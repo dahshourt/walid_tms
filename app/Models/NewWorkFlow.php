@@ -1,0 +1,46 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class NewWorkFlow extends Model
+{
+    use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $hidden = [
+        'updated_at',
+        'created_at'
+    ];
+    protected $table = 'new_workflow';
+    protected $fillable = [ 
+        'from_status_id',
+        'active',
+        'same_time',
+        'workflow_type', // this is flag especially or not
+        'to_status_label',
+        'type_id' //this is workflow type id 
+    ];
+
+
+    public function from_status()
+    {
+        return $this->belongsTo(Status::class,'from_status_id');
+    }
+
+    public function workflowstatus()
+    {
+        return $this->hasMany(NewWorkFlowStatuses::class,'new_workflow_id');
+    }
+
+   /*public function workflowStatuses()
+    {
+        return $this->hasMany(NewWorkFlowStatuses::class, 'new_workflow_id', 'id');
+    }*/
+}

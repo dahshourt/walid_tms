@@ -1,0 +1,219 @@
+<?php
+
+namespace App\Http\Controllers\Auth;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\Api\LoginRequest;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Adldap\Laravel\Facades\Adldap;
+use App\Models\UserGroups;
+use Illuminate\Support\Facades\Config;
+
+
+use App\Http\Repository\Users\UserRepository;
+use App\Http\Repository\Roles\RolesRepository;
+use App\Http\Repository\Groups\GroupRepository;
+
+class CustomAuthController extends Controller
+{
+
+
+
+    public function index()
+    {
+        return view('auth.login');
+    }
+
+
+    public function CheckLdapAccount($user_name,$password)
+    {
+        $ldapconn = @ldap_connect(config('constants.cairo.ldap_host'));
+        $response = array();
+        if (!$ldapconn) {
+            $response['message'] = "There is a connection problem with ldap.";
+            $response['status'] = false;
+            return $response;
+        }
+        $ldap_binddn = config('constants.cairo.ldap_binddn') . $user_name;
+                
+        $ldapbind = @ldap_bind($ldapconn, $ldap_binddn, $password);
+        if (!$ldapbind) {
+            $response['message'] = "Credentials Invalid.";
+            $response['status'] = false;
+            return $response;
+            //return \Redirect::back()->withErrors(['msg' => "Credentials Invalid."])->withInput();
+        }
+        $response['message'] = "Success";
+        $response['status'] = true;
+        return $response;
+    }
+
+    /**
+     * Login
+     *
+     * @param  [string] username
+     * @param  [string] password
+     * @return [object] user data
+     * @throws \SMartins\PassportMultiauth\Exceptions\MissingConfigException
+     */
+    public function login(Request $request)
+    {
+        $request->validate([
+            'user_name' => 'required',
+            'password' => 'required',
+        ]);
+ 
+        
+        #Check if user is authenticated or no
+        $user = User::with('user_groups', 'user_groups.group', 'defualt_group')->where('user_name', $request->user_name)->first();
+        if(! $user){
+            //return \Redirect::back()->withErrors(['msg' => "account not found in system"])->withInput();
+            $response = $this->CheckLdapAccount($request->user_name,$request->password);
+            if ($response['status']) 
+            {
+                $email=$request->user_name."@te.eg";
+                $check_email = (new UserRepository)->CheckUniqueEmail($email);
+                $roles = array();
+                $group_id = array();
+                $role = (new RolesRepository)->findByName("Viewer");
+                
+                $bussines_group = (new GroupRepository)->findByName("Business Team");
+                $roles[] = $role->name;
+                $default_group = $bussines_group->id;
+                $group_id[] = $bussines_group->id;
+
+                if($check_email)
+                {
+                    return \Redirect::back()->withErrors(['msg' =>"Credentials Invalid."])->withInput();
+                }
+                $data = [
+                    "user_type"=>1,
+                    "name"=>$request->user_name,
+                    "user_name"=>$request->user_name,
+                    "email"=>$email,
+                    "roles"=>$roles,
+                    "default_group"=>$default_group,
+                    "group_id"=>$group_id,
+                    "active"=>'1',
+                ];
+                //dd($data);
+                $user = (new UserRepository)->create($data);
+                Auth::login($user);
+                return redirect()->intended(url('/'));
+            }
+            else
+            {
+                return \Redirect::back()->withErrors(['msg' => $response['message']])->withInput();
+            }
+
+        }
+        if (isset($user->user_type)&&$user->user_type ==0) { // Local User
+
+
+            if(Auth::attempt(['user_name'=>$request->user_name,'password'=>$request->password])){
+                $userStatus = Auth::User()->active;
+                
+                if($userStatus=='1') {
+                    return redirect()->intended(url('/'));
+                }else{
+                    Auth::logout();
+                    Session::flush();
+                    return redirect("login")->with('failed','Your Account is inactive. Please Contact your adminstrator');
+                }
+            }
+            return redirect("login")->with('failed','Username or password is incorrect');
+
+        } else {
+
+
+            $response = $this->CheckLdapAccount($request->user_name,$request->password);
+            if ($response['status']) {
+
+                $user = User::with('user_groups', 'user_groups.group', 'defualt_group')->where('user_name', $request->user_name)->first();
+                Auth::login($user);
+                return redirect()->intended(url('/'));
+            }
+            else
+            {
+                return \Redirect::back()->withErrors(['msg' => $response['message']])->withInput();
+            }
+
+        } 
+    }
+
+    /**
+     * Logout user (Revoke the token)
+     *
+     * @param  [string] token
+     * @return [array] msg
+     */
+    public function logout(Request $request)
+    {
+        try {
+            $user = User::where('id', $request->user()->id)->first();
+            $user->device_token = null;
+            $user->save();
+            $request->user()->tokens()->delete();
+            return response()->json(['msg' => [__('messages.logout_successfully')]], 200);
+        } catch (\Exception $e) {
+            \Log::debug($e->getMessage());
+            return response()->json(['msg' => [__('messages.failed_request')]], 403);
+        }
+    }
+
+    /**
+     * Reset Password
+     *
+     * @param  [string] password
+     * @param  [string] password confiramtion
+     * @return [array] msg
+     * @throws \SMartins\PassportMultiauth\Exceptions\MissingConfigException
+     */
+    public function resetPassword(ResetPasswordRequest $request)
+    {
+        try {
+            $user = User::where('phone', $request->phone)->first();
+            // reset user password
+            $user->password = Hash::make($request->password);
+            $user->save();
+            // Revoke a all user tokens...
+            return response()->json(['msg' => [__('messages.reset_successfully')]], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::debug($e->getMessage());
+            return response()->json(['msg' => [__('messages.failed_request')]], 403);
+        }
+    }
+
+    /**
+     * Update Password
+     *
+     * @param  [string] old_password
+     * @param  [string] password
+     * @param  [string] password_confirmation
+     * @return [array] msg
+     */
+    public function updatePassword(UpdatePasswordRequest $request)
+    {
+
+        try {
+            DB::beginTransaction();
+            $user = User::where('id', $request->user()->id)->first();
+            if (Hash::check($request->old_password, $user->password)) {
+                $user->password = Hash::make($request->password);
+                $user->save();
+            } else {
+                return response()->json(['msg' => [__('messages.old_password_is_incorrect')]], 403);
+            }
+            DB::commit();
+            return response()->json(['msg' => [__('messages.success_update')]], 200);
+        } catch (\Exception $e) {
+            DB::rollback();
+            \Log::debug($e->getMessage());
+            return response()->json(['msg' => [__('messages.failed_request')]], 403);
+        }
+    }
+}

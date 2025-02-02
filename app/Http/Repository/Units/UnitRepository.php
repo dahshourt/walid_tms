@@ -1,0 +1,50 @@
+<?php
+
+namespace App\Http\Repository\Units;
+use App\Contracts\Units\UnitRepositoryInterface;
+
+// declare Entities
+use App\Models\Unit;
+
+
+
+class UnitRepository implements UnitRepositoryInterface
+{
+
+    
+    public function getAll()
+    {
+        return Unit::all();
+    }
+
+    public function create($request)
+    {
+        return Unit::create($request);
+    }
+
+    public function delete($id)
+    {
+        return Unit::destroy($id);
+    }
+
+    public function update($request, $id)
+    {
+        return Unit::where('id', $id)->update($request);
+    }
+
+    public function find($id)
+    {
+        return Unit::find($id);
+    }
+public function updateactive($active,$id){
+		if($active){
+		return 	$this->update(['active'=>'0'],$id);
+		} else{
+			
+					return 	$this->update(['active'=>'1'],$id);
+
+		}
+		
+	}
+
+}

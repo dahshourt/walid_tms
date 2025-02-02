@@ -1,0 +1,110 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Spatie\Permission\Traits\HasRoles;
+
+class User extends Authenticatable
+{
+    use HasApiTokens, HasFactory, Notifiable, HasRoles;
+
+
+    /**
+     * The code of status active type.
+     *
+     * @var int
+     */
+    const ACTIVE = 1;
+
+    /**
+     * The code of status inactive type.
+     *
+     * @var int
+     */
+    const INACTIVE = 0;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [
+        'name',
+        'user_name',
+        'email',
+        'password',
+        'default_group',
+        'user_type',
+        'active',
+        //'role_id', old roles system
+        'unit_id',
+        'man_power',
+        'department_id',
+    ];
+
+
+    public function setPasswordAttribute($password)
+    {
+        $this->attributes['password'] = bcrypt($password);
+    }
+
+    /**
+     * The attributes that should be hidden for arrays.
+     *
+     * @var array
+     */
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+    ];
+
+
+    public function user_groups()
+    {
+        return $this->hasMany(UserGroups::class, 'user_id', 'id');
+    }
+    public function user_report_to()
+    {
+        return $this->hasOne(Pivotusersrole::class);
+    }
+    public function defualt_group()
+    {
+
+        return $this->belongsTo(Group::class, 'default_group','id');
+    }
+    public function role()
+    {
+
+        return $this->belongsTo(Role::class);
+    }
+    public function unit()
+    {
+
+        return $this->belongsTo(Unit::class)->select('id','name');
+    }
+    public function department()
+    {
+
+        return $this->belongsTo(Department::class)->select('id','name');
+    }
+
+    public function logs()
+    {
+        return $this->hasMany(Log::class);
+    }
+
+}
