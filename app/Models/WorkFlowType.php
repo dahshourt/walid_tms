@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class WorkFlowType extends Model
+{
+    use HasFactory;
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $hidden = [
+        'updated_at',
+        'created_at'
+    ];
+    protected $table = 'workflow_type';
+    protected $fillable = [
+        'name','parent_id' ,'active'
+    ];
+
+   
+
+    public function children() 
+    {
+        return $this->hasMany(WorkFlowType::class,'parent_id');
+    }
+    public function parent() 
+    {
+        return $this->belongsTo(WorkFlowType::class,'parent_id');
+    }
+    
+    
+
+}

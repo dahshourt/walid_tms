@@ -1,0 +1,47 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class CabCrUser extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'user_id','cab_cr_id', 'status'
+    ];
+    const INACTIVE = '0';
+    const APPROVED = '1';
+    const REJECTED = '2';
+
+    public static $statuses = [
+        self::INACTIVE => 'Inactive',
+        self::APPROVED => 'Approved',
+        self::REJECTED => 'Rejected',
+    ];
+
+    public function isApproved ()
+    {
+        return $this->status == self::APPROVED;
+    }
+    public function isRejected ()
+    {
+        return $this->status == self::REJECTED;
+    }
+
+    public function isInactive ()
+    {
+        return $this->status == self::INACTIVE;
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function cab_cr()
+    {
+        return $this->belongsTo(CabCr::class);
+    }
+}
