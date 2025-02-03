@@ -98,6 +98,12 @@
                                                             <option value="{{ $value->id }}">{{ $value->name }}</option>
                                                         @endforeach
                                                         @endif
+                                                        @if($customField->name=="workflow_type_id")
+                                                        
+                                                        @foreach ($workflows as $value)
+                                                            <option value="{{ $value->id }}">{{ $value->name }}</option>
+                                                        @endforeach
+                                                        @endif
 
                                                     </select>
                                                 @elseif ($customField->type == 'textArea')

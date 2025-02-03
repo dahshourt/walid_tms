@@ -13,6 +13,7 @@ use App\Http\Repository\Applications\ApplicationRepository;//ParentRepository
 use App\Http\Repository\Parents\ParentRepository;//CategoreyRepository
 use App\Http\Repository\Categories\CategoreyRepository;//CategoreyRepository
 use App\Http\Repository\Units\UnitRepository;
+use App\Http\Repository\Workflow\Workflow_type_repository;
 use App\Http\Resources\CustomFieldResource;
 use App\Http\Resources\CustomFieldSelectedGroupResource;
 
@@ -135,9 +136,10 @@ class CustomFieldGroupTypeController extends Controller
  $categories=(new CategoreyRepository)->getAll();
         // Ensure $CustomFields is not an array of arrays if not expected
        $units= (new UnitRepository)->getAll();
+       $workflows= (new Workflow_type_repository)->get_workflow_all_subtype_without_release();
        
     
-        return view('search.advanced_search',compact('fields','statuses','priorities','applications','parents','categories','units'));
+        return view('search.advanced_search',compact('fields','statuses','priorities','applications','parents','categories','units','workflows'));
         
     }
 
