@@ -65,9 +65,7 @@
 												<select name="workflow_type" id="workflow_type" class="form-control" onchange="this.form.submit()">
 													<option value="">All</option>
 													<option value="Normal" {{ request('workflow_type') == 'Normal' ? 'selected' : '' }}>Normal</option>
-													<option value="On Going" {{ request('workflow_type') == 'On Going' ? 'selected' : '' }}>On Going</option>
 													<option value="Vendor" {{ request('workflow_type') == 'Vendor' ? 'selected' : '' }}>Vendor</option>
-													<option value="Realeas" {{ request('workflow_type') == 'Realeas' ? 'selected' : '' }}>Realeas</option>
 
 												</select>
 											</div>
