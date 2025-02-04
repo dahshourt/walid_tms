@@ -29,7 +29,7 @@
         @endforeach
     </select>
     @else
-    <select name="{{ $item->CustomField->name }}" class="form-control form-control-lg" multiple @if(isset($item->validation_type_id) && $item->validation_type_id == 1) required @endif
+    <select name="{{ $item->CustomField->name}}[]" class="form-control form-control-lg" multiple @if(isset($item->validation_type_id) && $item->validation_type_id == 1) required @endif
         @cannot('Set Time For Another User')
             @if($item->CustomField->name == 'tester_id' || $item->CustomField->name == 'designer_id' || $item->CustomField->name == 'developer_id')
                 disabled

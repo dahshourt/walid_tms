@@ -27,6 +27,7 @@ use App\Models\User;
 use App\Models\WorkFlowType;
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use Validator;
+use App\Http\Controllers\Mail\MailController;
 
 class ChangeRequestController extends Controller
 {
@@ -239,7 +240,7 @@ class ChangeRequestController extends Controller
     public function edit($id)
     {
        
-     
+        
         $this->authorize('Edit ChangeRequest'); // permission check
         //$this->logs = LogFactory::index();
         $cr = $this->changerequest->findById($id);
@@ -302,7 +303,20 @@ class ChangeRequestController extends Controller
      */
     public function update(changeRequest_Requests $request, $id)
     {
-      //dd($request->all());  
+      $mails = array();
+      //dd(empty($request->cap_users));
+      if(empty($request->cap_users))
+      {
+        foreach($request->cap_users as $users)
+          {
+            $mails[] = User::find($users)?->email;
+          }
+
+          $mail =  new MailController();
+          $mail->send_mail_to_cap_users($mails, $id);
+      }
+      
+
         if($request->hasFile('attach')){
             $input_data = $request->all();
 
