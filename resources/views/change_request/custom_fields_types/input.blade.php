@@ -1,7 +1,7 @@
 @if($item->CustomField->type == "input")
                                                   
 
-<div class="col-md-6 change-request-form-field">
+<div class="col-md-6 change-request-form-field field_{{$item->CustomField->name}}">
     
     @if(isset($cr))
         <label for="user_type">{{ $item->CustomField->label }} </label>
