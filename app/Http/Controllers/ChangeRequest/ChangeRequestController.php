@@ -292,7 +292,7 @@ class ChangeRequestController extends Controller
 
         return redirect()->back()->withErrors('File not found.');
     }
-
+ 
     /**
      * Update the specified resource in storage.
      *
@@ -302,7 +302,7 @@ class ChangeRequestController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(changeRequest_Requests $request, $id)
-    {
+    { 
       $mails = array();
       //dd(empty($request->cap_users));
       if(empty($request->cap_users))

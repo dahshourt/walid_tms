@@ -73,9 +73,9 @@ class MailController extends Controller
 
 
     } // end method
-    
+     
 
-    /*public function send_mail_to_cap_users($users_mail, $cr_no)
+    public function send_mail_to_cap_users($users_mail, $cr_no)
     {
         foreach ($users_mail as $key => $user) {
              $templateContent = [
@@ -97,7 +97,7 @@ class MailController extends Controller
                 return response()->json(['error' => 'Failed to send email.', 'details' => $e->getMessage()], 500);
             }
         }
-    }*/
+    }
 
     public function notifyDivisionManager($division_manager_email , $requester_email, $cr , $title, $description , $requester_name){
         

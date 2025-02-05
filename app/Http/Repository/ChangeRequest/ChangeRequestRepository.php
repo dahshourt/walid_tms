@@ -893,18 +893,18 @@ public function findNextAvailableTime($userId, $currentTime)
 
         $record = CabCr::create([
             'cr_id' => $id,
-            'status' => 0,
+            'status' => "0",
             
         ]);
 
         $insertedId = $record->id;
-
+ 
 
         foreach ($request->cap_users as $userId) {
             CabCrUser::create([
                 'user_id' => $userId,
                 'cab_cr_id' => $insertedId,
-                'status' => 0,
+                'status' => "0",
             ]);
            
         }
