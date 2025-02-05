@@ -1787,76 +1787,78 @@ public function findNextAvailableTime($userId, $currentTime)
         return $crs;
     }
 
-    public function AdvancedSearchResult()
-{
-    $request_query = request()->except('_token');
-     
-    $CRs = new change_request();
-    
-    foreach ($request_query as $key => $field_value) {
-        // Check if $field_value is not null or empty
-        if (!empty($field_value)) {
-            switch ($key) {
-                case 'title':
-                    $CRs = $CRs->where($key, 'LIKE', "%$field_value%");
-                    break;
-                case 'created_at':
-                    $CRs = $CRs->whereDate($key, '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
-                    break;
-                case 'updated_at':
-                    $CRs = $CRs->whereDate($key, '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
-                    break;
-                case 'greater_than_date':
-                    $CRs = $CRs->whereDate('updated_at', '>=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
-                    break;
-                case 'less_than_date':
-                    $CRs = $CRs->whereDate('updated_at', '<=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
-                    break;
-                case 'uat_date':
-                    $CRs = $CRs->whereDate('uat_date', '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
-                    break;
-                case 'release_delivery_date':
-                    $CRs = $CRs->whereDate('release_delivery_date', '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
-                    break;
-                case 'release_receiving_date':
-                    $CRs = $CRs->whereDate('release_receiving_date', '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
-                    break;
-                case 'te_testing_date':
-                    $CRs = $CRs->whereDate('te_testing_date', '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
-                    break;
-                case 'status_id':
-                    $CRs = $CRs->whereHas('CurrentRequestStatuses', function ($query) use ($field_value) {
-                        $query->where('new_status_id', $field_value);
-                    });
-                    break;
-                case 'new_status_id':
-                    $CRs = $CRs->whereHas('CurrentRequestStatuses', function ($query) use ($field_value) {
-                        $query->where('new_status_id', $field_value);
-                    });
-                    break;
-                case 'assignment_user_id':
-                    $CRs = $CRs->whereHas('CurrentRequestStatuses', function ($query) use ($field_value) {
-                        $query->where('assignment_user_id', $field_value);
-                        $query->where('active', 1);
-                    });
-                    break;
-                default:
-                    $CRs = $CRs->where($key, $field_value);
+    public function AdvancedSearchResult($getall=0)
+    {
+        $request_query = request()->except('_token','page');
+         
+        $CRs = new change_request();
+        
+        foreach ($request_query as $key => $field_value) {
+            if (!empty($field_value)) {
+                switch ($key) {
+                    case 'title':
+                        $CRs = $CRs->where($key, 'LIKE', "%$field_value%");
+                        break;
+                    case 'created_at':
+                        $CRs = $CRs->whereDate($key, '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
+                        break;
+                    case 'updated_at':
+                        $CRs = $CRs->whereDate($key, '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
+                        break;
+                    case 'greater_than_date':
+                        $CRs = $CRs->whereDate('updated_at', '>=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
+                        break;
+                    case 'less_than_date':
+                        $CRs = $CRs->whereDate('updated_at', '<=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
+                        break;
+                    case 'uat_date':
+                        $CRs = $CRs->whereDate('uat_date', '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
+                        break;
+                    case 'release_delivery_date':
+                        $CRs = $CRs->whereDate('release_delivery_date', '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
+                        break;
+                    case 'release_receiving_date':
+                        $CRs = $CRs->whereDate('release_receiving_date', '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
+                        break;
+                    case 'te_testing_date':
+                        $CRs = $CRs->whereDate('te_testing_date', '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
+                        break;
+                    case 'status_id':
+                        $CRs = $CRs->whereHas('CurrentRequestStatuses', function ($query) use ($field_value) {
+                            $query->where('new_status_id', $field_value);
+                        });
+                        break;
+                    case 'new_status_id':
+                        $CRs = $CRs->whereHas('CurrentRequestStatuses', function ($query) use ($field_value) {
+                            $query->where('new_status_id', $field_value);
+                        });
+                        break;
+                    case 'assignment_user_id':
+                        $CRs = $CRs->whereHas('CurrentRequestStatuses', function ($query) use ($field_value) {
+                            $query->where('assignment_user_id', $field_value);
+                            $query->where('active', 1);
+                        });
+                        break;
+                    default:
+                        $CRs = $CRs->where($key, $field_value);
+                }
             }
         }
-    }
-
-    \DB::enableQueryLog();
-    $results = $CRs->get();
-    $queries = \DB::getQueryLog();
-    $lastQuery = end($queries);
-
-    // Optionally: Log the last query
-    \Log::info('Last Query: ', $lastQuery);
     
-    return $results;
-}
-
+        \DB::enableQueryLog();
+        if ($getall == 0) {
+            $results = $CRs->paginate(10);
+        } else {
+            $results = $CRs->get();
+        }
+      
+        $queries = \DB::getQueryLog();
+        $lastQuery = end($queries);
+    
+        \Log::info('Last Query: ', $lastQuery);
+        
+        return $results;
+    }
 
     public function get_change_request_by_release($release_id){
         return $changeRequests = Change_request::with("CurrentRequestStatuses")->where('release_name', $release_id)->where("workflow_type_id", 5)->get();
