@@ -164,7 +164,6 @@ $('#status_id').select2({
 
 		</script>
 		@stack('script')
-
 	</body>
 	<!--end::Body-->
 </html>

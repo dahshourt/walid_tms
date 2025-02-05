@@ -221,7 +221,7 @@ class UserRepository implements UserRepositoryInterface
                SELECT 
                     cps.*,users.user_name,apps.name
                 FROM
-                    tms_28_1_2025.system_user_cabs cps
+                    system_user_cabs cps
                 left join users on  users.id  = cps.user_id
                 left join applications apps on apps.id = cps.system_id
                 where apps.id = ".$system_id."
