@@ -24,12 +24,12 @@
         @foreach($item->CustomField->getCustomFieldValue() as $value)
             @if($value->defualt_group->title === 'CR Team Admin') {{-- Filter by group name --}}
                 <option value="{{ $value->id }}" {{ isset($cr) && $cr->{$item->CustomField->name} == $value->id ? 'selected' : ''  }}>{{ $value->name }}</option> 
-
+ 
             @endif
         @endforeach
-    </select>
+    </select> 
     @else
-    <select name="{{ $item->CustomField->name }}" class="form-control form-control-lg" multiple @if(isset($item->validation_type_id) && $item->validation_type_id == 1) required @endif
+    <select name="{{ $item->CustomField->name}}[]" class="form-control form-control-lg" multiple @if(isset($item->validation_type_id) && $item->validation_type_id == 1) required @endif
         @cannot('Set Time For Another User')
             @if($item->CustomField->name == 'tester_id' || $item->CustomField->name == 'designer_id' || $item->CustomField->name == 'developer_id')
                 disabled

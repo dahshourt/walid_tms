@@ -19,6 +19,8 @@ use App\Models\Category;
 use App\Models\DivisionManagers;
 use App\Models\CustomField;
 use App\Models\ChangeRequestCustomField;
+use App\Models\CabCrUser;
+use App\Models\CabCr;
 use Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
@@ -889,6 +891,24 @@ public function findNextAvailableTime($userId, $currentTime)
             $user = \Auth::user();
         }
 
+        $record = CabCr::create([
+            'cr_id' => $id,
+            'status' => "0",
+            
+        ]);
+
+        $insertedId = $record->id;
+ 
+
+        foreach ($request->cap_users as $userId) {
+            CabCrUser::create([
+                'user_id' => $userId,
+                'cab_cr_id' => $insertedId,
+                'status' => "0",
+            ]);
+           
+        }
+
         //dd($user->role_id);
         $change_request = Change_request::find($id);
         /** check assignments */
@@ -897,7 +917,7 @@ public function findNextAvailableTime($userId, $currentTime)
         }
          
 /** end check */
-        $except = ['old_status_id', 'new_status_id', '_method', 'current_status', 'duration', 'current_status', 'categories', 'cat_name', 'pr_name', 'Applications', 'app_name', 'depend_cr_name', 'depend_crs', 'test', 'priorities', 'cr_id', 'assign_to', 'dev_estimation', 'design_estimation', 'testing_estimation', 'assignment_user_id', '_token','attach'];
+        $except = ['old_status_id', 'new_status_id', '_method', 'current_status', 'duration', 'current_status', 'categories', 'cat_name', 'pr_name', 'Applications', 'app_name', 'depend_cr_name', 'depend_crs', 'test', 'priorities', 'cr_id', 'assign_to', 'dev_estimation', 'design_estimation', 'testing_estimation', 'assignment_user_id', '_token','attach', 'cap_users'];
 
         // calculate estimation
         if ((isset($request['dev_estimation']) && $request['dev_estimation'] != '') || (isset($request['design_estimation']) && $request['design_estimation'] != '') || (isset($request['testing_estimation']) && $request['testing_estimation'] != '')) 
@@ -930,6 +950,7 @@ public function findNextAvailableTime($userId, $currentTime)
 
 
         
+
 
         //$request['assignment_user_id'] = $user->id;
         if($new_status_id) $request['new_status_id'] = $new_status_id;
