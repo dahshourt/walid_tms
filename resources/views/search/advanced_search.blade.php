@@ -33,8 +33,8 @@
                             <h3 class="card-title">Add {{ $form_title }}</h3>
                         </div>
                         <!--begin::Form-->
-                        <form method="POST" id="advanced_search" action="{{ route('advanced.search.result') }}">
-                            @csrf
+                        <form  id="advanced_search" action="{{ route('advanced.search.result') }}">
+                          
 
                             @if (count($fields) > 0)
                                 <div class="form-group row p-3">
