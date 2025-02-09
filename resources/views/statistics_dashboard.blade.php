@@ -83,6 +83,42 @@
 				</div>
 
 
+                <div class="row" >
+                    <div class="col-lg-12">
+						<div class="card card-custom gutter-b">
+							<div class="card-header">
+								<div class="card-title">
+								    <h3 class="card-label">In House Statistics (No of CRs per Status & system) </h3>
+							    </div>
+							</div>
+							<div class="card-body">
+                                <div class="col-md-6 form-group" style="float: right;">
+                                    <label for="statusFilter">Select Status:</label>
+                                    <select id="statusFilter" class="form-control form-control-lg">
+                                        <option value="all">All</option>
+                                        @foreach($inhouse_crs_per_status_system as $key=>$item)
+                                            <option value="{{ $item->new_status_id }}"> {{ $item->status?$item->status->status_name:'No Name' }} </option>    
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6 form-group">
+                                    <label for="appFilter">Select App:</label>
+                                    <select id="appFilter" class="form-control form-control-lg">
+                                        <option value="all">All</option>
+                                        @foreach($inhouse_apps as $key=>$item)
+                                            <option value="{{ $item->id }}"> {{ $item->name }} </option>    
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <canvas id="InHouseStatusChart" width="400" height="200"></canvas>
+						    </div>
+					    </div>
+										<!--end::Card-->
+										
+					</div>
+				</div>
+
+
             </div>
             <!--end::Card-->
         </div>
@@ -206,4 +242,54 @@
 });
 
 </script>
+
+<script>
+
+$(document).ready(function () {
+
+// in house chart   
+// Example data for categories
+   const InhouseCRsStatusNames= [];
+   const InhouseCRsStatusValues= [];
+   @foreach($inhouse_crs_per_status_system as $key=>$item)
+       var data_val = "{{ $item->total }}";
+       InhouseCRsStatusNames.push("{{ $item->status?$item->status->status_name:'No Name' }}");
+       InhouseCRsStatusValues.push(data_val);
+   @endforeach
+
+
+    // Initialize Chart
+    const ctx = document.getElementById("InHouseStatusChart").getContext("2d");
+    let pieChart = new Chart(ctx, {
+    type: "pie",
+    data: {
+        labels: InhouseCRsStatusNames,
+        datasets: [
+            {
+                data: InhouseCRsStatusValues,
+            },
+        ],
+    },
+    options: {
+        responsive: true,
+    },
+    });
+});
+
+
+$("#appFilter").change(function(){
+    renderChart();
+});
+$("#statusFilter").change(function(){
+    renderChart();
+});
+
+function renderChart()
+{
+    const applicationValue = $('#appFilter').value;
+    const statusValue = $('#statusFilter').value;
+}
+</script>
+
+
 @endpush
