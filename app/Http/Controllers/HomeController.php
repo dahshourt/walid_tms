@@ -125,7 +125,9 @@ class HomeController extends Controller
         
         $vendor_crs = (new ChangeRequestRepository)->CountCrsPerSystem(5);
         $status_crs = (new ChangeRequestRepository)->CountCrsPerStatus();
-        return view('statistics_dashboard',compact('inhouse_crs','vendor_crs','status_crs')); 
+        $inhouse_crs_per_status_system = (new ChangeRequestRepository)->CountCrsPerSystemAndStatus(3);
+        $inhouse_apps = (new ApplicationRepository)->application_based_on_workflow(3);
+        return view('statistics_dashboard',compact('inhouse_crs','vendor_crs','status_crs','inhouse_crs_per_status_system','inhouse_apps')); 
     }
 
 }

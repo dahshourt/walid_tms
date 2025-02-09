@@ -2121,7 +2121,6 @@ public function findNextAvailableTime($userId, $currentTime)
 
 
 
-
     public function CountCrsPerSystem($workflow_type)
     {
         $collection = Change_request::groupBy('application_id')->selectRaw('count(*) as total, application_id')->where('workflow_type_id',$workflow_type)->get();
@@ -2135,6 +2134,23 @@ public function findNextAvailableTime($userId, $currentTime)
         
         return $collection;
     }
+
+
+    public function CountCrsPerSystemAndStatus($workflow_type)
+    {
+
+        $collection = Change_request_statuse::
+                    whereHas('ChangeRequest', function ($q) use ($workflow_type) {
+                        $q->where('workflow_type_id', $workflow_type);
+                    })
+                    ->groupBy('new_status_id')
+                    ->selectRaw('count(*) as total, new_status_id')
+                    ->where('active','1')
+                    ->get();
+        return $collection;
+
+    }
+
 
 
 }

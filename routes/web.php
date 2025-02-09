@@ -143,6 +143,9 @@ Route::middleware(['auth'])->group(
         Route::get('cr/{id}' , 'ChangeRequest\ChangeRequestController@show')->name('show.cr');
         Route::get('change_request/{id}/edit' , 'ChangeRequest\ChangeRequestController@edit')->name('edit.cr');
 
+
+        Route::resource('cab_users', 'CabUser\CabUserController');
+        Route::post('cab_user/updateactive', 'CabUser\CabUserController@updateactive');
 });
 
 /// user routes
