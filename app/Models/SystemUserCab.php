@@ -19,6 +19,11 @@ class SystemUserCab extends Model
         self::ACTIVE => 'Active',
         self::INACTIVE => 'Inactive',
     ];
+	
+	
+	protected $attributes = array(
+	   'active' => '0',
+	);
 
     public function isActive ()
     {

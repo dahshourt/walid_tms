@@ -899,14 +899,16 @@ public function findNextAvailableTime($userId, $currentTime)
 
         $insertedId = $record->id;
  
-
-        foreach ($request->cap_users as $userId) {
-            CabCrUser::create([
-                'user_id' => $userId,
-                'cab_cr_id' => $insertedId,
-                'status' => "0",
-            ]);
-           
+        if(!empty($request->cap_users))
+        {
+            foreach ($request->cap_users as $userId) {
+                CabCrUser::create([
+                    'user_id' => $userId,
+                    'cab_cr_id' => $insertedId,
+                    'status' => "0",
+                ]);
+            
+            }
         }
 
         //dd($user->role_id);
