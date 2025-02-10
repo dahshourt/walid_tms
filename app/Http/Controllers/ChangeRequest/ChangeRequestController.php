@@ -433,11 +433,12 @@ class ChangeRequestController extends Controller
         $workflow_type = $request->input('workflow_type', null);
         //dd($workflow_type);
         $query = Change_request::where("requester_id", $user_id->id);
-
+        
         if($workflow_type){
             $workflow_type_id = WorkFlowType::where('name' ,$workflow_type)->whereNotNull('parent_id')->value('id');
-           
+            
             if($workflow_type_id){
+               
                 $query->where('workflow_type_id' ,$workflow_type_id);
             }
         }
