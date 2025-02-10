@@ -46,18 +46,20 @@ class TableExport implements FromCollection, WithHeadings, WithMapping
         return [
             $item['id'],
             $item['title'],
-            $item['category'],
-            $item['application'],
-            $item['current_status'],
-            $item['requester_name'],
-            $item['requester_email'],
-            $item['design_duration'],
-            $item['develop_duration'],
-            $item['test_duration'],
-            $item['created_at'],
-            $item['department'],
-            $item['application'], // Assuming 'application' is the "targeted system"
-            $item['updated_at'],
+            $item['category']['name']??"",
+            $item['application']['name']??"",
+            $item->getCurrentStatus()->status->status_name??"",
+            $item['requester_name']??"",
+            $item['requester_email']??"",
+            $item['design_duration']??"",
+            $item['develop_duration']??"",
+            $item['test_duration']??"",
+            $item['created_at']??"",
+            $item['department']??"",
+            $item['application']['name']??"",
+            $item['updated_at']??"",
         ];
     }
 }
+
+                                    

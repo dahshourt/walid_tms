@@ -306,6 +306,34 @@ $(window).on("load", function () {
     }
 }); 
 
+// handle worlkload validation.. mandatory when transfer status from Analysis to Release plan and optional when transfer status from Analysis to Pending business Feedback
+
+$(document).ready(function () {
+    const statusField = $('select[name="new_status_id"]'); 
+    const workLoadField = $(".field_cr_workload input");  
+
+    //console.log("Status Field and Work Load Field Found");
+
+
+    function handleWorkLoadValidation() {
+        const selectedStatus = statusField.find("option:selected").text().trim();  
+        //console.log("Selected Status:", selectedStatus); 
+
+
+        if (selectedStatus === "Release Plan") {
+            workLoadField.prop("required", true); // mandatory
+            console.log("Work Load is now mandatory");
+        } else if (selectedStatus === "Pending Business") {
+            workLoadField.prop("required", false); // optional
+        }
+    }
+
+    
+    handleWorkLoadValidation();
+
+    statusField.on("change", handleWorkLoadValidation);
+});
+
 
 </script>
 @endpush

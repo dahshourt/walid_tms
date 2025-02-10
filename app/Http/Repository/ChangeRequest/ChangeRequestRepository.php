@@ -19,6 +19,8 @@ use App\Models\Category;
 use App\Models\DivisionManagers;
 use App\Models\CustomField;
 use App\Models\ChangeRequestCustomField;
+use App\Models\CabCrUser;
+use App\Models\CabCr;
 use Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
@@ -889,6 +891,26 @@ public function findNextAvailableTime($userId, $currentTime)
             $user = \Auth::user();
         }
 
+        $record = CabCr::create([
+            'cr_id' => $id,
+            'status' => "0",
+            
+        ]);
+
+        $insertedId = $record->id;
+ 
+        if(!empty($request->cap_users))
+        {
+            foreach ($request->cap_users as $userId) {
+                CabCrUser::create([
+                    'user_id' => $userId,
+                    'cab_cr_id' => $insertedId,
+                    'status' => "0",
+                ]);
+            
+            }
+        }
+
         //dd($user->role_id);
         $change_request = Change_request::find($id);
         /** check assignments */
@@ -897,7 +919,7 @@ public function findNextAvailableTime($userId, $currentTime)
         }
          
 /** end check */
-        $except = ['old_status_id', 'new_status_id', '_method', 'current_status', 'duration', 'current_status', 'categories', 'cat_name', 'pr_name', 'Applications', 'app_name', 'depend_cr_name', 'depend_crs', 'test', 'priorities', 'cr_id', 'assign_to', 'dev_estimation', 'design_estimation', 'testing_estimation', 'assignment_user_id', '_token','attach'];
+        $except = ['old_status_id', 'new_status_id', '_method', 'current_status', 'duration', 'current_status', 'categories', 'cat_name', 'pr_name', 'Applications', 'app_name', 'depend_cr_name', 'depend_crs', 'test', 'priorities', 'cr_id', 'assign_to', 'dev_estimation', 'design_estimation', 'testing_estimation', 'assignment_user_id', '_token','attach', 'cap_users'];
 
         // calculate estimation
         if ((isset($request['dev_estimation']) && $request['dev_estimation'] != '') || (isset($request['design_estimation']) && $request['design_estimation'] != '') || (isset($request['testing_estimation']) && $request['testing_estimation'] != '')) 
@@ -930,6 +952,7 @@ public function findNextAvailableTime($userId, $currentTime)
 
 
         
+
 
         //$request['assignment_user_id'] = $user->id;
         if($new_status_id) $request['new_status_id'] = $new_status_id;
@@ -1787,76 +1810,78 @@ public function findNextAvailableTime($userId, $currentTime)
         return $crs;
     }
 
-    public function AdvancedSearchResult()
-{
-    $request_query = request()->except('_token');
-     
-    $CRs = new change_request();
-    
-    foreach ($request_query as $key => $field_value) {
-        // Check if $field_value is not null or empty
-        if (!empty($field_value)) {
-            switch ($key) {
-                case 'title':
-                    $CRs = $CRs->where($key, 'LIKE', "%$field_value%");
-                    break;
-                case 'created_at':
-                    $CRs = $CRs->whereDate($key, '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
-                    break;
-                case 'updated_at':
-                    $CRs = $CRs->whereDate($key, '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
-                    break;
-                case 'greater_than_date':
-                    $CRs = $CRs->whereDate('updated_at', '>=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
-                    break;
-                case 'less_than_date':
-                    $CRs = $CRs->whereDate('updated_at', '<=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
-                    break;
-                case 'uat_date':
-                    $CRs = $CRs->whereDate('uat_date', '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
-                    break;
-                case 'release_delivery_date':
-                    $CRs = $CRs->whereDate('release_delivery_date', '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
-                    break;
-                case 'release_receiving_date':
-                    $CRs = $CRs->whereDate('release_receiving_date', '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
-                    break;
-                case 'te_testing_date':
-                    $CRs = $CRs->whereDate('te_testing_date', '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
-                    break;
-                case 'status_id':
-                    $CRs = $CRs->whereHas('CurrentRequestStatuses', function ($query) use ($field_value) {
-                        $query->where('new_status_id', $field_value);
-                    });
-                    break;
-                case 'new_status_id':
-                    $CRs = $CRs->whereHas('CurrentRequestStatuses', function ($query) use ($field_value) {
-                        $query->where('new_status_id', $field_value);
-                    });
-                    break;
-                case 'assignment_user_id':
-                    $CRs = $CRs->whereHas('CurrentRequestStatuses', function ($query) use ($field_value) {
-                        $query->where('assignment_user_id', $field_value);
-                        $query->where('active', 1);
-                    });
-                    break;
-                default:
-                    $CRs = $CRs->where($key, $field_value);
+    public function AdvancedSearchResult($getall=0)
+    {
+        $request_query = request()->except('_token','page');
+         
+        $CRs = new change_request();
+        
+        foreach ($request_query as $key => $field_value) {
+            if (!empty($field_value)) {
+                switch ($key) {
+                    case 'title':
+                        $CRs = $CRs->where($key, 'LIKE', "%$field_value%");
+                        break;
+                    case 'created_at':
+                        $CRs = $CRs->whereDate($key, '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
+                        break;
+                    case 'updated_at':
+                        $CRs = $CRs->whereDate($key, '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
+                        break;
+                    case 'greater_than_date':
+                        $CRs = $CRs->whereDate('updated_at', '>=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
+                        break;
+                    case 'less_than_date':
+                        $CRs = $CRs->whereDate('updated_at', '<=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
+                        break;
+                    case 'uat_date':
+                        $CRs = $CRs->whereDate('uat_date', '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
+                        break;
+                    case 'release_delivery_date':
+                        $CRs = $CRs->whereDate('release_delivery_date', '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
+                        break;
+                    case 'release_receiving_date':
+                        $CRs = $CRs->whereDate('release_receiving_date', '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
+                        break;
+                    case 'te_testing_date':
+                        $CRs = $CRs->whereDate('te_testing_date', '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
+                        break;
+                    case 'status_id':
+                        $CRs = $CRs->whereHas('CurrentRequestStatuses', function ($query) use ($field_value) {
+                            $query->where('new_status_id', $field_value);
+                        });
+                        break;
+                    case 'new_status_id':
+                        $CRs = $CRs->whereHas('CurrentRequestStatuses', function ($query) use ($field_value) {
+                            $query->where('new_status_id', $field_value);
+                        });
+                        break;
+                    case 'assignment_user_id':
+                        $CRs = $CRs->whereHas('CurrentRequestStatuses', function ($query) use ($field_value) {
+                            $query->where('assignment_user_id', $field_value);
+                            $query->where('active', 1);
+                        });
+                        break;
+                    default:
+                        $CRs = $CRs->where($key, $field_value);
+                }
             }
         }
-    }
-
-    \DB::enableQueryLog();
-    $results = $CRs->get();
-    $queries = \DB::getQueryLog();
-    $lastQuery = end($queries);
-
-    // Optionally: Log the last query
-    \Log::info('Last Query: ', $lastQuery);
     
-    return $results;
-}
-
+        \DB::enableQueryLog();
+        if ($getall == 0) {
+            $results = $CRs->paginate(10);
+        } else {
+            $results = $CRs->get();
+        }
+      
+        $queries = \DB::getQueryLog();
+        $lastQuery = end($queries);
+    
+        \Log::info('Last Query: ', $lastQuery);
+        
+        return $results;
+    }
 
     public function get_change_request_by_release($release_id){
         return $changeRequests = Change_request::with("CurrentRequestStatuses")->where('release_name', $release_id)->where("workflow_type_id", 5)->get();
@@ -2098,7 +2123,6 @@ public function findNextAvailableTime($userId, $currentTime)
 
 
 
-
     public function CountCrsPerSystem($workflow_type)
     {
         $collection = Change_request::groupBy('application_id')->selectRaw('count(*) as total, application_id')->where('workflow_type_id',$workflow_type)->get();
@@ -2112,6 +2136,23 @@ public function findNextAvailableTime($userId, $currentTime)
         
         return $collection;
     }
+
+
+    public function CountCrsPerSystemAndStatus($workflow_type)
+    {
+
+        $collection = Change_request_statuse::
+                    whereHas('ChangeRequest', function ($q) use ($workflow_type) {
+                        $q->where('workflow_type_id', $workflow_type);
+                    })
+                    ->groupBy('new_status_id')
+                    ->selectRaw('count(*) as total, new_status_id')
+                    ->where('active','1')
+                    ->get();
+        return $collection;
+
+    }
+
 
 
 }

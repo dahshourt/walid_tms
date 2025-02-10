@@ -13,6 +13,8 @@
       
                 <div class="card-body">
                     <h2>Search Result</h2>
+                 
+
                     <div class="card-toolbar">
 							
                             <!--begin::Button-->
@@ -61,19 +63,19 @@
                                     <td>
                                     <a href='{{ url("$route") }}/{{ $item["id"] }}'>{{ $item['id'] }} </a>
                                     </td>
-                                    <td>{{ $item['title'] }}</td>
-                                    <td>{{ $item['category'] }}</td>
-                                    <td>{{ $item['application'] }}</td> <!-- Changed from 'release' to 'application' -->
-                                    <td>{{ $item['current_status'] }}</td>
-                                    <td>{{ $item['requester_name'] }}</td>
-                                    <td>{{ $item['requester_email'] }}</td>
-                                    <td>{{ $item['design_duration'] }}</td>
-                                    <td>{{ $item['develop_duration'] }}</td>
-                                    <td>{{ $item['test_duration'] }}</td>
-                                    <td>{{ $item['created_at'] }}</td>
-                                    <td>{{ $item['department'] }}</td>
-                                    <td>{{ $item['application'] }}</td>
-                                    <td>{{ $item['updated_at'] }}</td>
+                                    <td>{{ $item['title'] ??"" }}</td>
+                                    <td>{{ $item['category']['name'] ??"" }}</td>
+                                    <td>{{ $item['application']['name']??"" }}</td> <!-- Changed from 'release' to 'application' -->
+                                    <td>{{ $item->getCurrentStatus()->status->status_name??"" }}</td>
+                                    <td>{{ $item['requester_name']??""  }}</td>
+                                    <td>{{ $item['requester_email']??""  }}</td>
+                                    <td>{{ $item['design_duration'] ??"" }}</td>
+                                    <td>{{ $item['develop_duration']??""  }}</td>
+                                    <td>{{ $item['test_duration']??""  }}</td>
+                                    <td>{{ $item['created_at'] ??"" }}</td>
+                                    <td>{{ $item['department'] ??"" }}</td>
+                                    <td>{{ $item['application']['name']??""  }}</td>
+                                    <td>{{ $item['updated_at'] ??"" }}</td>
                                     
                                     
                                     <td>
@@ -115,6 +117,13 @@
                             </tbody>
                         </table>
                     </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded shadow-sm">
+    <p class="mb-0 text-primary fw-bold">Total Results: {{ $totalCount }}</p>
+    <div>
+        {{ $items->links() }}
+    </div>
+</div>
+
                 </div>
             </div>
         </div>

@@ -73,7 +73,31 @@ class MailController extends Controller
 
 
     } // end method
-    
+     
+
+    public function send_mail_to_cap_users($users_mail, $cr_no)
+    {
+        foreach ($users_mail as $key => $user) {
+             $templateContent = [
+                'subject' => "CR #$cr_no Is Pending Cap",
+                'body' => "Dear $user, <br><br>"
+                ."CR #$cr_no has been transfered To Pending Cap Status Waiting Your Approval Or Rejection following Link."
+                ."<br><br>"
+                ."You can review it here: <a href='#'>CR: #$cr_no</a>"
+                ."<br><br>"
+                ."TMS Automation <br><br> Thank you",
+            ];
+
+            try {
+                // Send the email
+                Mail::to($requester_email)->send(new TestMail($templateContent));
+        
+                return response()->json(['success' => 'Email sent successfully.']);
+            } catch (\Exception $e) {
+                return response()->json(['error' => 'Failed to send email.', 'details' => $e->getMessage()], 500);
+            }
+        }
+    }
 
     public function notifyDivisionManager($division_manager_email , $requester_email, $cr , $title, $description , $requester_name){
         

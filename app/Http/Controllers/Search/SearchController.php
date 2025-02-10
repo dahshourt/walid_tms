@@ -81,35 +81,29 @@ class SearchController extends Controller
         return view("$this->view.index",compact('cr','crs_in_queues'));
     }
 
-    public function AdvancedSearchResult()
+    public function AdvancedSearchResult() 
     {
         $this->authorize('Access Advanced Search'); // permission check
-       /* $fieldsPosted = $request->except('_token');  // This checks all fields except the CSRF token
-
-        // If no fields are posted, redirect back with an error message
-        if (empty($fieldsPosted)) {
-            return redirect('/search/advanced_search')->withErrors(['error' => 'Please fill out or select at least one field before submitting.']);
-        }*/
-        // Retrieve the raw collection from the model
-        $collection = $this->changerequest->AdvancedSearchResult();
+        $alldata=$this->changerequest->AdvancedSearchResult(1);
+       
+        // Retrieve the paginated collection from the model
+        $collection = $this->changerequest->AdvancedSearchResult()->appends(request()->query());
         
-        // Ensure $collection is an instance of Illuminate\Support\Collection or Illuminate\Database\Eloquent\Collection
-        if (!($collection instanceof \Illuminate\Support\Collection || $collection instanceof \Illuminate\Database\Eloquent\Collection)) {
-            // Handle unexpected data type
-            abort(500, 'Expected collection from AdvancedSearchResult.');
+        // Ensure $collection is an instance of Illuminate\Pagination\LengthAwarePaginator
+        if (!($collection instanceof \Illuminate\Pagination\LengthAwarePaginator)) {
+            abort(500, 'Expected paginated collection from AdvancedSearchResult.');
         }
-    
+        $totalCount = $collection->total(); 
         // Transform the collection into resource format
         $collection = AdvancedSearchRequestResource::collection($collection);
-      
-        $collection=$collection->toArray(request());
+     //  $collection = $collection->toArray(request());
         
-  
-        $r=new ChangeRequestRepository();
-        $crs_in_queues=  $r->getAll()->pluck("id");
+        $r = new ChangeRequestRepository();
+        $crs_in_queues = $r->getAll()->pluck("id");
+        
         // Pass the transformed data to the view
-        session(['advanced_search_items' => $collection]);
-        return view("$this->view.AdvancedSearchResult", ['items' => $collection,'crs_in_queues'=>$crs_in_queues]);
+        session(['advanced_search_items' => $alldata]);
+        return view("$this->view.AdvancedSearchResult", ['totalCount'=>$totalCount,'items' => $collection, 'crs_in_queues' => $crs_in_queues]);
     }
     public function AdvancedSearchResultExport(Request $request)
     {

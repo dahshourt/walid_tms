@@ -19,7 +19,7 @@
                 <!--end::Heading-->
             </div>
             <!--end::Info-->
-        </div>
+        </div> 
     </div>
     <!--end::Subheader-->
 

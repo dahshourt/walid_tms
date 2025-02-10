@@ -86,7 +86,7 @@ Route::middleware(['auth'])->group(
        //Route::resource('searchs', Search\SearchController::class);
        Route::get('/search/result', 'Search\SearchController@search_result');
       // Route::get('/search/advanced_search', 'Search\SearchController@advanced_search');
-       Route::post('advanced/search/result', 'Search\SearchController@AdvancedSearchResult')->name('advanced.search.result');;
+       Route::get('advanced/search/result', 'Search\SearchController@AdvancedSearchResult')->name('advanced.search.result');;
         Route::get('/search/advanced_search', 'CustomFields\CustomFieldGroupTypeController@AllCustomFieldsWithSelectedByformType')->name('advanced.search');
 
        Route::resource('applications', Applications\ApplicationController::class);
@@ -143,6 +143,9 @@ Route::middleware(['auth'])->group(
         Route::get('cr/{id}' , 'ChangeRequest\ChangeRequestController@show')->name('show.cr');
         Route::get('change_request/{id}/edit' , 'ChangeRequest\ChangeRequestController@edit')->name('edit.cr');
 
+
+        Route::resource('cab_users', 'CabUser\CabUserController');
+        Route::post('cab_user/updateactive', 'CabUser\CabUserController@updateactive');
 });
 
 /// user routes
