@@ -890,7 +890,8 @@ public function findNextAvailableTime($userId, $currentTime)
         } else {
             $user = \Auth::user();
         }
-
+        if(!empty($request->cap_users))
+        {
         $record = CabCr::create([
             'cr_id' => $id,
             'status' => "0",
@@ -899,14 +900,15 @@ public function findNextAvailableTime($userId, $currentTime)
 
         $insertedId = $record->id;
  
-
-        foreach ($request->cap_users as $userId) {
-            CabCrUser::create([
-                'user_id' => $userId,
-                'cab_cr_id' => $insertedId,
-                'status' => "0",
-            ]);
-           
+        
+            foreach ($request->cap_users as $userId) {
+                CabCrUser::create([
+                    'user_id' => $userId,
+                    'cab_cr_id' => $insertedId,
+                    'status' => "0",
+                ]);
+            
+            }
         }
 
         //dd($user->role_id);

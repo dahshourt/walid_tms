@@ -305,7 +305,7 @@ class ChangeRequestController extends Controller
     { 
       $mails = array();
       //dd(empty($request->cap_users));
-      if(empty($request->cap_users))
+      if(!empty($request->cap_users))
       {
         foreach($request->cap_users as $users)
           {
