@@ -61,7 +61,7 @@
 									<div class="card-body">
 										<form method="GET" action="{{ url()->current() }}">
 											<div class="form-group">
-												<label for="workflow_type">Filter by Workflow Type:</label>
+												<label for="workflow_type">Select Type:</label>
 												<select name="workflow_type" id="workflow_type" class="form-control" onchange="this.form.submit()">
 													<option value="">All</option>
 													<option value="In House" {{ request('workflow_type') == 'In House' ? 'selected' : '' }}>In House</option>
