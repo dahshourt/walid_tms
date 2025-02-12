@@ -278,6 +278,7 @@ $(window).on("load", function () {
 
  $(window).on("load", function () {
     $(".field_cap_users").hide();
+    
     const statusField = document.querySelector('select[name="new_status_id"]');
     // Function to check if the status is "Reject"
     function isStatusReject() {
