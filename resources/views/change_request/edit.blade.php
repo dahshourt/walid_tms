@@ -11,6 +11,7 @@
         width: 100%;
         height: 100%;
         background-color: rgba(0, 0, 0, 0.4);
+        overflow-y: auto;
     }
 
     .modal-content {
@@ -20,6 +21,7 @@
         border: 1px solid #888;
         width: 50%;
         border-radius: 5px;
+        overflow-y: auto;
     }
 
     .close {
@@ -173,7 +175,7 @@
                                                     </button>
                                                     @endif
 													@can('Show CR Logs')
-										    			<button id="openModal" class="btn btn-primary">View History Logs</button>
+										    			<button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
 													@endcan	
 
 												</div>
