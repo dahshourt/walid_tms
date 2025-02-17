@@ -35,6 +35,6 @@ class Release extends Model
 
     public function changeRequests()
     {
-        return $this->hasMany(ChangeRequest::class);
+        return $this->hasMany(Change_request::class);
     }
 }
