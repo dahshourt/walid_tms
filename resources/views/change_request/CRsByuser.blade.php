@@ -61,10 +61,10 @@
 									<div class="card-body">
 										<form method="GET" action="{{ url()->current() }}">
 											<div class="form-group">
-												<label for="workflow_type">Filter by Workflow Type:</label>
+												<label for="workflow_type">Select Type:</label>
 												<select name="workflow_type" id="workflow_type" class="form-control" onchange="this.form.submit()">
-													<option value="">All</option>
-													<option value="In House" {{ request('workflow_type') == 'In House' ? 'selected' : '' }}>In House</option>
+													
+													<option value="In House" {{ request('workflow_type', 'In House') == 'In House' ? 'selected' : '' }}>In House</option>
 													<option value="Vendor" {{ request('workflow_type') == 'Vendor' ? 'selected' : '' }}>Vendor</option>
 
 												</select>
@@ -78,6 +78,7 @@
  													<th>Title</th>
 													<th>Status</th>
 													@if(!empty($roles_name) && isset($roles_name[0]) && $roles_name[0] != "Viewer")
+													@if(request('workflow_type', 'In House') == 'In House')
 													<th>Design Duration</th>
 													<th>Start Design Time</th>
 													<th>End Design Time</th>
@@ -87,6 +88,19 @@
 													<th>Test Duration</th>
 													<th>Start Test Time</th>
 													<th>End Test Time</th>
+													@endif
+													@if(request('workflow_type') == 'Vendor')
+													<th>Release</th>
+													<th>Planned Start IOT Date</th>
+													<th>Planned End IOT Date</th>
+													<th>Planned Start E2E Date</th>
+													<th>Planned End E2E Date</th>
+													<th>Planned Start UAT Date</th>
+													<th>Planned End UAT Date</th>
+													<th>Planned Start Smoke Test Date</th>
+													<th>Planned End Smoke Test Date</th>
+													<th>Go Live Planned Date</th>
+                                                    @endif
 													@endif
 													@canany(['Edit ChangeRequest' , 'Show ChangeRequest'])
 													<th>Action</th>

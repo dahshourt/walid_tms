@@ -430,9 +430,10 @@ class ChangeRequestController extends Controller
         
         $user_name = $user_id->user_name;
 
-        $workflow_type = $request->input('workflow_type', null);
+        $workflow_type = $request->input('workflow_type', 'In House');
         //dd($workflow_type);
-        $query = Change_request::where("requester_id", $user_id->id);
+        $query = new Change_request();
+        $query = $query->with(['release','CurrentRequestStatuses'])->where("requester_id", $user_id->id);
         
         if($workflow_type){
             $workflow_type_id = WorkFlowType::where('name' ,$workflow_type)->whereNotNull('parent_id')->value('id');
@@ -442,7 +443,9 @@ class ChangeRequestController extends Controller
                 $query->where('workflow_type_id' ,$workflow_type_id);
             }
         }
+        //dd($query->get()->toArray());
         $collection = $query->get();
+        //$collection = $collection->toArray();
         $r=new ChangeRequestRepository();
         $crs_in_queues=  $r->getAll()->pluck("id");
         return view("$this->view.CRsByuser",compact('collection', 'user_name','crs_in_queues'));
