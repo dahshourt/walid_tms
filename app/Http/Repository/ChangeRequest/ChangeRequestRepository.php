@@ -1586,7 +1586,7 @@ public function findNextAvailableTime($userId, $currentTime)
                 $log->create($data);
             }
 
-            if(isset($request->description))
+            if(isset($request->description) && ($change_request->description != $request->description ))
             {  
                 $log_text = "CR Description To  ".  " \"  $request->description \" " . " By " . \Auth::user()->user_name;
                 $data = [
