@@ -1,15 +1,6 @@
 @if($item->CustomField->type == "multiselect")
     <div class="col-md-6 change-request-form-field field_{{$item->CustomField->name}}">
-        
-    @if(($item->CustomField->name=='tester_id')&&!empty($cr->test_duration))
-        <label type="text" class="form-control form-control-lg"> {{$cr->tester->name}} </label>
-    @elseif(($item->CustomField->name=='designer_id')&&!empty($cr->design_duration))
-        <label type="text" class="form-control form-control-lg"> {{$cr->designer->name}} </label>
-    @elseif(($item->CustomField->name=='developer_id')&&!empty($cr->develop_duration))
-        <label type="text" class="form-control form-control-lg"> {{$cr->developer->name}} </label>
-    @else
-        <label for="user_type">{{ $item->CustomField->label }} </label>
-    @endif
+    <label for="user_type">{{ $item->CustomField->label }} </label>
     @if( isset($item->validation_type_id)&&($item->validation_type_id==1))
         <span style="color: red;">*</span>
     @endif
@@ -80,23 +71,11 @@
                     @endif
 
                     @if($item->CustomField->name == "cap_users" )
-                         @foreach($cap_users as $items)
-                            <option value="{{$items->id}}"> {{$items->user_name}}</option>
+                         @foreach($cap_users as $item)
+                            <option value="{{$item->user_id}}"> {{$item->user->name}}</option>
                          @endforeach
                     @endif
 
-                   <!--  @foreach($item->CustomField->getCustomFieldValue() as $value)
-                        @if($item->CustomField->name == "developer_id" )
-                        @elseif($item->CustomField->name == "tester_id" )
-                        @elseif($item->CustomField->name == "designer_id" )
-                        @else
-                            @if(isset($cr))
-                            <option value="{{ $value->id }}" {{ old($item->CustomField->name, $cr->{$item->CustomField->name}) == $value->id ? 'selected' : '' }}>{{ $value->name }}</option>	
-                            @else
-                            <option value="{{ $value->id }}">{{ $value->name }}</option>	
-                            @endif	
-                        @endif
-                    @endforeach -->
                 @else
                 @php
                     // Get the selected value from old input or the current record (cr)

@@ -1,15 +1,6 @@
 @if($item->CustomField->type == "select")
     <div class="col-md-6 change-request-form-field field_{{$item->CustomField->name}}">
-        
-    @if(($item->CustomField->name=='tester_id')&&!empty($cr->test_duration))
-        <label type="text" class="form-control form-control-lg"> {{$cr->tester->name}} </label>
-    @elseif(($item->CustomField->name=='designer_id')&&!empty($cr->design_duration))
-        <label type="text" class="form-control form-control-lg"> {{$cr->designer->name}} </label>
-    @elseif(($item->CustomField->name=='developer_id')&&!empty($cr->develop_duration))
-        <label type="text" class="form-control form-control-lg"> {{$cr->developer->name}} </label>
-    @else
         <label for="user_type">{{ $item->CustomField->label }} </label>
-    @endif
     @if( isset($item->validation_type_id)&&($item->validation_type_id==1))
         <span style="color: red;">*</span>
     @endif

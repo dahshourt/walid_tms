@@ -178,10 +178,10 @@ class ChangeRequestController extends Controller
 
             $validator = Validator::make(
                 $input_data, [
-                'attach.*' => 'required|mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif|max:2048'
+                'attach.*' => 'required|mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg|max:2048'
                 ],[
                     'attach.*.required' => 'Please upload an attachment',
-                    'attach.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif are allowed',
+                    'attach.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
                     'attach.*.max' => 'Sorry! Maximum allowed size for an attachment is 2MB',
                 ]
             );
@@ -276,7 +276,6 @@ class ChangeRequestController extends Controller
         //$CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowType($workflow_type_id, $form_type);
         $status_id = $cr->getCurrentStatus()->status->id;
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus($workflow_type_id, $form_type, $status_id);
-
         return view("$this->view.edit",compact('cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users'));  
 
     }
@@ -322,10 +321,10 @@ class ChangeRequestController extends Controller
 
             $validator = Validator::make(
                 $input_data, [
-                'attach.*' => 'required|mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif|max:2048'
+                'attach.*' => 'required|mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg|max:2048'
                 ],[
                     'attach.*.required' => 'Please upload an attachment',
-                    'attach.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif are allowed',
+                    'attach.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
                     'attach.*.max' => 'Sorry! Maximum allowed size for an attachment is 2MB',
                 ]
             );

@@ -1197,7 +1197,7 @@ public function findNextAvailableTime($userId, $currentTime)
             if($key != "_token")
             {
                 $custom_field_id = CustomField::findId($key);
-                if($custom_field_id){
+                if($custom_field_id && $value){
                     $change_request_custom_field = array(
                         "cr_id" =>$change_request->id,
                         "custom_field_id" =>$custom_field_id->id,

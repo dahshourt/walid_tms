@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Hash;
 
 // declare Entities
 use App\Models\User;
+use App\Models\SystemUserCab;
 use App\Models\UserGroups;
 use App\Models\Pivotusersrole;
 use App\Http\Repository\Roles\RolesRepository;
@@ -216,17 +217,7 @@ class UserRepository implements UserRepositoryInterface
 
     public function get_users_cap($system_id)
     {
-        return  DB::select
-             ("
-               SELECT 
-                    cps.*,users.user_name,apps.name
-                FROM
-                    system_user_cabs cps
-                left join users on  users.id  = cps.user_id
-                left join applications apps on apps.id = cps.system_id
-                where apps.id = ".$system_id."
-                ;
-             "); 
+        return SystemUserCab::where('system_id',$system_id)->where('active','1')->get();
     }
 
 

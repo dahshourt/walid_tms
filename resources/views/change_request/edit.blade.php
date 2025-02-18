@@ -240,7 +240,7 @@
         if (status === "Reject" || status === "Closed" || status === "CR Closed") {
             $('input, select, textarea').prop('disabled', true);
         } else {
-            $('input, select, textarea').prop('disabled', false);
+            //$('input, select, textarea').prop('disabled', false);
         }
         $('#new_status_id').prop('disabled', false);
     });
