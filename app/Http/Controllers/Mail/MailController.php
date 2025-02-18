@@ -114,7 +114,7 @@ class MailController extends Controller
         $templateContent = [
             'subject' => $template->subject . " #$cr",
             'body' => "Dear $first_name, <br><br>"
-            . $template->body 
+            . "Please Check CR#$cr has been created"
             . "<br><br>"
             . "TMS (Ref: CR ID #<a href='$cr_link'>$cr</a>)"
             . "<br><br>"

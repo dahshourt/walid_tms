@@ -28,6 +28,7 @@ use App\Models\WorkFlowType;
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use Validator;
 use App\Http\Controllers\Mail\MailController;
+use Illuminate\Auth\Access\AuthorizationException;
 
 class ChangeRequestController extends Controller
 {
@@ -64,10 +65,15 @@ class ChangeRequestController extends Controller
      */
     public function index()
     {
+        try {
         $this->authorize('List change requests'); // permission check
        
         $collection = $this->changerequest->getAll();
         return view("$this->view.index",compact('collection'));
+
+        } catch (AuthorizationException $e) {
+            return redirect('/')->with('error', 'You do not have permission to access this page.');
+        }
         
     }
       public function selectGroup($groupId)
