@@ -1770,9 +1770,9 @@ public function findNextAvailableTime($userId, $currentTime)
         $user_flage = Auth::user()->flag;
 
         if ($user_flage == '0') {
-            $changeRequest = Change_request::where('id', $id)->where('requester_id', auth::user()->id)->first();
+            $changeRequest = Change_request::with("Release")->where('id', $id)->where('requester_id', auth::user()->id)->first();
         } else {
-            $changeRequest = Change_request::where('id', $id)->first();
+            $changeRequest = Change_request::with('Release')->where('id', $id)->first();
         }
 
         return $changeRequest;

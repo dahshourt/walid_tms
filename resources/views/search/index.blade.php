@@ -111,29 +111,49 @@
 										<table class="table table-bordered" >
 											<thead>
 												<tr>
-													<th>#</th>
-													<th>Sbject</th>
-													<th>Sumarry</th>
-													<th>status</th>
-													<th>App</th>
-													<th>Design Duration</th>
-													<th>Start Design Time</th>
-													<th>End Design Time</th>
-													<th>Development Duration</th> 
-													<th>Start Development Time</th>
-													<th>End Development Time</th>
-													<th>Test Duration</th> 
-													<th>Start Test Time</th>
-													<th>End Test Time</th>
-													<th>Creation Date</th>
-													<th>Delivery/Updated Date</th>
-													<th>#</th>
+													@if($cr->workflow_type_id == 5)
+														<th>#</th>
+														<th>Sbject</th>
+														<th>Sumarry</th>
+														<th>status</th>
+														<th>App</th>
+														<th>Release Name</th>
+														<th>Go Live Planned Date</th>
+														<th> planned_start_iot_date</th>            	 
+														<th> planned_end_iot_date</th>
+														<th> planned_start_e2e_date</th>
+														<th> planned_end_e2e_date</th>
+														<th> planned_start_uat_date</th>
+														<th> planned_end_uat_date</th>
+														<th> planned_start_smoke_test_date</th> 
+														<th> planned_end_smoke_test_date</th>
+														<th>#</th>
+													@else
+														<th>#</th>
+														<th>Sbject</th>
+														<th>Sumarry</th>
+														<th>status</th>
+														<th>App</th>
+														<th>Design Duration</th>
+														<th>Start Design Time</th>
+														<th>End Design Time</th>
+														<th>Development Duration</th> 
+														<th>Start Development Time</th>
+														<th>End Development Time</th>
+														<th>Test Duration</th> 
+														<th>Start Test Time</th>
+														<th>End Test Time</th>
+														<th>Creation Date</th>
+														<th>Delivery/Updated Date</th>
+														<th>#</th>
+													@endif
 												</tr>
 											</thead>
 											<tbody>
 											@include("$view.loop")
 											</tbody>
 										</table>
+										 
 										<!--end: Datatable-->
 									</div>
 								</div>
