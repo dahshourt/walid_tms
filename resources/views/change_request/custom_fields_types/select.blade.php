@@ -45,13 +45,7 @@
                         <option value="{{ $status->id }}"  
     {{ isset($cr->{$item->CustomField->name}) && $cr->{$item->CustomField->name} == $status->id ? 'selected' : '' }}>
     
-    {{
-        (isset($status->workflowstatus[0]->to_status->high_level) &&
-        isset($status->workflowstatus[0]->to_status->previous_status_high_level) &&
-        $status->workflowstatus[0]->to_status->previous_status_high_level == optional($cr->getCurrentStatus())->status['id'])
-        ? $status->workflowstatus[0]->to_status->high_level->name
-        : $status->workflowstatus[0]->to_status->status_name
-    }}
+    {{ $status->workflowstatus[0]->to_status->high_level? $status->workflowstatus[0]->to_status->high_level->name : $status->workflowstatus[0]->to_status->status_name  }} 
 </option>
 
                         @endif            

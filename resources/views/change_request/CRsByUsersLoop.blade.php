@@ -5,7 +5,7 @@
 @foreach ($collection as $item)
                                 <tr>
                                     <td><a href='{{ url("$route") }}/{{ $item['id'] }}'>{{ $item['id'] }} </a></td>
-                                    <th scope="row">{{ $item['']}}</th>
+                                    <th scope="row">{{ $item['title']}}</th>
                                     <td>{{ $item->getCurrentStatus() && $item->getCurrentStatus()->Status ? $item->getCurrentStatus()->status->status_name : "" }}</td>
                                     @if(!empty($roles_name) && isset($roles_name[0]) && $roles_name[0] != "Viewer")
                                     @if(request('workflow_type', 'In House') == 'In House')

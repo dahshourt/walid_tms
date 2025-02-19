@@ -74,7 +74,7 @@ Route::middleware(['auth'])->group(
        Route::resource('high_level_status', highLevelStatuses\highLevelStatusesControlller::class);
        Route::post('high_level_status/updateactive', 'highLevelStatuses\highLevelStatusesControlller@updateactive');
        Route::resource('workflows', Workflow\WorkflowController::class);
-      
+       
        Route::resource('searchs', Search\SearchController::class);
       // Route::get('/search/result', 'Search\SearchController@search_result');
 
@@ -83,6 +83,7 @@ Route::middleware(['auth'])->group(
 
        //Route::resource('workflows', Workflow\WorkflowController::class);
        Route::resource('NewWorkFlowController', Workflow\NewWorkFlowController::class);
+       Route::get('workflow/list/all', 'Workflow\NewWorkFlowController@ListAllWorkflows');
        Route::post('workflow2/updateactive', 'Workflow\NewWorkFlowController@updateactive');
        //Route::resource('searchs', Search\SearchController::class);
        Route::get('/search/result', 'Search\SearchController@search_result');
