@@ -12,16 +12,16 @@
                                         <td>{{ $cr->description }}</td>
                                         <td>{{ $cr->getCurrentStatus()?->status?->status_name }}</td>
                                         <td>{{ $cr->application->name }}</td>
-                                        <td>{{ $cr->Release->name }}</td>
-                                        <td>{{ $cr->Release->go_live_planned_date }}</td>
-                                        <td>{{ $cr->Release->planned_start_iot_date }}</td>
-                                        <td>{{ $cr->Release->planned_end_iot_date }}</td>
-                                        <td>{{ $cr->Release->planned_start_e2e_date }}</td>
-                                        <td>{{ $cr->Release->planned_end_e2e_date }}</td>
-                                        <td>{{ $cr->Release->planned_start_uat_date }}</td>
-                                        <td>{{ $cr->Release->planned_end_uat_date }}</td>
-                                        <td>{{ $cr->Release->planned_start_smoke_test_date }}</td>
-                                        <td>{{ $cr->Release->planned_end_smoke_test_date }}</td>
+                                        <td>{{ @$cr->Release->name }}</td>
+                                        <td>{{ @$cr->Release->go_live_planned_date }}</td>
+                                        <td>{{ @$cr->Release->planned_start_iot_date }}</td>
+                                        <td>{{ @$cr->Release->planned_end_iot_date }}</td>
+                                        <td>{{ @$cr->Release->planned_start_e2e_date }}</td>
+                                        <td>{{ @$cr->Release->planned_end_e2e_date }}</td>
+                                        <td>{{ @$cr->Release->planned_start_uat_date }}</td>
+                                        <td>{{ @$cr->Release->planned_end_uat_date }}</td>
+                                        <td>{{ @$cr->Release->planned_start_smoke_test_date }}</td>
+                                        <td>{{ @$cr->Release->planned_end_smoke_test_date }}</td>
                                     @else
                                     <td>{{ $cr->title }}</td>
                                         <td>{{ $cr->description }}</td>
