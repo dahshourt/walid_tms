@@ -35,14 +35,25 @@
             
                                                                   
             @if($item->CustomField->name == "new_status_id")
+          
                 <option value="{{$cr->getCurrentStatus()?->status?->status_name}}" disabled selected>{{ $cr->getCurrentStatus()?->status?->status_name }}</option>
                     @foreach($cr->set_status as $status)
                         @if($status->same_time == 1)
                             <option value="{{ $status->id }}" {{ $cr->{$item->CustomField->name} == $status->id ? 'selected' : '' }}>{{ $status->to_status_label }} </option>
                         @else
-                            <option value="{{ $status->id }}"  {{ $cr->{$item->CustomField->name} == $status->id ? 'selected' : '' }}>
-                                {{ $status->workflowstatus[0]->to_status->high_level? $status->workflowstatus[0]->to_status->high_level->name : $status->workflowstatus[0]->to_status->status_name  }} 
-                            </option>
+                      
+                        <option value="{{ $status->id }}"  
+    {{ isset($cr->{$item->CustomField->name}) && $cr->{$item->CustomField->name} == $status->id ? 'selected' : '' }}>
+    
+    {{
+        (isset($status->workflowstatus[0]->to_status->high_level) &&
+        isset($status->workflowstatus[0]->to_status->previous_status_high_level) &&
+        $status->workflowstatus[0]->to_status->previous_status_high_level == optional($cr->getCurrentStatus())->status['id'])
+        ? $status->workflowstatus[0]->to_status->high_level->name
+        : $status->workflowstatus[0]->to_status->status_name
+    }}
+</option>
+
                         @endif            
                     @endforeach
                 @elseif($item->CustomField->name == "release_name")
