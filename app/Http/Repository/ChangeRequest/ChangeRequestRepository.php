@@ -1362,7 +1362,7 @@ public function findNextAvailableTime($userId, $currentTime)
         $status_id = $current_status->new_status_id;
         $set_status = NewWorkFlow::where('from_status_id', $status_id)->whereHas('workflowstatus', function ($q) {
             $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
-        })->where('type_id', $type_id)->where('active','1')->orderby('workflow_type', 'ASC')->get();
+        })->where('type_id', $type_id)->where('active','1')->orderby('id', 'DESC')->get();
         //$set_status = 1;
 
         return $set_status;
