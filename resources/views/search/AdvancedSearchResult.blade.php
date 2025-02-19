@@ -52,7 +52,9 @@
                                 @foreach ($items as $item)
                                     <tr>
                                         <td>
-                                            <a href='{{ url("$route") }}/{{ $item["id"] }}'>{{ $item['id'] }}</a>
+                                        @can('Edit ChangeRequest')
+                                            <a href='{{ url("$route") }}/{{ $item["id"] }}/edit'>{{ $item['id'] }}</a>
+                                        @endcan    
                                         </td>
                                         <td>{{ $item['title'] ?? "" }}</td>
                                         <td>{{ $item['category']['name'] ?? "" }}</td>
