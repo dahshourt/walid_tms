@@ -92,7 +92,7 @@
 							    </div>
 							</div>
 							<div class="card-body">
-                                <div class="col-md-6 form-group" style="float: right;">
+                                <div class="col-md-6 form-group" style="float: right;display:none">
                                     <label for="statusFilter">Select Status:</label>
                                     <select id="statusFilter" class="form-control form-control-lg">
                                         <option value="all">All</option>
@@ -101,7 +101,7 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-6 form-group">
+                                <div class="col-md-6 form-group" style="display:none">
                                     <label for="appFilter">Select App:</label>
                                     <select id="appFilter" class="form-control form-control-lg">
                                         <option value="all">All</option>
@@ -111,6 +111,41 @@
                                     </select>
                                 </div>
                                 <canvas id="InHouseStatusChart" width="400" height="200"></canvas>
+						    </div>
+					    </div>
+										<!--end::Card-->
+										
+					</div>
+				</div>
+
+                <div class="row" >
+                    <div class="col-lg-12">
+						<div class="card card-custom gutter-b">
+							<div class="card-header">
+								<div class="card-title">
+								    <h3 class="card-label">Vendor Statistics (No of CRs per Status & system) </h3>
+							    </div>
+							</div>
+							<div class="card-body">
+                                <div class="col-md-6 form-group" style="float: right;display:none">
+                                    <label for="statusVendorFilter">Select Status:</label>
+                                    <select id="statusVendorFilter" class="form-control form-control-lg">
+                                        <option value="all">All</option>
+                                        @foreach($vendor_crs_per_status_system as $key=>$item)
+                                            <option value="{{ $item->new_status_id }}"> {{ $item->status?$item->status->status_name:'No Name' }} </option>    
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6 form-group" style="display:none">
+                                    <label for="appVendorFilter">Select App:</label>
+                                    <select id="appVendorFilter" class="form-control form-control-lg">
+                                        <option value="all">All</option>
+                                        @foreach($vendor_apps as $key=>$item)
+                                            <option value="{{ $item->id }}"> {{ $item->name }} </option>    
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <canvas id="VendorStatusChart" width="400" height="200"></canvas>
 						    </div>
 					    </div>
 										<!--end::Card-->
@@ -291,5 +326,55 @@ function renderChart()
 }
 </script>
 
+
+
+
+<script>
+
+$(document).ready(function () {
+
+// in house chart   
+// Example data for categories
+   const VendorCRsStatusNames= [];
+   const VendorCRsStatusValues= [];
+   @foreach($vendor_crs_per_status_system as $key=>$item)
+       var data_val = "{{ $item->total }}";
+       VendorCRsStatusNames.push("{{ $item->status?$item->status->status_name:'No Name' }}");
+       VendorCRsStatusValues.push(data_val);
+   @endforeach
+
+
+    // Initialize Chart
+    const ctxVendor = document.getElementById("VendorStatusChart").getContext("2d");
+    let pieVendorChart = new Chart(ctxVendor, {
+    type: "pie",
+    data: {
+        labels: VendorCRsStatusNames,
+        datasets: [
+            {
+                data: VendorCRsStatusValues,
+            },
+        ],
+    },
+    options: {
+        responsive: true,
+    },
+    });
+});
+
+
+$("#appVendorFilter").change(function(){
+    renderVendorChart();
+});
+$("#statusVendorFilter").change(function(){
+    renderVendorChart();
+});
+
+function renderVendorChart()
+{
+    const applicationVendorValue = $('#appVendorFilter').value;
+    const statusVendorValue = $('#statusVendorFilter').value;
+}
+</script>
 
 @endpush

@@ -28,6 +28,7 @@ Route::middleware(['auth'])->group(
     function () {
         
         Route::get('/statistics', 'HomeController@StatisticsDashboard');
+        Route::get('/dashboard', 'HomeController@StatisticsDashboard');
 
         Route::get('get_workflow/subtype/all', 'Workflow\Workflow_type@Allsubtype');
         Route::get('customs/field/group/type/selected/{form_type?}', 'CustomFields\CustomFieldGroupTypeController@AllCustomFieldsWithSelectedWithFormType');
@@ -35,7 +36,7 @@ Route::middleware(['auth'])->group(
         Route::post('/charts_dashboard', 'HomeController@dashboard');
         
         Route::get('/application_based_on_workflow', 'HomeController@application_based_on_workflow');
-        Route::get('/dashboard', 'HomeController@dashboard');
+        //Route::get('/dashboard', 'HomeController@dashboard');
         Route::post('custom/field/group/type', 'CustomFields\CustomFieldGroupTypeController@store')->name('custom.fields.store');
         Route::get('/custom_fields/create', 'CustomFields\CustomFieldController@create')->name('custom.fields.create');
         Route::get('/custom_fields/createCF', 'CustomFields\CustomFieldController@createCF')->name('custom.fields.createCF');
