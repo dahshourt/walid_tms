@@ -5,22 +5,38 @@
                                     <th scope="row">
                                         <a href='{{ url("$route") }}/{{ $cr->id }}'>{{ $cr->id }} </a>
                                     </th>
+                                    @if($cr->workflow_type_id == 5)
+                                        <td>{{ $cr->title }}</td>
+                                        <td>{{ $cr->description }}</td>
+                                        <td>{{ $cr->getCurrentStatus()?->status?->status_name }}</td>
+                                        <td>{{ $cr->application->name }}</td>
+                                        <td>{{ $cr->Release->name }}</td>
+                                        <td>{{ $cr->Release->go_live_planned_date }}</td>
+                                        <td>{{ $cr->Release->planned_start_iot_date }}</td>
+                                        <td>{{ $cr->Release->planned_end_iot_date }}</td>
+                                        <td>{{ $cr->Release->planned_start_e2e_date }}</td>
+                                        <td>{{ $cr->Release->planned_end_e2e_date }}</td>
+                                        <td>{{ $cr->Release->planned_start_uat_date }}</td>
+                                        <td>{{ $cr->Release->planned_end_uat_date }}</td>
+                                        <td>{{ $cr->Release->planned_start_smoke_test_date }}</td>
+                                        <td>{{ $cr->Release->planned_end_smoke_test_date }}</td>
+                                    @else
                                     <td>{{ $cr->title }}</td>
-                                    <td>{{ $cr->description }}</td>
-                                    <td>{{ $cr->getCurrentStatus()?->status?->status_name }}</td>
-                                    <td>{{ $cr->application->name }}</td>
-                                    <td>{{ $cr->design_duration }}</td>
-                                    <td>{{ $cr->start_design_time }}</td>
-                                    <td>{{ $cr->end_design_time }}</td>
-                                    <td>{{ $cr->develop_duration }}</td> 
-                                    <td>{{ $cr->start_develop_time }}</td>
-                                    <td>{{ $cr->end_develop_time }}</td>
-                                    <td>{{ $cr->test_duration }}</td> 
-                                    <td>{{ $cr->start_test_time }}</td>
-                                    <td>{{ $cr->end_test_time }}</td>
-                                    <td>{{ $cr->created_at }}</td>
-                                    <td>{{ $cr->updated_at }}</td> 
-
+                                        <td>{{ $cr->description }}</td>
+                                        <td>{{ $cr->getCurrentStatus()?->status?->status_name }}</td>
+                                        <td>{{ $cr->application->name }}</td>
+                                        <td>{{ $cr->design_duration }}</td>
+                                        <td>{{ $cr->start_design_time }}</td>
+                                        <td>{{ $cr->end_design_time }}</td>
+                                        <td>{{ $cr->develop_duration }}</td> 
+                                        <td>{{ $cr->start_develop_time }}</td>
+                                        <td>{{ $cr->end_develop_time }}</td>
+                                        <td>{{ $cr->test_duration }}</td> 
+                                        <td>{{ $cr->start_test_time }}</td>
+                                        <td>{{ $cr->end_test_time }}</td>
+                                        <td>{{ $cr->created_at }}</td>
+                                        <td>{{ $cr->updated_at }}</td>
+                                    @endif
 
                                     <td>
                                         <div class="d-inline-flex">
