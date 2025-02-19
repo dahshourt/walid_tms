@@ -37,6 +37,16 @@ class NewWorkFlowController extends Controller
     {  
         $this->authorize('List Workflows'); // permission check
        
+        $collection = $this->NewWorkflow->ListAllWorkflowWithoutRelease();
+        $types = (new Workflow_type_repository)->get_workflow_all_subtype();
+
+        return view("$this->view.index",compact('collection','types'));
+    }
+
+    public function ListAllWorkflows()
+    {  
+        $this->authorize('List Workflows'); // permission check
+       
         $collection = $this->NewWorkflow->paginateAll();
         $types = (new Workflow_type_repository)->get_workflow_all_subtype();
 

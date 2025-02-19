@@ -24,6 +24,7 @@ class HighLevelStatusesRepository implements HighLevelStatusesRepositoryInterfac
     }
     public function create($request)
     {
+        //dd($request);
     //     echo"<pre>";
     //    print_r($request);
     //    echo"</pre>"; die;
@@ -61,21 +62,18 @@ class HighLevelStatusesRepository implements HighLevelStatusesRepositoryInterfac
 
     public function update($request, $id)
     {
-       // \DB::enableQueryLog(); 
-   //die;
-    //     echo"<pre>";
-    //    print_r($request);
-    //    echo"</pre>"; die;
+       
 			$HighLevelStatuses =  HighLevelStatuses::where('id', $id)->update(collect($request)->except(['_method','from_status_id','to_status_id'])->toArray());
             
-        
-            // Status::where('high_level_status_id', $id)->update(['high_level_status_id' => null
-            // ,'previous_status_high_level'=>null]);
+            // Status::where('id', $request['from_status_id'])->update(['high_level_status_id' => $id
+            //     ,'previous_status_high_level'=>$request['to_status_id']]
+            // );
 
-//
-           Status::where('id', $request['from_status_id'])->update(['high_level_status_id' => $id
-        ,'previous_status_high_level'=>$request['to_status_id']]
-        );
+            Status::where('high_level_status_id', $id)->update(['previous_status_high_level' => null,'high_level_status_id'=>null]);
+
+            Status::where('id',$request['to_status_id'])->update(
+                ['high_level_status_id'=>$id,'previous_status_high_level'=>$request['from_status_id']
+            ]);
 
 
 

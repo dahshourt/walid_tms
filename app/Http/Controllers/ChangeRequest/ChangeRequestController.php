@@ -268,11 +268,11 @@ class ChangeRequestController extends Controller
         $sa_users =  UserFactory::index()->get_user_by_department_id(4);
         $testing_users =  UserFactory::index()->get_user_by_department_id(3);
         $work= $cr->workflow_type_id;
-        $cond = in_array($cr->RequestStatuses->last()?->new_status_id, [66, 67, 68, 69]);
-        if(($work==5)&&$cond)
-        {
-            return redirect()->to('/change_request');
-        }
+        // $cond = in_array($cr->RequestStatuses->last()?->new_status_id, [66, 67, 68, 69]);
+        // if(($work==5)&&$cond)
+        // {
+        //     return redirect()->to('/change_request');
+        // }
       
         $cap_users =  UserFactory::index()->get_users_cap($cr->application_id);
         $form_type = 2; // create CR form type id

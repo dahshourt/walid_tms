@@ -1089,9 +1089,9 @@ public function findNextAvailableTime($userId, $currentTime)
             foreach ($workflow->workflowstatus as $key => $item) {
                 $workflow_check_active = 0;
 
-                if ($workflow->workflow_type != 1) {
-                    $workflow_check_active = Change_request_statuse::where('cr_id', $id)->where('new_status_id', $item->to_status_id)->where('active', '2')->first();
-                }
+                // if ($workflow->workflow_type != 1) {
+                //     $workflow_check_active = Change_request_statuse::where('cr_id', $id)->where('new_status_id', $item->to_status_id)->where('active', '2')->first();
+                // }
                 if (!$workflow_check_active) {
                     $status_sla = Status::find($item->to_status_id);
                     if($status_sla)
@@ -1601,6 +1601,43 @@ public function findNextAvailableTime($userId, $currentTime)
             {  
                 $catigory_name = Category::find($request->category_id)->name;
                 $log_text = "CR Category Changed To  ".  " \" $catigory_name  \" " . " By " . \Auth::user()->user_name;
+                $data = [
+                    'cr_id' => $id,
+                    'user_id' => \Auth::user()->id,
+                    'log_text' => $log_text,
+                ];
+                $log->create($data);
+            }
+
+            if(isset($request->postpone)  && ($change_request->postpone !=   $request->postpone ) )
+            {  
+                if($request->postpone == 1)
+                {
+                    $log_text = "CR PostPone changed To  Active BY " . \Auth::user()->user_name;
+                }
+                else
+                {
+                    $log_text = "CR PostPone changed To  InActive BY " . \Auth::user()->user_name;
+                }
+                $data = [
+                    'cr_id' => $id,
+                    'user_id' => \Auth::user()->id,
+                    'log_text' => $log_text,
+                ];
+                $log->create($data);
+            }
+
+            if(isset($request->need_ux_ui)  && ($change_request->need_ux_ui !=   $request->need_ux_ui ) )
+            {  
+                
+                if($request->need_ux_ui == 1)
+                {
+                    $log_text = "CR Need UI UX changed To  Active BY " . \Auth::user()->user_name;
+                }
+                else
+                {
+                    $log_text = "CR Need UI UX changed To  InActive BY " . \Auth::user()->user_name;
+                }
                 $data = [
                     'cr_id' => $id,
                     'user_id' => \Auth::user()->id,

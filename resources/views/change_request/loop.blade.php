@@ -50,7 +50,7 @@
                                     //dd($t);
                                    // dd($item->workflow_type_id == 5 &&  in_array($t, [66, 67, 68, 69]) );
                                        ?>
-                                        @if(!($item->workflow_type_id == 5 &&  in_array($t, [66, 67, 68, 69])) )
+                                        
 
                                         <a href='{{url("$route")}}/{{ $item->id }}/edit' class="btn btn-sm btn-clean btn-icon mr-2" title="Edit details">
                                             <span class="svg-icon svg-icon-md">
@@ -63,7 +63,6 @@
                                                 </svg>
                                             </span>
                                         </a>
-                                        @endif
                                         @endcan
                                     </div>
                                         

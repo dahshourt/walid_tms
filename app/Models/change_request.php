@@ -66,6 +66,7 @@ class Change_request extends Model
         'creator_mobile_number',
         'vendor_id',
         'need_ux_ui',
+        'cr_workload','rtm_member','need_down_time','deployment_impact','business_feedback','sanity_spoc','postpone'
     ];
 
     protected $hidden = [
@@ -192,7 +193,7 @@ class Change_request extends Model
 
     public function get_releases()
     {
-        $list_releases = Release::whereDate('planned_start_iot_date', '>', now())->get();
+        $list_releases = Release::whereDate('go_live_planned_date', '>', now())->get();
         return $list_releases;
     }
 

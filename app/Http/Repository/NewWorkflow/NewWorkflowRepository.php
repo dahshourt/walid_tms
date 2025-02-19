@@ -25,6 +25,19 @@ class NewWorkflowRepository implements NewWorkflowRepositoryInterface
 
     }
 
+    public function ListAllWorkflowWithoutRelease()
+    { 
+       /* return  NewWorkFlow::with([
+            'from_status',                // To get the status from which the workflow starts
+            'workflowstatus.to_status'    // To get the statuses to which the workflow transitions
+        ])->get();*/
+        return NewWorkFlow::where('type_id','!=',7)->with([
+            'from_status', 
+            'workflowstatus.to_status',
+        ])->get();
+
+    }
+
     public function StoreWorkFlowStatuses($workflow_id,$request)
     {
 

@@ -30,7 +30,7 @@
 															@foreach($statuses as $item)
 															<option value="{{ $item->id }}" 
 
-															{{ ($item->id == (isset($row) && isset($row->status[0]['id']) ? $row->status[0]['id'] : null)) ? "selected" : "" }}
+															{{ ($item->id == (isset($row) && isset($row->status[0]['previous_status_high_level']) ? $row->status[0]['previous_status_high_level'] : null)) ? "selected" : "" }}
 
 															> {{ $item->status_name}} </option>
 													<!-- <option value="{{ $item->id }}" > {{ $item->status_name }} </option> -->
@@ -51,7 +51,7 @@
 															@foreach($statuses as $item)
 															<option value="{{ $item->id }}" 
 															
-															{{ ($item->id == (isset($row) && isset($row->status[0]['previous_status_high_level']) ? $row->status[0]['previous_status_high_level'] : null)) ? "selected" : "" }}
+															{{ ($item->id == (isset($row) && isset($row->status[0]['id']) ? $row->status[0]['id'] : null)) ? "selected" : "" }}
 
 
 															>{{ $item->status_name }}  </option>
