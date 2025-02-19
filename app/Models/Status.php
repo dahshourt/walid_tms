@@ -20,6 +20,7 @@ class Status extends Model
      * @var array
      */
     protected $fillable = [
+        'id',
         'status_name',
         'stage_id',
         'sla',
