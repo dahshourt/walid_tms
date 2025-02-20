@@ -8,7 +8,7 @@ use Auth;
 // declare Entities
 class AttachmentsCRSRepository implements AttachmentsCRSRepositoryInterface
 {
-    public function add_files($data, $cr_id)
+    public function add_files($data, $cr_id, $flag)
     {
         foreach ($data as $key => $item) {
             $description = "";
@@ -41,6 +41,7 @@ class AttachmentsCRSRepository implements AttachmentsCRSRepositoryInterface
                 $att->description = $description;
               
                 $att->size = $size; // Save the size in MB
+                $att->flag = $flag;
                 $att->save();
             } else {
                 // Handle file upload failure
