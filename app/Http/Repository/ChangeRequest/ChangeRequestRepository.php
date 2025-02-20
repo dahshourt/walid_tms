@@ -877,6 +877,7 @@ public function findNextAvailableTime($userId, $currentTime)
     public function update($id, $request)
     {
         
+        
        $new_status_id = null;
        if($request->new_status_id) $new_status_id = $request->new_status_id;
 
@@ -890,8 +891,11 @@ public function findNextAvailableTime($userId, $currentTime)
         } else {
             $user = \Auth::user();
         }
+
+        
+
         if(!empty($request->cap_users))
-        {
+        { 
         $record = CabCr::create([
             'cr_id' => $id,
             'status' => "0",
@@ -899,7 +903,7 @@ public function findNextAvailableTime($userId, $currentTime)
         ]);
 
         $insertedId = $record->id;
- 
+
         
             foreach ($request->cap_users as $userId) {
                 CabCrUser::create([
@@ -910,6 +914,7 @@ public function findNextAvailableTime($userId, $currentTime)
             
             }
         }
+        
 
         //dd($user->role_id);
         $change_request = Change_request::find($id);
@@ -917,9 +922,10 @@ public function findNextAvailableTime($userId, $currentTime)
         if ((isset($request['dev_estimation'])) || (isset($request['testing_estimation'])) || (isset($request['design_estimation'])) || ($request['assign_to'])) {
              $request['assignment_user_id'] = $user->id;
         }
+       
          
 /** end check */
-        $except = ['old_status_id', 'new_status_id', '_method', 'current_status', 'duration', 'current_status', 'categories', 'cat_name', 'pr_name', 'Applications', 'app_name', 'depend_cr_name', 'depend_crs', 'test', 'priorities', 'cr_id', 'assign_to', 'dev_estimation', 'design_estimation', 'testing_estimation', 'assignment_user_id', '_token','attach', 'cap_users'];
+        $except = ['old_status_id', 'new_status_id', '_method', 'current_status', 'duration', 'current_status', 'categories', 'cat_name', 'pr_name', 'Applications', 'app_name', 'depend_cr_name', 'depend_crs', 'test', 'priorities', 'cr_id', 'assign_to', 'dev_estimation', 'design_estimation', 'testing_estimation', 'assignment_user_id', '_token', 'attach', 'business_attachments', 'technical_attachments', 'cap_users'];
 
         // calculate estimation
         if ((isset($request['dev_estimation']) && $request['dev_estimation'] != '') || (isset($request['design_estimation']) && $request['design_estimation'] != '') || (isset($request['testing_estimation']) && $request['testing_estimation'] != '')) 
@@ -928,9 +934,14 @@ public function findNextAvailableTime($userId, $currentTime)
             $data = $this->calculateEstimation($id,$change_request,$request,$user);
             $request->merge($data);
         }
+        
         $this->changeRequest_old = Change_request::find($id);
         $arr = Arr::except($request, $except);
-        $data = $arr->all();
+        //$data = $arr->all();
+        //$arr = $request->except($except);
+        $data = $request->except($except);
+        //dd($data);
+        
         
         foreach ($data as $key => $value) {
             if($key != "_token")
@@ -947,8 +958,11 @@ public function findNextAvailableTime($userId, $currentTime)
                     $this->InsertOrUpdateChangeRequestCustomField($change_request_custom_field);
                 }
             }
+            
         }
+       
         $changeRequest = Change_request::where('id', $id)->update($arr->except($except));
+        
 
 
         
@@ -1191,8 +1205,10 @@ public function findNextAvailableTime($userId, $currentTime)
         
 
         $change_request = Change_request::create($request);
-
-        $data = $request;
+        
+        //$data = $request;
+        $data = Arr::except($request, ['technical_attachments', 'business_attachments']);
+        //dd($data);
         foreach ($data as $key => $value) {
             if($key != "_token")
             {

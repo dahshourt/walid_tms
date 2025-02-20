@@ -129,40 +129,84 @@
 													
 													@if(count($cr['attachments'])  > 0  )
 													<div class="form-group col-md-12" style="float:left">
+                                                    @can('View Technichal Attachments')
+                                                    <h5>Technichal Attachments</h5>
 													<table class="table table-bordered">
-    <thead>
-        <tr class="text-center">
-            <th>#</th>
-            <th>File Name</th>
-            <th>User Name</th>
-            <th>Uploaded At</th>
-            <th>File Size (MB)</th>
-            <th>Download</th>
-        </tr>
-    </thead>
-    <tbody class="text-center">
-        @foreach ($cr['attachments'] as $key => $file)
-        <tr>
-            <td>{{ ++$key }}</td>
-            <td>{{ $file->file }}</td>
-            <td>{{ $file->user->user_name }} ({{ $file->user->defualt_group->title }})</td>
-            <td>{{ $file->created_at }}</td>
-            <td>
-                @if (isset($file->size)) <!-- Ensure the file size is available -->
-				{{ round($file->size / 1024) }} KB
-                @else
-                    N/A
-                @endif
-            </td>
-            <td class="text-center">
-                <a href="{{ route('files.download', $file->id) }}" class="btn btn-light btn-sm">
-                    Download
-                </a>
-            </td>
-        </tr>
-        @endforeach
-    </tbody>
-</table>
+                                                        <thead>
+                                                            <tr class="text-center">
+                                                                <th>#</th>
+                                                                <th>File Name</th>
+                                                                <th>User Name</th>
+                                                                <th>Uploaded At</th>
+                                                                <th>File Size (MB)</th>
+                                                                <th>Download</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="text-center">
+                                                            @foreach ($cr['attachments'] as $key => $file)
+                                                            @if ($file->flag == 1)
+                                                            <tr>
+                                                                <td>{{ ++$key }}</td>
+                                                                <td>{{ $file->file }}</td>
+                                                                <td>{{ $file->user->user_name }} ({{ $file->user->defualt_group->title }})</td>
+                                                                <td>{{ $file->created_at }}</td>
+                                                                <td>
+                                                                    @if (isset($file->size)) <!-- Ensure the file size is available -->
+                                                                    {{ round($file->size / 1024) }} KB
+                                                                    @else
+                                                                        N/A
+                                                                    @endif
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    <a href="{{ route('files.download', $file->id) }}" class="btn btn-light btn-sm">
+                                                                        Download
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                            @endif
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                    @endcan
+                                                    @can('View Business Attachments')
+                                                    <h5>Business Attachments</h5>
+                                                    <table class="table table-bordered">
+                                                        <thead>
+                                                            <tr class="text-center">
+                                                                <th>#</th>
+                                                                <th>File Name</th>
+                                                                <th>User Name</th>
+                                                                <th>Uploaded At</th>
+                                                                <th>File Size (MB)</th>
+                                                                <th>Download</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="text-center">
+                                                            @foreach ($cr['attachments'] as $key => $file)
+                                                            @if ($file->flag == 2)
+                                                            <tr>
+                                                                <td>{{ ++$key }}</td>
+                                                                <td>{{ $file->file }}</td>
+                                                                <td>{{ $file->user->user_name }} ({{ $file->user->defualt_group->title }})</td>
+                                                                <td>{{ $file->created_at }}</td>
+                                                                <td>
+                                                                    @if (isset($file->size)) <!-- Ensure the file size is available -->
+                                                                    {{ round($file->size / 1024) }} KB
+                                                                    @else
+                                                                        N/A
+                                                                    @endif
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    <a href="{{ route('files.download', $file->id) }}" class="btn btn-light btn-sm">
+                                                                        Download
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                            @endif
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                    @endcan
 
 													</div>
 													@endif
@@ -336,60 +380,6 @@ $(document).ready(function () {
     statusField.on("change", handleWorkLoadValidation);
 });
 
-
-$(window).on("load", function () {
-    const statusField = document.querySelector('select[name="new_status_id"]');
-    const responsibleDesignerField = document.querySelector('select[name="designer_id"]'); // Assuming the field is an input field
-    const responsibleDesignerLabel = Array.from(document.querySelectorAll('label')).find(label => label.textContent.trim() === "Responsible Designer");
-    const DesigneEstimationLabel = Array.from(document.querySelectorAll('label')).find(label => label.textContent.trim() === "Design Estimation");
-    const DesigneEstimationInput = document.querySelector('input[name="design_estimation"]');
-    
-    // Function to check if the status is "Pending Design"
-    function isStatusPendingDesign() {
-        if (statusField) {
-            const selectedText = statusField.options[statusField.selectedIndex].text;
-            return selectedText === "Pending Design";
-        }
-        return false;
-    }
-
-    // Function to handle the field as optional or required
-    function handleOptionalOrRequiredOption() {
-        if (isStatusPendingDesign()) {
-            // Add "*" above the field name "Responsible Designer" and make the field required
-            if (responsibleDesignerLabel && !responsibleDesignerLabel.innerHTML.includes("*")) {
-                /*responsibleDesignerLabel.innerHTML = " * " + responsibleDesignerLabel.innerHTML;
-                DesigneEstimationLabel.innerHTML = " * " + DesigneEstimationLabel.innerHTML;*/
-                responsibleDesignerLabel.innerHTML = `<span style="color: red;">*</span> ` + responsibleDesignerLabel.innerHTML;
-                DesigneEstimationLabel.innerHTML = `<span style="color: red;">*</span> ` + DesigneEstimationLabel.innerHTML;
-            }
-            if (responsibleDesignerField) {
-                responsibleDesignerField.setAttribute("required", true);
-                DesigneEstimationInput.setAttribute("required", true);
-            }
-        } else {
-            // Remove "*" above the field name "Responsible Designer" and make the field optional
-            if (responsibleDesignerLabel && responsibleDesignerLabel.innerHTML.includes("*")) {
-                /*responsibleDesignerLabel.innerHTML = responsibleDesignerLabel.innerHTML.replace("*", "");
-                DesigneEstimationLabel.innerHTML = DesigneEstimationLabel.innerHTML.replace("*", "");*/
-                responsibleDesignerLabel.innerHTML = responsibleDesignerLabel.innerHTML.replace(/<span style="color: red;">\*<\/span> /, "");
-                DesigneEstimationLabel.innerHTML = DesigneEstimationLabel.innerHTML.replace(/<span style="color: red;">\*<\/span> /, "");
-            }
-            if (responsibleDesignerField) {
-                responsibleDesignerField.removeAttribute("required");
-                DesigneEstimationInput.removeAttribute("required");
-            }
-        }
-    }
-
-    // Check the status on page load
-    handleOptionalOrRequiredOption();
-
-    // Add an event listener to the status field to handle change events
-    if (statusField) {
-        statusField.addEventListener("change", handleOptionalOrRequiredOption);
-    }
-});
 
 </script>
 @endpush

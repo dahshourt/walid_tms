@@ -179,19 +179,43 @@ class ChangeRequestController extends Controller
     public function store(changeRequest_Requests $request)
     {
         
-        if($request->hasFile('attach')){
+        if($request->hasFile('technical_attachments')){
+        
             $input_data = $request->all();
 
             $validator = Validator::make(
                 $input_data, [
-                'attach.*' => 'required|mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg|max:2048'
+                'technical_attachments.*' => 'required|mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg|max:2048'
                 ],[
-                    'attach.*.required' => 'Please upload an attachment',
-                    'attach.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
-                    'attach.*.max' => 'Sorry! Maximum allowed size for an attachment is 2MB',
+                    'technical_attachments.*.required' => 'Please upload an attachment',
+                    'technical_attachments.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
+                    'technical_attachments.*.max' => 'Sorry! Maximum allowed size for an attachment is 2MB',
                 ]
             );
-    
+
+            if ($validator->fails()) {
+                //return redirect()->back()->withErrors('File not found.');
+                //return redirect()->back()->with('error' , 'Created Successfully CR#'.$cr_id  );
+                return redirect()->back()->withInput()->withErrors($validator);
+            }
+        }
+      
+
+        if($request->hasFile('business_attachments')){
+            
+
+            $input_data = $request->all();
+
+            $validator = Validator::make(
+                $input_data, [
+                'business_attachments.*' => 'required|mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg|max:2048'
+                ],[
+                    'business_attachments.*.required' => 'Please upload an attachment',
+                    'business_attachments.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
+                    'business_attachments.*.max' => 'Sorry! Maximum allowed size for an attachment is 2MB',
+                ]
+            );
+
             if ($validator->fails()) {
                 //return redirect()->back()->withErrors('File not found.');
                 //return redirect()->back()->with('error' , 'Created Successfully CR#'.$cr_id  );
@@ -200,8 +224,18 @@ class ChangeRequestController extends Controller
         }
         $cr_id = $this->changerequest->create($request->all()); 
 
-        if ($request->file()) {
+        /*if ($request->file()) {
             $this->attachments->add_files($request->file('attach'), $cr_id);
+        }*/
+        
+        if ($request->hasFile('technical_attachments')) {
+            $this->attachments->add_files($request->file('technical_attachments'), $cr_id, 1);
+            
+        }
+        
+        if ($request->hasFile('business_attachments')) {
+            $this->attachments->add_files($request->file('business_attachments'), $cr_id, 2);
+            
         }
         return redirect()->back()->with('status' , 'Created Successfully CR#'.$cr_id  );
         
@@ -322,16 +356,17 @@ class ChangeRequestController extends Controller
       }
       
 
-        if($request->hasFile('attach')){
+      if($request->hasFile('technical_attachments')){
+        
             $input_data = $request->all();
 
             $validator = Validator::make(
                 $input_data, [
-                'attach.*' => 'required|mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg|max:2048'
+                'technical_attachments.*' => 'required|mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg|max:2048'
                 ],[
-                    'attach.*.required' => 'Please upload an attachment',
-                    'attach.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
-                    'attach.*.max' => 'Sorry! Maximum allowed size for an attachment is 2MB',
+                    'technical_attachments.*.required' => 'Please upload an attachment',
+                    'technical_attachments.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
+                    'technical_attachments.*.max' => 'Sorry! Maximum allowed size for an attachment is 2MB',
                 ]
             );
 
@@ -341,13 +376,47 @@ class ChangeRequestController extends Controller
                 return redirect()->back()->withInput()->withErrors($validator);
             }
         }
+      
+
+        if($request->hasFile('business_attachments')){
+            
+
+            $input_data = $request->all();
+
+            $validator = Validator::make(
+                $input_data, [
+                'business_attachments.*' => 'required|mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg|max:2048'
+                ],[
+                    'business_attachments.*.required' => 'Please upload an attachment',
+                    'business_attachments.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
+                    'business_attachments.*.max' => 'Sorry! Maximum allowed size for an attachment is 2MB',
+                ]
+            );
+
+            if ($validator->fails()) {
+                //return redirect()->back()->withErrors('File not found.');
+                //return redirect()->back()->with('error' , 'Created Successfully CR#'.$cr_id  );
+                return redirect()->back()->withInput()->withErrors($validator);
+            }
+        }
+        
+
       $cr_id=  $this->changerequest->update($id, $request);
+      
         if($cr_id==false){
             return redirect()->to('/change_request')-> with('error', 'No group provided.');
 
         }
-        if ($request->file()) {
-            $this->attachments->add_files($request->file('attach'), $id);
+        
+
+        if ($request->hasFile('technical_attachments')) {
+            $this->attachments->add_files($request->file('technical_attachments'), $id, 1);
+            
+        }
+        
+        if ($request->hasFile('business_attachments')) {
+            $this->attachments->add_files($request->file('business_attachments'), $id, 2);
+            
         }
         return redirect()->to('/change_request')->with('status' , 'Updated Successfully' );
         //return redirect()->back()->with('status' , 'Updated Successfully' );
