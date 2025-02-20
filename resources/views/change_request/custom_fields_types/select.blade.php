@@ -25,7 +25,8 @@
             @if($item->CustomField->name == 'tester_id' || $item->CustomField->name == 'designer_id' || $item->CustomField->name == 'developer_id')
                 disabled
             @endif
-        @endcannot   {{(isset($item->enable)&&($item->enable==1))?'enabled':'disabled'}}>
+        @endcannot   
+        {{(isset($item->enable)&&($item->enable==1))?'enabled':'disabled'}}>
 
             @cannot('Set Time For Another User')
                 @if($item->CustomField->name == 'tester_id' || $item->CustomField->name == 'designer_id' || $item->CustomField->name == 'developer_id')
@@ -68,7 +69,7 @@
                             <option value="{{ $users->id }}" {{ old($users->user_name, $cr->{$item->CustomField->name}) == $users->id ? 'selected' : '' }}>{{ $users->user_name }}</option>
                         @endforeach
                     @endif
-                    @if($item->CustomField->name == "sa_users" )
+                    @if($item->CustomField->name == "designer_id" )
                         @foreach($sa_users as $users)
                             <option value="{{ $users->id }}" {{ old($users->user_name, $cr->{$item->CustomField->name}) == $users->id ? 'selected' : '' }}>{{ $users->user_name }}</option>
                         @endforeach

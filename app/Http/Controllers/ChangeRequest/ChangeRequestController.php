@@ -264,8 +264,8 @@ class ChangeRequestController extends Controller
         } // to check if the user has access to edit this cr or not 
         
         //dd($cr->change_request_custom_fields);
-        $developer_users =  UserFactory::index()->get_user_by_department_id(2);
-        $sa_users =  UserFactory::index()->get_user_by_department_id(4);
+        $developer_users =  UserFactory::index()->get_user_by_group($cr->application_id);
+        $sa_users =  UserFactory::index()->get_user_by_department_id(6);
         $testing_users =  UserFactory::index()->get_user_by_department_id(3);
         $work= $cr->workflow_type_id;
         // $cond = in_array($cr->RequestStatuses->last()?->new_status_id, [66, 67, 68, 69]);

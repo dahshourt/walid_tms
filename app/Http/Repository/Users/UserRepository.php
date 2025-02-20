@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\SystemUserCab;
 use App\Models\UserGroups;
+use App\Models\Application;
 use App\Models\Pivotusersrole;
 use App\Http\Repository\Roles\RolesRepository;
 use DB;
@@ -207,6 +208,15 @@ class UserRepository implements UserRepositoryInterface
     public function get_user_by_department_id($id)
     {
         return User::where('department_id', $id)->get();
+    }
+
+
+    public function get_user_by_group($app_id)
+    {
+        $app_groups = Application::find($app_id)->group_applications()->pluck('group_id')->toArray();
+        //dd($app_groups);
+        //return User::where('department_id', $id)->get();
+        return User::whereIn('default_group', $app_groups)->get();
     }
 
     public function CheckUniqueEmail($email)
