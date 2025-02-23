@@ -90,7 +90,7 @@ class MailController extends Controller
 
             try {
                 // Send the email
-                Mail::to($requester_email)->send(new TestMail($templateContent));
+                Mail::to($user)->send(new TestMail($templateContent));
         
                 return response()->json(['success' => 'Email sent successfully.']);
             } catch (\Exception $e) {
