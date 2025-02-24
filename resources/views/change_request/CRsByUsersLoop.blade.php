@@ -5,14 +5,23 @@
 @foreach ($collection as $item)
                                 <tr>
 
+                                    @can('Edit ChangeRequest')
                                     <td>
-                                        @if(in_array($item->getCurrentStatus()->status->id, [18, 79,41]))
-                                        <a href='{{ url("$route") }}/{{ $item->id }}/edit'>{{ $item['id'] }} </a>
+                                        @if(in_array($item->getCurrentStatus()->status->id, [64, 79,41,44]))
+                                            <a href='{{ url("$route") }}/{{ $item->id }}/edit'>{{ $item['id'] }} </a>
                                         @else
-                                        <a href='{{ url("$route") }}/{{ $item["id"] }}'>{{ $item['id'] }} </a>
+                                            <a href='{{ url("$route") }}/{{ $item["id"] }}'>{{ $item['id'] }} </a>
                                         @endif
-                                        
                                     </td>
+                                    @else
+                                        @can('Show ChangeRequest')
+                                            <td><a href='{{ url("$route") }}/{{ $item->id }}'>{{ $item['id'] }} </a></td>
+                                        @else
+                                            <td>{{ $item['id'] }} </td>
+                                        @endcan
+                                    @endcan
+
+                                   
                                     <th scope="row">{{ $item['title']}}</th>
                                     <td>{{ $item->getCurrentStatus() && $item->getCurrentStatus()->Status ? $item->getCurrentStatus()->status->status_name : "" }}</td>
                                     @if(!empty($roles_name) && isset($roles_name[0]) && $roles_name[0] != "Viewer")
@@ -45,7 +54,8 @@
                                             </span>
                                         </a>
                                         @endcan
-                                        @if(in_array($item->getCurrentStatus()->status->id, [18, 79,41]))
+                                        @can('Edit ChangeRequest')
+                                        @if(in_array($item->getCurrentStatus()->status->id, [64, 79,41,44]))
                                         <a href='{{url("$route")}}/{{ $item["id"] }}/edit' class="btn btn-sm btn-clean btn-icon mr-2" title="Edit details">
                                             <span class="svg-icon svg-icon-md">
                                                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
@@ -58,6 +68,7 @@
                                             </span>
                                         </a>
                                         @endif
+                                        @endcan
                                     </div>
                                         
                                     </td>

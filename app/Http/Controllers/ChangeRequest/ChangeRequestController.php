@@ -291,7 +291,7 @@ class ChangeRequestController extends Controller
         } //to check if the cr exists or not
 
         $cr = $this->changerequest->find($id);
-
+        
         if(!$cr)
         {
             return redirect()->back()->with('status' , 'You have no access to edit this CR' );

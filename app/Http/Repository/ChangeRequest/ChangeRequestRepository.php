@@ -1288,8 +1288,8 @@ public function findNextAvailableTime($userId, $currentTime)
     {
         
         $groups = auth()->user()->user_groups->pluck('group_id')->toArray();
+        
         $view_statuses = $this->getViewStatuses($groups);
-    
 
         $changeRequest = Change_request::with('category')->with('attachments',
             function ($q) use ($groups) {
@@ -1302,8 +1302,8 @@ public function findNextAvailableTime($userId, $currentTime)
                         $q->where('visible', 1);
                     });
                 }
-            }
-        )->whereHas('RequestStatuses', function ($query) use ($groups, $view_statuses) {
+            });
+            $changeRequest =    $changeRequest->whereHas('RequestStatuses', function ($query) use ($groups, $view_statuses) {
             $query->where('active', '1')->whereIn('new_status_id', $view_statuses)
                 ->whereHas('status.group_statuses', function ($query) use ($groups) {
                     // Check if the groups array does not contain group_id 19 or 8
@@ -1360,7 +1360,7 @@ public function findNextAvailableTime($userId, $currentTime)
         
     
         // Fetch and return the statuses related to the group(s)
-        $view_statuses = $view_statuses->get()->pluck('status_id');
+        $view_statuses = $view_statuses->groupBy('status_id')->get()->pluck('status_id');
         
         return $view_statuses;
     }
@@ -1821,13 +1821,13 @@ public function findNextAvailableTime($userId, $currentTime)
     public function searhchangerequest($id)
     {
         $user_flage = Auth::user()->flag;
-
-        if ($user_flage == '0') {
+		$changeRequest = Change_request::with('Release')->where('id', $id)->first();
+        /* if ($user_flage == '0') {
             $changeRequest = Change_request::with("Release")->where('id', $id)->where('requester_id', auth::user()->id)->first();
         } else {
             $changeRequest = Change_request::with('Release')->where('id', $id)->first();
         }
-
+		dd($changeRequest); */
         return $changeRequest;
     }
 
