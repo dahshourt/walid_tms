@@ -86,11 +86,18 @@ class NewWorkflowRepository implements NewWorkflowRepositoryInterface
 
     public function create($request)
     {  
+        echo "<pre>";
+        print_r($request);
+        echo "</pre>"; //die;
        if($request['type_id']){
         $request['workflow_type'] = $request['type_id'];
        }
         $request['workflow_type'] = $request['workflow_type'] == 1 ? '1' : '0';
         //dd($request['to_status_lable']);
+        if(isset( $request['to_status_lable'])&&!empty($request['to_status_lable'])){
+
+            $request['same_time']="1";
+        }
         $request['to_status_label'] = $request['to_status_lable'];
         $workflow = NewWorkFlow::create($request);
         $this->StoreWorkFlowStatuses($workflow->id,$request);
@@ -112,9 +119,20 @@ class NewWorkflowRepository implements NewWorkflowRepositoryInterface
         }
         $except=['to_status_id','_method','default_to_status','_token','to_status_lable','default_status'];
         $request['workflow_type'] = $request['workflow_type'] == 1 ? '1' : '0';
-        $request['same_time'] = $request['same_time'] == 1 ? '1' : '0';
+        if(isset( $request['to_status_lable'])&&!empty($request['to_status_lable'])){
+//die('ff');
+            $request['same_time']="1";
+        } else{
+
+            $request['same_time']="0";
+        }
         $request['to_status_label'] = $request['to_status_lable'];
+        // echo"<pre>";
+        // print_r($request->all());
+        // echo "</pre>"; die;
         $new_workflow = NewWorkFlow::where('id', $id)->update($request->except($except));
+      
+
         $request['default_status'] = $defualt;
         
         
