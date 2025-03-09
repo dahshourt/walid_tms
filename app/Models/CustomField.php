@@ -43,15 +43,6 @@ class CustomField extends Model
 
     public function getCustomFieldValue()
     {
-        // if ($this->related_table === 'users') {
-        //     // Fetch users with their default group names
-        //     return \DB::table('users')
-        //         ->leftJoin('groups', 'users.default_group', '=', 'groups.id') // Adjust table and column names
-        //         ->select('users.*', 'groups.title as group_name') // Include group name
-        //         ->get();
-        // }
-    
-        // Default behavior for other related tables
         return $this->setTableName($this->related_table)->getDataByDynamicTable();
     }
     

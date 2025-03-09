@@ -46,7 +46,7 @@
 													<div id="success-message" style="margin-top: 20px; color: rgb(2, 8, 2); font-weight: bold;">
 														{{ session('status') }}:
 														@if($cr_link)		
-															<a href="#" onclick="viewCR('{{ $cr_link }}')" target="_blank">View CR</a>
+															<a href="{{ $cr_link }}" target="_blank">View CR</a>
 														@endif
 													</div>
 											</div>

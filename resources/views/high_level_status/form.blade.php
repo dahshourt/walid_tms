@@ -22,21 +22,49 @@
 
 													
 
+													
+													
 													<div class="form-group">
-														<label>Name:</label>
-														<input type="text" class="form-control form-control-lg" placeholder="Name" name="name" value="{{ isset($row) ? $row->name : old('name') }}" />
-														{!! $errors->first('name', '<span class="form-control-feedback">:message</span>') !!}
-													</div>
-													<div class="form-group">
-														<label for="status_id">status:</label>
-														<select class="form-control form-control-lg select2" id="status_id" name="status_id[]" multiple="multiple">
+														<label for="status_id2"> from status:</label>
+														<select class="form-control form-control-lg" id="status_id3" name="from_status_id" >
 															@foreach($statuses as $item)
-															<option value="{{ $item->id }}" {{ isset($row) && $row->id == $item->high_level_status_id ? "selected" : "" }}> {{ $item->status_name }} </option>
+															<option value="{{ $item->id }}" 
+
+															{{ ($item->id == (isset($row) && isset($row->status[0]['previous_status_high_level']) ? $row->status[0]['previous_status_high_level'] : null)) ? "selected" : "" }}
+
+															> {{ $item->status_name}} </option>
 													<!-- <option value="{{ $item->id }}" > {{ $item->status_name }} </option> -->
 
 															@endforeach
 														</select>
-														{!! $errors->first('status_id', '<span class="form-control-feedback">:message</span>') !!}
+														{!! $errors->first('from_status_id', '<span class="form-control-feedback">:message</span>') !!}
+													</div>
+
+
+
+
+
+
+													<div class="form-group">
+														<label for="status_id"> to status:</label>
+														<select class="form-control form-control-lg select2" id="status_id" name="to_status_id">
+															@foreach($statuses as $item)
+															<option value="{{ $item->id }}" 
+															
+															{{ ($item->id == (isset($row) && isset($row->status[0]['id']) ? $row->status[0]['id'] : null)) ? "selected" : "" }}
+
+
+															>{{ $item->status_name }}  </option>
+													<!-- <option value="{{ $item->id }}" > {{ $item->status_name }} </option> -->
+
+															@endforeach
+														</select>
+														{!! $errors->first('to_status_id', '<span class="form-control-feedback">:message</span>') !!}
+													</div>
+													<div class="form-group">
+														<label>Name:</label>
+														<input type="text" class="form-control form-control-lg" placeholder="Name" name="name" value="{{ isset($row) ? $row->name : old('name') }}" />
+														{!! $errors->first('name', '<span class="form-control-feedback">:message</span>') !!}
 													</div>
 
 													<div class="form-group">

@@ -11,7 +11,7 @@
             if(isset($item->validation_type_id) && $item->validation_type_id == 1) $required = "required";
         @endphp
         @if(isset($cr))
-            <textarea name="{{ $item->CustomField->name }}" class="form-control form-control-lg" {{ $required }} {{ $disabled }}>{{ old($item->CustomField->name, $cr->{$item->CustomField->name}) }}</textarea>
+            <textarea name="{{ $item->CustomField->name }}" class="form-control form-control-lg" {{ $required }} {{ $disabled }}>{{ $custom_field_value }}</textarea>
         @else
             <textarea name="{{ $item->CustomField->name }}" class="form-control form-control-lg" {{ $required }} {{ $disabled }}>{{ old($item->CustomField->name) }}</textarea>
         @endif 

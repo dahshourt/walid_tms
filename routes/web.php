@@ -28,6 +28,7 @@ Route::middleware(['auth'])->group(
     function () {
         
         Route::get('/statistics', 'HomeController@StatisticsDashboard');
+        Route::get('/dashboard', 'HomeController@StatisticsDashboard');
 
         Route::get('get_workflow/subtype/all', 'Workflow\Workflow_type@Allsubtype');
         Route::get('customs/field/group/type/selected/{form_type?}', 'CustomFields\CustomFieldGroupTypeController@AllCustomFieldsWithSelectedWithFormType');
@@ -35,7 +36,7 @@ Route::middleware(['auth'])->group(
         Route::post('/charts_dashboard', 'HomeController@dashboard');
         
         Route::get('/application_based_on_workflow', 'HomeController@application_based_on_workflow');
-        Route::get('/dashboard', 'HomeController@dashboard');
+        //Route::get('/dashboard', 'HomeController@dashboard');
         Route::post('custom/field/group/type', 'CustomFields\CustomFieldGroupTypeController@store')->name('custom.fields.store');
         Route::get('/custom_fields/create', 'CustomFields\CustomFieldController@create')->name('custom.fields.create');
         Route::get('/custom_fields/createCF', 'CustomFields\CustomFieldController@createCF')->name('custom.fields.createCF');
@@ -73,7 +74,7 @@ Route::middleware(['auth'])->group(
        Route::resource('high_level_status', highLevelStatuses\highLevelStatusesControlller::class);
        Route::post('high_level_status/updateactive', 'highLevelStatuses\highLevelStatusesControlller@updateactive');
        Route::resource('workflows', Workflow\WorkflowController::class);
-      
+       
        Route::resource('searchs', Search\SearchController::class);
       // Route::get('/search/result', 'Search\SearchController@search_result');
 
@@ -82,6 +83,7 @@ Route::middleware(['auth'])->group(
 
        //Route::resource('workflows', Workflow\WorkflowController::class);
        Route::resource('NewWorkFlowController', Workflow\NewWorkFlowController::class);
+       Route::get('workflow/list/all', 'Workflow\NewWorkFlowController@ListAllWorkflows');
        Route::post('workflow2/updateactive', 'Workflow\NewWorkFlowController@updateactive');
        //Route::resource('searchs', Search\SearchController::class);
        Route::get('/search/result', 'Search\SearchController@search_result');
@@ -142,7 +144,7 @@ Route::middleware(['auth'])->group(
 
         Route::get('cr/{id}' , 'ChangeRequest\ChangeRequestController@show')->name('show.cr');
         Route::get('change_request/{id}/edit' , 'ChangeRequest\ChangeRequestController@edit')->name('edit.cr');
-
+        Route::get('change_request/{id}/edit_cab' , 'ChangeRequest\ChangeRequestController@edit_cab')->name('edit_cab.cr');
 
         Route::resource('cab_users', 'CabUser\CabUserController');
         Route::post('cab_user/updateactive', 'CabUser\CabUserController@updateactive');

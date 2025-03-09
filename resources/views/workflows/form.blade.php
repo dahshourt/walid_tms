@@ -57,12 +57,13 @@
 
     <div class="form-group">
         <label for="to_status_id">To Status:</label>
-        <div class="checkbox-inline mb-10">
-            <label class="checkbox">
-                <input type="checkbox" id="same_time" name="same_time" value="1" {{ isset($row) && $row->same_time == 1 ? "checked" : "" }}>
-                <span></span>At the same time
-            </label>
-        </div>
+        <div class="checkbox-inline mb-10 d-none">
+    <label class="checkbox">
+        <input type="checkbox" id="same_time" name="same_time" checked>
+        <span></span>At the same time
+    </label>
+</div>
+
         
         <div class="same_class">
             <select class="form-control form-control-lg" id="to_status_id" name="to_status_id[]" multiple="multiple">
@@ -159,6 +160,7 @@
             if (this.checked) {
                 $(".not_same_class").remove();
                 $(".same_class").show();
+                $(".same_time").hide();
             } else {
                 $(".same_class").hide();
                 

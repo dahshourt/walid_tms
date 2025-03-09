@@ -10,8 +10,9 @@ class Change_request extends Model
     use HasFactory;
     public $table = 'change_request';
     protected $appends = array('name');
-    protected $fillable = [
-        'cr_no',
+	protected $guarded = [];
+    /* protected $fillable = [
+        //'cr_no',
         'title',
         'description',
         'active',
@@ -48,8 +49,8 @@ class Change_request extends Model
         'release',
         'associated',
         'depend_on',
-        'analysis_feedback',
-        'technical_feedback',
+        //'analysis_feedback',
+        //'technical_feedback',
         'approval',
         'need_design',
         'impacted_services',
@@ -65,8 +66,15 @@ class Change_request extends Model
         'parent_id',
         'creator_mobile_number',
         'vendor_id',
-        'need_ux_ui',
-    ];
+        //'need_ux_ui',
+        'cr_workload',
+		'rtm_member',
+		'need_down_time',
+		'deployment_impact',
+		//'business_feedback',
+		'sanity_spoc',
+		'postpone'
+    ]; */
 
     protected $hidden = [
         'updated_at',
@@ -74,6 +82,11 @@ class Change_request extends Model
     ];
 
 
+
+    public function defects()
+    {
+        return $this->hasMany(Defect::class, 'cr_id', 'id');
+    }
 
     public function logs()
     {
@@ -138,6 +151,11 @@ class Change_request extends Model
         return $this->belongsTo(User::class, 'designer_id')->select('id', 'name', 'user_name', 'email');
     }
 
+    public function cab_cr()
+    {
+        return $this->hasOne(CabCr::class, 'cr_id', 'id')->where('status', '0');
+    }
+
     public function current_status()
     {
         //return $this->HasManyThrough(Status::class,change_request_statuse::class,'cr_id','id','id','new_status_id');
@@ -192,7 +210,7 @@ class Change_request extends Model
 
     public function get_releases()
     {
-        $list_releases = Release::whereDate('planned_start_iot_date', '>', now())->get();
+        $list_releases = Release::whereDate('go_live_planned_date', '>', now())->get();
         return $list_releases;
     }
 
@@ -251,5 +269,8 @@ class Change_request extends Model
         //dd($status);
         return $status;
     }
+	
+	
+	
 
 }

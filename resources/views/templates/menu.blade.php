@@ -618,8 +618,8 @@
     <!-- Group Bar (Left) -->
     <div class="topbar-item">
 	<div class="btn-group">
-  <!-- <button type="button" class="btn btn-icon btn-hover-transparent-white d-flex align-items-center btn-lg px-md-2 w-md-auto dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"> -->
-  <button type="button" class="btn btn-icon btn-hover-transparent-white d-flex align-items-center btn-lg px-md-2 w-md-auto ">
+  <button type="button" class="btn btn-icon btn-hover-transparent-white d-flex align-items-center btn-lg px-md-2 w-md-auto dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+  <!-- <button type="button" class="btn btn-icon btn-hover-transparent-white d-flex align-items-center btn-lg px-md-2 w-md-auto "> -->
     <span class="navi-text" id="group-name">
       <img src="{{ asset('public/new_theme/assets/media/group.png') }}" />
 

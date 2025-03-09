@@ -34,7 +34,8 @@ class highlevelrequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'unique:high_level_statuses'],
-            'status_id'=>'required'
+            'from_status_id'=>'required',
+            'to_status_id'=>'required'
 
         ];
     }
@@ -44,7 +45,8 @@ class highlevelrequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'unique:high_level_statuses,name,' . $this->id],
-            'status_id'=>'required'
+            'from_status_id'=>'required',
+            'to_status_id'=>'required'
 
 
         ];
@@ -56,6 +58,12 @@ class highlevelrequest extends FormRequest
             
         ];
     }
-
+    protected function prepareForValidation()
+    {
+        // Set 'active' to 1 if not present in the request
+        $this->merge([
+            'active' => $this->has('active') ? $this->input('active') : '0',
+        ]);
+    }
 
 }

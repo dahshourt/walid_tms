@@ -43,7 +43,8 @@
 										</div>
 										<div class="card-toolbar">
     <!-- Add search box -->
-	<div class="d-flex justify-content-center mt-4">
+	<div class="d-flex col-md-8" style="
+    float: right;">
     <form action="" method="GET" class="d-flex align-items-center shadow-sm p-2 rounded" style="width: 50%; background-color: #f8f9fa;">
         <div class="input-group w-100">
             <!-- Search Input -->

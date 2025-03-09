@@ -29,7 +29,7 @@
         @endforeach
     </select> 
     @else
-    <select name="{{ $item->CustomField->name}}[]" class="form-control form-control-lg" multiple @if(isset($item->validation_type_id) && $item->validation_type_id == 1) required @endif
+    <select name="{{ $item->CustomField->name}}[]" class="form-control form-control-lg" multiple="multiple"  @if(isset($item->validation_type_id) && $item->validation_type_id == 1) required @endif
         @cannot('Set Time For Another User')
             @if($item->CustomField->name == 'tester_id' || $item->CustomField->name == 'designer_id' || $item->CustomField->name == 'developer_id')
                 disabled
@@ -81,22 +81,11 @@
 
                     @if($item->CustomField->name == "cap_users" )
                          @foreach($cap_users as $items)
-                            <option value="{{$items->id}}"> {{$items->user_name}}</option>
+                            <option value="{{$items->user_id}}"> {{$items->user->name}}</option>
                          @endforeach
                     @endif
 
-                   <!--  @foreach($item->CustomField->getCustomFieldValue() as $value)
-                        @if($item->CustomField->name == "developer_id" )
-                        @elseif($item->CustomField->name == "tester_id" )
-                        @elseif($item->CustomField->name == "designer_id" )
-                        @else
-                            @if(isset($cr))
-                            <option value="{{ $value->id }}" {{ old($item->CustomField->name, $cr->{$item->CustomField->name}) == $value->id ? 'selected' : '' }}>{{ $value->name }}</option>	
-                            @else
-                            <option value="{{ $value->id }}">{{ $value->name }}</option>	
-                            @endif	
-                        @endif
-                    @endforeach -->
+                  
                 @else
                 @php
                     // Get the selected value from old input or the current record (cr)

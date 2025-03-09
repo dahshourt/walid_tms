@@ -77,26 +77,30 @@ class MailController extends Controller
 
     public function send_mail_to_cap_users($users_mail, $cr_no)
     {
+        
         foreach ($users_mail as $key => $user) {
+            $cr_link = route('edit_cab.cr', $cr_no);
              $templateContent = [
                 'subject' => "CR #$cr_no Is Pending Cap",
                 'body' => "Dear $user, <br><br>"
                 ."CR #$cr_no has been transfered To Pending Cap Status Waiting Your Approval Or Rejection following Link."
                 ."<br><br>"
-                ."You can review it here: <a href='#'>CR: #$cr_no</a>"
+                ."You can review it here: <a href='$cr_link'>CR: #$cr_no</a>"
                 ."<br><br>"
                 ."TMS Automation <br><br> Thank you",
             ];
 
             try {
                 // Send the email
-                Mail::to($requester_email)->send(new TestMail($templateContent));
+                Mail::to($user)->send(new TestMail($templateContent));
         
-                return response()->json(['success' => 'Email sent successfully.']);
+                //return response()->json(['success' => 'Email sent successfully.']);
             } catch (\Exception $e) {
-                return response()->json(['error' => 'Failed to send email.', 'details' => $e->getMessage()], 500);
+
+                //return response()->json(['error' => 'Failed to send email.', 'details' => $e->getMessage()], 500);
             }
         }
+        return true;
     }
 
     public function notifyDivisionManager($division_manager_email , $requester_email, $cr , $title, $description , $requester_name){
@@ -114,7 +118,7 @@ class MailController extends Controller
         $templateContent = [
             'subject' => $template->subject . " #$cr",
             'body' => "Dear $first_name, <br><br>"
-            . $template->body 
+            . "Please Check CR#$cr has been created"
             . "<br><br>"
             . "TMS (Ref: CR ID #<a href='$cr_link'>$cr</a>)"
             . "<br><br>"

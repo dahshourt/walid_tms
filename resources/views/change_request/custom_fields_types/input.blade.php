@@ -13,7 +13,7 @@
     @endif
         @if((isset($item->enable)&&($item->enable==1)))
             @if(isset($cr))
-                <input type="text" name="{{ $item->CustomField->name }}" class="form-control form-control-lg" value="{{ old($item->CustomField->name, $cr->{$item->CustomField->name}) }}" @if(isset($item->validation_type_id) && $item->validation_type_id == 1) required @endif  />
+                <input type="text" name="{{ $item->CustomField->name }}" class="form-control form-control-lg" value="{{ old($item->CustomField->name, $custom_field_value) }}" @if(isset($item->validation_type_id) && $item->validation_type_id == 1) required @endif  />
             @else
                 @if($item->CustomField->name === 'division_manager')
                     <input type="email" id="division_manager" name="{{ $item->CustomField->name }}" 

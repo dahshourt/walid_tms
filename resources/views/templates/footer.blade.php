@@ -34,7 +34,7 @@
 						<a class="font-weight-bold font-size-h5 text-dark-75 text-hover-primary">{{ $user->name }}</a>
 						<div class="text-muted mt-1">Last login : {{ $user->last_login }}</div>
 						<div class="navi mt-2">
-							<a href="#" class="navi-item">
+							<a href="javascript::;" class="navi-item">
 								<span class="navi-link p-0 pb-2">
 									<span class="navi-icon mr-1">
 										<span class="svg-icon svg-icon-lg svg-icon-primary">
@@ -123,6 +123,10 @@
 
 		$('#set_group_id').select2({
         	placeholder: "Select group/groups",
+        });
+
+		$('.multi-select').select2({
+        	placeholder: "Select ",
         });
 
 		$('#to_status_id').select2({
