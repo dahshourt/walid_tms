@@ -121,6 +121,7 @@
                                                 {{ method_field('PATCH') }}
 												<input type="hidden" name="workflow_type_id" value="{{$workflow_type_id}}">
 												<input type="hidden" name="old_status_id" value="{{$cr->current_status->new_status_id}}">
+                                                <input type="hidden" name="cab_cr_flag" value="{{isset($cab_cr_flag)?$cab_cr_flag:0}}">
 												<div class="card-body">
 													
 													<div class="form-group row">

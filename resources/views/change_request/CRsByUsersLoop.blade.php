@@ -7,7 +7,7 @@
 
                                     @can('Edit ChangeRequest')
                                     <td>
-                                        @if(in_array($item->getCurrentStatus()->status->id, [64, 79,41,44]))
+                                        @if($item->getCurrentStatus() && isset($item->getCurrentStatus()->status) && in_array($item->getCurrentStatus()->status->id, [64, 79,41,44]))
                                             <a href='{{ url("$route") }}/{{ $item->id }}/edit'>{{ $item['id'] }} </a>
                                         @else
                                             <a href='{{ url("$route") }}/{{ $item["id"] }}'>{{ $item['id'] }} </a>
@@ -37,7 +37,7 @@
                                     <td>{{ $item['end_test_time'] }}</td>
                                     @endif
                                     @if(request('workflow_type') == 'Vendor')
-                                    <td>{{$item['release'] ?  $item['release']->name : 'No Release'}}</td>
+										<td>{{$item['release'] ?  $item['release']->name : 'No Release'}}</td>
                                     @endif
                                     @endif
                                     <td>
@@ -55,7 +55,7 @@
                                         </a>
                                         @endcan
                                         @can('Edit ChangeRequest')
-                                        @if(in_array($item->getCurrentStatus()->status->id, [64, 79,41,44]))
+                                        @if($item->getCurrentStatus() && isset($item->getCurrentStatus()->status) && in_array($item->getCurrentStatus()->status->id, [64, 79,41,44]))
                                         <a href='{{url("$route")}}/{{ $item["id"] }}/edit' class="btn btn-sm btn-clean btn-icon mr-2" title="Edit details">
                                             <span class="svg-icon svg-icon-md">
                                                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">

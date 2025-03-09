@@ -277,25 +277,87 @@ class ChangeRequestController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+
+
+    public function edit_cab($id)
+    {
+        
+         return $this->edit($id,true);
+         //dd($cr->change_request_custom_fields);
+//          $developer_users =  UserFactory::index()->get_user_by_department_id(2);
+//          $sa_users =  UserFactory::index()->get_user_by_department_id(4);
+//          $testing_users =  UserFactory::index()->get_user_by_department_id(3);
+//          $work= $cr->workflow_type_id;
+//          $cond = in_array($cr->RequestStatuses->last()?->new_status_id, [66, 67, 68, 69]);
+//          if(($work==5)&&$cond)
+//          {
+//              return redirect()->to('/change_request');
+//          }
+       
+//          $cab_cr_flag = true;
+         
+//          $form_type = 2; // create CR form type id
+//          $workflow_type_id = $cr->workflow_type_id;
+//          //$logs_ers = $this->logs->get_by_cr_id($id);
+//          $logs_ers = $cr->logs;
+//          //$CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowType($workflow_type_id, $form_type);
+//          $status_id = $cr->getCurrentStatus()->status->id;
+//          $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus($workflow_type_id, $form_type, $status_id);
+//  //    echo"<pre>";
+//  //        print_r($CustomFields);
+//  //        echo"</pre>"; die;
+//          return view("$this->view.edit",compact('CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag'));  
+ 
+    } 
+
+    public function edit($id,$cab_cr_flag=false)
     {
        
         
         $this->authorize('Edit ChangeRequest'); // permission check
         //$this->logs = LogFactory::index();
-        $cr = $this->changerequest->findById($id);
-
-        if(!$cr)
+        if($cab_cr_flag)
         {
-            return redirect()->back()->with('status' , 'CR not exists' );
-        } //to check if the cr exists or not
-
-        $cr = $this->changerequest->find($id);
-        
-        if(!$cr)
+            $cr = $this->changerequest->findCr($id);
+            if(!$cr)
+            {
+                return redirect()->back()->with('status' , 'You have no access to edit this CR' );
+            }
+            if(empty($cr->cab_cr) OR $cr->cab_cr->status == '2')
+            {
+                return redirect()->to('/')->with('status' , 'CR already rejected' );
+            }
+            $user_id = \Auth::user()->id;
+            $cr_cab_user = $cr->cab_cr->cab_cr_user->pluck('user_id')->toArray();
+            
+            if(!in_array($user_id, $cr_cab_user))
+            {
+                return redirect()->to('/')->with('status' , 'You have no access to edit this CR' );
+            }
+            $check_if_approve = $cr->cab_cr->cab_cr_user->where('user_id',$user_id)->where('status','1')->first();
+            if($check_if_approve)
+            {
+                return redirect()->to('/')->with('status' , 'You alleardy approved before' );
+            }
+         
+        }
+        else
         {
-            return redirect()->back()->with('status' , 'You have no access to edit this CR' );
-        } // to check if the user has access to edit this cr or not 
+            $cr = $this->changerequest->findById($id);
+
+            if(!$cr)
+            {
+                return redirect()->back()->with('status' , 'CR not exists' );
+            } //to check if the cr exists or not
+    
+            $cr = $this->changerequest->find($id);
+            
+            if(!$cr)
+            {
+                return redirect()->back()->with('status' , 'You have no access to edit this CR' );
+            } // to check if the user has access to edit this cr or not 
+        }
+       
         
         //dd($cr->change_request_custom_fields);
         $developer_users =  UserFactory::index()->get_user_by_group($cr->application_id);
@@ -316,7 +378,7 @@ class ChangeRequestController extends Controller
         //$CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowType($workflow_type_id, $form_type);
         $status_id = $cr->getCurrentStatus()->status->id;
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus($workflow_type_id, $form_type, $status_id);
-        return view("$this->view.edit",compact('cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users'));  
+        return view("$this->view.edit",compact('cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag'));  
 
     }
 
@@ -350,7 +412,7 @@ class ChangeRequestController extends Controller
           {
             $mails[] = User::find($users)?->email;
           }
-
+          //dd($mails);
           $mail =  new MailController();
           $mail->send_mail_to_cap_users($mails, $id);
       }

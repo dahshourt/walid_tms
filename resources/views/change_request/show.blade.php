@@ -162,13 +162,17 @@
 												
 												<div class="card-body">
 													@foreach($CustomFields as $item)
+													@php 
+													$custom_field_value = $cr->change_request_custom_fields->where('custom_field_name',$item->CustomField->name)->first();
+													$custom_field_value = $custom_field_value  ? $custom_field_value->custom_field_value  : $cr->{$item->CustomField->name}
+													@endphp
 														@if($item->CustomField->type == "input")
 														<div class="form-group col-md-6" style="float:left">
 																	<label for="user_type">
 																		{{ $item->CustomField->label }}</label>
                                                                         <input type="text" name="{{ $item->CustomField->name }}" 
                                                                         class="form-control form-control-lg" 
-                                                                        value="{{ old($item->CustomField->name, $cr->{$item->CustomField->name}) }}" disabled />
+                                                                        value="{{ $custom_field_value }}" disabled />
 																</div>
 														@elseif($item->CustomField->type == "select")
 														<div class="form-group col-md-6" style="float:left">
@@ -186,7 +190,7 @@
 																		@else
                                                                         @foreach($item->CustomField->getCustomFieldValue() as $value)
                                                                             <option value="{{ $value->id }}" 
-                                                                                {{ old($item->CustomField->name, $cr->{$item->CustomField->name}) == $value->id ? 'selected' : '' }}>
+                                                                                {{ $custom_field_value == $value->id ? 'selected' : '' }}>
                                                                                 {{ $value->name }}
                                                                             </option>
                                                                         @endforeach
@@ -198,7 +202,7 @@
 																	<label for="user_type">
 																		{{ $item->CustomField->label }}</label>
                                                                         <textarea name="{{ $item->CustomField->name }}" disabled
-                                                                        class="form-control form-control-lg">{{ old($item->CustomField->name, $cr->{$item->CustomField->name}) }}</textarea>
+                                                                        class="form-control form-control-lg">{{ $custom_field_value }}</textarea>
 																</div>	
 														@endif		
 														

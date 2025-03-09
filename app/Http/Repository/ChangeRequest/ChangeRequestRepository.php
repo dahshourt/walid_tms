@@ -878,6 +878,45 @@ public function findNextAvailableTime($userId, $currentTime)
     {
         
         
+        if($request->cab_cr_flag == '1')
+        {
+            $cr = Change_request::find($id);
+            $user_id = Auth::user()->id;
+            $CabCr = CabCr::where("cr_id",$id)->where('status','0')->first();
+            $status = $request->new_status_id;
+            $new_workflow  = new NewWorkFlow();
+            //$to_statsus =  $new_workflow->workflowstatus[$status]->new_workflow_id;
+            unset($request['cab_cr_flag']);
+            if($status == '37')//reject
+            {
+                $CabCr->status = '2';
+                $CabCr->save();
+                $CabCr->cab_cr_user()->where('user_id', $user_id)->update([
+                    'status' => '2'
+                ]);
+            }
+            else//approve
+            {           
+                $CabCr->cab_cr_user()->where('user_id', $user_id)->update([
+                    'status' => '1'
+                ]);
+            
+                $count_all_users = $CabCr->cab_cr_user->count();// get count for all users that are approve CR
+                $count_approved_users = $CabCr->cab_cr_user->where('status','1')->count();// get count for all users that need to take action on cr}
+                if($count_all_users > $count_approved_users)
+                {
+                    return true;
+                }
+                else
+                {
+                    $CabCr->status = '1';
+                    $CabCr->save();
+                }
+            }
+            
+        }
+        unset($request['cab_cr_flag']); 
+        
        $new_status_id = null;
        if($request->new_status_id) $new_status_id = $request->new_status_id;
 
@@ -925,7 +964,7 @@ public function findNextAvailableTime($userId, $currentTime)
        
          
 /** end check */
-        $except = ['old_status_id', 'new_status_id', '_method', 'current_status', 'duration', 'current_status', 'categories', 'cat_name', 'pr_name', 'Applications', 'app_name', 'depend_cr_name', 'depend_crs', 'test', 'priorities', 'cr_id', 'assign_to', 'dev_estimation', 'design_estimation', 'testing_estimation', 'assignment_user_id', '_token', 'attach', 'business_attachments', 'technical_attachments', 'cap_users'];
+        $except = ['old_status_id', 'new_status_id', '_method', 'current_status', 'duration', 'current_status', 'categories', 'cat_name', 'pr_name', 'Applications', 'app_name', 'depend_cr_name', 'depend_crs', 'test', 'priorities', 'cr_id', 'assign_to', 'dev_estimation', 'design_estimation', 'testing_estimation', 'assignment_user_id', '_token', 'attach', 'business_attachments', 'technical_attachments', 'cap_users','analysis_feedback','technical_feedback','need_ux_ui','business_feedback','rejection_reason_id'];
 
         // calculate estimation
         if ((isset($request['dev_estimation']) && $request['dev_estimation'] != '') || (isset($request['design_estimation']) && $request['design_estimation'] != '') || (isset($request['testing_estimation']) && $request['testing_estimation'] != '')) 
@@ -1284,6 +1323,48 @@ public function findNextAvailableTime($userId, $currentTime)
         return Change_request::destroy($id);
     }
 
+
+    public function findCr($id){
+        $groups = auth()->user()->user_groups->pluck('group_id')->toArray();
+        
+        $view_statuses = $this->getViewStatuses($groups);
+        $changeRequest = Change_request::with('category')->with('attachments',
+            function ($q) use ($groups) {
+                $q->with('user');
+                if (!in_array(8, $groups)) {
+                    $q->whereHas('user', function ($q) {
+                        if (\Auth::user()->flag == '0') {
+                            $q->where('flag', \Auth::user()->flag);
+                        }
+                        $q->where('visible', 1);
+                    });
+                }
+            })->where('id', $id)->first();
+            // $changeRequest =    $changeRequest->whereHas('RequestStatuses', function ($query) use ($groups, $view_statuses) {
+            // $query->where('active', '1')->whereIn('new_status_id', $view_statuses)
+            //     ->whereHas('status.group_statuses', function ($query) use ($groups) {
+            //         // Check if the groups array does not contain group_id 19 or 8
+            //         if (!in_array(19, $groups) && !in_array(8, $groups)) {
+            //             $query->whereIn('group_id', $groups);
+            //         }
+            //         $query->where('type', 2);
+            //     });
+        
+    
+        if ($changeRequest) {
+            $changeRequest->current_status = $current_status = $this->getCurrentStatusCab($changeRequest, $view_statuses);
+            //dd($current_status);
+            $changeRequest->set_status = $this->GetSetStatus($current_status, $changeRequest->workflow_type_id);
+        }
+    
+        $assigned_user = $this->AssignToUsers();
+        if ($assigned_user) {
+            $changeRequest->assign_to = $this->AssignToUsers();
+        }
+    
+        return $changeRequest;
+    }
+
     public function find($id)
     {
         
@@ -1365,6 +1446,12 @@ public function findNextAvailableTime($userId, $currentTime)
         return $view_statuses;
     }
     
+    public function getCurrentStatusCab($changeRequest, $view_statuses)
+    {
+        $current_status = Change_request_statuse::where('cr_id', $changeRequest->id)->where('active', '1')->first();
+
+        return $current_status;
+    }
 
     public function getCurrentStatus($changeRequest, $view_statuses)
     {
@@ -2062,17 +2149,7 @@ public function findNextAvailableTime($userId, $currentTime)
             $return_data = array(); 
             if(isset($request['dev_estimation'])) // calc dev estimation
             {
-                if(empty($design_duration))
-                {
-                    $return_data['develop_duration'] = $request['dev_estimation'];
-                    if(isset($request['developer_id'])&&!empty($request['developer_id'])){
-                        $return_data['developer_id']=$request['developer_id'];
-                    }
-                    else {
-                        $return_data['developer_id'] = $user->id;
-                    }
-                }
-                if(!empty($design_duration))
+				if(isset($design_duration))
                 {
                     $return_data['develop_duration'] = $request['dev_estimation'];
                
@@ -2093,23 +2170,24 @@ public function findNextAvailableTime($userId, $currentTime)
                         $return_data['end_test_time'] = isset($dates[1]) ? $dates[1] : '';
                     }
                 }
+                else
+                {
+                    $return_data['develop_duration'] = $request['dev_estimation'];
+                    if(isset($request['developer_id'])&&!empty($request['developer_id'])){
+                        $return_data['developer_id']=$request['developer_id'];
+                    }
+                    else {
+                        $return_data['developer_id'] = $user->id;
+                    }
+                }
+                
             }
 
 
             if(isset($request['testing_estimation'])) // calc test estimation
             {
 
-                if(empty($design_duration))
-                {
-                    $return_data['test_duration'] = $request['testing_estimation'];
-                    if(isset($request['tester_id'])&&!empty($request['tester_id'])){
-                        $return_data['tester_id']=$request['tester_id'];
-                    }
-                    else {
-                        $return_data['tester_id'] = $user->id;
-                    }
-                }
-                if(!empty($design_duration))
+				if(isset($design_duration))
                 {
                     $return_data['test_duration'] = $request['testing_estimation'];
                
@@ -2131,6 +2209,17 @@ public function findNextAvailableTime($userId, $currentTime)
                         $request['end_test_time'] = isset($dates[1]) ? $dates[1] : '';
                     }
                 }
+                else
+                {
+                    $return_data['test_duration'] = $request['testing_estimation'];
+                    if(isset($request['tester_id'])&&!empty($request['tester_id'])){
+                        $return_data['tester_id']=$request['tester_id'];
+                    }
+                    else {
+                        $return_data['tester_id'] = $user->id;
+                    }
+                }
+                
             }
 
 

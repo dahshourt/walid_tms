@@ -10,8 +10,9 @@ class Change_request extends Model
     use HasFactory;
     public $table = 'change_request';
     protected $appends = array('name');
-    protected $fillable = [
-        'cr_no',
+	protected $guarded = [];
+    /* protected $fillable = [
+        //'cr_no',
         'title',
         'description',
         'active',
@@ -48,8 +49,8 @@ class Change_request extends Model
         'release',
         'associated',
         'depend_on',
-        'analysis_feedback',
-        'technical_feedback',
+        //'analysis_feedback',
+        //'technical_feedback',
         'approval',
         'need_design',
         'impacted_services',
@@ -65,9 +66,15 @@ class Change_request extends Model
         'parent_id',
         'creator_mobile_number',
         'vendor_id',
-        'need_ux_ui',
-        'cr_workload','rtm_member','need_down_time','deployment_impact','business_feedback','sanity_spoc','postpone'
-    ];
+        //'need_ux_ui',
+        'cr_workload',
+		'rtm_member',
+		'need_down_time',
+		'deployment_impact',
+		//'business_feedback',
+		'sanity_spoc',
+		'postpone'
+    ]; */
 
     protected $hidden = [
         'updated_at',
@@ -75,6 +82,11 @@ class Change_request extends Model
     ];
 
 
+
+    public function defects()
+    {
+        return $this->hasMany(Defect::class, 'cr_id', 'id');
+    }
 
     public function logs()
     {
@@ -137,6 +149,11 @@ class Change_request extends Model
     public function designer()
     {
         return $this->belongsTo(User::class, 'designer_id')->select('id', 'name', 'user_name', 'email');
+    }
+
+    public function cab_cr()
+    {
+        return $this->hasOne(CabCr::class, 'cr_id', 'id')->where('status', '0');
     }
 
     public function current_status()
@@ -252,5 +269,8 @@ class Change_request extends Model
         //dd($status);
         return $status;
     }
+	
+	
+	
 
 }

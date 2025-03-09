@@ -14,7 +14,7 @@
         <option value="">Select</option>
         @foreach($item->CustomField->getCustomFieldValue() as $value)
             @if($value->defualt_group->title === 'CR Team Admin') {{-- Filter by group name --}}
-                <option value="{{ $value->id }}" {{ isset($cr) && $cr->{$item->CustomField->name} == $value->id ? 'selected' : ''  }}>{{ $value->name }}</option> 
+                <option value="{{ $value->id }}" {{ $custom_field_value == $value->id ? 'selected' : ''  }}>{{ $value->name }}</option> 
 
             @endif
         @endforeach
@@ -40,13 +40,13 @@
                 <option value="{{$cr->getCurrentStatus()?->status?->status_name}}" disabled selected>{{ $cr->getCurrentStatus()?->status?->status_name }}</option>
                     @foreach($cr->set_status as $status)
                         @if($status->same_time == 1)
-                            <option value="{{ $status->id }}" {{ $cr->{$item->CustomField->name} == $status->id ? 'selected' : '' }}>{{ $status->to_status_label }} </option>
+                            <option value="{{ $status->id }}" {{ $custom_field_value == $status->id ? 'selected' : '' }}>{{ $status->to_status_label }} </option>
                         @else
                       
                         <option value="{{ $status->id }}"  
-    {{ isset($cr->{$item->CustomField->name}) && $cr->{$item->CustomField->name} == $status->id ? 'selected' : '' }}>
+    {{ $custom_field_value == $status->id ? 'selected' : '' }}>
     
-    {{  $status->workflowstatus[0]->to_status->status_name  }} 
+    {{ $status->workflowstatus[0]->to_status->high_level? $status->workflowstatus[0]->to_status->high_level->name : $status->workflowstatus[0]->to_status->status_name  }} 
 </option>
 
                         @endif            
@@ -54,24 +54,24 @@
                 @elseif($item->CustomField->name == "release_name")
                     <option value=""> select </option>
                     @foreach($cr->get_releases() as $release)
-                        <option value="{{ $release->id }}" {{ $cr->{$item->CustomField->name} == $release->id ? 'selected' : '' }}>{{ $release->name }} </option>
+                        <option value="{{ $release->id }}" {{ $custom_field_value == $release->id ? 'selected' : '' }}>{{ $release->name }} </option>
                     @endforeach
                 @else
                 @if((isset($item->enable)&&($item->enable==1)))
                     <option value="">Select</option>
                     @if($item->CustomField->name == "developer_id" )
                         @foreach($developer_users as $developer)
-                            <option value="{{ $developer->id }}" {{ old($developer->user_name, $cr->{$item->CustomField->name}) == $developer->id ? 'selected' : '' }}>{{ $developer->user_name }}</option>
+                            <option value="{{ $developer->id }}" {{ old($developer->user_name, $custom_field_value) == $developer->id ? 'selected' : '' }}>{{ $developer->user_name }}</option>
                         @endforeach
                     @endif
                     @if($item->CustomField->name == "tester_id" )
                         @foreach($testing_users as $users)
-                            <option value="{{ $users->id }}" {{ old($users->user_name, $cr->{$item->CustomField->name}) == $users->id ? 'selected' : '' }}>{{ $users->user_name }}</option>
+                            <option value="{{ $users->id }}" {{ old($users->user_name, $custom_field_value) == $users->id ? 'selected' : '' }}>{{ $users->user_name }}</option>
                         @endforeach
                     @endif
                     @if($item->CustomField->name == "designer_id" )
                         @foreach($sa_users as $users)
-                            <option value="{{ $users->id }}" {{ old($users->user_name, $cr->{$item->CustomField->name}) == $users->id ? 'selected' : '' }}>{{ $users->user_name }}</option>
+                            <option value="{{ $users->id }}" {{ old($users->user_name,$custom_field_value) == $users->id ? 'selected' : '' }}>{{ $users->user_name }}</option>
                         @endforeach
                     @endif
 
@@ -81,7 +81,7 @@
                         @elseif($item->CustomField->name == "designer_id" )
                         @else
                             @if(isset($cr))
-                            <option value="{{ $value->id }}" {{ old($item->CustomField->name, $cr->{$item->CustomField->name}) == $value->id ? 'selected' : '' }}>{{ $value->name }}</option>	
+                            <option value="{{ $value->id }}" {{ old($item->CustomField->name, $custom_field_value) == $value->id ? 'selected' : '' }}>{{ $value->name }}</option>	
                             @else
                             <option value="{{ $value->id }}">{{ $value->name }}</option>	
                             @endif	
@@ -91,7 +91,7 @@
                 @php
                     // Get the selected value from old input or the current record (cr)
                     $selectedValue = "";
-                    if(isset($cr)) $selectedValue = old($item->CustomField->name, $cr->{$item->CustomField->name});
+                    if(isset($cr)) $selectedValue = old($item->CustomField->name, $custom_field_value);
                 @endphp
 
                 @if($selectedValue)

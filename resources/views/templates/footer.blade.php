@@ -125,6 +125,10 @@
         	placeholder: "Select group/groups",
         });
 
+		$('.multi-select').select2({
+        	placeholder: "Select ",
+        });
+
 		$('#to_status_id').select2({
         	placeholder: "Select status/statuses",
         });
