@@ -16,5 +16,5 @@
 @include("$view.custom_fields_types.select")	
 @include("$view.custom_fields_types.textarea")	
 @include("$view.custom_fields_types.multiselect")                                               
-                                                  
+@include("$view.custom_fields_types.button")                                                  
 @endforeach

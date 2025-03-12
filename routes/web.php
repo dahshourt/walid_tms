@@ -148,6 +148,8 @@ Route::middleware(['auth'])->group(
 
         Route::resource('cab_users', 'CabUser\CabUserController');
         Route::post('cab_user/updateactive', 'CabUser\CabUserController@updateactive');
+        Route::get('create_defect/cr_id/{id}', 'Defect\DefectController@Create');
+        Route::post('store_defect', 'Defect\DefectController@store');
 });
 
 /// user routes

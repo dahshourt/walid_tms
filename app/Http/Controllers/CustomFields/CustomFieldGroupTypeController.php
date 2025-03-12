@@ -128,12 +128,12 @@ class CustomFieldGroupTypeController extends Controller
             $value="6";
         }
         $CustomFields = $this->custom_field_group_type->getAllCustomFieldsWithSelectedByformType($column, $value);
-  $fields = json_decode($CustomFields);
-  $statuses = (new StatusRepository)->getAll();
-  $priorities=(new priorityRepository)->getAll();
- $applications= (new ApplicationRepository)->getAll();
- $parents=(new ParentRepository)->getAll();
- $categories=(new CategoreyRepository)->getAll();
+        $fields = json_decode($CustomFields);
+        $statuses = (new StatusRepository)->getAll();
+        $priorities=(new priorityRepository)->getAll();
+        $applications= (new ApplicationRepository)->getAll();
+        $parents=(new ParentRepository)->getAll();
+        $categories=(new CategoreyRepository)->getAll();
         // Ensure $CustomFields is not an array of arrays if not expected
        $units= (new UnitRepository)->getAll();
        $workflows= (new Workflow_type_repository)->get_workflow_all_subtype_without_release();
