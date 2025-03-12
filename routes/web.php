@@ -150,6 +150,10 @@ Route::middleware(['auth'])->group(
         Route::post('cab_user/updateactive', 'CabUser\CabUserController@updateactive');
         Route::get('create_defect/cr_id/{id}', 'Defect\DefectController@Create');
         Route::post('store_defect', 'Defect\DefectController@store');
+        Route::get('edit_defect/{id}', 'Defect\DefectController@edit');
+        Route::get('defect/files/download/{id}','Defect\DefectController@download');
+        Route::patch('defect_update/{id}','Defect\DefectController@update');
+
 });
 
 /// user routes

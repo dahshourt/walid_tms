@@ -16,6 +16,7 @@ use App\Factories\Defect\DefectFactory;
 use App\Http\Repository\Defect\DefectRepository;
 use App\Models\Technical_team;
 use App\Models\Status;
+use App\Models\DefectAttachment;
 use App\Factories\Statuses\StatusFactory;
 
 class DefectController extends Controller
@@ -31,7 +32,7 @@ class DefectController extends Controller
         $this->custom_field_group_type = $custom_field_group_type::index();
         $this->view = 'defect';
         $view = 'Defect';
-        $title = 'Create Defect';
+        $title = 'Defect';
         $form_title = 'defect';
         $route = 'create_defect';
         view()->share(compact('view','route','title','form_title'));
@@ -119,7 +120,29 @@ class DefectController extends Controller
      */
     public function edit($id)
     {
-        //
+        //custom fields
+        $technical_team = Technical_team::all();
+        $defect_status = $this->status->get_defect_status();
+        $CustomFields = $this->custom_field_group_type->getAllCustomFieldsWithSelectedByformType("form_type", 7);
+        //get Defect data
+        $defect_data =  $this->defect->get_defect_data($id);
+        $defect_comments = $this->defect->get_defect_comments($id);
+        $defect_attachments = $this->defect->get_defect_attachments($id);
+        return view("$this->view.edit_defect", compact("id", "CustomFields", "defect_status", "technical_team", "defect_data", "defect_comments", "defect_attachments"));  
+    }
+
+
+    public function download($id)
+    {
+        
+        $file = DefectAttachment::findOrFail($id);
+        $filePath = public_path("uploads\defects\\" . $file['file']); // in config
+    
+        if (file_exists($filePath)) {
+            return response()->download($filePath, $file->file);
+        }
+
+        return redirect()->back()->withErrors('File not found.');
     }
 
     /**
@@ -130,8 +153,28 @@ class DefectController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
-    {
-        //
+    { 
+        
+        //comments
+        if($request->comment)
+        {
+            $comment_id = $this->defect->AddDefectComment($id, $request->comment);
+            $this->defect->AddDefectLog($id, "Added Comment");
+        }
+        //update defect statuses
+        $defect_data =  $this->defect->get_defect_data($id);
+        $defect_status = $this->defect->AddDefectStatus($id, $defect_data->status_id, $request->defect_status);
+        //update data 
+        $updated_defect = $this->defect->update_defect($id, $request);
+        ($updated_defect) ? $this->defect->AddDefectLog($id, "Defect Updated") : '';
+        //upload atachments if exist
+        if($request->business_attachments)
+        {
+            $this->defect->Defect_Attach($request->business_attachments, $id);
+            $this->defect->AddDefectLog($id, "Attachment Uploaded!");
+        }
+        
+        return redirect()->back()->with('status' , 'Defect Updated Successfully');
     }
 
     /**
