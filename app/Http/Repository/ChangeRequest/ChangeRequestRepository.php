@@ -1328,7 +1328,7 @@ public function findNextAvailableTime($userId, $currentTime)
         $groups = auth()->user()->user_groups->pluck('group_id')->toArray();
         
         $view_statuses = $this->getViewStatuses($groups);
-        $changeRequest = Change_request::with('category')->with('attachments',
+        $changeRequest = Change_request::with(['category','defects'])->with('attachments',
             function ($q) use ($groups) {
                 $q->with('user');
                 if (!in_array(8, $groups)) {
