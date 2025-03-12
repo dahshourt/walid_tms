@@ -64,4 +64,19 @@ class DefectRepository implements DefectRepositoryInterface
             ]);
         }
     }
+
+    public function get_defect_data($defect_id)
+    {
+        return Defect::find($defect_id);
+    }
+
+    public function get_defect_comments($defect_id)
+    {
+        return DefectComment::where("defect_id", $defect_id)->get();
+    }
+
+    public function get_defect_attachments($defect_id)
+    {
+        return DefectAttachment::where("defect_id", $defect_id)->get();
+    }
 }
