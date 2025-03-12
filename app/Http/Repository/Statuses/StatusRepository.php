@@ -143,6 +143,11 @@ class StatusRepository implements StatusRepositoryInterface
         ");
     }
 
+    public function get_defect_status()
+    {
+        return Status::whereIn('id', [85, 86, 87])->get();
+    }
+
 
 
 }

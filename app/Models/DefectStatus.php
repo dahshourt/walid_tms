@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class DefectStatus extends Model
 {
     use HasFactory;
-    public $table = 'defect_attachments';
+    public $table = 'defect_statuses';
 	protected $fillable = [
         'defect_id',
         'user_id',
