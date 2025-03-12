@@ -12,7 +12,7 @@
         <span style="color: red;">*</span>
     @endif
         @if((isset($item->enable)&&($item->enable==1)))
-                <a href="{{ url('create_defect/cr_id/') }}/{{$cr->id}}" type="button" name="{{ $item->CustomField->name }}"  class="form-control form-control-lg btn-primary"  value="{{ old($item->CustomField->name, $custom_field_value) }}"  style="color:white; font-weight: bold;font-size:15px;text-align:center"  >{{ $item->CustomField->label }}</a>          
+                <a href="{{ url('create_defect/cr_id/') }}/{{$cr->id}}"  target="_blank" type="button" name="{{ $item->CustomField->name }}"  class="form-control form-control-lg btn-primary"  value="{{ old($item->CustomField->name, $custom_field_value) }}"  style="color:white; font-weight: bold;font-size:15px;text-align:center"  >{{ $item->CustomField->label }}</a>          
         @else
             @if(isset($cr))
                 <label class="form-control form-control-lg">{{ ($cr->{$item->CustomField->name}) }} </label>
