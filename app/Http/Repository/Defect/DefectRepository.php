@@ -79,4 +79,13 @@ class DefectRepository implements DefectRepositoryInterface
     {
         return DefectAttachment::where("defect_id", $defect_id)->get();
     }
+
+    public function update_defect($defect_id, $request)
+    { 
+        return Defect::where('id', $defect_id)->update([
+            'subject' => $request->title,
+            'group_id' => $request->technical_team,
+            'status_id' => $request->defect_status,
+        ]);
+    }
 }

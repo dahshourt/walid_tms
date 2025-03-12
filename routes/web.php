@@ -152,6 +152,7 @@ Route::middleware(['auth'])->group(
         Route::post('store_defect', 'Defect\DefectController@store');
         Route::get('edit_defect/{id}', 'Defect\DefectController@edit');
         Route::get('defect/files/download/{id}','Defect\DefectController@download');
+        Route::patch('defect_update/{id}','Defect\DefectController@update');
 
 });
 

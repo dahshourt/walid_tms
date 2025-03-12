@@ -24,9 +24,9 @@
                             <h3 class="card-title">Update Defect For CR#_{{$defect_data->cr_id}}</h3>
                         </div>
                         
-                        <form class="form" action='{{URL("update_defect/")}}' method="post" enctype="multipart/form-data">
+                        <form class="form" action='{{URL("defect_update/")}}/{{$defect_data->id}}' method="post" enctype="multipart/form-data">
                             {{ csrf_field() }}
-                            
+                            @method('PATCH')
                            
                             <input type="hidden" name="cr_id" value="{{$defect_data->cr_id}}">
                             

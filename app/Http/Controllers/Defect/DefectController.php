@@ -153,8 +153,28 @@ class DefectController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
-    {
-        //
+    { 
+        
+        //comments
+        if($request->comment)
+        {
+            $comment_id = $this->defect->AddDefectComment($id, $request->comment);
+            $this->defect->AddDefectLog($id, "Added Comment");
+        }
+        //update defect statuses
+        $defect_data =  $this->defect->get_defect_data($id);
+        $defect_status = $this->defect->AddDefectStatus($id, $defect_data->status_id, $request->defect_status);
+        //update data 
+        $updated_defect = $this->defect->update_defect($id, $request);
+        ($updated_defect) ? $this->defect->AddDefectLog($id, "Defect Updated") : '';
+        //upload atachments if exist
+        if($request->business_attachments)
+        {
+            $this->defect->Defect_Attach($request->business_attachments, $id);
+            $this->defect->AddDefectLog($id, "Attachment Uploaded!");
+        }
+        
+        return redirect()->back()->with('status' , 'Defect Updated Successfully');
     }
 
     /**

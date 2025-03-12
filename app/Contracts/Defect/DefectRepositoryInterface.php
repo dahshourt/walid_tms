@@ -12,5 +12,6 @@ interface DefectRepositoryInterface
 	public function get_defect_data($defect_id);
 	public function get_defect_comments($defect_id);
 	public function get_defect_attachments($defect_id);
+	public function update_defect($defect_id, $request);
 
 }
