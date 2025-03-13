@@ -71,7 +71,7 @@ class DefectController extends Controller
         } // to check if the user has access to edit this cr or not 
          $technical_team = Technical_team::all();
          $defect_status = $this->status->get_defect_status();
-        $CustomFields = $this->custom_field_group_type->getAllCustomFieldsWithSelectedByformType("form_type", 7);
+         $CustomFields = $this->custom_field_group_type->getAllCustomFieldsWithSelectedByformType("form_type", 7);
 
         return view("$this->view.create_defect", compact("id", "CustomFields", "technical_team", "defect_status"));  
     }
@@ -87,7 +87,7 @@ class DefectController extends Controller
         $defect = $this->defect->AddDefect($request);
         $defect_id = $defect->id;
         
-        $defect_status = $this->defect->AddDefectStatus($defect_id, 0, $request->defect_status);
+        $defect_status = $this->defect->AddDefectStatus($defect_id, $request->defect_status, $request->defect_status);
         if($request->comment)
         {
             $comment_id = $this->defect->AddDefectComment($defect_id, $request->comment);
@@ -154,7 +154,6 @@ class DefectController extends Controller
      */
     public function update(Request $request, $id)
     { 
-        
         //comments
         if($request->comment)
         {
