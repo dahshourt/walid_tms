@@ -32,7 +32,7 @@ class DefectController extends Controller
         $this->custom_field_group_type = $custom_field_group_type::index();
         $this->view = 'defect';
         $view = 'Defect';
-        $title = 'Defect';
+        $title = 'Defects';
         $form_title = 'defect';
         $route = 'create_defect';
         view()->share(compact('view','route','title','form_title'));
@@ -45,7 +45,8 @@ class DefectController extends Controller
      */
     public function index()
     {
-        //
+        $collection = $this->defect->getAll();
+        return view("$this->view.index",compact('collection'));
     }
 
     /**
