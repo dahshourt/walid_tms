@@ -13,7 +13,7 @@ class MailTemplatesRepository implements MailTemplatesRepositoryInterface
 {
     public function getAll()
     { 
-        return MailTemplate::paginate(10);;
+        return MailTemplate::paginate(10);
     } // end method
 
 

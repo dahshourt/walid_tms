@@ -88,4 +88,8 @@ class DefectRepository implements DefectRepositoryInterface
             'status_id' => $request->defect_status,
         ]);
     }
+
+    public function getAll(){
+        return Defect::with('current_status')->paginate(10);
+    }
 }
