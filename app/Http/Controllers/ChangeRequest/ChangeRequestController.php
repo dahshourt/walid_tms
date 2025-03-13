@@ -24,6 +24,7 @@ use App\Models\Group;
 use App\Models\Change_request;
 use App\Models\attachements_crs;
 use App\Models\User; 
+use App\Models\Defect; 
 use App\Models\WorkFlowType;
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use Validator;
@@ -404,6 +405,8 @@ class ChangeRequestController extends Controller
      */
     public function update(changeRequest_Requests $request, $id)
     { 
+    //    $d=Defect::find($id);
+    //    print_r($d)
       $mails = array();
       //dd(empty($request->cap_users));
       if(!empty($request->cap_users))
@@ -462,7 +465,7 @@ class ChangeRequestController extends Controller
             }
         }
         
-
+//die('walid');
       $cr_id=  $this->changerequest->update($id, $request);
       
         if($cr_id==false){

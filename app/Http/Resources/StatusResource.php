@@ -24,7 +24,8 @@ class StatusResource extends JsonResource
             'group_statuses'        => GroupStatusResource::collection($this->group_statuses->where('type',1)),
             'view_group_statuses'   => GroupStatusResource::collection($this->group_statuses->where('type',2)),
             'stage'                 => new StageResource($this->stage),
-            'high_level'            =>'5'
+            'high_level'            =>'5',
+            'defect'=> $this->defect
         ];
     }
 }
