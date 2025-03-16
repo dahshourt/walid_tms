@@ -31,7 +31,7 @@ class ReleaseRepository implements ReleasesRepositoryInterface
     public function create($request)
     {        
 
-        $releaseWorkflowTypeId = WorkFlowType::where('name', 'Realeas')->value('id');
+        $releaseWorkflowTypeId = WorkFlowType::where('name', 'Release')->value('id');
 
         
         $workflow = NewWorkFlow::where('type_id', $releaseWorkflowTypeId)->first();

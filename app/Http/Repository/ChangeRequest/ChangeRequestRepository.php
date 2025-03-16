@@ -1243,7 +1243,8 @@ public function findNextAvailableTime($userId, $currentTime)
         //dd($request);
         
 
-        $change_request = Change_request::create($request);
+       $create_data = Arr::except($request, ['old_status_id', 'new_status_id', '_method', 'current_status', 'duration', 'current_status', 'categories', 'cat_name', 'pr_name', 'Applications', 'app_name', 'depend_cr_name', 'depend_crs', 'test', 'priorities', 'cr_id', 'assign_to', 'dev_estimation', 'design_estimation', 'testing_estimation', 'assignment_user_id', '_token', 'attach', 'business_attachments', 'technical_attachments', 'cap_users','analysis_feedback','technical_feedback','need_ux_ui','business_feedback','rejection_reason_id','cr_member','cr_no']);
+        $change_request = Change_request::create($create_data);
         
         //$data = $request;
         $data = Arr::except($request, ['technical_attachments', 'business_attachments']);

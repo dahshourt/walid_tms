@@ -54,15 +54,18 @@
         </select>
         {!! $errors->first('from_status_id', '<span class="form-control-feedback">:message</span>') !!}
     </div>
+<div class="form-group">
+		<div class="checkbox-inline mb-10">
+			<label class="checkbox">
+				<input type="checkbox" id="same_time" name="same_time">
+				<span></span>At the same time
+			</label>
+		</div>
+		</div>
 
     <div class="form-group">
         <label for="to_status_id">To Status:</label>
-        <div class="checkbox-inline mb-10 d-none">
-    <label class="checkbox">
-        <input type="checkbox" id="same_time" name="same_time" checked>
-        <span></span>At the same time
-    </label>
-</div>
+        
 
         
         <div class="same_class">
@@ -156,7 +159,7 @@
 <script>
     $(document).ready(function() {
         
-        $("#same_time").change(function() {
+       /*  $("#same_time").change(function() {
             if (this.checked) {
                 $(".not_same_class").remove();
                 $(".same_class").show();
@@ -182,7 +185,7 @@
                 // Append the recreated div to the form
                 $(".form-group.same_class").after(notSameClassDiv);
             }
-        });
+        }); */
 
     });
 
