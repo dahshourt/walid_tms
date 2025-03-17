@@ -9,6 +9,8 @@ use App\Models\DefectComment;
 use App\Models\DefectLog;
 use App\Models\DefectStatus;
 use App\Models\DefectAttachment;
+use App\Models\Technical_team;
+
 use Auth;
 class DefectRepository implements DefectRepositoryInterface
 {
@@ -91,5 +93,16 @@ class DefectRepository implements DefectRepositoryInterface
 
     public function getAll(){
         return Defect::with('current_status')->paginate(10);
+    }
+
+    public function get_technical_team_by_id($tech_id)
+    {
+        return Technical_team::where('id', $tech_id)->first();
+    }
+
+
+    public function get_defect_logs($id)
+    {
+        return DefectLog::where('defect_id', $id)->get();
     }
 }

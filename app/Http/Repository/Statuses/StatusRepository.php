@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Status;
 use App\Models\GroupStatuses;
 use App\Models\Change_request;
-
+use App\Models\Technical_team;
 
 class StatusRepository implements StatusRepositoryInterface
 {
@@ -149,5 +149,11 @@ class StatusRepository implements StatusRepositoryInterface
     }
 
 
+    public function get_defect_status_by_id($status_id)
+    {
+        return Status::where('id', $status_id)->first();
+    }
+
+    
 
 }

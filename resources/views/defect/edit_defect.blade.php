@@ -196,13 +196,14 @@
 
                                     <!-- Pagination (If Needed) -->
                                     <div class="d-flex justify-content-center">
-                                         
+                                    @include("defect.cr_logs")
                                     </div>
                                 </div>
                             </div>
 
                             <div class="card-footer text-left">
                                 <button type="submit" class="btn btn-success mr-2">Update Defect</button>
+                                <button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
                                 <!-- @can('Show CR Logs')
                                     <button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
                                 @endcan -->
@@ -218,3 +219,25 @@
 
 </div>
 @endsection
+
+@push('script')
+    <script>
+        var modal = document.getElementById("modal");
+        var btn = document.getElementById("openModal");
+        var closeBtn = document.getElementById("close_logs");
+
+        btn.onclick = function () {
+            modal.style.display = "block";
+        };
+
+        closeBtn.onclick = function () {
+            modal.style.display = "none";
+        };
+
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
+    </script>
+@endpush
