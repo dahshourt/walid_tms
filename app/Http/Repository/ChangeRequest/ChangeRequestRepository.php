@@ -1082,11 +1082,10 @@ public function findNextAvailableTime($userId, $currentTime)
         }
 /**end  check estimation  */
         if (isset($request['new_status_id'])) {
-           
             $new_status_id = $request['new_status_id'];  
-        } elseif (isset($request->new_status_id)) {
-           
-            $new_status_id = $request->new_status_id;  
+        } 
+        elseif (isset($request->new_status_id)) {
+           $new_status_id = $request->new_status_id;  
         }
         $workflow = NewWorkFlow::find($new_status_id);
         if(isset(\Auth::user()->id) && \Auth::user()->id != null)
@@ -1126,7 +1125,7 @@ public function findNextAvailableTime($userId, $currentTime)
                 $check_depend_workflow = NewWorkFlow::whereHas('workflowstatus', function ($q) use ($workflow) {
                     $q->where('to_status_id', $workflow->workflowstatus[0]->to_status_id);
                 })->pluck('from_status_id');
-                $active = $depend_statuses->count() > 0 ? '0' : '1';
+                $active = $depend_statuses->count() > 1 ? '0' : '1';
                 $check_depend_status = Change_request_statuse::where('cr_id', $id)->whereIN('new_status_id', $check_depend_workflow)->where('active', '1')->count();
                 if ($check_depend_status > 0) {
                     $active = '0';
@@ -1421,7 +1420,6 @@ public function findNextAvailableTime($userId, $currentTime)
         }else {
             $group = auth()->user()->default_group;
         }
-
         
     
         // Initialize the query for GroupStatuses
@@ -1434,10 +1432,11 @@ public function findNextAvailableTime($userId, $currentTime)
            
         } else {
             // If it's a single value, apply the condition for that group
-            if ($group != 19 && $group != 8) {
+
+            //if ($group != 19 && $group != 8) {
                 $view_statuses = $view_statuses->where('group_id', $group)->where('type', 2);
                
-            }
+            //}
         }
         
     
@@ -1463,8 +1462,13 @@ public function findNextAvailableTime($userId, $currentTime)
 
     public function GetSetStatus($current_status, $type_id)
     {
+        //dd($current_status);
         $status_id = $current_status->new_status_id;
-        $set_status = NewWorkFlow::where('from_status_id', $status_id)->whereHas('workflowstatus', function ($q) {
+        $previous_status_id = $current_status->old_status_id;
+        $set_status = NewWorkFlow::where('from_status_id', $status_id)->where(function($query) use ($previous_status_id){
+            $query->WhereNull('previous_status_id');
+            $query->ORwhere('previous_status_id',$previous_status_id);
+        })->whereHas('workflowstatus', function ($q) {
             $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
         })->where('type_id', $type_id)->where('active','1')->orderby('id', 'DESC')->get();
         //$set_status = 1;

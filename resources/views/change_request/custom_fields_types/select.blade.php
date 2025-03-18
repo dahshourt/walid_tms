@@ -106,8 +106,13 @@
     </div>
 @endif
 <?php 
-    $def1= $cr->defects()->count(); 
-    $def2=  $cr->defects()->whereIn('status_id', [86, 87])->count();
+    $def1 = 0;
+    $def2 = 0;
+    if(isset($cr))
+    {
+        $def1= $cr->defects()->count(); 
+        $def2=  $cr->defects()->whereIn('status_id', [86, 87])->count();
+    }
 ?>
 @if($item->CustomField->name == "new_status_id" && ($def1 != $def2))
     <script>

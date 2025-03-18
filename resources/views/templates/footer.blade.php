@@ -166,6 +166,15 @@ $('#status_id').select2({
 			});
     	});
 
+		$(document).ready(function() {
+			$('#dfUsageTable').DataTable({
+				"searching": true,
+				"paging":   false,
+        		"ordering": false,
+        		"info":     false
+			});
+		});
+
 		</script>
 		@stack('script')
 	</body>

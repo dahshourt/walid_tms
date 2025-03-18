@@ -20,9 +20,11 @@ class NewWorkFlow extends Model
     ];
     protected $table = 'new_workflow';
     protected $fillable = [ 
+        'previous_status_id',
         'from_status_id',
         'active',
         'same_time',
+        'same_time_from',
         'workflow_type', // this is flag especially or not
         'to_status_label',
         'type_id' //this is workflow type id 
@@ -32,6 +34,11 @@ class NewWorkFlow extends Model
     public function from_status()
     {
         return $this->belongsTo(Status::class,'from_status_id');
+    }
+
+    public function previous_status()
+    {
+        return $this->belongsTo(Status::class,'previous_status_id');
     }
 
     public function workflowstatus()

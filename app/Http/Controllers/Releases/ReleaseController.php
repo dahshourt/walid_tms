@@ -63,7 +63,7 @@ class ReleaseController extends Controller
      */
     public function create()
     {
-        $releaseWorkflowTypeId = WorkFlowType::where('name', 'Realeas')->value('id');
+        $releaseWorkflowTypeId = WorkFlowType::where('name', 'Release')->whereNotNull('parent_id')->value('id');
 
         
         $workflow = NewWorkFlow::where('type_id', $releaseWorkflowTypeId)->first();
@@ -174,7 +174,7 @@ class ReleaseController extends Controller
 		
         $row =   $this->release->show($id);
 
-        $releaseWorkflowTypeId = WorkFlowType::where('name', 'Realeas')->value('id');
+        $releaseWorkflowTypeId = WorkFlowType::where('name', 'Release')->whereNotNull('parent_id')->value('id');
 
         
         $workflow = NewWorkFlow::where('type_id', $releaseWorkflowTypeId)->first();
@@ -191,7 +191,7 @@ class ReleaseController extends Controller
 		$this->authorize('Show Release'); 
         $row = $this->release->find($id);
         
-        $releaseWorkflowTypeId = WorkFlowType::where('name', 'Realeas')->value('id');
+        $releaseWorkflowTypeId = WorkFlowType::where('name', 'Release')->whereNotNull('parent_id')->value('id');
 
         //$workflow = NewWorkFlow::where('type_id', $releaseWorkflowTypeId)->first();
         $workflow = NewWorkFlow::where('from_status_id',$row->release_status)->where('type_id',$releaseWorkflowTypeId)->where('active','1')->orderBy('id', 'desc')->get();
@@ -224,7 +224,7 @@ class ReleaseController extends Controller
 
         $row = $this->release->find($id);
         
-        $releaseWorkflowTypeId = WorkFlowType::where('name', 'Realeas')->value('id');
+        $releaseWorkflowTypeId = WorkFlowType::where('name', 'Release')->whereNotNull('parent_id')->value('id');
 
         //$workflow = NewWorkFlow::where('type_id', $releaseWorkflowTypeId)->first();
         $workflow = NewWorkFlow::where('from_status_id',$row->release_status)->where('type_id',$releaseWorkflowTypeId)->where('active','1')->orderBy('id', 'desc')->get();

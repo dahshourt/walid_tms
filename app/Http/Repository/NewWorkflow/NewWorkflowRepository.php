@@ -86,9 +86,7 @@ class NewWorkflowRepository implements NewWorkflowRepositoryInterface
 
     public function create($request)
     {  
-        echo "<pre>";
-        print_r($request);
-        echo "</pre>"; //die;
+       
        if($request['type_id']){
         $request['workflow_type'] = $request['type_id'];
        }
