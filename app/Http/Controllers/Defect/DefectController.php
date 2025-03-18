@@ -45,6 +45,7 @@ class DefectController extends Controller
      */
     public function index()
     {
+        
         $collection = $this->defect->getAll();
         return view("$this->view.index",compact('collection'));
     }
@@ -110,7 +111,16 @@ class DefectController extends Controller
      */
     public function show($id)
     {
-        //
+        $technical_team = Technical_team::all();
+        $defect_status = $this->status->get_defect_status();
+        $CustomFields = $this->custom_field_group_type->getAllCustomFieldsWithSelectedByformType("form_type", 7);
+        //get Defect data
+        $defect_data =  $this->defect->get_defect_data($id);
+        $defect_comments = $this->defect->get_defect_comments($id);
+        $defect_attachments = $this->defect->get_defect_attachments($id);
+        // Defect Logs
+        $logs = $this->defect->get_defect_logs($id);
+        return view("$this->view.show", compact("id", "logs", "CustomFields", "defect_status", "technical_team", "defect_data", "defect_comments", "defect_attachments")); 
     }
 
     /**

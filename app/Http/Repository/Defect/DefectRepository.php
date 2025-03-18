@@ -10,6 +10,10 @@ use App\Models\DefectLog;
 use App\Models\DefectStatus;
 use App\Models\DefectAttachment;
 use App\Models\Technical_team;
+use App\Models\Group;
+use App\Models\Status;
+
+
 
 use Auth;
 class DefectRepository implements DefectRepositoryInterface
@@ -91,8 +95,36 @@ class DefectRepository implements DefectRepositoryInterface
         ]);
     }
 
-    public function getAll(){
-        return Defect::with('current_status')->paginate(10);
+    public function getAll($group = null){
+
+        if(empty($group)){
+            if(session('default_group')){
+                $group = session('default_group');
+    
+            }else {
+                $group = auth()->user()->default_group;
+            }
+        }
+
+        $isTechnicalTeam = Group::where('id', $group)->where('technical_team', '1')->exists();
+        $isUATTeam = Group::where('id', $group)->where('title', 'UAT')->exists();
+        
+        $query = Defect::with('current_status');
+
+        if($isTechnicalTeam){
+            $pendingStatus = Status::where('status_name', 'Pending')->value('id');
+            $query->where('group_id', $group)->where('status_id', $pendingStatus);
+        }
+        elseif($isUATTeam){
+            $solvedStatus = Status::where('status_name', 'Solved')->value('id');
+            $notDefectStatus = Status::where('status_name', 'Not Defect')->value('id');
+            $query->where('group_id', $group)->whereIn('status_id', [$solvedStatus, $notDefectStatus]);
+
+        }
+        else{
+            $query->where('group_id', $group);
+        }
+        return $query->paginate(10);
     }
 
     public function get_technical_team_by_id($tech_id)
