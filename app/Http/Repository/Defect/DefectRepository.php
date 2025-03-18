@@ -118,7 +118,7 @@ class DefectRepository implements DefectRepositoryInterface
         elseif($isUATTeam){
             $solvedStatus = Status::where('status_name', 'Solved')->value('id');
             $notDefectStatus = Status::where('status_name', 'Not Defect')->value('id');
-            $query->where('group_id', $group)->whereIn('status_id', [$solvedStatus, $notDefectStatus]);
+            $query->whereIn('status_id', [$solvedStatus, $notDefectStatus]);
 
         }
         else{
