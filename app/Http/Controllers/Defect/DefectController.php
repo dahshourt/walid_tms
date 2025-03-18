@@ -31,7 +31,7 @@ class DefectController extends Controller
         $this->defect = $defect::index();
         $this->custom_field_group_type = $custom_field_group_type::index();
         $this->view = 'defect';
-        $view = 'Defect';
+        $view = 'defect';
         $title = 'Defects';
         $form_title = 'defect';
         $route = 'create_defect';

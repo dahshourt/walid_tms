@@ -120,11 +120,12 @@
 									</div>
 									<div class="card-body">
 										<!--begin: Datatable-->
-										<table class="table table-separate table-head-custom table-checkable" id="kt_datatable2">
+										<table class="table table-separate table-head-custom table-checkable" id="dfUsageTable">
 											<thead>
 												<tr>
 													<th>number</th>
 													<th>type</th>
+													<th>Previous Status</th>
 													<th>From Status</th>
 													<th>To Status</th>
 													<th>To Status Label</th>
@@ -153,3 +154,5 @@
 					
 
 @endsection
+
+

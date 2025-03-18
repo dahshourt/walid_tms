@@ -31,7 +31,7 @@
 
     <div class="form-group">
         <label for="type_id">Type:</label>
-        <select class="form-control form-control-lg" id="type_id" name="type_id">
+        <select class="form-control form-control-lg" id="type_id" name="type_id" {{ isset($row) ? "disabled" : "" }}>
             <option value="">Select</option>
             @foreach($types as $item)
                 <option value="{{ $item->id }}" {{ isset($row) && $row->type_id == $item->id ? "selected" : "" }}>
@@ -41,6 +41,20 @@
         </select>
         {!! $errors->first('type_id', '<span class="form-control-feedback">:message</span>') !!}
     </div>
+
+    <div class="form-group">
+        <label for="previous_status_id">Pevious Status:</label>
+        <select class="form-control form-control-lg" id="previous_status_id" name="previous_status_id">
+            <option value="">Select</option>
+            @foreach($statuses as $item)
+                <option value="{{ $item->id }}" {{ isset($row) && $row->previous_status_id == $item->id ? "selected" : "" }}>
+                    {{ $item->name }}
+                </option>
+            @endforeach
+        </select>
+        {!! $errors->first('previous_status_id', '<span class="form-control-feedback">:message</span>') !!}
+    </div>
+
 
     <div class="form-group">
         <label for="from_status_id">From Status:</label>

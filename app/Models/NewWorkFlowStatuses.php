@@ -19,7 +19,11 @@ class NewWorkFlowStatuses extends Model
         'created_at'
     ];
     protected $table = 'new_workflow_statuses';
-    protected $fillable = [ 'new_workflow_id','to_status_id','default_to_status' ];
+    protected $fillable = [ 'new_workflow_id','to_status_id','default_to_status','dependency_ids' ];
+
+    protected $casts = [
+        'dependency_ids' => 'array'
+    ];
 
     public function to_status()
     {

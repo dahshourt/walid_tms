@@ -22,7 +22,9 @@
                                     
                                 
                                 </td>
+                                    <td>{{ $item->previous_status? $item->previous_status->status_name : "" }}</td>
                                     <td>{{ $item['from_status']['status_name'] }}</td>
+                                    
                                      <!-- <td>{{ count($item->workflowstatus) }}</td> -->
                                      <td>
                                          @foreach($item->workflowstatus as $itm)
