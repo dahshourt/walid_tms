@@ -137,4 +137,9 @@ class DefectRepository implements DefectRepositoryInterface
     {
         return DefectLog::where('defect_id', $id)->get();
     }
+
+    public function all_defects($id)
+    {
+        return Defect::where('cr_id', $id)->get();
+    }
 }
