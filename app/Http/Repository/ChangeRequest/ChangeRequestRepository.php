@@ -1141,21 +1141,24 @@ public function findNextAvailableTime($userId, $currentTime)
 
             foreach ($workflow->workflowstatus as $key => $item) {
                 $workflow_check_active = 0;
-
-                $dependency_ids_array = $item->dependency_ids;
-                $to_remove = array($item->new_workflow_id);
-                $result = array_diff($dependency_ids_array, $to_remove);
-                foreach($result as $x=>$worflow_status)
+                if($item->dependency_ids)
                 {
-                    //dd($worflow_status);
-                    $depend_workflow = NewWorkFlow::find($worflow_status);
-                    $check_depend_workflow_status = Change_request_statuse::where('cr_id', $id)->where('new_status_id', $depend_workflow->from_status_id)->where('old_status_id', $depend_workflow->previous_status_id)->where('active', '1')->count();
-                    if($check_depend_status)
+                    $dependency_ids_array = $item->dependency_ids;
+                    $to_remove = array($item->new_workflow_id);
+                    $result = array_diff($dependency_ids_array, $to_remove);
+                    foreach($result as $x=>$worflow_status)
                     {
-                        $active='0';
-                        break;
+                        //dd($worflow_status);
+                        $depend_workflow = NewWorkFlow::find($worflow_status);
+                        $check_depend_workflow_status = Change_request_statuse::where('cr_id', $id)->where('new_status_id', $depend_workflow->from_status_id)->where('old_status_id', $depend_workflow->previous_status_id)->where('active', '1')->count();
+                        if($check_depend_status)
+                        {
+                            $active='0';
+                            break;
+                        }
                     }
                 }
+                
                 //dd($item,$item->dependency_ids,$result);
                 // if ($workflow->workflow_type != 1) {
                 //     $workflow_check_active = Change_request_statuse::where('cr_id', $id)->where('new_status_id', $item->to_status_id)->where('active', '2')->first();
