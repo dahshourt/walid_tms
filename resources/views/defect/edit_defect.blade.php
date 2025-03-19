@@ -134,6 +134,7 @@
                                 <button type="submit" class="btn btn-success mr-2">Update Defect</button>
                                 <button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
                             </div>
+                            @if(count($defect_comments) > 0)
                             <div class="card-footer">
                                 <div class="container mt-4">
                                     <h2 class="mb-3">Defect Comments</h2>
@@ -167,7 +168,8 @@
                                     </div>
                                 </div>
                             </div>
-
+                            @endif
+                            @if(count($defect_attachments) > 0)
                             <div class="card-footer">
                                 <div class="container mt-4">
                                     <h2 class="mb-3">Defect Attachments</h2>
@@ -203,7 +205,8 @@
                                     </div>
                                 </div>
                             </div>
-
+                            @endif
+                            @if(count($all_defects) > 0)
                             <div class="card-footer">
                                 <div class="container mt-4">
                                     <h2 class="mb-3">Defects Related CR#_{{$defect_data->cr_id}}</h2>
@@ -239,7 +242,7 @@
                                     </div>
                                 </div>
                             </div>
-
+                            @endif
                             @include("defect.cr_logs")
                             
                         </form>
