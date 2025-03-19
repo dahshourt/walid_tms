@@ -1143,6 +1143,7 @@ public function findNextAvailableTime($userId, $currentTime)
                 $workflow_check_active = 0;
                 if($item->dependency_ids)
                 {
+
                     $dependency_ids_array = $item->dependency_ids;
                     $to_remove = array($item->new_workflow_id);
                     $result = array_diff($dependency_ids_array, $to_remove);
@@ -1157,6 +1158,7 @@ public function findNextAvailableTime($userId, $currentTime)
                             break;
                         }
                     }
+                    
                 }
                 
                 //dd($item,$item->dependency_ids,$result);
