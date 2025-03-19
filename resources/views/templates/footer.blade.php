@@ -132,7 +132,15 @@
 		$('#to_status_id').select2({
         	placeholder: "Select status/statuses",
         });
-$('#status_id').select2({
+		$('#from_status_id').select2({
+        	placeholder: "Select status/statuses",
+        });
+		
+		
+		$('#previous_status_id').select2({
+        	placeholder: "Select status/statuses",
+        });
+		$('#status_id').select2({
         	placeholder: "Select group/groups",
         });
 		$('._change_active').on('click', function(){
