@@ -113,43 +113,53 @@
         $def1= $cr->defects()->count(); 
         $def2=  $cr->defects()->whereIn('status_id', [86, 87])->count();
     }
+
 ?>
-@if($item->CustomField->name == "new_status_id" && ($def1 != $def2))
+@if($def1 != $def2)
+
     <script>
-        async function checkStatusBeforeSubmit(event) {
-            const statusDropdown = document.getElementById("{{ $item->CustomField->name }}");
-            const selectedOption = statusDropdown.options[statusDropdown.selectedIndex];
+  
+  document.addEventListener("DOMContentLoaded", function () {
+    async function checkStatusBeforeSubmit(event) {
+        let selectElement = document.querySelector('select[name="new_status_id"]');
+        if (!selectElement) {
+            alert("Dropdown not found");
+            return;
+        }
+
+        let selectedOption = selectElement.options[selectElement.selectedIndex];
+        let defectValue = selectedOption?.getAttribute('data-defect') || "0";
+     
+
+        console.log("Defect Value:", defectValue);
+
+       
+
+        if (defectValue == "1") {
           
-            const defectValue = selectedOption.getAttribute('data-defect');
+            event.preventDefault();
 
-            if (defectValue == "1") {
-                // Prevent the form from submitting immediately
-                event.preventDefault();
+            const result = await Swal.fire({
+                title: 'Are you sure?',
+                text: "There are defects related to this CRS. Are you sure you want to continue?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, continue!',
+                cancelButtonText: 'No, cancel!'
+            });
 
-                // Show SweetAlert2 confirmation dialog
-                const result = await Swal.fire({
-                    title: 'Are you sure?',
-                    text: "There are defects related to this CRS. Are you sure you want to continue?",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Yes, continue!',
-                    cancelButtonText: 'No, cancel!'
-                });
-
-                // If the user confirms, submit the form programmatically
-                if (result.isConfirmed) {
-                    document.querySelector("form").submit();
-                } else {
-                    // Do nothing or handle the cancellation
-                }
+            if (result.isConfirmed) {
+                document.querySelector("form").submit();
             }
         }
 
-        // Attach the event listener to the form's submit event
-        document.querySelector("form").addEventListener("submit", function(event) {
-            checkStatusBeforeSubmit(event);
-        });
+        
+    }
+
+    document.querySelector("form")?.addEventListener("submit", checkStatusBeforeSubmit, { once: true });
+});
+
     </script>
 @endif
