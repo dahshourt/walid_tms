@@ -141,7 +141,9 @@ class DefectController extends Controller
         $defect_attachments = $this->defect->get_defect_attachments($id);
         // Defect Logs
         $logs = $this->defect->get_defect_logs($id);
-        return view("$this->view.edit_defect", compact("id", "logs", "CustomFields", "defect_status", "technical_team", "defect_data", "defect_comments", "defect_attachments"));  
+        //Defects Related Same CR
+        $all_defects = $this->defect->all_defects($defect_data->cr_id);;
+        return view("$this->view.edit_defect", compact("id", "all_defects", "logs", "CustomFields", "defect_status", "technical_team", "defect_data", "defect_comments", "defect_attachments"));  
     }
 
 
