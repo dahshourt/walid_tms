@@ -160,4 +160,19 @@ class NewWorkFlowController extends Controller
 		
 	}
 
+
+    public function SameFromWorkflow(Request $request)
+    {
+        if($request->same_time_from)
+        {
+            $statuses = $this->NewWorkflow->ListTypeWorkflow($request->type_id);
+        }
+        else
+        {
+            $statuses = (new StatusRepository)->getAll();
+        }
+        $same_time_from = $request->same_time_from;
+        return view("$this->view.from_previous",compact('same_time_from','statuses'));
+    }
+
 }

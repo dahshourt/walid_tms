@@ -51,6 +51,7 @@ class NewWorkflowRepository implements NewWorkflowRepositoryInterface
                 $new_workflow_statuses = new NewWorkFlowStatuses;
                 $new_workflow_statuses->new_workflow_id = $workflow_id;
                 $new_workflow_statuses->to_status_id = $value;
+                if($request['dependency_ids']) $new_workflow_statuses->dependency_ids = $request['dependency_ids'];
                 if(isset($request['default_status']) && $request['default_status'] == 1){
                        
                     $new_workflow_statuses->default_to_status = '1';
@@ -67,6 +68,7 @@ class NewWorkflowRepository implements NewWorkflowRepositoryInterface
             $new_workflow_statuses = new NewWorkFlowStatuses;
             $new_workflow_statuses->new_workflow_id = $workflow_id;
             $new_workflow_statuses->to_status_id = $request['to_status_id'];
+            if($request['dependency_ids']) $new_workflow_statuses->dependency_ids = $request['dependency_ids'];
                 if(isset($request['default_status']) && $request['default_status'] == 1){
                      
                     $new_workflow_statuses->default_to_status = '1';
@@ -86,19 +88,49 @@ class NewWorkflowRepository implements NewWorkflowRepositoryInterface
 
     public function create($request)
     {  
-       
+       //dd($request);
        if($request['type_id']){
         $request['workflow_type'] = $request['type_id'];
        }
         $request['workflow_type'] = $request['workflow_type'] == 1 ? '1' : '0';
         //dd($request['to_status_lable']);
-        if(isset( $request['to_status_lable'])&&!empty($request['to_status_lable'])){
-
-            $request['same_time']="1";
-        }
+        //if(isset( $request['to_status_lable'])&&!empty($request['to_status_lable'])){
+        $request['same_time']="1";
+        //}
         $request['to_status_label'] = $request['to_status_lable'];
-        $workflow = NewWorkFlow::create($request);
-        $this->StoreWorkFlowStatuses($workflow->id,$request);
+        
+        if($request['same_time_from'])
+        {
+            $from_status_id = $request['from_status_id'];
+            $dependency_ids = array();
+            foreach($from_status_id as $key=>$value)
+            {
+                $from_status_data = NewWorkFlow::find($value);
+                $workflow = new NewWorkFlow();
+                $workflow->same_time_from = '1';
+                $workflow->previous_status_id = $from_status_data->from_status_id;
+                $workflow->from_status_id = $from_status_data->workflowstatus[0]->to_status_id;
+                $workflow->active = $request['active'];
+                $workflow->type_id = $request['type_id'];
+                $workflow->workflow_type = $request['workflow_type'];
+                $workflow->save();
+                $dependency_ids[] = $workflow->id;
+                //dd($workflow);
+            }
+            $request['dependency_ids']=$dependency_ids;
+            //dd($request);
+            foreach($dependency_ids as $key=>$id)
+            {
+                $this->StoreWorkFlowStatuses($id,$request);
+            }
+            //$this->StoreWorkFlowStatuses($workflow->id,$request);
+        }
+        else
+        {
+            $workflow = NewWorkFlow::create($request);
+            $this->StoreWorkFlowStatuses($workflow->id,$request);
+        }
+        
     }
    
 
@@ -189,6 +221,12 @@ class NewWorkflowRepository implements NewWorkflowRepositoryInterface
     public function get_next_status_release($id)
     {
         return NewWorkFlow::with("workflowstatus.to_status")->where("from_status_id", $id)->first();
+    }
+
+    
+    public function ListTypeWorkflow($type_id)
+    {
+        return NewWorkFlow::where('type_id',$type_id)->get();
     }
     
 

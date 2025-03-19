@@ -1075,7 +1075,7 @@ public function findNextAvailableTime($userId, $currentTime)
      */
     public function UpateChangeRequestStatus($id, $request)
     {
-        //dd($id,$request);
+        //dd($id,$request->all());
 /** check estimation user without changing in status */
         if (!isset($request->new_status) && isset($request->assignment_user_id)) {
             Change_request_statuse::where('cr_id', $id)->where('new_status_id', $request->old_status_id)->where('active', '1')->update(['assignment_user_id' => $request->assignment_user_id]);
@@ -1088,6 +1088,7 @@ public function findNextAvailableTime($userId, $currentTime)
            $new_status_id = $request->new_status_id;  
         }
         $workflow = NewWorkFlow::find($new_status_id);
+        //dd($workflow, $workflow->workflowstatus);
         if(isset(\Auth::user()->id) && \Auth::user()->id != null)
         {
             $user_id = \Auth::user()->id   ;    
@@ -1141,6 +1142,21 @@ public function findNextAvailableTime($userId, $currentTime)
             foreach ($workflow->workflowstatus as $key => $item) {
                 $workflow_check_active = 0;
 
+                $dependency_ids_array = $item->dependency_ids;
+                $to_remove = array($item->new_workflow_id);
+                $result = array_diff($dependency_ids_array, $to_remove);
+                foreach($result as $x=>$worflow_status)
+                {
+                    //dd($worflow_status);
+                    $depend_workflow = NewWorkFlow::find($worflow_status);
+                    $check_depend_workflow_status = Change_request_statuse::where('cr_id', $id)->where('new_status_id', $depend_workflow->from_status_id)->where('old_status_id', $depend_workflow->previous_status_id)->where('active', '1')->count();
+                    if($check_depend_status)
+                    {
+                        $active='0';
+                        break;
+                    }
+                }
+                //dd($item,$item->dependency_ids,$result);
                 // if ($workflow->workflow_type != 1) {
                 //     $workflow_check_active = Change_request_statuse::where('cr_id', $id)->where('new_status_id', $item->to_status_id)->where('active', '2')->first();
                 // }
@@ -1311,10 +1327,7 @@ public function findNextAvailableTime($userId, $currentTime)
                     $query->where('type', 2);
                 });
         })->orderBy('id', 'DESC')->get();
-    //     echo "<pre>";
-    //    print_r($changeRequests);
-    //    echo "</pre>"; die;
-    //dd($changeRequests);
+   
         return $changeRequests;
     }
 

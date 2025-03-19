@@ -43,31 +43,42 @@
     </div>
 
     <div class="form-group">
-        <label for="previous_status_id">Pevious Status:</label>
-        <select class="form-control form-control-lg" id="previous_status_id" name="previous_status_id">
-            <option value="">Select</option>
-            @foreach($statuses as $item)
-                <option value="{{ $item->id }}" {{ isset($row) && $row->previous_status_id == $item->id ? "selected" : "" }}>
-                    {{ $item->name }}
-                </option>
-            @endforeach
-        </select>
-        {!! $errors->first('previous_status_id', '<span class="form-control-feedback">:message</span>') !!}
-    </div>
+		<div class="checkbox-inline mb-10">
+			<label class="checkbox">
+				<input type="checkbox" id="same_time_from" name="same_time_from">
+				<span></span>From At the same time
+			</label>
+		</div>
+	</div>
+
+    <span id="load_from_status">
+        <div class="form-group">
+            <label for="previous_status_id">Previous Status:</label>
+            <select class="form-control form-control-lg" id="previous_status_id" name="previous_status_id">
+                <option value="">Select</option>
+                @foreach($statuses as $item)
+                    <option value="{{ $item->id }}" {{ isset($row) && $row->previous_status_id == $item->id ? "selected" : "" }}>
+                        {{ $item->name }}
+                    </option>
+                @endforeach
+            </select>
+            {!! $errors->first('previous_status_id', '<span class="form-control-feedback">:message</span>') !!}
+        </div>
 
 
-    <div class="form-group">
-        <label for="from_status_id">From Status:</label>
-        <select class="form-control form-control-lg" id="from_status_id" name="from_status_id">
-            <option value="">Select</option>
-            @foreach($statuses as $item)
-                <option value="{{ $item->id }}" {{ isset($row) && $row->from_status_id == $item->id ? "selected" : "" }}>
-                    {{ $item->name }}
-                </option>
-            @endforeach
-        </select>
-        {!! $errors->first('from_status_id', '<span class="form-control-feedback">:message</span>') !!}
-    </div>
+        <div class="form-group">
+            <label for="from_status_id">From Status:</label>
+            <select class="form-control form-control-lg" id="from_status_id" name="from_status_id">
+                <option value="">Select</option>
+                @foreach($statuses as $item)
+                    <option value="{{ $item->id }}" {{ isset($row) && $row->from_status_id == $item->id ? "selected" : "" }}>
+                        {{ $item->name }}
+                    </option>
+                @endforeach
+            </select>
+            {!! $errors->first('from_status_id', '<span class="form-control-feedback">:message</span>') !!}
+        </div>
+    </span>
 <div class="form-group">
 		<div class="checkbox-inline mb-10">
 			<label class="checkbox">
@@ -82,7 +93,7 @@
         
 
         
-        <div class="same_class">
+        <!--<div class="same_class">-->
             <select class="form-control form-control-lg" id="to_status_id" name="to_status_id[]" multiple="multiple">
                 <option value="">Select</option>
                 @foreach($statuses as $key => $item)
@@ -104,9 +115,9 @@
                 @endforeach
             </select>
             {!! $errors->first('to_status_id', '<span class="form-control-feedback">:message</span>') !!}
-        </div>
+        <!--</div>-->
     </div>
-    <div class="form-group same_class">
+    <div class="form-group">
         <label>To Status Label:</label>
         <input type="text" class="form-control form-control-lg" placeholder="To Status Label" name="to_status_lable" 
         value="@if(isset($row)){{$row->to_status_label}}
@@ -117,10 +128,10 @@
         {!! $errors->first('to_status_lable', '<span class="form-control-feedback">:message</span>') !!}
     </div>
  
-    <div class="form-group not_same_class">
+    <!-- <div class="form-group not_same_class">
         <select class="form-control form-control-lg " id="to_status_id" name="to_status_id">
             <option value="">Select</option>
-            <!-- {{ isset($row) && $row->to_status_id == $item->id ? "selected" : "" }} -->
+            {{ isset($row) && $row->to_status_id == $item->id ? "selected" : "" }}
             @foreach($statuses as $item)
 
                 <option value="{{ $item->id }}"  
@@ -139,7 +150,7 @@
             @endforeach
         </select>
         {!! $errors->first('to_status_id', '<span class="form-control-feedback">:message</span>') !!}
-    </div>
+    </div> -->
  @if(isset($row))
  @foreach($row->workflowstatus as $itm)
 @php
@@ -172,7 +183,12 @@
 @push('script')
 <script>
     $(document).ready(function() {
-        
+        $("#same_time_from").change(function() {
+            ChangeFromSameSelect();
+        });
+        $("#type_id").change(function() {
+            ChangeFromSameSelect();
+        });
        /*  $("#same_time").change(function() {
             if (this.checked) {
                 $(".not_same_class").remove();
@@ -202,6 +218,19 @@
         }); */
 
     });
+
+    function ChangeFromSameSelect(){
+        var same_time_from = 0;
+        $("#load_from_status").empty();
+        if($('#same_time_from').is(':checked')) var same_time_from = 1;
+        $.get( "{{url('workflow/same/from/status')}}", { same_time_from: same_time_from, type_id: $("#type_id").val() } )
+            .done(function( data ) {
+                $("#load_from_status").html(data);
+                $('#from_previous_status_id').select2({
+        	        placeholder: "Select status/statuses",
+                });
+        });
+    }
 
 
 document.addEventListener('DOMContentLoaded', function() {

@@ -43,7 +43,7 @@ class NewWorkflowRequest extends FormRequest
     { 
         return  [
             'type_id' => ['required'],
-            'from_status_id' => ['required','int'],
+            'from_status_id' => ['required'],
             'active' => ['required','int'],
             //'to_status_label' => ['sometimes','nullable','string'],
              'to_status_id' => ['required'],
@@ -63,7 +63,7 @@ class NewWorkflowRequest extends FormRequest
     public function updateRules()
     {
         $rules = [
-            'from_status_id' => ['required','int'],
+            'from_status_id' => ['required'],
             
            // 'to_status_label' => ['sometimes','nullable','string'],
             'default_to_status'=>['sometimes','nullable','int']
