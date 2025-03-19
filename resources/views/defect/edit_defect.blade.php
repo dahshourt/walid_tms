@@ -227,7 +227,7 @@
                                                 </tr>
                                             @empty
                                                 <tr>
-                                                    <td colspan="3" class="text-center text-muted">No Files found.</td>
+                                                    <td colspan="3" class="text-center text-muted">No Defects found.</td>
                                                 </tr>
                                             @endforelse
                                         </tbody>
