@@ -18,6 +18,7 @@ use App\Factories\Workflow\Workflow_type_factory;
 use App\Factories\CustomField\CustomFieldGroupTypeFactory;
 use App\Factories\Applications\ApplicationFactory;
 use App\Factories\Logs\LogFactory;
+use App\Factories\Defect\DefectFactory;
 use App\Factories\Users\UserFactory;
 use App\Http\Resources\CustomFieldSelectedGroupResource;
 use App\Models\Group;
@@ -40,9 +41,11 @@ class ChangeRequestController extends Controller
     private $logs;
     private $users;
     private $applications;
-    public function __construct(ChangeRequestFactory $changerequest, ChangeRequestStatusFactory $changerequeststatus, NewWorkFlowFactory $workflow, AttachmetsCRSFactory $attachments,Workflow_type_factory $workflow_type,CustomFieldGroupTypeFactory $custom_field_group_type, ApplicationFactory $applications)
+    private $defects;
+    public function __construct(DefectFactory $defect ,ChangeRequestFactory $changerequest, ChangeRequestStatusFactory $changerequeststatus, NewWorkFlowFactory $workflow, AttachmetsCRSFactory $attachments,Workflow_type_factory $workflow_type,CustomFieldGroupTypeFactory $custom_field_group_type, ApplicationFactory $applications)
     {
         $this->changerequest = $changerequest::index();
+        $this->defects = $defect::index();
         $this->changerequeststatus = $changerequeststatus::index();
         $this->changerworkflowequeststatus = $workflow::index();
         $this->workflow_type = $workflow_type::index();
@@ -314,7 +317,7 @@ class ChangeRequestController extends Controller
     public function edit($id,$cab_cr_flag=false)
     {
        
-        
+       
         $this->authorize('Edit ChangeRequest'); // permission check
         //$this->logs = LogFactory::index();
         if($cab_cr_flag)
@@ -379,7 +382,8 @@ class ChangeRequestController extends Controller
         //$CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowType($workflow_type_id, $form_type);
         $status_id = $cr->getCurrentStatus()->status->id;
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus($workflow_type_id, $form_type, $status_id);
-        return view("$this->view.edit",compact('cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag'));  
+        $all_defects = $this->defects->all_defects($id);
+        return view("$this->view.edit",compact('all_defects' ,'cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag'));  
 
     }
 

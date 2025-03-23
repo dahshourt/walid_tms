@@ -226,33 +226,58 @@
 													@can('Show CR Logs')
 										    			<button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
 													@endcan	
-
+                                                    @if($workflow_type_id == 9)
+                                                    <button type="button" id="open_defects" class="btn btn-primary">View CR Defects</button>
+                                                    @endif
 												</div>
 											</form>
 											<!--end::Form-->
+                                            
 										</div>
-										
-										 <!-- Button to trigger the modal -->
-										
+                                        @if(count($all_defects) > 0  && $workflow_type_id == 9 )
+                                        <div class="card-footer">
+                                            <div class="container mt-4">
+                                                <h2 class="mb-3">CR Defects</h2>
+
+                                                <table class="table table-striped table-hover table-bordered">
+                                                    <thead class="table-primary">
+                                                        <tr>
+                                                            <th scope="col">User Name</th>
+                                                            <th scope="col">Title</th>
+                                                            <th scope="col">Group</th>
+                                                            <th scope="col">Status</th>
+                                                            <th scope="col">Created At </th>
+                                                            <th scope="col">Action </th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    @forelse ($all_defects as $value)
+                                                     
+                                                        <tr>
+                                                            <td>{{ $value->User_created->user_name }}</td>
+                                                            <td>{{ $value->subject }}</td>
+                                                            <td>{{ $value->assigned_team->title }}</td>
+                                                            <td>{{ $value->current_status->status_name }}</td>
+                                                            <td>{{ $value->created_at->format('Y-m-d H:i:s') }}</td>
+                                                            <td> <a href="{{url('edit_defect')}}/{{$value->id}}">Edit </a> </td>
+                                                         </tr>
+                                                    @empty
+                                                        <tr>
+                                                            <td colspan="3" class="text-center text-muted">No Defects Found.</td>
+                                                        </tr>
+                                                    @endforelse
+                                                    </tbody>
+                                                </table>
+
+                                                <!-- Pagination (If Needed) -->
+                                                <div class="d-flex justify-content-center">
+                                                
+                                                </div>
+                                            </div>
+                                        </div>
+										@endif
 										@include("$view.cr_logs")
-
-										    <!-- Modal -->
-										   <!--  <div id="modal" class="modal">
-										        <div class="modal-content">
-										            <span class="close">&times;</span>
-										            <h2>Ticket History Logs</h2>
-										            <div class="timeline">
-										            	@foreach($logs_ers as $log)
-										                <div class="timeline-item">
-										                    <span class="timeline-time">{{$log->created_at}}</span>
-										                    <p class="timeline-description">{{$log->log_text}}</p>
-										                </div>
-										                @endforeach
-										            </div>
-										        </div>
-										    </div> -->
-
-
+                                        
 									</div>
 							</div>
 							<!--end::Container-->
@@ -260,11 +285,12 @@
 						<!--end::Entry-->
 					</div>
 					<!--end::Content-->
-					
+                
 
 @endsection
 
 @push('script')
+
 <script>
     var modal = document.getElementById("modal");
     var btn = document.getElementById("openModal");
@@ -283,7 +309,7 @@
             modal.style.display = "none";
         }
     };
-
+ 
     $(document).ready(function () {
         var status = $('select[name="new_status_id"] option:selected').val();
         if (status === "Reject" || status === "Closed" || status === "CR Closed") {
