@@ -21,6 +21,8 @@ use App\Models\CustomField;
 use App\Models\ChangeRequestCustomField;
 use App\Models\CabCrUser;
 use App\Models\CabCr;
+use App\Models\TechnicalCrTeam;
+use App\Models\TechnicalCr;
 use Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
@@ -961,18 +963,14 @@ public function findNextAvailableTime($userId, $currentTime)
             'status' => "0",
             
         ]);
-
         $insertedId = $record->id;
-
-        
-            foreach ($request->technical_teams as $groupId) {
-                TechnicalCrTeam::create([
-                    'group_id' => $groupId,
-                    'technical_cr_id' => $insertedId,
-                    'status' => "0",
-                ]);
-            
-            }
+        foreach ($request->technical_teams as $groupId) {
+            TechnicalCrTeam::create([
+                'group_id' => $groupId,
+                'technical_cr_id' => $insertedId,
+                'status' => "0",
+            ]);
+        }
         }
         
 

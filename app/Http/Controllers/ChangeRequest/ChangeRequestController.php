@@ -384,7 +384,7 @@ class ChangeRequestController extends Controller
         $status_id = $cr->getCurrentStatus()->status->id;
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus($workflow_type_id, $form_type, $status_id);
         $all_defects = $this->defects->all_defects($id);
-        return view("$this->view.edit",compact('all_defects' ,'cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag'));  
+        return view("$this->view.edit",compact('all_defects' ,'cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag', 'technical_teams'));  
 
         
 
