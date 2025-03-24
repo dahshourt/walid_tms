@@ -953,6 +953,27 @@ public function findNextAvailableTime($userId, $currentTime)
             
             }
         }
+        // insert tech teams to database
+        if(!empty($request->technical_teams))
+        { 
+        $record = TechnicalCr::create([
+            'cr_id' => $id,
+            'status' => "0",
+            
+        ]);
+
+        $insertedId = $record->id;
+
+        
+            foreach ($request->technical_teams as $groupId) {
+                TechnicalCrTeam::create([
+                    'group_id' => $groupId,
+                    'technical_cr_id' => $insertedId,
+                    'status' => "0",
+                ]);
+            
+            }
+        }
         
 
         //dd($user->role_id);
@@ -964,7 +985,7 @@ public function findNextAvailableTime($userId, $currentTime)
        
          
 /** end check */
-        $except = ['old_status_id', 'new_status_id', '_method', 'current_status', 'duration', 'current_status', 'categories', 'cat_name', 'pr_name', 'Applications', 'app_name', 'depend_cr_name', 'depend_crs', 'test', 'priorities', 'cr_id', 'assign_to', 'dev_estimation', 'design_estimation', 'testing_estimation', 'assignment_user_id', '_token', 'attach', 'business_attachments', 'technical_attachments', 'cap_users','analysis_feedback','technical_feedback','need_ux_ui','business_feedback','rejection_reason_id'];
+        $except = ['old_status_id', 'new_status_id', '_method', 'current_status', 'duration', 'current_status', 'categories', 'cat_name', 'pr_name', 'Applications', 'app_name', 'depend_cr_name', 'depend_crs', 'test', 'priorities', 'cr_id', 'assign_to', 'dev_estimation', 'design_estimation', 'testing_estimation', 'assignment_user_id', '_token', 'attach', 'business_attachments', 'technical_attachments', 'cap_users','analysis_feedback','technical_feedback','need_ux_ui','business_feedback','rejection_reason_id', 'technical_teams'];
 
         // calculate estimation
         if ((isset($request['dev_estimation']) && $request['dev_estimation'] != '') || (isset($request['design_estimation']) && $request['design_estimation'] != '') || (isset($request['testing_estimation']) && $request['testing_estimation'] != '')) 

@@ -62,6 +62,18 @@
 													</div>
 
 													<div class="form-group">
+														<label>Technical Team?</label>
+														<div class="checkbox-inline">
+															<label class="checkbox">						
+																<input type="hidden" name="technical_team" value="0">
+																<input type="checkbox" name="technical_team" value="1" 
+																	{{ isset($row) && $row->technical_team == 1 ? "checked" : "" }}>
+																<span></span>Yes
+															</label>
+														</div>
+													</div>
+
+													<div class="form-group">
 														<label>Status SLA 
 														<br/> 
 														<span class="hint"> Hint : number values in days </span>	

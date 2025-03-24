@@ -213,7 +213,7 @@ class ChangeRequestController extends Controller
             $validator = Validator::make(
                 $input_data, [
                 'business_attachments.*' => 'required|mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg|max:2048'
-                ],[
+                ],[   
                     'business_attachments.*.required' => 'Please upload an attachment',
                     'business_attachments.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
                     'business_attachments.*.max' => 'Sorry! Maximum allowed size for an attachment is 2MB',
@@ -375,6 +375,7 @@ class ChangeRequestController extends Controller
         // }
       
         $cap_users =  UserFactory::index()->get_users_cap($cr->application_id);
+        $technical_teams = Group::where('technical_team', '1')->get(); 
         $form_type = 2; // create CR form type id
         $workflow_type_id = $cr->workflow_type_id;
         //$logs_ers = $this->logs->get_by_cr_id($id);
@@ -382,8 +383,6 @@ class ChangeRequestController extends Controller
         //$CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowType($workflow_type_id, $form_type);
         $status_id = $cr->getCurrentStatus()->status->id;
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus($workflow_type_id, $form_type, $status_id);
-        $all_defects = $this->defects->all_defects($id);
-        return view("$this->view.edit",compact('cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag','all_defects'));  
         $all_defects = $this->defects->all_defects($id);
         return view("$this->view.edit",compact('all_defects' ,'cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag'));  
 
