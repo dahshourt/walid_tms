@@ -35,7 +35,8 @@ class Defect extends Model
 
     }
 
-    public function created_by()
+   
+    public function User_created()
     {
         return $this->belongsTo(User::class,'created_by');
 
