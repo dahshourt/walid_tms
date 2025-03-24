@@ -85,6 +85,12 @@
                          @endforeach
                     @endif
 
+                    @if($item->CustomField->name == "technical_teams" )
+                         @foreach($technical_teams as $items)
+                            <option value="{{$items->id}}"> {{$items->title}}</option>
+                         @endforeach
+                    @endif
+
                   
                 @else
                 @php
