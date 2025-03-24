@@ -44,7 +44,15 @@
                                 {{ $custom_field_value == $status->id ? 'selected' : '' }}
                                 data-status-name="{{ $status->workflowstatus[0]->to_status->status_name }}"
                                 data-defect="{{ $status->workflowstatus[0]->to_status->defect }}">
-                                {{ $status->workflowstatus[0]->to_status->high_level ? $status->workflowstatus[0]->to_status->high_level->name : $status->workflowstatus[0]->to_status->status_name }}
+                                @if($status->workflowstatus[0]->to_status->high_level)
+                                {{$status->workflowstatus[0]->to_status->high_level->name}}
+                                @else
+                                    @if($status->to_status_label)
+                                        {{$status->to_status_label }}
+                                    @else
+                                        {{$status->workflowstatus[0]->to_status->status_name }}
+                                    @endif
+                                @endif
                             </option>
                         @endif
                     @endforeach

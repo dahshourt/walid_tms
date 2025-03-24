@@ -1151,8 +1151,8 @@ public function findNextAvailableTime($userId, $currentTime)
                     {
                         //dd($worflow_status);
                         $depend_workflow = NewWorkFlow::find($worflow_status);
-                        $check_depend_workflow_status = Change_request_statuse::where('cr_id', $id)->where('new_status_id', $depend_workflow->from_status_id)->where('old_status_id', $depend_workflow->previous_status_id)->where('active', '1')->count();
-                        if($check_depend_status)
+                        $check_depend_workflow_status = Change_request_statuse::where('cr_id', $id)->where('new_status_id', $depend_workflow->from_status_id)->where('old_status_id', $depend_workflow->previous_status_id)->where('active', '2')->first();
+                        if(!$check_depend_workflow_status)
                         {
                             $active='0';
                             break;
@@ -1485,6 +1485,7 @@ public function findNextAvailableTime($userId, $currentTime)
         $previous_status_id = $current_status->old_status_id;
         $set_status = NewWorkFlow::where('from_status_id', $status_id)->where(function($query) use ($previous_status_id){
             $query->WhereNull('previous_status_id');
+            $query->ORwhere('previous_status_id',0);
             $query->ORwhere('previous_status_id',$previous_status_id);
         })->whereHas('workflowstatus', function ($q) {
             $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
