@@ -2320,5 +2320,33 @@ public function findNextAvailableTime($userId, $currentTime)
     }
 
 
+    
+    public function update_to_next_status_calendar()
+    {
+        $today = Carbon::today()->toDateString(); 
+        //$records = Change_request::with("current_status")->whereDate('calendar', $today)->get();
+        $records = Change_request::with("current_status")
+            ->whereDate('calendar', $today)
+            ->whereHas('current_status', function ($query) {
+                $query->where('status_id', 89)->where('active', '1');  // Assuming `status_id` is the column in the `current_status` table
+            })
+            ->get();
+        //$records[0]->current_status[0]->status_id 
+        // dd($records);
+        foreach ($records as $record) {
+            $crId = $record->id;  // Replace with the correct CR ID field
+            // Update the Change_request_statuse table
+            Change_request_statuse::create([
+                'new_status_id' => 103,
+                'old_status_id' => 89,
+                'cr_id' => $crId,
+                'user_id' => 1,
+                'active' => 1,
+            ]);
+        }
+
+    }
+
+
 
 }

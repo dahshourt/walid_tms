@@ -142,8 +142,8 @@ class DefectController extends Controller
         // Defect Logs
         $logs = $this->defect->get_defect_logs($id);
         //Defects Related Same CR
-        $all_defects = $this->defect->all_defects($defect_data->cr_id);;
-        return view("$this->view.edit_defect", compact("id", "all_defects", "logs", "CustomFields", "defect_status", "technical_team", "defect_data", "defect_comments", "defect_attachments"));  
+        //$all_defects = $this->defect->all_defects($defect_data->cr_id);;
+        return view("$this->view.edit_defect", compact("id", "logs", "CustomFields", "defect_status", "technical_team", "defect_data", "defect_comments", "defect_attachments"));  
     }
 
 
@@ -180,13 +180,13 @@ class DefectController extends Controller
         $defect_status = $this->defect->AddDefectStatus($id, $defect_data->status_id, $request->defect_status);
         $from_status = $this->status->get_defect_status_by_id($defect_data->status_id);
         $to_status = $this->status->get_defect_status_by_id($request->defect_status);
-        ($defect_data->status_id != $request->defect_status) ?  $this->defect->AddDefectLog($id, "Status Changed From < {$from_status->status_name} >  To : < {$to_status->status_name} > "): '';
-        //update data 
-        $updated_defect = $this->defect->update_defect($id, $request);
+        (isset($request->defect_status) && ($defect_data->status_id != $request->defect_status)) ?  $this->defect->AddDefectLog($id, "Status Changed From < {$from_status->status_name} >  To : < {$to_status->status_name} > "): '';
+       
         //check Technical Team
         $fromTech = $this->defect->get_technical_team_by_id($defect_data->group_id);
         $to_tech =  $this->defect->get_technical_team_by_id($request->technical_team);
-        ($defect_data->group_id != $request->technical_team) ? $this->defect->AddDefectLog($id, "Technical Team Changed From < {$fromTech->name} > To < {$to_tech->name} >") : '';
+       // dd($defect_data->group_id);
+        (isset($request->technical_team) && ($defect_data->group_id != $request->technical_team)  ) ?  $this->defect->AddDefectLog($id, "Technical Team Changed From < {$fromTech->title} > To < {$to_tech->title} >") : '';
         // check the subject
         ($defect_data->subject != $request->title) ? $this->defect->AddDefectLog($id, "Subject Changed From {$defect_data->subject} To: {$request->title}") : '';
         //upload atachments if exist
@@ -195,7 +195,8 @@ class DefectController extends Controller
             $this->defect->Defect_Attach($request->business_attachments, $id);
             $this->defect->AddDefectLog($id, "Attachment Uploaded!  {$request->business_attachments} ");
         }
-        
+         //update data 
+         $updated_defect = $this->defect->update_defect($id, $request);
         return redirect()->back()->with('status' , 'Defect Updated Successfully');
     }
     

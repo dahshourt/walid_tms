@@ -129,7 +129,7 @@ class DefectRepository implements DefectRepositoryInterface
 
     public function get_technical_team_by_id($tech_id)
     {
-        return Technical_team::where('id', $tech_id)->first();
+        return Group::where('id', $tech_id)->first();
     }
 
 

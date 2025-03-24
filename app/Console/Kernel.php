@@ -15,6 +15,8 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
            \App\Console\Commands\UpdateReleaseAndCrs::class,
+           \App\Console\Commands\UpdateToNextStatusAsCalendar::class, // Fixed class name
+
     ];
 
     /**
@@ -26,6 +28,8 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
          $schedule->command('update_releae_and_crs')->daily();
+         $schedule->command('CalendarUpdateStatus:run')->daily();
+
     }
 
     /**
