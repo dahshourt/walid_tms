@@ -82,7 +82,7 @@
 <div class="form-group">
 		<div class="checkbox-inline mb-10">
 			<label class="checkbox">
-				<input type="checkbox" id="same_time" name="same_time">
+				<input type="checkbox" id="same_time" name="same_time"  value="1" {{ isset($row) && $row->same_time == 1 ? "checked" : "" }}>
 				<span></span>At the same time
 			</label>
 		</div>

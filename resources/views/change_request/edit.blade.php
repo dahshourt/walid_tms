@@ -226,9 +226,7 @@
 													@can('Show CR Logs')
 										    			<button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
 													@endcan	
-                                                    @if($workflow_type_id == 9)
-                                                    <button type="button" id="open_defects" class="btn btn-primary">View CR Defects</button>
-                                                    @endif
+                                                    
 												</div>
 											</form>
 											<!--end::Form-->

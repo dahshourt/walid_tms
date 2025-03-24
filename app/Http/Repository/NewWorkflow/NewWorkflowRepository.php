@@ -51,7 +51,7 @@ class NewWorkflowRepository implements NewWorkflowRepositoryInterface
                 $new_workflow_statuses = new NewWorkFlowStatuses;
                 $new_workflow_statuses->new_workflow_id = $workflow_id;
                 $new_workflow_statuses->to_status_id = $value;
-                if($request['dependency_ids']) $new_workflow_statuses->dependency_ids = $request['dependency_ids'];
+                if(isset($request['dependency_ids'])) $new_workflow_statuses->dependency_ids = $request['dependency_ids'];
                 if(isset($request['default_status']) && $request['default_status'] == 1){
                        
                     $new_workflow_statuses->default_to_status = '1';
@@ -68,7 +68,7 @@ class NewWorkflowRepository implements NewWorkflowRepositoryInterface
             $new_workflow_statuses = new NewWorkFlowStatuses;
             $new_workflow_statuses->new_workflow_id = $workflow_id;
             $new_workflow_statuses->to_status_id = $request['to_status_id'];
-            if($request['dependency_ids']) $new_workflow_statuses->dependency_ids = $request['dependency_ids'];
+            if(isset($request['dependency_ids'])) $new_workflow_statuses->dependency_ids = $request['dependency_ids'];
                 if(isset($request['default_status']) && $request['default_status'] == 1){
                      
                     $new_workflow_statuses->default_to_status = '1';
@@ -94,12 +94,12 @@ class NewWorkflowRepository implements NewWorkflowRepositoryInterface
        }
         $request['workflow_type'] = $request['workflow_type'] == 1 ? '1' : '0';
         //dd($request['to_status_lable']);
-        //if(isset( $request['to_status_lable'])&&!empty($request['to_status_lable'])){
-        $request['same_time']="1";
-        //}
+        if(isset( $request['same_time'])){
+            $request['same_time']="1";
+        }
         $request['to_status_label'] = $request['to_status_lable'];
         
-        if($request['same_time_from'])
+        if(isset($request['same_time_from']))
         {
             $from_status_id = $request['from_status_id'];
             $dependency_ids = array();

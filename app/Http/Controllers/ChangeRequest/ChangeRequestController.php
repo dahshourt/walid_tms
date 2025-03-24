@@ -41,10 +41,10 @@ class ChangeRequestController extends Controller
     private $logs;
     private $users;
     private $applications;
-    private $defects;
     public function __construct(DefectFactory $defect ,ChangeRequestFactory $changerequest, ChangeRequestStatusFactory $changerequeststatus, NewWorkFlowFactory $workflow, AttachmetsCRSFactory $attachments,Workflow_type_factory $workflow_type,CustomFieldGroupTypeFactory $custom_field_group_type, ApplicationFactory $applications)
     {
         $this->changerequest = $changerequest::index();
+        $this->defects = $defect::index();
         $this->defects = $defect::index();
         $this->changerequeststatus = $changerequeststatus::index();
         $this->changerworkflowequeststatus = $workflow::index();
@@ -382,6 +382,8 @@ class ChangeRequestController extends Controller
         //$CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowType($workflow_type_id, $form_type);
         $status_id = $cr->getCurrentStatus()->status->id;
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus($workflow_type_id, $form_type, $status_id);
+        $all_defects = $this->defects->all_defects($id);
+        return view("$this->view.edit",compact('cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag','all_defects'));  
         $all_defects = $this->defects->all_defects($id);
         return view("$this->view.edit",compact('all_defects' ,'cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag'));  
 
