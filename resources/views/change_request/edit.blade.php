@@ -226,20 +226,13 @@
 													@can('Show CR Logs')
 										    			<button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
 													@endcan	
-
-                                                    @if($workflow_type_id == 9)
-                                                    <button type="button" id="open_defects" class="btn btn-primary">View CR Defects</button>
-                                                    @endif
-
-
+                                                    
 												</div>
 											</form>
 											<!--end::Form-->
+                                            
 										</div>
-										
-										 <!-- Button to trigger the modal -->
-
-                                         @if(count($all_defects) > 0  && $workflow_type_id == 9 )
+                                        @if(count($all_defects) > 0  && $workflow_type_id == 9 )
                                         <div class="card-footer">
                                             <div class="container mt-4">
                                                 <h2 class="mb-3">CR Defects</h2>
@@ -281,27 +274,8 @@
                                             </div>
                                         </div>
 										@endif
-
-										
 										@include("$view.cr_logs")
-
-										    <!-- Modal -->
-										   <!--  <div id="modal" class="modal">
-										        <div class="modal-content">
-										            <span class="close">&times;</span>
-										            <h2>Ticket History Logs</h2>
-										            <div class="timeline">
-										            	@foreach($logs_ers as $log)
-										                <div class="timeline-item">
-										                    <span class="timeline-time">{{$log->created_at}}</span>
-										                    <p class="timeline-description">{{$log->log_text}}</p>
-										                </div>
-										                @endforeach
-										            </div>
-										        </div>
-										    </div> -->
-
-
+                                        
 									</div>
 							</div>
 							<!--end::Container-->
@@ -309,11 +283,12 @@
 						<!--end::Entry-->
 					</div>
 					<!--end::Content-->
-					
+                
 
 @endsection
 
 @push('script')
+
 <script>
     var modal = document.getElementById("modal");
     var btn = document.getElementById("openModal");
@@ -332,7 +307,7 @@
             modal.style.display = "none";
         }
     };
-
+ 
     $(document).ready(function () {
         var status = $('select[name="new_status_id"] option:selected').val();
         if (status === "Reject" || status === "Closed" || status === "CR Closed") {

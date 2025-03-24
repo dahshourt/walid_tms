@@ -23,6 +23,7 @@ License: You must have a valid license purchased only from themeforest(the above
 		<link rel="canonical" href="https://keenthemes.com/metronic" />
 		<meta name="csrf-token" content="{{ csrf_token() }}">
 		<!--begin::Fonts-->
+		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 		<link rel="stylesheet" href="{{asset('public/new_theme/font.css')}}" />
 		<!--end::Fonts-->
         <link href="{{asset('public/new_theme/assets/plugins/custom/datatables/datatables.bundle.css')}}" rel="stylesheet" type="text/css" />
@@ -35,6 +36,8 @@ License: You must have a valid license purchased only from themeforest(the above
 		<!--end::Global Theme Styles-->
 		<!--begin::Layout Themes(used by all pages)-->
 		<!--end::Layout Themes-->
+		
+
 		<link rel="shortcut icon" href="{{asset('public/logo-icon.png')}}" />
 		<style>
 			.form-control-feedback{
@@ -69,6 +72,7 @@ License: You must have a valid license purchased only from themeforest(the above
 			}
 			
 		</style>
+		  
 	</head>
 	<!--end::Head-->
 	<!--begin::Body-->
