@@ -386,6 +386,8 @@ class ChangeRequestController extends Controller
         $all_defects = $this->defects->all_defects($id);
         return view("$this->view.edit",compact('all_defects' ,'cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag'));  
 
+        
+
     }
 
     public function download($id)
