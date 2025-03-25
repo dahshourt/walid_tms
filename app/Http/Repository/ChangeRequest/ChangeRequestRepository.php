@@ -977,16 +977,16 @@ public function findNextAvailableTime($userId, $currentTime)
         //dd($user->role_id);
         $change_request = Change_request::find($id);
         /** check assignments */
-        if ((isset($request['dev_estimation'])) || (isset($request['testing_estimation'])) || (isset($request['design_estimation'])) || ($request['assign_to'])) {
+        if ((isset($request['dev_estimation'])) || (isset($request['testing_estimation'])) || (isset($request['design_estimation'])) || ($request['assign_to'])|| (isset($request['CR_estimation']))) {
              $request['assignment_user_id'] = $user->id;
         }
        
          
 /** end check */
-        $except = ['old_status_id', 'new_status_id', '_method', 'current_status', 'duration', 'current_status', 'categories', 'cat_name', 'pr_name', 'Applications', 'app_name', 'depend_cr_name', 'depend_crs', 'test', 'priorities', 'cr_id', 'assign_to', 'dev_estimation', 'design_estimation', 'testing_estimation', 'assignment_user_id', '_token', 'attach', 'business_attachments', 'technical_attachments', 'cap_users','analysis_feedback','technical_feedback','need_ux_ui','business_feedback','rejection_reason_id', 'technical_teams'];
+        $except = ['old_status_id', 'new_status_id', '_method', 'current_status', 'duration', 'current_status', 'categories', 'cat_name', 'pr_name', 'Applications', 'app_name', 'depend_cr_name', 'depend_crs', 'test', 'priorities', 'cr_id', 'assign_to', 'dev_estimation', 'design_estimation', 'testing_estimation', 'assignment_user_id', '_token', 'attach', 'business_attachments', 'technical_attachments', 'cap_users','analysis_feedback','technical_feedback','need_ux_ui','business_feedback','rejection_reason_id', 'technical_teams','CR_estimation'];
 
         // calculate estimation
-        if ((isset($request['dev_estimation']) && $request['dev_estimation'] != '') || (isset($request['design_estimation']) && $request['design_estimation'] != '') || (isset($request['testing_estimation']) && $request['testing_estimation'] != '')) 
+        if ((isset($request['CR_duration']) && $request['CR_duration'] != '') ||(isset($request['dev_estimation']) && $request['dev_estimation'] != '') || (isset($request['design_estimation']) && $request['design_estimation'] != '') || (isset($request['testing_estimation']) && $request['testing_estimation'] != '')) 
         {
             
             $data = $this->calculateEstimation($id,$change_request,$request,$user);
@@ -1282,7 +1282,7 @@ public function findNextAvailableTime($userId, $currentTime)
         //dd($request);
         
 
-       $create_data = Arr::except($request, ['old_status_id', 'new_status_id', '_method', 'current_status', 'duration', 'current_status', 'categories', 'cat_name', 'pr_name', 'Applications', 'app_name', 'depend_cr_name', 'depend_crs', 'test', 'priorities', 'cr_id', 'assign_to', 'dev_estimation', 'design_estimation', 'testing_estimation', 'assignment_user_id', '_token', 'attach', 'business_attachments', 'technical_attachments', 'cap_users','analysis_feedback','technical_feedback','need_ux_ui','business_feedback','rejection_reason_id','cr_member','cr_no']);
+       $create_data = Arr::except($request, ['old_status_id', 'new_status_id', '_method', 'current_status', 'duration', 'current_status', 'categories', 'cat_name', 'pr_name', 'Applications', 'app_name', 'depend_cr_name', 'depend_crs', 'test', 'priorities', 'cr_id', 'assign_to', 'dev_estimation', 'design_estimation','CR_estimation', 'testing_estimation', 'assignment_user_id', '_token', 'attach', 'business_attachments', 'technical_attachments', 'cap_users','analysis_feedback','technical_feedback','need_ux_ui','business_feedback','rejection_reason_id','cr_member','cr_no']);
         $change_request = Change_request::create($create_data);
         
         //$data = $request;
@@ -1408,7 +1408,8 @@ public function findNextAvailableTime($userId, $currentTime)
         $groups = auth()->user()->user_groups->pluck('group_id')->toArray();
         
         $view_statuses = $this->getViewStatuses($groups);
-
+ $view_statuses->push(99);
+ 
         $changeRequest = Change_request::with('category')->with('attachments',
             function ($q) use ($groups) {
                 $q->with('user');
@@ -1962,28 +1963,40 @@ public function findNextAvailableTime($userId, $currentTime)
     }
 
     public function my_assignments_crs()
-    {
-        $user_id = Auth::user()->id;
-        //$group = request()->header('group');
-        if(session('default_group')){
-            $group = session('default_group');
+{
+   
+ 
+   
 
-        }else {
-            $group = auth()->user()->default_group;
-        }
-        $view_statuses = $this->getViewStatuses();
+    $user_id = Auth::user()->id;
 
-       
-        
-        $crs = Change_request::with('Req_status.status')->whereHas('Req_status', function ($query) use ($user_id, $group, $view_statuses) {
-            $query->where('assignment_user_id', $user_id)
-                #->ORwhere('active', '2')
-                ->whereIn('new_status_id', $view_statuses);
-
-        })->get();
-        //dd($view_statuses);
-        return $crs;
+    if (session('default_group')) {
+        $group = session('default_group');
+    } else {
+        $group = auth()->user()->default_group;
     }
+
+    $view_statuses = $this->getViewStatuses();
+    $view_statuses->push(99);
+    
+
+    $crs = Change_request::with('Req_status.status')
+    ->whereHas('Req_status', function ($query) use ($user_id, $view_statuses) {
+        $query->where('assignment_user_id', $user_id)
+              ->whereIn('new_status_id', $view_statuses);
+    })
+    ->orWhere(function ($query) use ($user_id) {
+        $query->whereHas('CurrentRequestStatuses', function ($q) {
+            $q->where('new_status_id', 99)
+              ->where('active', 1);
+        })->orWhere('change_request.chnage_requester_id', $user_id); // Ensure correct column reference
+    })
+    ->get();
+
+    
+    return $crs;
+}
+
 
     public function my_crs()
     {
@@ -2299,8 +2312,31 @@ public function findNextAvailableTime($userId, $currentTime)
                 }
                 
             }
+            
+            
+            if(isset($request['CR_duration'])) // fields in tables 
+            {
 
-           
+                $return_data['CR_duration'] = $request['CR_duration'];
+               
+                if(isset($request['chnage_requester_id'])&&!empty($request['chnage_requester_id']))
+                {
+                    $return_data['chnage_requester_id']=$request['chnage_requester_id'];
+                }
+                else 
+                {
+                    $return_data['chnage_requester_id'] = $user->id;
+                }
+                   $return_data['chnage_requester_id']; 
+                $dates = $this->GetLastCRDate($id, $user->id, 'chnage_requester_id', 'end_CR_time', $request['CR_estimation'], 'CR');
+                $return_data['start_CR_time'] = isset($dates[0]) ? $dates[0] : '';
+                $return_data['end_CR_time'] = isset($dates[1]) ? $dates[1] : '';
+
+              
+
+              
+                
+            }
              
             return $return_data; 
         
