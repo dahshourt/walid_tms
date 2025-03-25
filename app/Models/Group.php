@@ -22,7 +22,8 @@ class Group extends Model
         'head_group_name',
         'head_group_email',
         'man_power',
-		'active'
+		'active',
+		'technical_team',
     ];
     protected $appends = array('name');
 

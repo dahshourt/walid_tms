@@ -25,7 +25,7 @@ class Status extends Model
         'stage_id',
         'sla',
         'active',
-        'technical_team',
+        'view_technical_team_flag',
     ];
 
     protected $hidden = [

@@ -106,7 +106,6 @@
 		<!--end::Page Scripts-->
 		<script src="{{asset('public/new_theme/assets/css/charts.css')}}"></script>
 
-		<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 
 

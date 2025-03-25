@@ -17,6 +17,7 @@ use App\Http\Repository\Defect\DefectRepository;
 use App\Models\Technical_team;
 use App\Models\Status;
 use App\Models\DefectAttachment;
+use App\Models\Group;
 use App\Factories\Statuses\StatusFactory;
 
 class DefectController extends Controller
@@ -71,7 +72,7 @@ class DefectController extends Controller
         {
             return redirect()->back()->with('status' , 'You have no access to edit this CR' );
         } // to check if the user has access to edit this cr or not 
-         $technical_team = Technical_team::all();
+        $technical_team =  Group::where('technical_team', '1')->get();
          $defect_status = $this->status->get_defect_status();
          $CustomFields = $this->custom_field_group_type->getAllCustomFieldsWithSelectedByformType("form_type", 7);
 
@@ -111,7 +112,7 @@ class DefectController extends Controller
      */
     public function show($id)
     {
-        $technical_team = Technical_team::all();
+        $technical_team =  Group::where('technical_team', '1')->get();
         $defect_status = $this->status->get_defect_status();
         $CustomFields = $this->custom_field_group_type->getAllCustomFieldsWithSelectedByformType("form_type", 7);
         //get Defect data
@@ -132,7 +133,7 @@ class DefectController extends Controller
     public function edit($id)
     {
         //custom fields
-        $technical_team = Technical_team::all();
+        $technical_team =  Group::where('technical_team', '1')->get();
         $defect_status = $this->status->get_defect_status();
         $CustomFields = $this->custom_field_group_type->getAllCustomFieldsWithSelectedByformType("form_type", 7);
         //get Defect data
