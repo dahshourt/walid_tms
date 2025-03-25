@@ -78,6 +78,19 @@
 			{!! $errors->first('head_group_email', '<span class="form-control-feedback">:message</span>') !!}
 
 		</div>
+
+		<div class="form-group">
+														<label>Technical Team?</label>
+														<div class="checkbox-inline">
+															<label class="checkbox">						
+																<input type="hidden" name="technical_team" value="0">
+																<input type="checkbox" name="technical_team" value="1" 
+																	{{ isset($row) && $row->technical_team == 1 ? "checked" : "" }}>
+																<span></span>Yes
+															</label>
+														</div>
+													</div>
+
 		@if(isset($row))
 		<div class="form-group">
 														<label>Active</label>

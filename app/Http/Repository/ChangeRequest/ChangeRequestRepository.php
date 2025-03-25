@@ -876,6 +876,45 @@ public function findNextAvailableTime($userId, $currentTime)
     }
 
 
+    public function UpdateCRData($id,$request)
+    {
+
+        $except = ['old_status_id', 'new_status_id', '_method', 'current_status', 'duration', 'current_status', 'categories', 'cat_name', 'pr_name', 'Applications', 'app_name', 'depend_cr_name', 'depend_crs', 'test', 'priorities', 'cr_id', 'assign_to', 'dev_estimation', 'design_estimation', 'testing_estimation', 'assignment_user_id', '_token', 'attach', 'business_attachments', 'technical_attachments', 'cap_users','analysis_feedback','technical_feedback','need_ux_ui','business_feedback','rejection_reason_id', 'technical_teams','CR_estimation','cr_member'];
+
+       
+        $this->changeRequest_old = Change_request::find($id);
+        $arr = Arr::except($request, $except);
+        //$data = $arr->all();
+        //$arr = $request->except($except);
+        $data = $request->except($except);
+        //dd($data);
+        
+        
+        foreach ($data as $key => $value) {
+            if($key != "_token")
+            {
+                $custom_field_id = CustomField::findId($key);
+                if($custom_field_id && $value)
+                {
+                    $change_request_custom_field = array(
+                        "cr_id" =>$id,
+                        "custom_field_id" =>$custom_field_id->id,
+                        "custom_field_name" =>$key,
+                        "custom_field_value" =>$value,
+                    );
+                    $this->InsertOrUpdateChangeRequestCustomField($change_request_custom_field);
+                }
+            }
+            
+        }
+       
+        $changeRequest = Change_request::where('id', $id)->update($arr->except($except));
+        
+        return $changeRequest;
+
+    }
+
+
     public function update($id, $request)
     {
         
@@ -907,6 +946,7 @@ public function findNextAvailableTime($userId, $currentTime)
                 $count_approved_users = $CabCr->cab_cr_user->where('status','1')->count();// get count for all users that need to take action on cr}
                 if($count_all_users > $count_approved_users)
                 {
+                    $this->UpdateCRData($id,$request);
                     return true;
                 }
                 else
@@ -925,6 +965,50 @@ public function findNextAvailableTime($userId, $currentTime)
 
        $old_status_id = null;
        if($request->old_status_id) $old_status_id = $request->old_status_id;
+
+        // check if status has flag technical team
+        $old_status_data = Status::find($old_status_id);
+        if($old_status_data->view_technical_team_flag)
+        {
+
+            if (session('default_group')) {
+                $technical_default_group = session('default_group');
+            } else {
+                $technical_default_group = auth()->user()->default_group;
+            }
+            $cr = Change_request::find($id);
+            $TechnicalCr = TechnicalCr::where("cr_id",$id)->where('status','0')->first();
+            $check_workflow_type  = NewWorkFlow::find($request->new_status_id)->workflow_type;
+            if($check_workflow_type)//reject
+            {
+                $TechnicalCr->status = '2';
+                $TechnicalCr->save();
+                $TechnicalCr->technical_cr_team()->where('group_id', $technical_default_group)->update([
+                    'status' => '2'
+                ]);
+            }
+            else//approve
+            {           
+                $TechnicalCr->technical_cr_team()->where('group_id', auth()->user()->default_group)->update([
+                    'status' => '1'
+                ]);
+            
+                $count_all_teams = $TechnicalCr->technical_cr_team->count();// get count for all users that are approve CR
+                $count_approved_teams = $TechnicalCr->technical_cr_team->where('status','1')->count();// get count for all users that need to take action on cr}
+                if($count_all_teams > $count_approved_teams)
+                {
+                    $this->UpdateCRData($id,$request);
+                    return true;
+                }
+                else
+                {
+                    $TechnicalCr->status = '1';
+                    $TechnicalCr->save();
+                }
+            }
+
+        }
+        //end check
 
 
         if ($request['assign_to']) {
@@ -983,7 +1067,6 @@ public function findNextAvailableTime($userId, $currentTime)
        
          
 /** end check */
-        $except = ['old_status_id', 'new_status_id', '_method', 'current_status', 'duration', 'current_status', 'categories', 'cat_name', 'pr_name', 'Applications', 'app_name', 'depend_cr_name', 'depend_crs', 'test', 'priorities', 'cr_id', 'assign_to', 'dev_estimation', 'design_estimation', 'testing_estimation', 'assignment_user_id', '_token', 'attach', 'business_attachments', 'technical_attachments', 'cap_users','analysis_feedback','technical_feedback','need_ux_ui','business_feedback','rejection_reason_id', 'technical_teams','CR_estimation'];
 
         // calculate estimation
         if ((isset($request['CR_duration']) && $request['CR_duration'] != '') ||(isset($request['dev_estimation']) && $request['dev_estimation'] != '') || (isset($request['design_estimation']) && $request['design_estimation'] != '') || (isset($request['testing_estimation']) && $request['testing_estimation'] != '')) 
@@ -992,36 +1075,8 @@ public function findNextAvailableTime($userId, $currentTime)
             $data = $this->calculateEstimation($id,$change_request,$request,$user);
             $request->merge($data);
         }
-        
-        $this->changeRequest_old = Change_request::find($id);
-        $arr = Arr::except($request, $except);
-        //$data = $arr->all();
-        //$arr = $request->except($except);
-        $data = $request->except($except);
-        //dd($data);
-        
-        
-        foreach ($data as $key => $value) {
-            if($key != "_token")
-            {
-                $custom_field_id = CustomField::findId($key);
-                if($custom_field_id && $value)
-                {
-                    $change_request_custom_field = array(
-                        "cr_id" =>$id,
-                        "custom_field_id" =>$custom_field_id->id,
-                        "custom_field_name" =>$key,
-                        "custom_field_value" =>$value,
-                    );
-                    $this->InsertOrUpdateChangeRequestCustomField($change_request_custom_field);
-                }
-            }
-            
-        }
-       
-        $changeRequest = Change_request::where('id', $id)->update($arr->except($except));
-        
-
+      
+        $changeRequest = $this->UpdateCRData($id,$request);
 
         
 
@@ -1511,7 +1566,6 @@ public function findNextAvailableTime($userId, $currentTime)
             $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
         })->where('type_id', $type_id)->where('active','1')->orderby('id', 'DESC')->get();
         //$set_status = 1;
-
         return $set_status;
     }
 
