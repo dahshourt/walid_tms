@@ -18,7 +18,6 @@ use App\Factories\Workflow\Workflow_type_factory;
 use App\Factories\CustomField\CustomFieldGroupTypeFactory;
 use App\Factories\Applications\ApplicationFactory;
 use App\Factories\Logs\LogFactory;
-use App\Factories\Defect\DefectFactory;
 use App\Factories\Users\UserFactory;
 use App\Http\Resources\CustomFieldSelectedGroupResource;
 use App\Models\Group;
@@ -41,11 +40,9 @@ class ChangeRequestController extends Controller
     private $logs;
     private $users;
     private $applications;
-    public function __construct(DefectFactory $defect ,ChangeRequestFactory $changerequest, ChangeRequestStatusFactory $changerequeststatus, NewWorkFlowFactory $workflow, AttachmetsCRSFactory $attachments,Workflow_type_factory $workflow_type,CustomFieldGroupTypeFactory $custom_field_group_type, ApplicationFactory $applications)
+    public function __construct(ChangeRequestFactory $changerequest, ChangeRequestStatusFactory $changerequeststatus, NewWorkFlowFactory $workflow, AttachmetsCRSFactory $attachments,Workflow_type_factory $workflow_type,CustomFieldGroupTypeFactory $custom_field_group_type, ApplicationFactory $applications)
     {
         $this->changerequest = $changerequest::index();
-        $this->defects = $defect::index();
-        $this->defects = $defect::index();
         $this->changerequeststatus = $changerequeststatus::index();
         $this->changerworkflowequeststatus = $workflow::index();
         $this->workflow_type = $workflow_type::index();
@@ -213,7 +210,7 @@ class ChangeRequestController extends Controller
             $validator = Validator::make(
                 $input_data, [
                 'business_attachments.*' => 'required|mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg|max:2048'
-                ],[   
+                ],[
                     'business_attachments.*.required' => 'Please upload an attachment',
                     'business_attachments.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
                     'business_attachments.*.max' => 'Sorry! Maximum allowed size for an attachment is 2MB',
@@ -318,11 +315,14 @@ class ChangeRequestController extends Controller
     {
        
        
+        
         $this->authorize('Edit ChangeRequest'); // permission check
         //$this->logs = LogFactory::index();
+       
         if($cab_cr_flag)
         {
             $cr = $this->changerequest->findCr($id);
+           
             if(!$cr)
             {
                 return redirect()->back()->with('status' , 'You have no access to edit this CR' );
@@ -347,6 +347,7 @@ class ChangeRequestController extends Controller
         }
         else
         {
+            
             $cr = $this->changerequest->findById($id);
 
             if(!$cr)
@@ -354,7 +355,7 @@ class ChangeRequestController extends Controller
                 return redirect()->back()->with('status' , 'CR not exists' );
             } //to check if the cr exists or not
     
-            $cr = $this->changerequest->find($id);
+            $cr = $this->changerequest->findCr($id);
             
             if(!$cr)
             {
@@ -375,7 +376,6 @@ class ChangeRequestController extends Controller
         // }
       
         $cap_users =  UserFactory::index()->get_users_cap($cr->application_id);
-        $technical_teams = Group::where('technical_team', '1')->get(); 
         $form_type = 2; // create CR form type id
         $workflow_type_id = $cr->workflow_type_id;
         //$logs_ers = $this->logs->get_by_cr_id($id);
@@ -383,10 +383,7 @@ class ChangeRequestController extends Controller
         //$CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowType($workflow_type_id, $form_type);
         $status_id = $cr->getCurrentStatus()->status->id;
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus($workflow_type_id, $form_type, $status_id);
-        $all_defects = $this->defects->all_defects($id);
-        return view("$this->view.edit",compact('all_defects' ,'cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag', 'technical_teams'));  
-
-        
+        return view("$this->view.edit",compact('cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag'));  
 
     }
 
