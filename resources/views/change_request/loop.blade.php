@@ -11,8 +11,8 @@ if (session('default_group')) {
     $default_group = auth()->user()->default_group;
 }
 $view_technical_team_flag = $item->getCurrentStatus()->status->view_technical_team_flag;
-$assigned_technical_teams = $item->technical_Cr? $item->technical_Cr->technical_cr_team->pluck('group_id')->toArray() : null;
-$check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_team->where('group_id',$default_group)->where('status','0')->count() : null;
+$assigned_technical_teams = $item->technical_Cr? $item->technical_Cr->technical_cr_team->pluck('group_id')->toArray() : [];
+$check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_team->where('group_id',$default_group)->where('status','0')->count() : 0;
 @endphp
 
 @if(!$view_technical_team_flag || ($view_technical_team_flag && in_array($default_group, $assigned_technical_teams) && $check_if_status_active))
