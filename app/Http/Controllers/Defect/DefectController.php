@@ -46,7 +46,7 @@ class DefectController extends Controller
      */
     public function index()
     {
-        
+        $this->authorize('List Defects'); // permission check
         $collection = $this->defect->getAll();
         return view("$this->view.index",compact('collection'));
     }
