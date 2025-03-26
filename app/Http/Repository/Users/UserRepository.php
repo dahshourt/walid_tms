@@ -47,7 +47,7 @@ class UserRepository implements UserRepositoryInterface
 
     public function paginateAll()
     {
-        return User::whereNotIn('user_name' , $this->dev_users)->latest()->paginate(10);
+        return User::whereNotIn('user_name' , $this->dev_users)->orderBy('id',"DESC")->paginate(50);
     }
 
     public function create($request)

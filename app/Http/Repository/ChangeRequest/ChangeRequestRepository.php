@@ -980,6 +980,7 @@ public function findNextAvailableTime($userId, $currentTime)
             $cr = Change_request::find($id);
             $TechnicalCr = TechnicalCr::where("cr_id",$id)->where('status','0')->first();
             $check_workflow_type  = NewWorkFlow::find($request->new_status_id)->workflow_type;
+			
             if($check_workflow_type)//reject
             {
                 $TechnicalCr->status = '2';
@@ -990,7 +991,7 @@ public function findNextAvailableTime($userId, $currentTime)
             }
             else//approve
             {           
-                $TechnicalCr->technical_cr_team()->where('group_id', auth()->user()->default_group)->update([
+                $TechnicalCr->technical_cr_team()->where('group_id', $technical_default_group)->update([
                     'status' => '1'
                 ]);
             
