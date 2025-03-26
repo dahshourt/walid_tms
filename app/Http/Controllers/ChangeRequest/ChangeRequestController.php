@@ -359,7 +359,7 @@ class ChangeRequestController extends Controller
             } //to check if the cr exists or not
     
             $cr = $this->changerequest->find($id);
-            
+          
             if(!$cr)
             {
                 return redirect()->back()->with('status' , 'You have no access to edit this CR' );
@@ -577,14 +577,22 @@ class ChangeRequestController extends Controller
         $user_id = \Auth::user();
         
         $user_name = $user_id->user_name;
-
+        $status_promo_view=null;
         $workflow_type = $request->input('workflow_type', 'In House');
+        if($workflow_type=='Promo')
+        {
+            $group_promo = Group::with('group_statuses')->find(50);
+          $status_promo_view=  $group_promo->group_statuses->where('type', \App\Models\GroupStatuses::VIEWBY)->pluck('status.id');
+           
+            $status_promo_view =$status_promo_view->toArray();
+           
+        }
         //dd($workflow_type);
         $query = new Change_request();
         $query = $query->with(['release','CurrentRequestStatuses'])->where("requester_id", $user_id->id);
         
         if($workflow_type){
-            $workflow_type_id = WorkFlowType::where('name' ,$workflow_type)->whereNotNull('parent_id')->value('id');
+            $workflow_type_id = WorkFlowType::where('name' ,$workflow_type)->whereNotNull('parent_id')->value('id'); 
             
             if($workflow_type_id){
                
@@ -593,10 +601,14 @@ class ChangeRequestController extends Controller
         }
         //dd($query->get()->toArray());
         $collection = $query->get();
-        //$collection = $collection->toArray();
+      //  $collection = $collection->toArray();
+      
         $r=new ChangeRequestRepository();
         $crs_in_queues=  $r->getAll()->pluck("id");
-        return view("$this->view.CRsByuser",compact('collection', 'user_name','crs_in_queues'));
+        // echo"<pre>";
+        // print_r($crs_in_queues->toArray());
+        // echo "</pre>"; die;
+        return view("$this->view.CRsByuser",compact('collection', 'user_name','crs_in_queues','status_promo_view'));
     }
 
     /*public function Crsbyusers(Request $request)

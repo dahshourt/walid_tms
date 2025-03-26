@@ -12,6 +12,7 @@ use App\Models\Change_request_statuse;
 use App\Models\GroupStatuses;
 use App\Models\NewWorkFlow;
 use App\Models\Status;
+use App\Models\Group;
 use App\Models\User;
 use App\Models\Priority;
 use App\Models\Unit;
@@ -1461,10 +1462,20 @@ public function findNextAvailableTime($userId, $currentTime)
     {
         
         $groups = auth()->user()->user_groups->pluck('group_id')->toArray();
+        $promo=[50];
+        $groups =array_merge($groups, $promo);
         
+       
+        $group_promo = Group::with('group_statuses')->find(50);
+      $status_promo_view=  $group_promo->group_statuses->where('type', \App\Models\GroupStatuses::VIEWBY)->pluck('status.id');
+       
+        $status_promo_view =$status_promo_view;
+       
         $view_statuses = $this->getViewStatuses($groups);
+        $view_statuses= $status_promo_view->merge($view_statuses)->unique();
+       
  $view_statuses->push(99);
- 
+
         $changeRequest = Change_request::with('category')->with('attachments',
             function ($q) use ($groups) {
                 $q->with('user');
@@ -1477,6 +1488,11 @@ public function findNextAvailableTime($userId, $currentTime)
                     });
                 }
             });
+
+
+
+
+
             $changeRequest =    $changeRequest->whereHas('RequestStatuses', function ($query) use ($groups, $view_statuses) {
             $query->where('active', '1')->whereIn('new_status_id', $view_statuses)
                 ->whereHas('status.group_statuses', function ($query) use ($groups) {
@@ -2031,6 +2047,9 @@ public function findNextAvailableTime($userId, $currentTime)
     }
 
     $view_statuses = $this->getViewStatuses();
+
+   
+       
     $view_statuses->push(99);
     
 
