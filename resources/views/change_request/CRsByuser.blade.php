@@ -105,6 +105,9 @@
                                                     @endif
 													@endif
 													@canany(['Edit ChangeRequest' , 'Show ChangeRequest'])
+													@if(request('workflow_type') == 'Promo')
+													<th>created at</th>
+													@endif
 													<th>Action</th>
 													@endcanany
 												</tr>
