@@ -11,6 +11,7 @@ use App\Models\Change_request;
 use App\Models\Change_request_statuse;
 use App\Models\GroupStatuses;
 use App\Models\NewWorkFlow;
+use App\Models\NewWorkFlowStatuses;
 use App\Models\Status;
 use App\Models\Group;
 use App\Models\User;
@@ -28,7 +29,7 @@ use Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use App\Http\Controllers\Mail\MailController;
-
+use DB;
 class ChangeRequestRepository implements ChangeRequestRepositoryInterface
 {
     private $changeRequest_old;
@@ -2478,26 +2479,52 @@ public function findNextAvailableTime($userId, $currentTime)
     
     public function update_to_next_status_calendar()
     {
-        dd('Hello');
-        $today = Carbon::today()->toDateString(); 
-        //$records = Change_request::with("current_status")->whereDate('calendar', $today)->get();
+        //get crs it's calender equal today and status equal set_kickoff
+        //get from workflow the next status id
+        //Loop in these crs to add new record in table "Change_request_statuse" to the next
+        $today = date('Y-m-d'); 
+        //$records = Change_request::with("current_status")->whereDate("calendar", $today )->get();
         $records = Change_request::with("current_status")
-            ->whereDate('calendar', $today)
-            ->whereHas('current_status', function ($query) {
-                $query->where('status_id', 89)->where('active', '1');  // Assuming `status_id` is the column in the `current_status` table
-            })
-            ->get();
-        //$records[0]->current_status[0]->status_id 
-        // dd($records);
+        ->whereDate('calendar', $today)
+        ->whereHas('current_status', function ($query) {
+            $query->where('status_id', 110)->where('active', '1');  // Assuming `status_id` is the column in the `current_status` table
+        })
+        ->get();
+      /**
+       * use App\Models\NewWorkFlow;
+        *use App\Models\NewWorkFlowStatuses;
+       *  */  
+       //  dd($records);
         foreach ($records as $record) {
-            $crId = $record->id;  // Replace with the correct CR ID field
-            // Update the Change_request_statuse table
+            $crId = $record->id;
+            
+            $tr = count($record->current_status) - 1;
+            $current_status = $record->current_status[$tr]->status_id;
+            $workflow_id = NewWorkFlow::where('from_status_id', $current_status)->where('type_id', 9)->select("id")->latest()->first();
+            $next_status = NewWorkFlowStatuses::where('new_workflow_id', $workflow_id->id)->select("to_status_id")->latest()->first();
+            $next_status = $next_status->to_status_id;
+             //dd($next_status);
+            //get the next status
+           //dd($current_status);
+           /* Change_request_statuse::where('cr_id', $crId)
+            ->where('new_status_id', $current_status)
+            ->where('active', 1)
+            ->update(['active' => 2]); */
+
+            DB::update("UPDATE change_request_statuses 
+            SET active = 2 
+            WHERE cr_id = ? 
+            AND new_status_id = ? 
+            AND active = 1", 
+            [$crId, $current_status]);
+            
+            //new status
             Change_request_statuse::create([
-                'new_status_id' => 103,
-                'old_status_id' => 89,
+                'new_status_id' => $next_status,
+                'old_status_id' => $current_status,
                 'cr_id' => $crId,
                 'user_id' => 1,
-                'active' => 1,
+                'active' => '1',
             ]);
         }
 
