@@ -90,6 +90,9 @@
 													<th>Test Duration</th>
 													<th>Start Test Time</th>
 													<th>End Test Time</th>
+													<th>CR Duration</th>
+													<th>Start CR Time</th>
+													<th>End CR Time</th>
 													@endif
 													@if(request('workflow_type') == 'Vendor')
 													<th>Release</th>

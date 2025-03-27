@@ -35,6 +35,9 @@
                                     <td>{{ $item['test_duration'] }}</td>
                                     <td>{{ $item['start_test_time'] }}</td>
                                     <td>{{ $item['end_test_time'] }}</td>
+                                    <td>{{ $item['CR_duration'] }}</td>
+                                    <td>{{ $item['start_CR_time'] }}</td>
+                                    <td>{{ $item['end_CR_time'] }}</td>
                                     @endif
                                     @if(request('workflow_type') == 'Vendor')
 										<td>{{$item['release'] ?  $item['release']->name : 'No Release'}}</td>
