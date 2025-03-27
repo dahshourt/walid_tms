@@ -573,6 +573,7 @@
 																		</a>
 																	</li>
 																	@endcan
+																	@can('List Defects')
 																	<li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
 																		<a href="{{ url('defects') }}" class="menu-link">
 																		<span class="svg-icon menu-icon">
@@ -590,6 +591,7 @@
 																			
 																		</a>
 																	</li>
+																	@endcan
 													</ul>
 											</li>	
 											@endcanany

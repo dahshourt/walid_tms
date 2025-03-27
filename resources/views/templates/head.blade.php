@@ -23,7 +23,6 @@ License: You must have a valid license purchased only from themeforest(the above
 		<link rel="canonical" href="https://keenthemes.com/metronic" />
 		<meta name="csrf-token" content="{{ csrf_token() }}">
 		<!--begin::Fonts-->
-		<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 		<link rel="stylesheet" href="{{asset('public/new_theme/font.css')}}" />
 		<!--end::Fonts-->
         <link href="{{asset('public/new_theme/assets/plugins/custom/datatables/datatables.bundle.css')}}" rel="stylesheet" type="text/css" />

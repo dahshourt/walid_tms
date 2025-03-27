@@ -46,7 +46,7 @@ class DefectController extends Controller
      */
     public function index()
     {
-        
+        $this->authorize('List Defects'); // permission check
         $collection = $this->defect->getAll();
         return view("$this->view.index",compact('collection'));
     }
@@ -112,7 +112,7 @@ class DefectController extends Controller
      */
     public function show($id)
     {
-        $technical_team = Technical_team::all();
+        $technical_team =  Group::where('technical_team', '1')->get();
         $defect_status = $this->status->get_defect_status();
         $CustomFields = $this->custom_field_group_type->getAllCustomFieldsWithSelectedByformType("form_type", 7);
         //get Defect data

@@ -62,12 +62,12 @@
 													</div>
 
 													<div class="form-group">
-														<label>Technical Team?</label>
+														<label>Technical Team View Flag?</label>
 														<div class="checkbox-inline">
 															<label class="checkbox">						
-																<input type="hidden" name="technical_team" value="0">
-																<input type="checkbox" name="technical_team" value="1" 
-																	{{ isset($row) && $row->technical_team == 1 ? "checked" : "" }}>
+																<input type="hidden" name="view_technical_team_flag" value="0">
+																<input type="checkbox" name="view_technical_team_flag" value="1" 
+																	{{ isset($row) && $row->view_technical_team_flag == 1 ? "checked" : "" }}>
 																<span></span>Yes
 															</label>
 														</div>
