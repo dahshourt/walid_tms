@@ -230,6 +230,24 @@ class Change_request extends Model
     }
 
 
+    public function GetTechnicalTeamCurrentStatus()
+    {
+        if(session('default_group')){
+            $group = session('default_group');
+
+        }else {
+            $group = auth()->user()->default_group;
+        }
+        $technical_cr_team_status = null;
+        $TechnicalCr = TechnicalCr::where("cr_id",$this->id)->where('status','0')->first();
+        if($TechnicalCr)
+        {
+            $technical_cr_team_status = $TechnicalCr->technical_cr_team()->where('group_id', $group)->where('status','0')->first();
+            
+        }
+        return $technical_cr_team_status;
+    }
+
     public function getCurrentStatus()
     {
         
@@ -240,7 +258,18 @@ class Change_request extends Model
         }else {
             $group = auth()->user()->default_group;
         }
-        $view_statuses = GroupStatuses::where('group_id', $group)->where('type', 2)->get()->pluck('status_id');
+        $view_statuses = GroupStatuses::where('group_id', $group)->where('type', 2)->get()->pluck('status_id')->toArray();
+        $technical_cr_team_status = $this->GetTechnicalTeamCurrentStatus();
+        if($technical_cr_team_status)
+        {
+
+            if(in_array($technical_cr_team_status->current_status_id,$view_statuses))
+            {
+                $view_statuses = array();    
+                $view_statuses[]=$technical_cr_team_status->current_status_id;
+            }
+        
+        }
         $status = Change_request_statuse::where('cr_id', $this->id)->whereIn('new_status_id', $view_statuses)->where('active', '1')->first();
         if($status)
         {
@@ -271,7 +300,6 @@ class Change_request extends Model
 			}
         }
        
-        //dd($status);
         return $status;
     }
 	
