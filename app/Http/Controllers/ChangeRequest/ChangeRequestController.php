@@ -72,6 +72,7 @@ class ChangeRequestController extends Controller
         $this->authorize('List change requests'); // permission check
        
         $collection = $this->changerequest->getAll();
+        
         return view("$this->view.index",compact('collection'));
 
         } catch (AuthorizationException $e) {
@@ -387,8 +388,13 @@ class ChangeRequestController extends Controller
         //$CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowType($workflow_type_id, $form_type);
         $status_id = $cr->getCurrentStatus()->status->id;
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus($workflow_type_id, $form_type, $status_id);
+        
         $all_defects = $this->defects->all_defects($id);
-        return view("$this->view.edit",compact('cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag','technical_teams','all_defects'));  
+
+        $reminder_promo_tech_teams = array();
+        $reminder_promo_tech_teams = $cr->technical_Cr ? $cr->technical_Cr->technical_cr_team->where('status','0')->pluck('group')->pluck('title')->toArray(): array();
+        $reminder_promo_tech_teams_text = implode(',',$reminder_promo_tech_teams);
+        return view("$this->view.edit",compact('cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag','technical_teams','all_defects','reminder_promo_tech_teams','reminder_promo_tech_teams_text'));  
 
     }
 

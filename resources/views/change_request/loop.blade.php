@@ -5,6 +5,7 @@
 
 @foreach ($collection as $item)
 @php
+
 if (session('default_group')) {
     $default_group = session('default_group');
 } else {

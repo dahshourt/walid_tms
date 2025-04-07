@@ -39,6 +39,10 @@ License: You must have a valid license purchased only from themeforest(the above
 
 		<link rel="shortcut icon" href="{{asset('public/logo-icon.png')}}" />
 		<style>
+			.swal2-icon-show
+			{
+				left:40%;
+			}
 			.form-control-feedback{
 				color:red;
 			}

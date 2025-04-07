@@ -219,9 +219,15 @@
                                                 
 												<div class="card-footer" style="width: 100%;float: right;">
                                                     @if(count($cr->set_status) > 0)
-												    <button type="submit" class="btn btn-success mr-2">
-                                                        Submit
-                                                    </button>
+                                                        @if($cr->getCurrentStatus()?->status?->id == 68 && $workflow_type_id == 9 && count($reminder_promo_tech_teams) > 0)
+                                                            <button type="button" class="btn btn-success mr-2" id="show_error_message">
+                                                                Submit
+                                                            </button>
+                                                        @else
+                                                            <button type="submit" class="btn btn-success mr-2">
+                                                                Submit
+                                                            </button>
+                                                        @endif
                                                     @endif
 													@can('Show CR Logs')
 										    			<button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
@@ -465,6 +471,12 @@ $(window).on("load", function () {
     if (statusField) {
         statusField.addEventListener("change", handleOptionalOrRequiredOption);
     }
+});
+
+
+$("#show_error_message").click(function(){
+    let message = " There are group(s) ({{$reminder_promo_tech_teams_text}}) still not transfer CR to Smoke test yet!"
+    Swal.fire ('Warning...', message, 'error')
 });
 
 </script>
