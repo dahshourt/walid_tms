@@ -121,8 +121,90 @@
         $def1= $cr->defects()->count(); 
         $def2=  $cr->defects()->whereIn('status_id', [86, 87])->count();
     }
-
+   $status_id= $cr->getCurrentStatus()?->status?->id;
 ?>
+@if($status_id==120||$status_id==105)
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const statusSelect = document.querySelector('select[name="new_status_id"]');
+
+    let techTeamWrapper = null;
+    let techTeamSelect = null;
+    let originalParent = null;
+
+    document.querySelectorAll('select[name="technical_teams[]"]').forEach(select => {
+        techTeamSelect = select;
+        techTeamWrapper = select.closest('.change-request-form-field');
+        originalParent = techTeamWrapper?.parentNode;
+    });
+
+    let storedTechTeamWrapper = null;
+
+    function addAsteriskIfNeeded(wrapper) {
+        const label = wrapper.querySelector("label");
+        if (label && !label.innerHTML.includes('*')) {
+            const star = document.createElement("span");
+            star.style.color = "red";
+            star.innerHTML = " *";
+            label.appendChild(star);
+        }
+    }
+
+    function removeAsterisk(wrapper) {
+        const label = wrapper.querySelector("label");
+        if (label) {
+            label.innerHTML = label.innerHTML.replace(/\s*<span[^>]*>\*<\/span>/g, '').replace(/\s*\*/g, '');
+        }
+    }
+
+    function handleStatusChange(value) {
+        const hideStatuses = ["260", "107"];
+        const requiredStatuses = ["257", "106"];
+
+        if (hideStatuses.includes(value) && techTeamWrapper) {
+            storedTechTeamWrapper = techTeamWrapper;
+            techTeamWrapper.remove();
+            techTeamWrapper = null;
+        } else if (requiredStatuses.includes(value) && !techTeamWrapper && storedTechTeamWrapper) {
+            originalParent.appendChild(storedTechTeamWrapper);
+            techTeamWrapper = storedTechTeamWrapper;
+            storedTechTeamWrapper = null;
+
+            const restoredSelect = techTeamWrapper.querySelector('select[name="technical_teams[]"]');
+            if (restoredSelect) {
+                restoredSelect.setAttribute("required", "required");
+                addAsteriskIfNeeded(techTeamWrapper);
+            }
+        } else if (requiredStatuses.includes(value) && techTeamWrapper) {
+            techTeamSelect?.setAttribute("required", "required");
+            addAsteriskIfNeeded(techTeamWrapper);
+        } else if (!hideStatuses.includes(value) && techTeamWrapper) {
+            techTeamSelect?.removeAttribute("required");
+            removeAsterisk(techTeamWrapper);
+        } else if (!hideStatuses.includes(value) && !techTeamWrapper && storedTechTeamWrapper) {
+            originalParent.appendChild(storedTechTeamWrapper);
+            techTeamWrapper = storedTechTeamWrapper;
+            storedTechTeamWrapper = null;
+
+            const restoredSelect = techTeamWrapper.querySelector('select[name="technical_teams[]"]');
+            if (restoredSelect) {
+                restoredSelect.removeAttribute("required");
+                removeAsterisk(techTeamWrapper);
+            }
+        }
+    }
+
+    if (statusSelect) {
+        handleStatusChange(statusSelect.value);
+        statusSelect.addEventListener("change", function () {
+            handleStatusChange(this.value);
+        });
+    }
+});
+</script>
+@endif
+
+
 @if($def1 != $def2)
 
     <script>
