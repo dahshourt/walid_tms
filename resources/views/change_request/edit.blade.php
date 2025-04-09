@@ -124,7 +124,7 @@
                                                 {{ csrf_field() }}
                                                 {{ method_field('PATCH') }}
 												<input type="hidden" name="workflow_type_id" value="{{$workflow_type_id}}">
-												<input type="hidden" name="old_status_id" value="{{$cr->current_status->new_status_id}}">
+												<input type="hidden" name="old_status_id" value="{{$cr->current_status?->new_status_id}}">
                                                 <input type="hidden" name="cab_cr_flag" value="{{isset($cab_cr_flag)?$cab_cr_flag:0}}">
 												<div class="card-body">
 													
@@ -261,7 +261,7 @@
                                                             <td>{{ $value->User_created->user_name }}</td>
                                                             <td>{{ $value->subject }}</td>
                                                             <td>{{ $value->assigned_team->title }}</td>
-                                                            <td>{{ $value->current_status->status_name }}</td>
+                                                            <td>{{ $value->current_status?->status_name }}</td>
                                                             <td>{{ $value->created_at->format('Y-m-d H:i:s') }}</td>
                                                             <td> <a href="{{url('edit_defect')}}/{{$value->id}}">Edit </a> </td>
                                                          </tr>
