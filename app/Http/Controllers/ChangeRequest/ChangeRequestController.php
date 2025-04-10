@@ -27,6 +27,7 @@ use App\Models\attachements_crs;
 use App\Models\User; 
 use App\Models\Defect; 
 use App\Models\WorkFlowType;
+use App\Models\Change_request_statuse;
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use Validator;
 use App\Http\Controllers\Mail\MailController;
@@ -315,13 +316,19 @@ class ChangeRequestController extends Controller
  
     } 
 
-    public function edit($id,$cab_cr_flag=false)
+    public function edit($id,$cab_cr_flag=false , Request $request)
     {
-       
-       
-        
         $this->authorize('Edit ChangeRequest'); // permission check
         //$this->logs = LogFactory::index();
+
+        $user_email = auth()->user()->email;
+        $division_manager = Change_request::where('id' , $id)->value('division_manager');
+        $current_status = Change_request_statuse::where('cr_id', $id)->where('active', '1')->value('new_status_id');
+
+        //this condition to check if the division manager approve the CR or not
+        if ($request->has('check_dm') && $user_email === $division_manager && $current_status != '22'){
+            return redirect()->back()->with('status', 'You already approved this CR.');
+        }
        
         if($cab_cr_flag)
         {
