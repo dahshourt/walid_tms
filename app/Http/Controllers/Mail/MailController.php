@@ -113,7 +113,8 @@ class MailController extends Controller
         $email_parts = explode('.', explode('@', $division_manager_email)[0]);
         $first_name = ucfirst($email_parts[0]); 
 
-        $cr_link = route('edit.cr', $cr);
+        //$cr_link = route('edit.cr', $cr);
+        $cr_link = route('edit.cr', ['id' => $cr, 'check_dm' => 1]);
 
         $templateContent = [
             'subject' => $template->subject . " #$cr",
