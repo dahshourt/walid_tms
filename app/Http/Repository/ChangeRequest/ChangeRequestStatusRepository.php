@@ -53,5 +53,32 @@ class ChangeRequestStatusRepository implements ChangeRequestStatusRepositoryInte
     }
 
 
+    public function createInitialStatus($cr_id, $request)
+    {
+        $status_sla = Status::find($request['new_status_id']);
+        if($status_sla)
+        {
+            $status_sla = $status_sla->sla;
+        }
+        else
+        {
+            $status_sla = 0;
+        }
+        $user_id = \Auth::user()->id; // 3;
+        $data = [
+            'cr_id' => $cr_id,
+            'old_status_id' => $request['old_status_id'],
+            'new_status_id' => $request['new_status_id'],
+            'sla' => $status_sla,
+            'user_id' => $user_id,
+            //'updated_at' => NULL,
+            'active' => '1',
+        ];
+        $this->create($data);
+
+        return true;
+    }
+
+
 
 }

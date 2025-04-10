@@ -7,11 +7,20 @@
 
                                     @can('Edit ChangeRequest')
                                     <td>
+									@if(request('workflow_type') == 'Promo')
+                                        
+                                        @if($item->getCurrentStatus() && isset($item->getCurrentStatus()->status)&&isset($status_promo_view) && in_array($item->getCurrentStatus()->status->id, $status_promo_view))
+											<a href='{{ url("$route") }}/{{ $item->id }}/edit'>{{ $item['id'] }} </a>
+                                        @else
+                                            <a href='{{ url("$route") }}/{{ $item["id"] }}'>{{ $item['id'] }} </a>
+                                        @endif
+									@else	
                                         @if($item->getCurrentStatus() && isset($item->getCurrentStatus()->status) && in_array($item->getCurrentStatus()->status->id, [64, 79,41,44]))
                                             <a href='{{ url("$route") }}/{{ $item->id }}/edit'>{{ $item['id'] }} </a>
                                         @else
                                             <a href='{{ url("$route") }}/{{ $item["id"] }}'>{{ $item['id'] }} </a>
                                         @endif
+									@endif
                                     </td>
                                     @else
                                         @can('Show ChangeRequest')
@@ -35,14 +44,21 @@
                                     <td>{{ $item['test_duration'] }}</td>
                                     <td>{{ $item['start_test_time'] }}</td>
                                     <td>{{ $item['end_test_time'] }}</td>
+                                    <td>{{ $item['CR_duration'] }}</td>
+                                    <td>{{ $item['start_CR_time'] }}</td>
+                                    <td>{{ $item['end_CR_time'] }}</td>
                                     @endif
                                     @if(request('workflow_type') == 'Vendor')
 										<td>{{$item['release'] ?  $item['release']->name : 'No Release'}}</td>
                                     @endif
                                     @endif
+                                    @if(request('workflow_type') == 'Promo')
+													<td>{{ $item["created_at"] }}</td>
+													@endif
                                     <td>
                                         <div class="d-inline-flex">
                                         @can('Show ChangeRequest')
+                                      
                                         <a href='{{ url("$route") }}/{{ $item["id"] }}' class="btn btn-sm btn-clean btn-icon mr-2" title="Show details">
                                             <span class="svg-icon svg-icon-md">
                                                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">

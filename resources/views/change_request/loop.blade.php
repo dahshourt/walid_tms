@@ -5,6 +5,7 @@
 
 @foreach ($collection as $item)
 @php
+
 if (session('default_group')) {
     $default_group = session('default_group');
 } else {
@@ -38,6 +39,9 @@ $check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_
                                     <td>{{ $item['test_duration'] }}</td>
                                     <td>{{ $item['start_test_time'] }}</td>
                                     <td>{{ $item['end_test_time'] }}</td>
+                                    <td>{{ $item['CR_duration'] }}</td>
+                                    <td>{{ $item['start_CR_time'] }}</td>
+                                    <td>{{ $item['end_CR_time'] }}</td>
                                     @endif
                                     <td>
                                         <div class="d-inline-flex">

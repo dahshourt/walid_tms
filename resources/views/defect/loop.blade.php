@@ -22,7 +22,7 @@
                                             </span>
                                         </a>
 
-                                        @can('Edit Permission')
+                                        
                                             
                                         <a href='{{url("")}}/edit_defect/{{ $item->id }}' class="btn btn-sm btn-clean btn-icon mr-2" title="Edit Defect">
                                             <span class="svg-icon svg-icon-md">
@@ -35,7 +35,7 @@
                                                 </svg>
                                             </span>
                                         </a>
-                                        @endcan
+                                        
 
                                         
                                     

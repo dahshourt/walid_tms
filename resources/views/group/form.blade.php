@@ -91,7 +91,6 @@
 														</div>
 													</div>
 
-		@if(isset($row))
 		<div class="form-group">
 														<label>Active</label>
 														<div class="checkbox-inline">
@@ -102,7 +101,6 @@
 														</div>
 														
 													</div>
-													@endif
 
 	</div>
 </div>

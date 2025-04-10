@@ -10,7 +10,7 @@ class TechnicalCrTeam extends Model
     use HasFactory;
 
     protected $fillable = [
-        'group_id','technical_cr_id', 'status'
+        'group_id','technical_cr_id', 'status','current_status_id'
     ];
     const INACTIVE = '0';
     const APPROVED = '1';
