@@ -1540,21 +1540,30 @@ public function findNextAvailableTime($userId, $currentTime)
 
     public function find($id)
     {
+        $user_email = auth()->user()->email;
+        $division_manager = Change_request::where('id' , $id)->value('division_manager');
+        //dd($devision_manager);
+        if ($user_email === $division_manager){
+            $groups = Group::pluck('id')->toArray();
+        }
+        else{
+            $groups = auth()->user()->user_groups->pluck('group_id')->toArray();
+        }
+        //$groups = auth()->user()->user_groups->pluck('group_id')->toArray();
         
-        $groups = auth()->user()->user_groups->pluck('group_id')->toArray();
         $promo=[50];
         $groups =array_merge($groups, $promo);
-        
-       
+
+        //dd($groups);
         $group_promo = Group::with('group_statuses')->find(50);
-      $status_promo_view=  $group_promo->group_statuses->where('type', \App\Models\GroupStatuses::VIEWBY)->pluck('status.id');
+        $status_promo_view=  $group_promo->group_statuses->where('type', \App\Models\GroupStatuses::VIEWBY)->pluck('status.id');
        
         $status_promo_view =$status_promo_view;
        
         $view_statuses = $this->getViewStatuses($groups,$id);
+        //dd($view_statuses);
         $view_statuses= $status_promo_view->merge($view_statuses)->unique();
-       
- $view_statuses->push(99);
+        $view_statuses->push(99);
 
         $changeRequest = Change_request::with('category')->with('attachments',
             function ($q) use ($groups) {
@@ -1568,11 +1577,6 @@ public function findNextAvailableTime($userId, $currentTime)
                     });
                 }
             });
-
-
-
-
-
             $changeRequest =    $changeRequest->whereHas('RequestStatuses', function ($query) use ($groups, $view_statuses) {
             $query->where('active', '1')->whereIn('new_status_id', $view_statuses)
                 ->whereHas('status.group_statuses', function ($query) use ($groups) {
@@ -1583,7 +1587,7 @@ public function findNextAvailableTime($userId, $currentTime)
                     $query->where('type', 2);
                 });
         })->where('id', $id)->first();
-    
+        
         if ($changeRequest) {
             $changeRequest->current_status = $current_status = $this->getCurrentStatus($changeRequest, $view_statuses);
             //dd($current_status);
@@ -1594,7 +1598,7 @@ public function findNextAvailableTime($userId, $currentTime)
         if ($assigned_user) {
             $changeRequest->assign_to = $this->AssignToUsers();
         }
-    
+        
         return $changeRequest;
     }
     
@@ -1619,6 +1623,10 @@ public function findNextAvailableTime($userId, $currentTime)
 
     public function getViewStatuses($group = null,$id=null)
     {
+        $user_email = auth()->user()->email;
+        $division_manager = Change_request::where('id' , $id)->value('division_manager');
+        $current_status = Change_request_statuse::where('cr_id', $id)->where('active', '1')->value('new_status_id');
+        //dd($current_status);
         
         // Get the default group if none is provided
         if (empty($group)) {
@@ -1630,6 +1638,13 @@ public function findNextAvailableTime($userId, $currentTime)
         }else {
             $group = auth()->user()->default_group;
         }
+
+        //this condition to check if the user is division manager and the status is business approval if yes he will be able to edit the CR.
+        if ($user_email === $division_manager && $current_status == '22'){
+            $group = Group::pluck('id')->toArray();
+        }
+        
+        
         
     
         // Initialize the query for GroupStatuses
