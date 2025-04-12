@@ -19,7 +19,21 @@
                     @endif
                 @endforeach
             </select>
+        @elseif($item->CustomField->name == "deployment_impact")
+            <select name="{{ $item->CustomField->name }}" class="form-control form-control-lg">
+                <option value="">Select</option>
+                @foreach($item->CustomField->getCustomFieldValue() as $value)
+                 
+                    @if(in_array($value->id, $ApplicationImpact->pluck('impacts_id')->toArray()  ))
+                        <option value="{{ $value->id }}" {{ $custom_field_value == $value->id ? 'selected' : '' }}>{{ $value->name }}</option>
+                     @endif
+                     @if(empty($ApplicationImpact->pluck('impacts_id')->toArray()))
+                     <option value="{{ $value->id }}" {{ $custom_field_value == $value->id ? 'selected' : '' }}>{{ $value->name }}</option>
+                     @endif
+                @endforeach
+            </select>
         @else
+        
             <select name="{{ $item->CustomField->name }}" id="{{ $item->CustomField->name }}" class="form-control form-control-lg" 
                 @if(isset($item->validation_type_id) && $item->validation_type_id == 1) required @endif
                 @cannot('Set Time For Another User')
