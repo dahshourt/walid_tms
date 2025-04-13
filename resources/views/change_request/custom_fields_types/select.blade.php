@@ -156,12 +156,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function handleStatusChange(value) {
-        const hideStatuses = ["260", "223","273"];
-        const requiredStatuses = ["257", "220","276","275"];
+        const hideStatuses = ["260", "223", "273"];
+        const requiredStatuses = ["257", "220", "276", "275"];
+        const hideTexts = ["Test in Progress", "Pending HL Design", "Assess the defects"];
 
         if (!techTeamWrapper || !techTeamSelect) return;
 
-        if (hideStatuses.includes(value)) {
+        const selectedOption = statusSelect?.options[statusSelect.selectedIndex];
+        const selectedText = selectedOption?.textContent.trim();
+
+        if (hideStatuses.includes(value) || hideTexts.includes(selectedText)) {
             techTeamWrapper.style.display = "none";
             techTeamSelect.removeAttribute("required");
             removeAsterisk(techTeamWrapper);
@@ -185,6 +189,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 });
 </script>
+
 
 @if($def1 != $def2)
 <script>
@@ -218,3 +223,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 @endif
+
+
+
