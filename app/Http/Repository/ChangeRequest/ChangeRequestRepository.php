@@ -1620,6 +1620,54 @@ public function findNextAvailableTime($userId, $currentTime)
         }
         return $technical_cr_team_status;
     }
+    //old function 
+    /*public function getViewStatuses($group = null , $id = null)
+    {
+
+        $user_email = auth()->user()->email;
+        $division_manager = Change_request::where('id' , $id)->value('division_manager');
+        $current_status = Change_request_statuse::where('cr_id', $id)->where('active', '1')->value('new_status_id');
+
+        // Get the default group if none is provided
+        if (empty($group)) {
+            $group = auth()->user()->default_group;
+        }
+        if(session('default_group')){
+            $group = session('default_group');
+
+        }else {
+            $group = auth()->user()->default_group;
+        }
+
+        //this condition to check if the user is division manager and the status is business approval if yes he will be able to edit the CR.
+        if ($user_email === $division_manager && $current_status == '22'){
+            $group = Group::pluck('id')->toArray();
+        }
+        
+    
+        // Initialize the query for GroupStatuses
+        $view_statuses = new GroupStatuses;
+    
+        // Check if $group is an array or a single value
+        if (is_array($group)) {
+            // If it's an array, apply the condition for all group IDs
+            $view_statuses = $view_statuses->whereIn('group_id', $group)->where('type', 2);
+           
+        } else {
+            // If it's a single value, apply the condition for that group
+
+            //if ($group != 19 && $group != 8) {
+                $view_statuses = $view_statuses->where('group_id', $group)->where('type', 2);
+               
+            //}
+        }
+        
+    
+        // Fetch and return the statuses related to the group(s)
+        $view_statuses = $view_statuses->groupBy('status_id')->get()->pluck('status_id');
+        
+        return $view_statuses;
+    }*/
 
     public function getViewStatuses($group = null,$id=null)
     {

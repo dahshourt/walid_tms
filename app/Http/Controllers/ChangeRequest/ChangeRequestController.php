@@ -27,6 +27,8 @@ use App\Models\attachements_crs;
 use App\Models\User; 
 use App\Models\Defect; 
 use App\Models\WorkFlowType;
+use App\Models\Change_request_statuse;
+use App\Models\ApplicationImpact;
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use Validator;
 use App\Http\Controllers\Mail\MailController;
@@ -315,13 +317,19 @@ class ChangeRequestController extends Controller
  
     } 
 
-    public function edit($id,$cab_cr_flag=false)
+    public function edit($id,$cab_cr_flag=false , Request $request)
     {
-       
-       
-        
         $this->authorize('Edit ChangeRequest'); // permission check
         //$this->logs = LogFactory::index();
+
+        $user_email = auth()->user()->email;
+        $division_manager = Change_request::where('id' , $id)->value('division_manager');
+        $current_status = Change_request_statuse::where('cr_id', $id)->where('active', '1')->value('new_status_id');
+
+        //this condition to check if the division manager approve the CR or not
+        if ($request->has('check_dm') && $user_email === $division_manager && $current_status != '22'){
+            return redirect()->back()->with('status', 'You already approved this CR.');
+        }
        
         if($cab_cr_flag)
         {
@@ -390,11 +398,16 @@ class ChangeRequestController extends Controller
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus($workflow_type_id, $form_type, $status_id);
         
         $all_defects = $this->defects->all_defects($id);
-
-        $reminder_promo_tech_teams = array();
+       
+        $ApplicationImpact = ApplicationImpact::where('application_id', $cr->application_id)->select('impacts_id')->get();
+        // foreach($ApplicationImpact as $value){
+        //     $ApplicationImpacts[] = $value;
+        // }
+         
+         $reminder_promo_tech_teams = array();
         $reminder_promo_tech_teams = $cr->technical_Cr ? $cr->technical_Cr->technical_cr_team->where('status','0')->pluck('group')->pluck('title')->toArray(): array();
         $reminder_promo_tech_teams_text = implode(',',$reminder_promo_tech_teams);
-        return view("$this->view.edit",compact('cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag','technical_teams','all_defects','reminder_promo_tech_teams','reminder_promo_tech_teams_text'));  
+        return view("$this->view.edit",compact('ApplicationImpact' ,'cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag','technical_teams','all_defects','reminder_promo_tech_teams','reminder_promo_tech_teams_text'));  
 
     }
 
