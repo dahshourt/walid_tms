@@ -1,26 +1,28 @@
-@if($item->CustomField->type == "textArea")	
-    <div class="col-md-6 change-request-form-field">
-        <label for="user_type">{{ $item->CustomField->label }}</label>
-        @if( isset($item->validation_type_id)&&($item->validation_type_id==1))
-            <span style="color: red;">*</span>
+@if($item->CustomField->type == "textArea")
+    <div class="col-md-6 change-request-form-field field_{{ $item->CustomField->name }}">
+        {{-- Label --}}
+        <label for="{{ $item->CustomField->name }}">{{ $item->CustomField->label }}</label>
+        @if(isset($item->validation_type_id) && $item->validation_type_id == 1)
+            <span class="text-danger">*</span>
         @endif
+
+        {{-- Input rules --}}
         @php
-            $disabled = "";
-            $required = "";
-            if((isset($item->enable)&&($item->enable!=1))) $disabled = "disabled";
-            if(isset($item->validation_type_id) && $item->validation_type_id == 1) $required = "required";
+            $fieldName = $item->CustomField->name;
+            $isRequired = isset($item->validation_type_id) && $item->validation_type_id == 1 ? 'required' : '';
+            $isDisabled = isset($item->enable) && $item->enable != 1 ? 'disabled' : '';
+            $value = isset($cr) ? $custom_field_value : old($fieldName);
         @endphp
-        @if(isset($cr))
-            <textarea name="{{ $item->CustomField->name }}" class="form-control form-control-lg" {{ $required }} {{ $disabled }}>{{ $custom_field_value }}</textarea>
-        @else
-            <textarea name="{{ $item->CustomField->name }}" class="form-control form-control-lg" {{ $required }} {{ $disabled }}>{{ old($item->CustomField->name) }}</textarea>
-        @endif 
-        @if($errors->has($item->CustomField->name))
-                @foreach($errors->get($item->CustomField->name) as $error)
-                    <small class="text-danger d-block">{{ $error }}</small>
-                @endforeach
-        @endif   
-           
-       
+
+        {{-- Textarea --}}
+        <textarea name="{{ $fieldName }}" 
+                  id="{{ $fieldName }}"
+                  class="form-control form-control-lg @error($fieldName) is-invalid @enderror"
+                  {{ $isRequired }} {{ $isDisabled }}>{{ $value }}</textarea>
+
+        {{-- Error display --}}
+        @error($fieldName)
+            <small class="text-danger d-block">{{ $message }}</small>
+        @enderror
     </div>
 @endif
