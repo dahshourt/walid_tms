@@ -28,6 +28,7 @@ use App\Models\User;
 use App\Models\Defect; 
 use App\Models\WorkFlowType;
 use App\Models\Change_request_statuse;
+use App\Models\ApplicationImpact;
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use Validator;
 use App\Http\Controllers\Mail\MailController;
@@ -397,11 +398,16 @@ class ChangeRequestController extends Controller
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus($workflow_type_id, $form_type, $status_id);
         
         $all_defects = $this->defects->all_defects($id);
-
-        $reminder_promo_tech_teams = array();
+       
+        $ApplicationImpact = ApplicationImpact::where('application_id', $cr->application_id)->select('impacts_id')->get();
+        // foreach($ApplicationImpact as $value){
+        //     $ApplicationImpacts[] = $value;
+        // }
+         
+         $reminder_promo_tech_teams = array();
         $reminder_promo_tech_teams = $cr->technical_Cr ? $cr->technical_Cr->technical_cr_team->where('status','0')->pluck('group')->pluck('title')->toArray(): array();
         $reminder_promo_tech_teams_text = implode(',',$reminder_promo_tech_teams);
-        return view("$this->view.edit",compact('cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag','technical_teams','all_defects','reminder_promo_tech_teams','reminder_promo_tech_teams_text'));  
+        return view("$this->view.edit",compact('ApplicationImpact' ,'cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag','technical_teams','all_defects','reminder_promo_tech_teams','reminder_promo_tech_teams_text'));  
 
     }
 
