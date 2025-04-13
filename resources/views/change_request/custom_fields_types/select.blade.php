@@ -125,7 +125,10 @@
 @php
     $def1 = isset($cr) ? $cr->defects()->count() : 0;
     $def2 = isset($cr) ? $cr->defects()->whereIn('status_id', [86, 87])->count() : 0;
-    $status_id = $cr->getCurrentStatus()?->status?->id ?? null;
+	if(isset($cr))
+	{	
+		$status_id = $cr->getCurrentStatus()?->status?->id ?? null;
+	}
 @endphp
 
 {{-- JavaScript --}}

@@ -171,7 +171,7 @@ class ChangeRequestController extends Controller
     //    echo"<pre>";
     //    print_r($CustomFields);
     //    echo"</pre>"; die;
-        $title = 'Create CR';
+        $title = "Create $target_system->name CR";
         return view("$this->view.create",compact('CustomFields','workflow_type_id','target_system','title'));
     }
 
