@@ -995,7 +995,7 @@ public function findNextAvailableTime($userId, $currentTime)
     public function update($id, $request)
     {
         
-        //dd($request->all());
+       // dd($request->all());
         if($request->cab_cr_flag == '1')
         {
             $cr = Change_request::find($id);
@@ -1049,7 +1049,7 @@ public function findNextAvailableTime($userId, $currentTime)
         //dd($old_status_data);
         if($old_status_data->view_technical_team_flag)
         {
-
+            
             if (session('default_group')) {
                 $technical_default_group = session('default_group');
             } else {
@@ -1160,6 +1160,7 @@ public function findNextAvailableTime($userId, $currentTime)
             
         ]);
         $insertedId = $record->id;
+        
         foreach ($request->technical_teams as $groupId) {
             TechnicalCrTeam::create([
                 'group_id' => $groupId,
@@ -1275,7 +1276,11 @@ public function findNextAvailableTime($userId, $currentTime)
            $new_status_id = $request->new_status_id;  
         }
         $workflow = NewWorkFlow::find($new_status_id);
-        //dd($workflow, $workflow->workflowstatus);
+        $change_request = Change_request::find($id);
+      
+        
+      
+        
         if(isset(\Auth::user()->id) && \Auth::user()->id != null)
         {
             $user_id = \Auth::user()->id   ;    
@@ -1392,16 +1397,42 @@ public function findNextAvailableTime($userId, $currentTime)
                     }
                     else
                     {
-                        $data = [
-                            'cr_id' => $id,
-                            'old_status_id' => $request['old_status_id'],
-                            'new_status_id' => $item->to_status_id,
-                            'user_id' => $user_id,
-                            'sla' => $status_sla,
-                            'active' => $active,
-                        ];
+                        if($workflow->same_time=="1"){
+                            if($change_request->design_duration=="0" && $item->to_status_id==40 &&$request['old_status_id']==51){
+                                continue;
+                          
+                            } else{
+
+                                $data = [
+                                    'cr_id' => $id,
+                                    'old_status_id' => $request['old_status_id'],
+                                    'new_status_id' => $item->to_status_id,
+                                    'user_id' => $user_id,
+                                    'sla' => $status_sla,
+                                    'active' => $active,
+                                ];
+                            }
+                
+                          
+                        }else{
+                            $data = [
+                                'cr_id' => $id,
+                                'old_status_id' => $request['old_status_id'],
+                                'new_status_id' => $item->to_status_id,
+                                'user_id' => $user_id,
+                                'sla' => $status_sla,
+                                'active' => $active,
+                            ];
+                        }
+
+
+                        
+                       
                     }
-                    
+                    // echo"<pre>";
+                    // print_r($data);
+                    // echo "</pre>";
+                    // die("walid");
                     $change_request_status->create($data);
                 }
             }
