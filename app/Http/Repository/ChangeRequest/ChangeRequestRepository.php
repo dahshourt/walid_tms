@@ -1572,7 +1572,9 @@ public function findNextAvailableTime($userId, $currentTime)
     public function find($id)
     {
         $user_email = auth()->user()->email;
+        $user_email = strtolower($user_email);
         $division_manager = Change_request::where('id' , $id)->value('division_manager');
+        $division_manager = strtolower($division_manager);
         //dd($devision_manager);
         if ($user_email === $division_manager){
             $groups = Group::pluck('id')->toArray();
@@ -1703,7 +1705,9 @@ public function findNextAvailableTime($userId, $currentTime)
     public function getViewStatuses($group = null,$id=null)
     {
         $user_email = auth()->user()->email;
+        $user_email = strtolower($user_email);
         $division_manager = Change_request::where('id' , $id)->value('division_manager');
+        $division_manager = strtolower($division_manager);
         $current_status = Change_request_statuse::where('cr_id', $id)->where('active', '1')->value('new_status_id');
         //dd($current_status);
         

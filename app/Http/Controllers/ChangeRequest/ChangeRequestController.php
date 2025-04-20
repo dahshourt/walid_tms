@@ -323,7 +323,9 @@ class ChangeRequestController extends Controller
         //$this->logs = LogFactory::index();
 
         $user_email = auth()->user()->email;
+        $user_email = strtolower($user_email);
         $division_manager = Change_request::where('id' , $id)->value('division_manager');
+        $division_manager = strtolower($division_manager);
         $current_status = Change_request_statuse::where('cr_id', $id)->where('active', '1')->value('new_status_id');
 
         //this condition to check if the division manager approve the CR or not
