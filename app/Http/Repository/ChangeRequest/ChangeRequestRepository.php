@@ -1398,7 +1398,8 @@ public function findNextAvailableTime($userId, $currentTime)
                     else
                     {
                         if($workflow->same_time=="1"){
-                            if($change_request->design_duration=="0" && $item->to_status_id==40 &&$request['old_status_id']==51){
+                       
+                            if($change_request->design_duration=="0" && $item->to_status_id==40 &&$request['old_status_id']==74){
                                 continue;
                           
                             } else{
