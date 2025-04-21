@@ -163,14 +163,9 @@ class ChangeRequestController extends Controller
         $form_type = 1; // create CR form type id
         $target_system_id = request()->target_system_id;
         $target_system = $this->applications->find($target_system_id);                            
-        //$workflow_type_id = request()->workflow_type_id;
         $workflow_type_id = $this->applications->workflowType($target_system_id)->id;
         
-      //echo  $workflow_type_id;
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowType($workflow_type_id, $form_type);
-    //    echo"<pre>";
-    //    print_r($CustomFields);
-    //    echo"</pre>"; die;
         $title = "Create $target_system->name CR";
         return view("$this->view.create",compact('CustomFields','workflow_type_id','target_system','title'));
     }

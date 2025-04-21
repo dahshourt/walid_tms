@@ -5,6 +5,7 @@ namespace App\Http\Requests\Change_Request\Api;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use App\Http\Repository\CustomField\CustomFieldGroupTypeRepository;
 
 class changeRequest_Requests extends FormRequest
 {
@@ -38,59 +39,54 @@ class changeRequest_Requests extends FormRequest
      */
     public function createRules()
     {
-
-        return [
-            'title' => ['required','string'],//requester_department
-            'requester_department' => ['sometimes','nullable','string'],
-            'description' => ['required','string'],
-            //'active' => ['required'],
-            'testable' => ['sometimes'],
-            'depend_cr_id' => ['sometimes','nullable','integer', 'exists:change_request,id'],
-            'category_id' => ['sometimes','nullable','integer', 'exists:categories,id'],
-            'priority_id' => ['sometimes','nullable','integer', 'exists:priorities,id'],
-            'unit_id' => ['sometimes','nullable','integer', 'exists:units,id'],
-            'department_id' => ['sometimes','nullable','integer', 'exists:departments,id'],
-            'application_id' => ['sometimes','nullable','integer', 'exists:applications,id'],
-            'helpdesk_id' => ['sometimes','nullable','integer'],
-            'depend_cr_id' => ['sometimes','nullable','integer'],
-            'requester_name' => ['sometimes','nullable','string'],
-            'requester_email' => ['sometimes','nullable','string'],
-            'requester_unit' => ['sometimes','nullable','string'],
-            'requester_division_manager' => ['sometimes','nullable','string'],
-          
-            'application_name' => ['sometimes','nullable','string'],
-            'creator_mobile_number' => ['required','regex:/^01[0-9]{9}$/'],
-
-        ]; 
+        $formFields=new CustomFieldGroupTypeRepository();
+        $formFields = $formFields->CustomFieldsByWorkFlowType($this->workflow_type_id, 1);
+        $rules = [];
+        foreach ($formFields as $field) {
+            if($field->validation_type_id == 1){
+                if($field->CustomField->name == "division_manager")
+                {
+                    $rules[$field->CustomField->name] = "required|email";
+                }
+                elseif($field->CustomField->name == "creator_mobile_number")
+                {
+                    $rules[$field->CustomField->name] = "required|regex:/^01[0-9]{9}$/";
+                }
+                else
+                {
+                    $rules[$field->CustomField->name] = "required";
+                }
+                
+            }
+        }
+        return $rules;
+       
 
     }
 
     public function updateRules()
     {
-        return [
-
-           /* 'title' => ['sometimes','string'],
-            'description' => ['sometimes','string'],
-            'active' => ['sometimes'],
-            'testable' => ['sometimes'],
-            'depend_cr_id' => ['sometimes','nullable','integer', 'exists:change_request,id'],
-            'category_id' => ['sometimes','nullable','integer', 'exists:categories,id'],
-            'priority_id' => ['sometimes','nullable','integer', 'exists:priorities,id'],
-            'unit_id' => ['sometimes','nullable','integer', 'exists:units,id'],
-            'department_id' => ['sometimes','nullable','integer', 'exists:departments,id'],
-            'application_id' => ['sometimes','nullable','integer', 'exists:applications,id'],
-            'helpdesk_id' => ['sometimes','nullable','integer'],
-            'depend_cr_id' => ['sometimes','nullable','integer'],
-            'requester_name' => ['sometimes','nullable','string'],
-            'requester_email' => ['sometimes','nullable','string'],
-            'requester_unit' => ['sometimes','nullable','string'],
-            'requester_division_manager' => ['sometimes','nullable','string'],
-            'requester_department' => ['sometimes','nullable','string'],
-            'application_name' => ['sometimes','nullable','string'],*/
-            // 'old_status_id ' => ['required',"integer"],
-            // 'new_status_id ' => ['required',"integer"]
-
-        ];
+        $formFields=new CustomFieldGroupTypeRepository();
+        $formFields = $formFields->CustomFieldsByWorkFlowTypeAndStatus($this->workflow_type_id, 2,$this->old_status_id);
+        $rules = [];
+        foreach ($formFields as $field) {
+            if($field->validation_type_id == 1){
+                if($field->CustomField->name == "division_manager")
+                {
+                    $rules[$field->CustomField->name] = "required|email";
+                }
+                elseif($field->CustomField->name == "creator_mobile_number")
+                {
+                    $rules[$field->CustomField->name] = "required|regex:/^01[0-9]{9}$/";
+                }
+                else
+                {
+                    $rules[$field->CustomField->name] = "required";
+                }
+                
+            }
+        }
+        return $rules;
     }
 
 
@@ -111,14 +107,73 @@ class changeRequest_Requests extends FormRequest
     // }
 
     public function messages()
-{
-    return [
-        'title.required' => 'The CR Subject field is required.',
-        'title.string' => 'The CR Subject must be a valid string.',
-        'creator_mobile_number.regex' => 'The mobile number is invalid',
+    {
+        $messages = [];
+        if ($this->isMethod('POST')) {
+            $formFields=new CustomFieldGroupTypeRepository();
+            $formFields = $formFields->CustomFieldsByWorkFlowType($this->workflow_type_id, 1);
+            
+            foreach ($formFields as $field) {
+                foreach ($formFields as $field) {
+                    if($field->validation_type_id == 1){
+                        if($field->CustomField->name == "division_manager")
+                        {
+                            $field_name = str_replace('_', ' ', $field->CustomField->label);
+                            $messages["{$field->CustomField->name}.required"] = "{$field_name} is required";
+                            $messages["{$field->CustomField->name}.email"] = "{$field_name} must be a valid email";
+                        }
+                        elseif($field->CustomField->name == "creator_mobile_number")
+                        {
+                            $field_name = str_replace('_', ' ', $field->CustomField->label);
+                            $messages["{$field->CustomField->name}.required"] = "{$field_name} is required";
+                            $messages["{$field->CustomField->name}.regex"] = "{$field_name} must be 11 digit with start of 01";
+                        }
+                        else
+                        {
+                            $field_name = str_replace('_', ' ', $field->CustomField->label);
+                            $messages["{$field->CustomField->name}.required"] = "{$field_name} is required";
+                        }
+                        
+                    }
+                    //
+                }
+            }
+        }
+        else
+        {
 
-    ];
-}
+            $formFields=new CustomFieldGroupTypeRepository();
+            $formFields = $formFields->CustomFieldsByWorkFlowTypeAndStatus($this->workflow_type_id, 2,$this->old_status_id);
+            
+            foreach ($formFields as $field) {
+                foreach ($formFields as $field) {
+                    if($field->validation_type_id == 1){
+                        if($field->CustomField->name == "division_manager")
+                        {
+                            $field_name = str_replace('_', ' ', $field->CustomField->label);
+                            $messages["{$field->CustomField->name}.required"] = "{$field_name} is required";
+                            $messages["{$field->CustomField->name}.email"] = "{$field_name} must be a valid email";
+                        }
+                        elseif($field->CustomField->name == "creator_mobile_number")
+                        {
+                            $field_name = str_replace('_', ' ', $field->CustomField->label);
+                            $messages["{$field->CustomField->name}.required"] = "{$field_name} is required";
+                            $messages["{$field->CustomField->name}.regex"] = "{$field_name} must be 11 digit with start of 01";
+                        }
+                        else
+                        {
+                            $field_name = str_replace('_', ' ', $field->CustomField->label);
+                            $messages["{$field->CustomField->name}.required"] = "{$field_name} is required";
+                        }
+                        
+                    }
+                    //
+                }
+            }
+        }
+        return $messages;
+       
+    }
 
 public function attributes()
 {
