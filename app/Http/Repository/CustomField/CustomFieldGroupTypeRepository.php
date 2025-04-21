@@ -120,25 +120,10 @@ $CFs = $CFs->where("status_id", request()->status_id ?? null);
 
     public function CustomFieldsByWorkFlowType($workflow_type_id, $form_type)
     {
-    //     $query = CustomFieldGroup::with('CustomField')
-    //     ->where('wf_type_id', $workflow_type_id)
-    //     ->where('form_type', $form_type)
-    //     ->orderBy('sort');
     
-    // // Print the SQL query
-    // $sql = $query->toSql();
-    // $bindings = $query->getBindings();
-    
-    // // Combine the SQL and bindings
-    // dd(vsprintf(str_replace('?', '%s', $sql), $bindings));
-        $result = CustomFieldGroup::with('CustomField')->where('wf_type_id',$workflow_type_id)->where('form_type',$form_type)->orderBy('sort')->get()->unique('CustomField.id');;
+        $result = CustomFieldGroup::with('CustomField')->where('wf_type_id',$workflow_type_id)->where('form_type',$form_type)->orderBy('sort')->get()->unique('CustomField.id');
         return $result;
-        // $result = CustomField::whereHas('custom_field_by_workflow', function($q) use($workflow_type_id, $form_type){
-        //     $q->where('wf_type_id',$workflow_type_id)->where('form_type',$form_type);
-        // })->with(["custom_field_by_workflow" => function($q) use($workflow_type_id, $form_type){
-        //     $q->where('wf_type_id',$workflow_type_id)->where('form_type',$form_type)->orderBy('sort');
-        // }])->get();
-        // return $result;
+      
     }
 
     public function CustomFieldsByWorkFlowTypeAndStatus($workflow_type_id, $form_type, $status_id)
