@@ -58,7 +58,8 @@ class DefectController extends Controller
      */
     public function create(Request $request, $id)
     {
-        
+        $this->authorize('Create Defect'); //permission check
+
         $cr = $this->changerequest->findById($id);
 
         if(!$cr)
@@ -112,6 +113,8 @@ class DefectController extends Controller
      */
     public function show($id)
     {
+        $this->authorize('Show Defect'); //permission check
+
         $technical_team =  Group::where('technical_team', '1')->get();
         $defect_status = $this->status->get_defect_status();
         $CustomFields = $this->custom_field_group_type->getAllCustomFieldsWithSelectedByformType("form_type", 7);
@@ -132,6 +135,7 @@ class DefectController extends Controller
      */
     public function edit($id)
     {
+        $this->authorize('Edit Defect'); //permission check
         //custom fields
         //$technical_team = Technical_team::all();
         $technical_team =  Group::where('technical_team', 1)->get();

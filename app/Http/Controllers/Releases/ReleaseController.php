@@ -43,7 +43,7 @@ class ReleaseController extends Controller
      */
     public function index()
     {
-		//$this->authorize('Edit Release'); 
+		$this->authorize('List Release'); 
 		if(isset($_GET['search']))
         {
             $search=$_GET['search'];
@@ -63,6 +63,8 @@ class ReleaseController extends Controller
      */
     public function create()
     {
+        $this->authorize('Create Release'); 
+
         $releaseWorkflowTypeId = WorkFlowType::where('name', 'Release')->whereNotNull('parent_id')->value('id');
 
         
@@ -77,7 +79,7 @@ class ReleaseController extends Controller
     }
 
     public function  reorderhome(){
-       
+        $this->authorize('Release To CRs'); 
         return view("$this->view.shifiting");
        }
     // public function show_crs(Request $request)
@@ -111,42 +113,44 @@ class ReleaseController extends Controller
     // }
 
     public function show_crs(Request $request)
-{
-   
-    $changeRequest = null;
-    $release = null;
-    $releaseStatus = null;
-    $errorMessage = null;
+    {
 
-    try {
-        // Validate the incoming request
-        $request->validate([
-            'change_request_id' => 'required|exists:change_request,id',
-        ]);
+        $this->authorize('CRs Related To Releases'); 
+    
+        $changeRequest = null;
+        $release = null;
+        $releaseStatus = null;
+        $errorMessage = null;
 
-        // Extract the Change Request ID from the request
-        $crId = $request->input('change_request_id');
+        try {
+            // Validate the incoming request
+            $request->validate([
+                'change_request_id' => 'required|exists:change_request,id',
+            ]);
 
-        // Call the repository method to retrieve the Change Request
-        $repository = new ChangeRequestRepository();
-        $changeRequest = $repository->findWithReleaseAndStatus($crId);//$changeRequest->release_name
-        $release = $this->release->find($changeRequest->release_name);
-     
-        if ($$release ) {
+            // Extract the Change Request ID from the request
+            $crId = $request->input('change_request_id');
+
+            // Call the repository method to retrieve the Change Request
+            $repository = new ChangeRequestRepository();
+            $changeRequest = $repository->findWithReleaseAndStatus($crId);//$changeRequest->release_name
+            $release = $this->release->find($changeRequest->release_name);
         
-            $releaseStatus = $release->releaseStatus;
+            if ($$release ) {
+            
+                $releaseStatus = $release->releaseStatus;
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            $errorMessage = "Invalid Change Request ID. Please ensure it exists in the database.";
+        } catch (\Exception $e) {
+            // Handle unexpected errors
+            $errorMessage = "An unexpected error occurred: " . $e->getMessage();
         }
-    } catch (\Illuminate\Validation\ValidationException $e) {
-        // Handle validation errors
-        $errorMessage = "Invalid Change Request ID. Please ensure it exists in the database.";
-    } catch (\Exception $e) {
-        // Handle unexpected errors
-        $errorMessage = "An unexpected error occurred: " . $e->getMessage();
-    }
 
-    // Return the view with data and error message if any
-    return view("$this->view.result_release", compact('changeRequest', 'release', 'releaseStatus', 'errorMessage'));
-}
+        // Return the view with data and error message if any
+        return view("$this->view.result_release", compact('changeRequest', 'release', 'releaseStatus', 'errorMessage'));
+    }
 
     /**
      * Store a newly created resource in storage.
@@ -170,7 +174,8 @@ class ReleaseController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function show($id)
-    {  
+    { 
+        $this->authorize('Show Release');
 		
         $row =   $this->release->show($id);
 
@@ -294,6 +299,7 @@ class ReleaseController extends Controller
 
     public function ReleaseLogs($id)
     {
+        $this->authorize('Show Release Logs'); 
         $logs= $this->release->DisplayLogs($id);
         return view("$this->view.release_logs",compact('logs'));
     }

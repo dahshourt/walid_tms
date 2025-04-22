@@ -1189,16 +1189,11 @@ public function findNextAvailableTime($userId, $currentTime)
             $data = $this->calculateEstimation($id,$change_request,$request,$user);
             $request->merge($data);
         }
-      
         $changeRequest = $this->UpdateCRData($id,$request);
-
-        
-
-
         //$request['assignment_user_id'] = $user->id;
         if($new_status_id) $request['new_status_id'] = $new_status_id;
         if($old_status_id) $request['old_status_id'] = $old_status_id;
-        //dd($request->all(),$new_status_id);
+        //dd($request->all(),$new_status_id, $old_status_id );
         if($request->new_status_id) $this->UpateChangeRequestStatus($id, $request);
         $this->StoreLog($id, $request, 'update');
         return $changeRequest;

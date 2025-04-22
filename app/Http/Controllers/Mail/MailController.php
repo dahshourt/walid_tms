@@ -117,7 +117,7 @@ class MailController extends Controller
         $cr_link = route('edit.cr', ['id' => $cr, 'check_dm' => 1]);
 
         $templateContent = [
-            'subject' => $template->subject . " #$cr",
+            'subject' => "CR #$cr has been created",
             'body' => "Dear $first_name, <br><br>"
             . "Please Check CR#$cr has been created"
             . "<br><br>"

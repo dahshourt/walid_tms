@@ -72,42 +72,43 @@ class CRSReleaseController extends Controller
     // }
 
     public function show_crs(Request $request)
-{
-   
-    $changeRequest = null;
-    $release = null;
-    $releaseStatus = null;
-    $errorMessage = null;
+    {
+        $this->authorize('CRs Related To Releases'); 
+    
+        $changeRequest = null;
+        $release = null;
+        $releaseStatus = null;
+        $errorMessage = null;
 
-    try {
-        // Validate the incoming request
-        $request->validate([
-            'change_request_id' => 'required|exists:change_request,id',
-        ]);
+        try {
+            // Validate the incoming request
+            $request->validate([
+                'change_request_id' => 'required|exists:change_request,id',
+            ]);
 
-        // Extract the Change Request ID from the request
-        $crId = $request->input('change_request_id');
+            // Extract the Change Request ID from the request
+            $crId = $request->input('change_request_id');
 
-        // Call the repository method to retrieve the Change Request
-        $repository = new ChangeRequestRepository();
-        $changeRequest = $repository->findWithReleaseAndStatus($crId);//$changeRequest->release_name
-        $release = $this->release->find($changeRequest->release_name);
-     
-        if ($$release ) {
+            // Call the repository method to retrieve the Change Request
+            $repository = new ChangeRequestRepository();
+            $changeRequest = $repository->findWithReleaseAndStatus($crId);//$changeRequest->release_name
+            $release = $this->release->find($changeRequest->release_name);
         
-            $releaseStatus = $release->releaseStatus;
+            if ($$release ) {
+            
+                $releaseStatus = $release->releaseStatus;
+            }
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            $errorMessage = "Invalid Change Request ID. Please ensure it exists in the database.";
+        } catch (\Exception $e) {
+            // Handle unexpected errors
+            $errorMessage = "An unexpected error occurred: " . $e->getMessage();
         }
-    } catch (\Illuminate\Validation\ValidationException $e) {
-        // Handle validation errors
-        $errorMessage = "Invalid Change Request ID. Please ensure it exists in the database.";
-    } catch (\Exception $e) {
-        // Handle unexpected errors
-        $errorMessage = "An unexpected error occurred: " . $e->getMessage();
-    }
 
-    // Return the view with data and error message if any
-    return view("$this->view.result_release", compact('changeRequest', 'release', 'releaseStatus', 'errorMessage'));
-}
+        // Return the view with data and error message if any
+        return view("$this->view.result_release", compact('changeRequest', 'release', 'releaseStatus', 'errorMessage'));
+    }
 
    
 

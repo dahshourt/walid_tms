@@ -101,7 +101,7 @@ Route::middleware(['auth'])->group(
        Route::post('rejection_reasons/updateactive', 'RejectionReasons\RejectionReasonsController@updateactive');
         Route::resource('roles', Roles\RolesController::class);//
         Route::resource('permissions', Permissions\PermissionsController::class);//
-        Route::resource('mail_templates', MailTemplates\MailTemplatesController::class);//
+        //Route::resource('mail_templates', MailTemplates\MailTemplatesController::class);//
 
         //Route::middleware('group')->group( function () {
         
@@ -121,8 +121,8 @@ Route::middleware(['auth'])->group(
         Route::get('files/download/{id}','ChangeRequest\ChangeRequestController@download')->name('files.download');
 
         // send mail routes
-        Route::get('manual_email', 'Mail\MailController@index');
-        Route::get('send-mail', 'Mail\MailController@sendMailByTemplate');
+        //Route::get('manual_email', 'Mail\MailController@index');
+        //Route::get('send-mail', 'Mail\MailController@sendMailByTemplate');
 
         Route::get('releases/show_crs/asd', 'Releases\CRSReleaseController@show_crs');
         Route::get('releases/home', 'Releases\CRSReleaseController@reorderhome');
