@@ -69,8 +69,8 @@ class changeRequest_Requests extends FormRequest
         $formFields=new CustomFieldGroupTypeRepository();
         $formFields = $formFields->CustomFieldsByWorkFlowTypeAndStatus($this->workflow_type_id, 2,$this->old_status_id);
         $rules = [];
-       /* foreach ($formFields as $field) {
-            if($field->validation_type_id == 1){
+        foreach ($formFields as $field) {
+            if($field->validation_type_id == 1 && $field->enable ==1){
                 if($field->CustomField->name == "division_manager")
                 {
                     $rules[$field->CustomField->name] = "required|email";
@@ -85,7 +85,7 @@ class changeRequest_Requests extends FormRequest
                 }
                 
             }
-        }*/
+        }
         return $rules;
     }
 
@@ -147,7 +147,7 @@ class changeRequest_Requests extends FormRequest
             
             foreach ($formFields as $field) {
                 foreach ($formFields as $field) {
-                    if($field->validation_type_id == 1){
+                    if($field->validation_type_id == 1 && $field->enable ==1){
                         if($field->CustomField->name == "division_manager")
                         {
                             $field_name = str_replace('_', ' ', $field->CustomField->label);
