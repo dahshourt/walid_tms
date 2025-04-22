@@ -116,7 +116,7 @@
                         @break
 
                     @case('technical_teams')
-                        @if($status_name == 'Business Approval')
+                        @if($status_name == 'Pending HL Design')
                                 <option value="">Select...</option>
                             @foreach($technical_teams as $team)
                                 <option  value="{{ $team->id }}">{{ $team->title }}</option>
@@ -125,7 +125,12 @@
                                 <option disabled value="">Select...</option>
                             @foreach($technical_team_disabled as $team)
                                 <option disabled value="{{ $team->id }}">{{ $team->title }}</option>
-                            @endforeach   
+                            @endforeach 
+                        @else
+                            <option disabled value="">Select...</option>
+                            @foreach($technical_teams as $team)
+                                <option disabled value="{{ $team->id }}">{{ $team->title }}</option>
+                            @endforeach    
                         @endif
                         @break
 
