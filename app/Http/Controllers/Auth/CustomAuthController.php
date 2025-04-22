@@ -60,89 +60,102 @@ class CustomAuthController extends Controller
      * @throws \SMartins\PassportMultiauth\Exceptions\MissingConfigException
      */
     public function login(Request $request)
-    {
-        $request->validate([
-            'user_name' => 'required',
-            'password' => 'required',
-        ]);
- 
-        
-        #Check if user is authenticated or no
-        $user = User::with('user_groups', 'user_groups.group', 'defualt_group')->where('user_name', $request->user_name)->first();
-        if(! $user){
-            //return \Redirect::back()->withErrors(['msg' => "account not found in system"])->withInput();
-            $response = $this->CheckLdapAccount($request->user_name,$request->password);
-            if ($response['status']) 
-            {
-                $email=$request->user_name."@te.eg";
-                $check_email = (new UserRepository)->CheckUniqueEmail($email);
-                $roles = array();
-                $group_id = array();
-                $role = (new RolesRepository)->findByName("Viewer");
-                
-                $bussines_group = (new GroupRepository)->findByName("Business Team");
-                $roles[] = $role->name;
-                $default_group = $bussines_group->id;
-                $group_id[] = $bussines_group->id;
+{
+    $request->validate([
+        'user_name' => 'required',
+        'password' => 'required',
+    ]);
 
-                if($check_email)
-                {
-                    return \Redirect::back()->withErrors(['msg' =>"Credentials Invalid."])->withInput();
-                }
-                $data = [
-                    "user_type"=>1,
-                    "name"=>$request->user_name,
-                    "user_name"=>$request->user_name,
-                    "email"=>$email,
-                    "roles"=>$roles,
-                    "default_group"=>$default_group,
-                    "group_id"=>$group_id,
-                    "active"=>'1',
-                ];
-                //dd($data);
-                $user = (new UserRepository)->create($data);
-                Auth::login($user);
-                return redirect()->intended(url('/'));
-            }
-            else
-            {
-                return \Redirect::back()->withErrors(['msg' => $response['message']])->withInput();
+    $maxAttempts = config('auth.max_login_attempts', 5); // default to 5 if not set
+
+    $user = User::with('user_groups', 'user_groups.group', 'defualt_group')
+                ->where('user_name', $request->user_name)
+                ->first();
+
+    // User not found in local DB, try LDAP
+    if (!$user) {
+        $response = $this->CheckLdapAccount($request->user_name, $request->password);
+        if ($response['status']) {
+            $email = $request->user_name . "@te.eg";
+            $check_email = (new UserRepository)->CheckUniqueEmail($email);
+
+            $roles = [];
+            $group_id = [];
+            $role = (new RolesRepository)->findByName("Viewer");
+            $bussines_group = (new GroupRepository)->findByName("Business Team");
+            $roles[] = $role->name;
+            $default_group = $bussines_group->id;
+            $group_id[] = $bussines_group->id;
+
+            if ($check_email) {
+                return \Redirect::back()->withErrors(['msg' => "Credentials Invalid."])->withInput();
             }
 
-        }
-        if (isset($user->user_type)&&$user->user_type ==0) { // Local User
+            $data = [
+                "user_type" => 1,
+                "name" => $request->user_name,
+                "user_name" => $request->user_name,
+                "email" => $email,
+                "roles" => $roles,
+                "default_group" => $default_group,
+                "group_id" => $group_id,
+                "active" => 1,
+            ];
 
-
-            if(Auth::attempt(['user_name'=>$request->user_name,'password'=>$request->password])){
-                $userStatus = Auth::User()->active;
-                
-                if($userStatus=='1') {
-                    return redirect()->intended(url('/'));
-                }else{
-                    Auth::logout();
-                    Session::flush();
-                    return redirect("login")->with('failed','Your Account is inactive. Please Contact your adminstrator');
-                }
-            }
-            return redirect("login")->with('failed','Username or password is incorrect');
-
+            $user = (new UserRepository)->create($data);
+            Auth::login($user);
+            return redirect()->intended(url('/'));
         } else {
-
-
-            $response = $this->CheckLdapAccount($request->user_name,$request->password);
-            if ($response['status']) {
-
-                $user = User::with('user_groups', 'user_groups.group', 'defualt_group')->where('user_name', $request->user_name)->first();
-                Auth::login($user);
-                return redirect()->intended(url('/'));
-            }
-            else
-            {
-                return \Redirect::back()->withErrors(['msg' => $response['message']])->withInput();
-            }
-
-        } 
+            return \Redirect::back()->withErrors(['msg' => $response['message']])->withInput();
+        }
     }
+
+    // Check if account is locked
+    if ($user->failed_attempts >= $maxAttempts) {
+        $user->active = 0;
+        $user->save();
+    }
+
+    if ($user->active == 0) {
+        return redirect("login")->with('failed', 'Your account is locked due to too many failed login attempts. Please contact your administrator.');
+    }
+
+    // Local user
+    if (isset($user->user_type) && $user->user_type == 0) {
+        if (Auth::attempt(['user_name' => $request->user_name, 'password' => $request->password])) {
+            $user->failed_attempts = 0;
+            $user->save();
+
+            return redirect()->intended(url('/'));
+        } else {
+            $user->failed_attempts += 1;
+            if ($user->failed_attempts >= $maxAttempts) {
+                $user->active = 0;
+            }
+            $user->save();
+
+            return redirect("login")->with('failed', 'Username or password is incorrect');
+        }
+    }
+
+    // LDAP user
+    $response = $this->CheckLdapAccount($request->user_name, $request->password);
+    if ($response['status']) {
+        $user->failed_attempts = 0;
+        $user->save();
+
+        Auth::login($user);
+        return redirect()->intended(url('/'));
+    } else {
+        $user->failed_attempts += 1;
+        if ($user->failed_attempts >= $maxAttempts) {
+            $user->active = 0;
+        }
+        $user->save();
+
+        return \Redirect::back()->withErrors(['msg' => $response['message']])->withInput();
+    }
+}
 
     /**
      * Logout user (Revoke the token)

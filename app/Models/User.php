@@ -45,6 +45,7 @@ class User extends Authenticatable
         'unit_id',
         'man_power',
         'department_id',
+        'failed_attempts',
     ];
 
 
