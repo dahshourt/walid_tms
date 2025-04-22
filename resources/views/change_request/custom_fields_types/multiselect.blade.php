@@ -116,10 +116,17 @@
                         @break
 
                     @case('technical_teams')
-                        <option value="">Select</option>
-                        @foreach($technical_teams as $team)
-                            <option value="{{ $team->id }}">{{ $team->title }}</option>
-                        @endforeach
+                        @if($status_name == 'Business Approval')
+                                <option value="">Select...</option>
+                            @foreach($technical_teams as $team)
+                                <option  value="{{ $team->id }}">{{ $team->title }}</option>
+                            @endforeach    
+                        @elseif($status_name == 'Rollback'  OR  $status_name == 'Pending fixation on production' OR  $status_name == 'Pending Rework' )
+                                <option disabled value="">Select...</option>
+                            @foreach($technical_team_disabled as $team)
+                                <option disabled value="{{ $team->id }}">{{ $team->title }}</option>
+                            @endforeach   
+                        @endif
                         @break
 
                     @default

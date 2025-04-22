@@ -9,4 +9,9 @@ class Technical_team extends Model
 {
     use HasFactory;
     public $table = 'technical_teams';
+
+    public function changeRequests()
+    {
+        return $this->belongsToMany(ChangeRequest::class, 'change_request_technical_team', 'technical_team_id', 'cr_id');
+    }
 }
