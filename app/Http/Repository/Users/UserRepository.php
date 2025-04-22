@@ -136,6 +136,8 @@ class UserRepository implements UserRepositoryInterface
             $except=['group_id','_method','password_confirmation','all_users_roles_values','roles', 'permissions'];
             $request['password']=Hash::make($request['password']);
         }
+        if(isset($request['active'])&&$request['active']==1)
+        $request['failed_attempts']='1';
        
         
         $filteredRequest = \Arr::except($request, $except);
