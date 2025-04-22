@@ -17,6 +17,9 @@ use App\Http\Repository\Users\UserRepository;
 use App\Http\Repository\Roles\RolesRepository;
 use App\Http\Repository\Groups\GroupRepository;
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Session;
+
 class CustomAuthController extends Controller
 {
 
@@ -107,6 +110,7 @@ class CustomAuthController extends Controller
     
                 $user = (new UserRepository)->create($data);
                 Auth::login($user);
+                DB::table('sessions')->where('user_id', $user->id)->where('id', '!=', Session::getId())->delete();
                 return redirect()->intended(url('/'));
             } else {
                 return \Redirect::back()->withErrors(['msg' => $generalLoginError])->withInput();
@@ -128,7 +132,7 @@ class CustomAuthController extends Controller
             if (Auth::attempt(['user_name' => $request->user_name, 'password' => $request->password])) {
                 $user->failed_attempts = 0;
                 $user->save();
-    
+                DB::table('sessions')->where('user_id', $user->id)->where('id', '!=', Session::getId())->delete();
                 return redirect()->intended(url('/'));
             } else {
                 $user->failed_attempts += 1;
@@ -136,7 +140,7 @@ class CustomAuthController extends Controller
                     $user->active = 0;
                 }
                 $user->save();
-    
+                
                 return redirect("login")->with('failed', $generalLoginError);
             }
         }
@@ -148,6 +152,7 @@ class CustomAuthController extends Controller
             $user->save();
     
             Auth::login($user);
+            DB::table('sessions')->where('user_id', $user->id)->where('id', '!=', Session::getId())->delete();
             return redirect()->intended(url('/'));
         } else {
             $user->failed_attempts += 1;
@@ -155,6 +160,7 @@ class CustomAuthController extends Controller
                 $user->active = 0;
             }
             $user->save();
+            
     
             return \Redirect::back()->withErrors(['msg' => $generalLoginError])->withInput();
         }
