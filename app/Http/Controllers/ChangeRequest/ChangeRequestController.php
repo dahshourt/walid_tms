@@ -27,13 +27,14 @@ use App\Models\attachements_crs;
 use App\Models\User; 
 use App\Models\Defect; 
 use App\Models\WorkFlowType;
+use App\Models\ChangeRequestTechnicalTeam;
 use App\Models\Change_request_statuse;
 use App\Models\ApplicationImpact;
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use Validator;
 use App\Http\Controllers\Mail\MailController;
 use Illuminate\Auth\Access\AuthorizationException;
-
+use DB;
 class ChangeRequestController extends Controller
 {
     private $changerequest;
@@ -392,10 +393,12 @@ class ChangeRequestController extends Controller
         $logs_ers = $cr->logs;
         //$CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowType($workflow_type_id, $form_type);
         $status_id = $cr->getCurrentStatus()->status->id;
+        $status_name = $cr->getCurrentStatus()->status->name;
+        
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus($workflow_type_id, $form_type, $status_id);
         
         $all_defects = $this->defects->all_defects($id);
-       
+        $technical_team_disabled = ChangeRequestTechnicalTeam::where('cr_id', $id)->get();
         $ApplicationImpact = ApplicationImpact::where('application_id', $cr->application_id)->select('impacts_id')->get();
         // foreach($ApplicationImpact as $value){
         //     $ApplicationImpacts[] = $value;
@@ -404,7 +407,7 @@ class ChangeRequestController extends Controller
          $reminder_promo_tech_teams = array();
         $reminder_promo_tech_teams = $cr->technical_Cr ? $cr->technical_Cr->technical_cr_team->where('status','0')->pluck('group')->pluck('title')->toArray(): array();
         $reminder_promo_tech_teams_text = implode(',',$reminder_promo_tech_teams);
-        return view("$this->view.edit",compact('ApplicationImpact' ,'cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag','technical_teams','all_defects','reminder_promo_tech_teams','reminder_promo_tech_teams_text'));  
+        return view("$this->view.edit",compact('technical_team_disabled' ,'status_name' ,'ApplicationImpact' ,'cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag','technical_teams','all_defects','reminder_promo_tech_teams','reminder_promo_tech_teams_text'));  
 
     }
 
@@ -430,8 +433,20 @@ class ChangeRequestController extends Controller
      */
     public function update(changeRequest_Requests $request, $id)
     { 
-    //    $d=Defect::find($id);
-    //    print_r($d)
+ 
+        if(isset($request->technical_teams) AND !empty($request->technical_teams))
+            { 
+                foreach ($request->technical_teams as $teamId) {
+                    
+                    DB::table('change_request_technical_team')->insert([
+                        'cr_id' => $id,
+                        'technical_team_id' => $teamId,
+                        'created_at' => now(),
+                        'updated_at' => now()
+                    ]);
+                }
+            }
+ 
       $mails = array();
       //dd(empty($request->cap_users));
       if(!empty($request->cap_users))
@@ -450,6 +465,7 @@ class ChangeRequestController extends Controller
         
             $input_data = $request->all();
 
+            
             $validator = Validator::make(
                 $input_data, [
                 'technical_attachments.*' => 'required|mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg|max:2048'
@@ -490,7 +506,9 @@ class ChangeRequestController extends Controller
             }
         }
         
-//die('walid');
+       
+        
+
       $cr_id=  $this->changerequest->update($id, $request);
       
         if($cr_id==false){

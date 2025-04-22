@@ -69,7 +69,7 @@ class changeRequest_Requests extends FormRequest
         $formFields=new CustomFieldGroupTypeRepository();
         $formFields = $formFields->CustomFieldsByWorkFlowTypeAndStatus($this->workflow_type_id, 2,$this->old_status_id);
         $rules = [];
-        foreach ($formFields as $field) {
+       /* foreach ($formFields as $field) {
             if($field->validation_type_id == 1){
                 if($field->CustomField->name == "division_manager")
                 {
@@ -85,7 +85,7 @@ class changeRequest_Requests extends FormRequest
                 }
                 
             }
-        }
+        }*/
         return $rules;
     }
 

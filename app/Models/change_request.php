@@ -302,6 +302,12 @@ class Change_request extends Model
        
         return $status;
     }
+
+
+    public function technicalTeams()
+    {
+        return $this->belongsToMany(TechnicalTeam::class, 'change_request_technical_team', 'cr_id', 'technical_team_id');
+    }
 	
 	
 	
