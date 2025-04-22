@@ -182,7 +182,7 @@ class UserRepository implements UserRepositoryInterface
         else
         {
 
-		    return 	$this->update1(['active'=>'1'],$id);
+		    return 	$this->update1(['active'=>'1','failed_attempts'=>'1'],$id);
 
 		}
 

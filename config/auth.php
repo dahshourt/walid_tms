@@ -110,7 +110,7 @@ return [
     | confirmation screen. By default, the timeout lasts for three hours.
     |
     */
-
+    'max_login_attempts' => env('MAX_LOGIN_ATTEMPTS', 5),
     'password_timeout' => 10800,
 
 ];
