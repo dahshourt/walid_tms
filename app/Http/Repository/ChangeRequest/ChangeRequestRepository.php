@@ -977,7 +977,7 @@ public function findNextAvailableTime($userId, $currentTime)
         //$data = $arr->all();
         //$arr = $request->except($except);
         //$data = $request->except($this->getExcludedFields());
-		$arr = Arr::except($request, ['_method']);
+		$data = Arr::except($request, ['_method']);
         //dd($data);
         
         
