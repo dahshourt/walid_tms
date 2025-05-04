@@ -131,7 +131,19 @@
 													<div class="form-group row">
 														@include("$view.custom_fields")
 													</div>
-													
+                                                    @if($cr->current_status->new_status_id == 113)
+                                                        @if(count($man_day) > 0)
+                                                            @php
+                                                                $manDayText = '';
+                                                                foreach ($man_day as $item) {
+                                                                    $manDayText .= $item['custom_field_value'] . ' ';
+                                                                }
+                                                                $manDayText = trim($manDayText);
+                                                            @endphp
+ 
+                                                            <p><label class="form-control-lg">MD's</label> => {{ $manDayText }}</p>
+                                                        @endif
+                                                    @endif
 													
 												</div>
                                                 
@@ -277,7 +289,7 @@
 
                                                 <!-- Pagination (If Needed) -->
                                                 <div class="d-flex justify-content-center">
-                                                
+                                                    
                                                 </div>
                                             </div>
                                         </div>
@@ -285,6 +297,7 @@
 										@include("$view.cr_logs")
                                         
 									</div>
+                                    
 							</div>
 							<!--end::Container-->
 						</div>

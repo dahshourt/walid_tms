@@ -124,15 +124,15 @@
                         @elseif($status_name == 'Rollback'  OR  $status_name == 'Pending fixation on production' OR  $status_name == 'Pending Rework' )
                                 <option disabled value="">Select...</option>
                             @foreach($technical_team_disabled as $team)
-                                <option disabled value="{{ $team->id }}">{{ $team->title }}</option>
+                                <option disabled value="{{ $team->id }}">{{ $team->group->title }}</option>
                             @endforeach 
                         @else
-                            <option disabled value="">Select...</option>
+                                <option disabled value="">Select...</option>
                             @foreach($technical_teams as $team)
                                 <option disabled value="{{ $team->id }}">{{ $team->title }}</option>
                             @endforeach    
                         @endif
-                        @break
+                    @break
 
                     @default
                         @if(isset($customOptions) && count($customOptions))
