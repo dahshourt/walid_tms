@@ -132,7 +132,30 @@
 														@include("$view.custom_fields")
 													</div>
 													
-													@if(count($cr['attachments'])  > 0  )
+													
+												</div>
+                                                
+												<div class="card-footer" style="width: 100%;float: right;">
+                                                    @if(count($cr->set_status) > 0)
+                                                        @if($cr->getCurrentStatus()?->status?->id == 68 && $workflow_type_id == 9 && count($reminder_promo_tech_teams) > 0)
+                                                            <button type="button" class="btn btn-success mr-2" id="show_error_message">
+                                                                Submit
+                                                            </button>
+                                                        @else
+                                                            <button type="submit" class="btn btn-success mr-2">
+                                                                Submit
+                                                            </button>
+                                                        @endif
+                                                    @endif
+													@can('Show CR Logs')
+										    			<button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
+													@endcan	
+                                                    
+												</div>
+											</form>
+											<!--end::Form-->
+                                            
+											@if(count($cr['attachments'])  > 0  )
 													<div class="form-group col-md-12" style="float:left">
                                                     @can('View Technichal Attachments')
                                                     <h5>Technichal Attachments</h5>
@@ -215,28 +238,7 @@
 
 													</div>
 													@endif
-												</div>
-                                                
-												<div class="card-footer" style="width: 100%;float: right;">
-                                                    @if(count($cr->set_status) > 0)
-                                                        @if($cr->getCurrentStatus()?->status?->id == 68 && $workflow_type_id == 9 && count($reminder_promo_tech_teams) > 0)
-                                                            <button type="button" class="btn btn-success mr-2" id="show_error_message">
-                                                                Submit
-                                                            </button>
-                                                        @else
-                                                            <button type="submit" class="btn btn-success mr-2">
-                                                                Submit
-                                                            </button>
-                                                        @endif
-                                                    @endif
-													@can('Show CR Logs')
-										    			<button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
-													@endcan	
-                                                    
-												</div>
-											</form>
-											<!--end::Form-->
-                                            
+											
 										</div>
                                         @if(count($all_defects) > 0  && $workflow_type_id == 9 )
                                         <div class="card-footer">

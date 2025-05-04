@@ -39,7 +39,8 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
         //$data['old_status_id'] = $defaultStatus;
         //$data['new_status_id'] = $defaultStatus;
         //dd($data);
-        return Arr::except($data, $this->getExcludedFields());
+        //return Arr::except($data, $this->getExcludedFields());
+        return Arr::only($data, $this->getRequiredFields());
     }
 
     protected function prepareStatusData(array $data, int $defaultStatus): array
@@ -64,7 +65,14 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
             'assignment_user_id', '_token', 'attach', 'business_attachments', 
             'technical_attachments', 'cap_users', 'analysis_feedback', 'technical_feedback',
             'need_ux_ui', 'business_feedback', 'rejection_reason_id', 'technical_teams',
-            'CR_estimation', 'cr_member','cr_no','deployment_impact','need_down_time'
+            'CR_estimation', 'cr_member','cr_no','deployment_impact','need_down_time','proposed_available_time'
+        ];
+    }
+	
+	protected function getRequiredFields(): array
+    {
+        return [
+            'title','description','active','developer_id','tester_id','designer_id','requester_id','design_duration','start_design_time','end_design_time','develop_duration','start_develop_time','end_develop_time','test_duration','start_test_time','end_test_time','depend_cr_id','requester_name','requester_email','requester_unit','requester_division_manager','requester_department','application_name','testable','created_at','updated_at','category_id','priority_id','unit_id','department_id','application_id','workflow_type_id','division_manager','creator_mobile_number','calendar','CR_duration','chnage_requester_id','start_CR_time','end_CR_time'
         ];
     }
 
@@ -114,7 +122,11 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
         $mailController->notifyRequesterCrCreated($statusdata['requester_email'] , $changeRequest->id);
 
         // send mail to division manager
-        $mailController->notifyDivisionManager($statusdata['division_manager'] , $statusdata['requester_email'], $changeRequest->id ,$statusdata['title'] , $statusdata['description'] , $statusdata['requester_name']);
+		if(isset($statusdata['division_manager']))
+		{
+			$mailController->notifyDivisionManager($statusdata['division_manager'] , $statusdata['requester_email'], $changeRequest->id ,$statusdata['title'] , $statusdata['description'] , $statusdata['requester_name']);	
+		}
+        
 
         return $changeRequest->id;
     }
@@ -960,10 +972,12 @@ public function findNextAvailableTime($userId, $currentTime)
 
        
         $this->changeRequest_old = Change_request::find($id);
-        $arr = Arr::except($request, $this->getExcludedFields());
+        //$arr = Arr::except($request, $this->getExcludedFields());
+        $arr = Arr::except($request, $this->getRequiredFields());
         //$data = $arr->all();
         //$arr = $request->except($except);
-        $data = $request->except($this->getExcludedFields());
+        //$data = $request->except($this->getExcludedFields());
+		$arr = Arr::except($request, ['_method']);
         //dd($data);
         
         
@@ -985,7 +999,8 @@ public function findNextAvailableTime($userId, $currentTime)
             
         }
        
-        $changeRequest = Change_request::where('id', $id)->update($arr->except($this->getExcludedFields()));
+        //$changeRequest = Change_request::where('id', $id)->update($arr->except($this->getExcludedFields()));
+        $changeRequest = Change_request::where('id', $id)->update($arr->only($this->getRequiredFields()));
         
         return $changeRequest;
 
