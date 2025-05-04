@@ -116,46 +116,55 @@
 
 	function check_division_manager_email()
 	{
-		submitButton.prop("disabled", true);
-		emailFeedback.text("");
-		emailFeedback.removeClass('text-success');
-		const email = $("#division_manager").val();
-		const divisionManagerInput = $("#division_manager");
-		if (email) {
-			
-			$.ajax({
-				headers: {
-				'X-CSRF-TOKEN': "{{ csrf_token() }}"
-				},
-				url: '{{url("/")}}/check-division-manager',
-				//data: JSON.stringify({ email: email }),
-				//processData: false,
-				data: {email: email},
-                dataType: 'JSON',
-				type: 'POST',
-				success: function ( data ) {
-					if (data.valid) {
-						//submitButton.disabled = false;
-						submitButton.prop("disabled", false);
-						divisionManagerInput.removeClass('is-invalid');
-						divisionManagerInput.addClass('is-valid');
-						emailFeedback.text(data.message);
-						emailFeedback.removeClass('text-danger');
-						emailFeedback.addClass('text-success');
-					}
-					else {
-							
-						submitButton.prop("disabled", true);
-						divisionManagerInput.removeClass('is-valid');
-						divisionManagerInput.addClass('is-invalid');
-						emailFeedback.text(data.message);
-						emailFeedback.removeClass('text-success');
-						emailFeedback.addClass('text-danger');
-						
-					}
-				}
-			});
+		var workflow_type_id = {{ $workflow_type_id }};
+		if(workflow_type_id == 9)
+		{
+			submitButton.prop("disabled", false);
 		}
+		else
+		{
+			submitButton.prop("disabled", true);
+			emailFeedback.text("");
+			emailFeedback.removeClass('text-success');
+			const email = $("#division_manager").val();
+			const divisionManagerInput = $("#division_manager");
+			if (email) {
+				
+				$.ajax({
+					headers: {
+					'X-CSRF-TOKEN': "{{ csrf_token() }}"
+					},
+					url: '{{url("/")}}/check-division-manager',
+					//data: JSON.stringify({ email: email }),
+					//processData: false,
+					data: {email: email},
+					dataType: 'JSON',
+					type: 'POST',
+					success: function ( data ) {
+						if (data.valid) {
+							//submitButton.disabled = false;
+							submitButton.prop("disabled", false);
+							divisionManagerInput.removeClass('is-invalid');
+							divisionManagerInput.addClass('is-valid');
+							emailFeedback.text(data.message);
+							emailFeedback.removeClass('text-danger');
+							emailFeedback.addClass('text-success');
+						}
+						else {
+								
+							submitButton.prop("disabled", true);
+							divisionManagerInput.removeClass('is-valid');
+							divisionManagerInput.addClass('is-invalid');
+							emailFeedback.text(data.message);
+							emailFeedback.removeClass('text-success');
+							emailFeedback.addClass('text-danger');
+							
+						}
+					}
+				});
+			}
+		}
+		
 	}
 	
 	
