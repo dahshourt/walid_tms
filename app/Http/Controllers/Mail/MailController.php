@@ -142,6 +142,39 @@ class MailController extends Controller
         }
     }
 
+
+    //Mail to Anan
+
+    public function notifyCrManager($cr){
+        $cr_manager_email = config('constants.mails.cr_manager');
+        $email_parts = explode('.', explode('@', $cr_manager_email)[0]);
+        $first_name = ucfirst($email_parts[0]); 
+
+        $cr_link = route('show.cr', $cr);
+
+        $templateContent = [
+            'subject' => "CR #$cr status has been changed",
+            'body' => "Dear $first_name, <br><br>"
+            ."CR #$cr status has been changed from Review CD_CR To Promo Nature Validation."
+            ."<br><br>"
+            ."You can review it here: <a href='$cr_link'>CR: #$cr</a>"
+            ."<br><br>"
+            ."Thank you",
+        ];
+
+        try {
+            // Send the email
+            Mail::to($cr_manager_email)->send(new TestMail($templateContent));
+    
+            return response()->json(['success' => 'Email sent successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to send email.', 'details' => $e->getMessage()], 500);
+        }
+
+
+
+    } // end method
+
     // to send the mail
     //sendMailByTemplate('Template Name', 'recipient@example.com', ['cc@example.com']);
 

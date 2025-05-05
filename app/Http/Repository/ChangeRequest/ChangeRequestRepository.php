@@ -1204,11 +1204,12 @@ public function findNextAvailableTime($userId, $currentTime)
             $data = $this->calculateEstimation($id,$change_request,$request,$user);
             $request->merge($data);
         }
+        //dd($request->all(),$new_status_id, $old_status_id );
         $changeRequest = $this->UpdateCRData($id,$request);
         //$request['assignment_user_id'] = $user->id;
         if($new_status_id) $request['new_status_id'] = $new_status_id;
         if($old_status_id) $request['old_status_id'] = $old_status_id;
-        //dd($request->all(),$new_status_id, $old_status_id );
+        
         if($request->new_status_id) $this->UpateChangeRequestStatus($id, $request);
         $this->StoreLog($id, $request, 'update');
         return $changeRequest;
@@ -1435,10 +1436,6 @@ public function findNextAvailableTime($userId, $currentTime)
                                 'active' => $active,
                             ];
                         }
-
-
-                        
-                       
                     }
                     // echo"<pre>";
                     // print_r($data);
@@ -1446,6 +1443,15 @@ public function findNextAvailableTime($userId, $currentTime)
                     // die("walid");
                     $change_request_status->create($data);
                 }
+                //dd($item->to_status_id, $request['old_status_id'],$change_request->id);
+
+                // send mail to CrManager
+                if ($request['old_status_id'] == '99' && $item->to_status_id == '101'){
+                    $mailController = new MailController();
+                    $mailController->notifyCrManager($change_request->id);
+                    
+                }
+               
             }
         }
 
@@ -1528,7 +1534,7 @@ public function findNextAvailableTime($userId, $currentTime)
                     $query->where('group_id', $group);
                     $query->where('type', 2);
                 });
-        })->orderBy('id', 'DESC')->get();
+        })->orderBy('id', 'DESC')->paginate(20);
    
         return $changeRequests;
     }
