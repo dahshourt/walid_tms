@@ -92,7 +92,7 @@
 										<!--end: Datatable-->
 									</div>
 								</div>
-								
+								{{ $collection->links() }}
 								<!--end::Card-->
 							</div>
 							<!--end::Container-->

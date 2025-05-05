@@ -26,6 +26,9 @@ return [
 			'ldap_host' => "Cairo.TelecomEgypt.corp",
 			'ldap_binddn' => "Cairo\\",
 			'ldap_rootdn' => "DC=Cairo,DC=TelecomEgypt,DC=corp"
+		],
+	'mails' =>
+	    [
+			'cr_manager' => 'sara.mostafa@te.eg'
 		]
-
 ];

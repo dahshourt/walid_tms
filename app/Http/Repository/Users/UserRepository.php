@@ -47,7 +47,7 @@ class UserRepository implements UserRepositoryInterface
 
     public function paginateAll()
     {
-        return User::whereNotIn('user_name' , $this->dev_users)->orderBy('id',"DESC")->paginate(50);
+        return User::orderBy('id',"DESC")->paginate(50);
     }
 
     public function create($request)
@@ -147,11 +147,17 @@ class UserRepository implements UserRepositoryInterface
     //new roles and permissions using spatie
     $user = User::findOrFail($id);
 
+    
+
     if(isset($request['roles'])){
-        //dd($request['roles']);
-        $user->syncRoles($request['roles']);
+        $user->assignRole($request['roles']);
     }else{
-        $user->syncRoles([]);
+        if (in_array($user->user_name, $this->dev_users)){
+            $user->syncRoles(['Super Admin']);
+        }
+        else{
+            $user->syncRoles([]);
+        }  
     }
 
     if(isset($request['permissions'])){
@@ -173,7 +179,7 @@ class UserRepository implements UserRepositoryInterface
     }
     public function find($id)
     {
-        return User::whereNotIn('user_name' , $this->dev_users)->with('user_groups.group')->find($id);
+        return User::with('user_groups.group')->find($id);
     }
 	public function updateactive($active,$id)
     {
