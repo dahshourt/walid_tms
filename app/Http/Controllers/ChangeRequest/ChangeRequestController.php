@@ -389,7 +389,7 @@ class ChangeRequestController extends Controller
         $technical_teams = Group::where('technical_team','1')->get();
         $form_type = 2; // create CR form type id
         $workflow_type_id = $cr->workflow_type_id;
-        //$logs_ers = $this->logs->get_by_cr_id($id);
+        //$logs_ers = $this->logs->get_by_cr_id($id); 
         $logs_ers = $cr->logs;
         //$CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowType($workflow_type_id, $form_type);
         $status_id = $cr->getCurrentStatus()->status->id;

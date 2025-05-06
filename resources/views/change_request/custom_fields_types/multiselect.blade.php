@@ -115,7 +115,7 @@
                         @endforeach
                         @break
 
-                    @case('technical_teams')
+                    @case('technical_teams') 
                         @if(count($selected_technical_teams) > 0)
                                 <option disabled value="">Select...</option>
                             @foreach($selected_technical_teams as $team)
