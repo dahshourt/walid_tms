@@ -116,21 +116,16 @@
                         @break
 
                     @case('technical_teams')
-                        @if($status_name == 'Pending HL Design')
-                                <option value="">Select...</option>
+                        @if(count($selected_technical_teams) > 0)
+                                <option disabled value="">Select...</option>
+                            @foreach($selected_technical_teams as $team)
+                                <option disabled value="">{{ $team }}</option>
+                            @endforeach   
+                        @else
+                             <option value="">Select...</option>
                             @foreach($technical_teams as $team)
                                 <option  value="{{ $team->id }}">{{ $team->title }}</option>
-                            @endforeach    
-                        @elseif($status_name == 'Rollback'  OR  $status_name == 'Pending fixation on production' OR  $status_name == 'Pending Rework' )
-                                <option disabled value="">Select...</option>
-                            @foreach($technical_team_disabled as $team)
-                                <option disabled value="{{ $team->id }}">{{ $team->group->title }}</option>
                             @endforeach 
-                        @else
-                                <option disabled value="">Select...</option>
-                            @foreach($technical_teams as $team)
-                                <option disabled value="{{ $team->id }}">{{ $team->title }}</option>
-                            @endforeach    
                         @endif
                     @break
 

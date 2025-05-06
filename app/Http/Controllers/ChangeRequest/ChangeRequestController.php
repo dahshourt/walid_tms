@@ -400,11 +400,12 @@ class ChangeRequestController extends Controller
         $technical_team_disabled = ChangeRequestTechnicalTeam::where('cr_id', $id)->get();
         $ApplicationImpact = ApplicationImpact::where('application_id', $cr->application_id)->select('impacts_id')->get();
         $man_day = $cr->change_request_custom_fields->where('custom_field_name', 'man_days')->values()->toArray();
-         
+         //dd($cr->technical_Cr_first->technical_cr_team->pluck('group')->pluck('title')->toArray());
+         $selected_technical_teams = $cr->technical_Cr_first->technical_cr_team->pluck('group')->pluck('title')->toArray();
         $reminder_promo_tech_teams = array();
         $reminder_promo_tech_teams = $cr->technical_Cr ? $cr->technical_Cr->technical_cr_team->where('status','0')->pluck('group')->pluck('title')->toArray(): array();
         $reminder_promo_tech_teams_text = implode(',',$reminder_promo_tech_teams);
-        return view("$this->view.edit",compact('man_day' ,'technical_team_disabled' ,'status_name' ,'ApplicationImpact' ,'cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag','technical_teams','all_defects','reminder_promo_tech_teams','reminder_promo_tech_teams_text'));  
+        return view("$this->view.edit",compact('selected_technical_teams','man_day' ,'technical_team_disabled' ,'status_name' ,'ApplicationImpact' ,'cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag','technical_teams','all_defects','reminder_promo_tech_teams','reminder_promo_tech_teams_text'));  
 
     }
 

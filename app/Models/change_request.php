@@ -161,6 +161,11 @@ class Change_request extends Model
         return $this->hasOne(TechnicalCr::class, 'cr_id', 'id')->where('status', '0');
     }
 
+    public function technical_Cr_first()
+    {
+        return $this->hasOne(TechnicalCr::class, 'cr_id', 'id');
+    }
+
     public function current_status()
     {
         //return $this->HasManyThrough(Status::class,change_request_statuse::class,'cr_id','id','id','new_status_id');
