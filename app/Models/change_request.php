@@ -157,8 +157,13 @@ class Change_request extends Model
     }
 
     public function technical_Cr()
-    {
+    { 
         return $this->hasOne(TechnicalCr::class, 'cr_id', 'id')->where('status', '0');
+    }
+
+    public function technical_Cr_first()
+    {
+        return $this->hasOne(TechnicalCr::class, 'cr_id', 'id');
     }
 
     public function current_status()
