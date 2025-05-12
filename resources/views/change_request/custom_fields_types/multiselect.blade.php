@@ -1,3 +1,11 @@
+@php
+        $fieldName = $item->CustomField->name;
+        $fieldLabel = $item->CustomField->label;
+        $isRequired = isset($item->validation_type_id) && $item->validation_type_id == 1;
+        $isEnabled = isset($item->enable) && $item->enable == 1;
+        $inputType = $fieldName === 'division_manager' ? 'email' : 'text';
+        $inputValue = isset($cr) ? old($fieldName, $custom_field_value) : old($fieldName);
+    @endphp
 @if($item->CustomField->type == "multiselect")
     <div class="col-md-6 change-request-form-field field_{{ $item->CustomField->name }}">
 
@@ -117,10 +125,24 @@
 
                     @case('technical_teams') 
                         @if(count($selected_technical_teams) > 0)
-                                <option disabled value="">Select...</option>
-                            @foreach($selected_technical_teams as $team)
-                                <option disabled value="">{{ $team }}</option>
-                            @endforeach   
+                                @if($isEnabled)
+                                    @if($status_name == "Rollback" OR  $status_name == "Pending Rollback" OR  $status_name == "Pending fixation on production")     
+                                            <option  value="">Select...</option>
+                                        @foreach($selected_technical_teams as $team)
+                                            <option  value="{{ $team['id'] }}">{{ $team['title'] }}</option>
+                                        @endforeach
+                                    @else
+                                            <option disabled  value="">Select...</option>
+                                        @foreach($selected_technical_teams as $team)
+                                            <option disabled value="{{ $team['id'] }}">{{ $team['title'] }}</option>
+                                        @endforeach
+                                    @endif
+                                @else
+                                             <option disabled  value="">Select...</option>
+                                        @foreach($selected_technical_teams as $team)
+                                            <option disabled value="{{ $team['id'] }}">{{ $team['title'] }}</option>
+                                        @endforeach
+                                @endif           
                         @else
                              <option value="">Select...</option>
                             @foreach($technical_teams as $team)
