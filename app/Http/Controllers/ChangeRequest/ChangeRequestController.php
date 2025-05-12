@@ -402,11 +402,11 @@ class ChangeRequestController extends Controller
         $man_day = $cr->change_request_custom_fields->where('custom_field_name', 'man_days')->values()->toArray();
          //dd($cr->technical_Cr_first->technical_cr_team->pluck('group')->pluck('title')->toArray());
          try {
-            $selected_technical_teams = $cr->technical_Cr_first->technical_cr_team->pluck('group')->pluck('title')->toArray();
+            $selected_technical_teams = $cr->technical_Cr_first->technical_cr_team->pluck('group')->toArray();
         } catch (\Throwable $e) {
             $selected_technical_teams = [];
         }
-         
+        // dd($selected_technical_teams);
         $reminder_promo_tech_teams = array();
         $reminder_promo_tech_teams = $cr->technical_Cr ? $cr->technical_Cr->technical_cr_team->where('status','0')->pluck('group')->pluck('title')->toArray(): array();
         $reminder_promo_tech_teams_text = implode(',',$reminder_promo_tech_teams);
