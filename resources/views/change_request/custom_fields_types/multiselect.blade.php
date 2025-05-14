@@ -132,9 +132,9 @@
                                             <option  value="{{ $team['id'] }}">{{ $team['title'] }}</option>
                                         @endforeach
                                     @else
-                                            <option disabled  value="">Select...</option>
+                                            <option   value="">Select...</option>
                                         @foreach($selected_technical_teams as $team)
-                                            <option disabled value="{{ $team['id'] }}">{{ $team['title'] }}</option>
+                                            <option  value="{{ $team['id'] }}">{{ $team['title'] }}</option>
                                         @endforeach
                                     @endif
                                 @else
