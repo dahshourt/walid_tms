@@ -67,6 +67,7 @@ class highLevelStatusesControlller extends Controller
      */
     public function store(highlevelrequest $request)
     {
+        $this->authorize('Create HighLevelStatus'); // permission check
         $this->high_level_status->create($request->all());
 
         return redirect()->back()->with('status' , 'Added Successfully' );
@@ -93,6 +94,7 @@ class highLevelStatusesControlller extends Controller
      */
     public function update(highlevelrequest $request, $id)
     {
+        $this->authorize('Edit HighLevelStatus'); // permission check
         
         $this->high_level_status->update($request->except(['_token', '_method']),$id);
         return redirect()->back()->with('status' , 'Updated Successfully' );

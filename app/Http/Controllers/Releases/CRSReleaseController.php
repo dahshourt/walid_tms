@@ -38,7 +38,7 @@ class CRSReleaseController extends Controller
  
 
     public function  reorderhome(){
-       
+       $this->authorize('Release To CRs'); 
         return view("$this->view.shifiting");
        }
     // public function show_crs(Request $request)

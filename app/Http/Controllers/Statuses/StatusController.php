@@ -63,6 +63,7 @@ class StatusController extends Controller
      */
     public function store(StatusRequest $request)
     {
+        $this->authorize('Create Status'); // permission check
         $this->status->create($request->all());
 
         return redirect()->back()->with('status' , 'Created Successfully' );
@@ -89,6 +90,7 @@ class StatusController extends Controller
      */
     public function update(StatusRequest $request, $id)
     {
+        $this->authorize('Edit Status'); // permission check
 		
         $status = $this->status->find($id);
         

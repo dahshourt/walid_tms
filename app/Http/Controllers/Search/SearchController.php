@@ -59,11 +59,13 @@ class SearchController extends Controller
         return view("$this->view.create");
     }
     public function advanced_search(){
+        $this->authorize('Access Advanced Search'); // permission check
 
         return view("$this->view.advanced_search");
     }
      public function edit($id)
     {
+        $this->authorize('Access Search'); 
         $row = $this->changerequest->find($id);
        
         return view("$this->view.edit",compact('row'));
@@ -71,7 +73,7 @@ class SearchController extends Controller
     }
     public function search_result()
     {
-       
+        $this->authorize('Access Search'); 
 
         $cr = $this->changerequest->searhchangerequest(request()->search);
 		if(!$cr)

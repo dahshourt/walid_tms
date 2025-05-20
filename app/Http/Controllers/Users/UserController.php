@@ -41,6 +41,7 @@ class UserController extends Controller
     }
     public function exportTable()
     {
+         $this->authorize('List Users'); // permission check
         
         return Excel::download(new TableExport, 'Users-data.xlsx');
     }
@@ -80,6 +81,7 @@ class UserController extends Controller
      */
     public function store(UserRequest $request)
     {
+         $this->authorize('Create User'); // permission check
         $this->user->create($request->all());
 
         return redirect()->back()->with('status' , 'Added Successfully' );
@@ -113,6 +115,7 @@ class UserController extends Controller
      */
     public function update(UserRequest $request, $id)
     {
+        $this->authorize('Edit User'); // permission check
 
         // $validator = Validator::make($request->all(), [
         //     'password' => [

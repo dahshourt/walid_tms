@@ -57,6 +57,7 @@ class Division_managerController extends Controller
      */
     public function store(division_managerRequest $request)
     {
+        $this->authorize('Create Division'); // permission check
         $this->division_manager->create($request->all());
         return redirect()->back()->with('status' , 'Added Successfully' );
     }
@@ -78,6 +79,7 @@ class Division_managerController extends Controller
      */
     public function update(division_managerRequest $request, $id)
     {
+        $this->authorize('Edit Division'); // permission check
         $this->division_manager->update($request->except(['_token', '_method']),$id);
         return redirect()->back()->with('status' , 'Updated Successfully' );
     }

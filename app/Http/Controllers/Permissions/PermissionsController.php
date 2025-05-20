@@ -77,6 +77,7 @@ class PermissionsController extends Controller
      }
     public function store(Request $request)
     {
+         $this->authorize('Create Permission'); // permission check
        
         $store= $this->permission->store_permission($request->all());
         return redirect()->back()->with('permission' , 'Created Successfully' );
@@ -97,6 +98,7 @@ class PermissionsController extends Controller
 
     public function update(Request $request ,$id)
     {
+        $this->authorize('Edit Permission'); // permission check
         $this->permission->update($request->all() , $id);
         return redirect()->back()->with('status' , 'Permission Updated Successfully' );
     } //end method

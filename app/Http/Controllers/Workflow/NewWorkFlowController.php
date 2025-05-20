@@ -69,6 +69,7 @@ class NewWorkFlowController extends Controller
 
     public function store(NewWorkflowRequest $request)
     {
+        $this->authorize('Create Workflow'); // permission check
         $res = $this->NewWorkflow->create($request->all());
         return redirect()->back()->with('success' , 'Created Successfully' );
     }
@@ -113,7 +114,7 @@ class NewWorkFlowController extends Controller
     }
 
     public function WorkflowStatuses($id)
-    {
+    {   
         $Workflow = $this->Workflow->find($id);
         if(!$Workflow)
         {
@@ -163,6 +164,7 @@ class NewWorkFlowController extends Controller
 
     public function SameFromWorkflow(Request $request)
     {
+        $this->authorize('Edit Workflow'); // permission check
         if($request->same_time_from)
         {
             $statuses = $this->NewWorkflow->ListTypeWorkflow($request->type_id);

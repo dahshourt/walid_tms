@@ -50,6 +50,7 @@ class RejectionReasonsController extends Controller
      */
     public function store(RejectionReasonsRequest $request)
     {
+        $this->authorize('Create RejectionReason'); // permission check
         die("sss");
         
         $this->rejectionReason->create($request->all());
@@ -74,6 +75,7 @@ class RejectionReasonsController extends Controller
      */
     public function update(RejectionReasonsRequest $request, $id)
     {
+        $this->authorize('Edit RejectionReason'); // permission check
         $this->rejectionReason->update($request->except(['_token', '_method']),$id);
             return redirect()->back()->with('status' , 'Updated Successfully' );
        // return redirect()->route('rejection_reason.index')->with('status' , 'Updated Successfully' );

@@ -26,6 +26,19 @@ class CustomFieldGroupTypeController extends Controller
     private $changerequest;
 
     function __construct(ChangeRequestFactory $changerequest,CustomFieldGroupTypeFactory $custom_field_group_type){
+
+        // Ensure the user is authenticated
+         $this->middleware(function ($request, $next) {
+			$this->user= \Auth::user();
+			if(!$this->user->hasRole('Super Admin') && !$this->user->can('Access CustomFields'))
+			{
+				abort(403, 'This action is unauthorized.');
+			}	
+			else
+			{
+				return $next($request);
+			}	
+		});
        
         $this->custom_field_group_type = $custom_field_group_type::index();
         $this->changerequest = $changerequest::index();
