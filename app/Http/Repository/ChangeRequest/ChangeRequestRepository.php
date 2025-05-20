@@ -967,20 +967,16 @@ public function findNextAvailableTime($userId, $currentTime)
 
     public function UpdateCRData($id,$request)
     {
-
-        
-
-       
+        //dd($request);
         $this->changeRequest_old = Change_request::find($id);
         //$arr = Arr::except($request, $this->getExcludedFields());
         $arr = Arr::except($request, $this->getRequiredFields());
+        //dd($arr);
         //$data = $arr->all();
         //$arr = $request->except($except);
         //$data = $request->except($this->getExcludedFields());
-		$data = Arr::except($request, ['_method']);
+		$data = Arr::except($request->all(), ['_method']);
         //dd($data);
-        
-        
         foreach ($data as $key => $value) {
             if($key != "_token")
             {
@@ -1009,8 +1005,7 @@ public function findNextAvailableTime($userId, $currentTime)
 
     public function update($id, $request)
     {
-        
-       // dd($request->all());
+       //dd($request->all());
         if($request->cab_cr_flag == '1')
         {
             $cr = Change_request::find($id);
@@ -2485,10 +2480,19 @@ public function findNextAvailableTime($userId, $currentTime)
 
     public function InsertOrUpdateChangeRequestCustomField(array $data)
     {
+        if($data['custom_field_name'] == 'technical_feedback' ||  $data['custom_field_name'] == 'business_feedback'){
+            ChangeRequestCustomField::create(
+            ['cr_id' => $data['cr_id'], 'custom_field_id' => $data['custom_field_id'],'custom_field_name' => $data['custom_field_name'],
+            'custom_field_value' => $data['custom_field_value']]
+        );
+        }
+        else{
+
         ChangeRequestCustomField::updateOrCreate(
             ['cr_id' => $data['cr_id'], 'custom_field_id' => $data['custom_field_id'],'custom_field_name' => $data['custom_field_name']],
             ['custom_field_value' => $data['custom_field_value']]
         );
+        }
         return true;
     }
 

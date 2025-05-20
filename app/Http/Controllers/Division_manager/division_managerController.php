@@ -8,6 +8,8 @@ use App\Http\Requests\division_manager\division_managerRequest;
 use App\Http\Resources\DivisionManagerResource;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+
 
 
 class Division_managerController extends Controller
@@ -101,10 +103,18 @@ class Division_managerController extends Controller
     public function ActiveDirectoryCheck(Request $request){
         
         //$mail = $request->input('email');
+        $validator = Validator::make($request->all(), [
+        'email' => 'required|email:rfc,dns',
+        ]);
+
+        if ($validator->fails()) {
+        return response()->json(['valid' => false, 'message' => 'Please enter valid division manager mail.']);
+        }
+
         $mail = $request->email;
-
+        //dd($mail);
+        
         //connection details
-
         $name = config('constants.active-directory.name');
         $pwd = config('constants.active-directory.pwd');
         $ldap_host = config('constants.active-directory.ldap_host');
@@ -124,8 +134,9 @@ class Division_managerController extends Controller
 
 
             if ($ldapbind) {
-                // Search for the email in Active Directory 
-                $search = "(mail=$mail)";  // Searching for the email address
+                // Search for the email in Active Directory
+                $escapedMail = ldap_escape($mail, "", LDAP_ESCAPE_FILTER); 
+                $search = "(mail=$escapedMail)";  // Searching for the email address
                 $result = ldap_search($ldap, $ldap_rootdn, $search);
     
                 // If search returns results, the email exists
