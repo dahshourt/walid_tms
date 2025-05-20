@@ -163,7 +163,7 @@
 												<div class="card-body">
 													@foreach($CustomFields as $item)
 													@php 
-													$custom_field_value = $cr->change_request_custom_fields->where('custom_field_name',$item->CustomField->name)->first();
+                                                    $custom_field_value = $cr->change_request_custom_fields->where('custom_field_name', $item->CustomField->name)->sortByDesc('id')->first();
 													$custom_field_value = $custom_field_value  ? $custom_field_value->custom_field_value  : $cr->{$item->CustomField->name}
 													@endphp
 														@if($item->CustomField->type == "input")

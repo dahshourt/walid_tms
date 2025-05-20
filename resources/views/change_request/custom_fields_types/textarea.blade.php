@@ -8,7 +8,6 @@
     @endphp
 
     @if($fieldName == 'business_feedback')
-    @can('View Business Feedback')
     <div class="col-md-6 change-request-form-field field_{{ $item->CustomField->name }}">
         {{-- Label --}}
         <label for="{{ $item->CustomField->name }}">{{ $item->CustomField->label }}</label>
@@ -26,10 +25,8 @@
             <small class="text-danger d-block">{{ $message }}</small>
         @enderror
     </div>
-    @endcan
 
     @elseif($fieldName == 'technical_feedback')
-    @can('View Technical Feedback')
     <div class="col-md-6 change-request-form-field field_{{ $item->CustomField->name }}">
         {{-- Label --}}
         <label for="{{ $item->CustomField->name }}">{{ $item->CustomField->label }}</label>
@@ -47,7 +44,6 @@
             <small class="text-danger d-block">{{ $message }}</small>
         @enderror
     </div>
-    @endcan
 
     @else
 

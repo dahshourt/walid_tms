@@ -253,7 +253,11 @@ class ChangeRequestController extends Controller
     public function show($id)
     { 
         $this->authorize('Show ChangeRequest'); // permission check
-
+        $cr = $this->changerequest->findById($id);
+        if(!$cr)
+        {
+            return redirect()->back()->with('status' , 'CR not exists' );
+        } //to check if the cr exists or not
         $cr = $this->changerequest->find($id);
         //dd($cr->logs);
         //$this->logs = LogFactory::index();
