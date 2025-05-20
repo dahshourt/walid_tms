@@ -70,6 +70,7 @@ class RolesController extends Controller
      */
     public function store(RolesRequest $request)
     {
+        $this->authorize('Create Role'); // permission check
         $this->role->create($request->all());
 
         return redirect()->route("roles.index")->with('status' , 'Added Successfully' );
@@ -99,6 +100,7 @@ class RolesController extends Controller
      */
     public function update(RolesRequest $request, $id)
     {
+        $this->authorize('Edit Role'); // permission check
         
         $this->role->update($request->all() , $id);
         return redirect()->back()->with('status' , 'Role Updated Successfully' );

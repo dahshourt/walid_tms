@@ -30,7 +30,7 @@ Route::middleware(['auth'])->group(
         Route::get('/statistics', 'HomeController@StatisticsDashboard');
         Route::get('/dashboard', 'HomeController@StatisticsDashboard');
 
-        Route::get('get_workflow/subtype/all', 'Workflow\Workflow_type@Allsubtype');
+        //Route::get('get_workflow/subtype/all', 'Workflow\Workflow_type@Allsubtype');
         Route::get('customs/field/group/type/selected/{form_type?}', 'CustomFields\CustomFieldGroupTypeController@AllCustomFieldsWithSelectedWithFormType');
         Route::get('/', 'HomeController@index')->name('home');
         Route::post('/charts_dashboard', 'HomeController@dashboard');
@@ -73,7 +73,7 @@ Route::middleware(['auth'])->group(
         Route::post('parent/updateactive', 'Parents\ParentController@updateactive');
        Route::resource('high_level_status', highLevelStatuses\highLevelStatusesControlller::class);
        Route::post('high_level_status/updateactive', 'highLevelStatuses\highLevelStatusesControlller@updateactive');
-       Route::resource('workflows', Workflow\WorkflowController::class);
+       //Route::resource('workflows', Workflow\WorkflowController::class);
        
        Route::resource('searchs', Search\SearchController::class);
       // Route::get('/search/result', 'Search\SearchController@search_result');
@@ -92,7 +92,7 @@ Route::middleware(['auth'])->group(
        Route::get('advanced/search/result', 'Search\SearchController@AdvancedSearchResult')->name('advanced.search.result');;
         Route::get('/search/advanced_search', 'CustomFields\CustomFieldGroupTypeController@AllCustomFieldsWithSelectedByformType')->name('advanced.search');
 
-       Route::resource('applications', Applications\ApplicationController::class);
+       //Route::resource('applications', Applications\ApplicationController::class);
       // Route::post('applications/updateactive', 'Applications\ApplicationController@updateactive');
       
       Route::post('advanced-search-requests/export', 'Search\SearchController@AdvancedSearchResultExport')->name('advanced.search.export');;

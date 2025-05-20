@@ -59,6 +59,7 @@ class CabUserController extends Controller
      */
     public function store(CabUserRequest $request)
     {
+        $this->authorize('Create Cab User'); // permission check
         $this->cab_user->create($request->all());
         return redirect()->back()->with('status' , 'Added Successfully' );
     }
@@ -80,6 +81,7 @@ class CabUserController extends Controller
      */
     public function update(CabUserRequest $request, $id)
     {
+        $this->authorize('Edit Cab User'); // permission check
         $this->cab_user->update($request->except(['_token', '_method']),$id);
         return redirect()->back()->with('status' , 'Updated Successfully' );
     }

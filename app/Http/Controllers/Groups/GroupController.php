@@ -55,6 +55,7 @@ class GroupController extends Controller
 
     public function store(GroupRequest $request)
     {
+        $this->authorize('Create Group'); // permission check
         $this->group->create($request->all());
         return redirect()->back()->with('status' , 'Added Successfully' );
     }
@@ -68,6 +69,7 @@ class GroupController extends Controller
      */
     public function update(GroupRequest $request,$id)
     {
+        $this->authorize('Edit Group'); // permission check
         // echo "<pre>";
         // print_r($request->all());
         // echo "</pre>"; die;

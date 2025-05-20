@@ -69,6 +69,7 @@ class ParentController extends Controller
      */
     public function store(ParentRequest $request)
     {
+         $this->authorize('Create Parent'); // permission check
         $this->parent->create($request->all());
 
         return redirect()->back()->with('status' , 'Added Successfully' );
@@ -93,6 +94,7 @@ class ParentController extends Controller
      */
     public function update(ParentRequest $request, $id)
     {
+         $this->authorize('Edit Parent'); // permission check
        
  $this->parent->update($request->except(['_token', '_method']),$id);
 // and then you can get query log

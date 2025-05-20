@@ -88,6 +88,7 @@ class DefectController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('Create Defect'); //permission check
         $defect = $this->defect->AddDefect($request);
         $defect_id = $defect->id;
         
@@ -175,6 +176,7 @@ class DefectController extends Controller
      */
     public function update(Request $request, $id)
     { 
+        $this->authorize('Edit Defect'); //permission check
         //comments
         if($request->comment)
         {

@@ -68,6 +68,7 @@ class StageController extends Controller
      */
     public function store(StageRequest $request)
     {
+        $this->authorize('Create Stage'); // permission check
         $this->stage->create($request->all());
 
         return redirect()->route('stages.index')->with('status' , 'Added Successfully' );
@@ -92,6 +93,7 @@ class StageController extends Controller
      */
     public function update(StageRequest $request, $id)
     {
+        $this->authorize('Edit Stage'); // permission check
         
         $this->stage->update($request->except(['_token', '_method']),$id);
         return redirect()->route('stages.index')->with('status' , 'Updated Successfully' );

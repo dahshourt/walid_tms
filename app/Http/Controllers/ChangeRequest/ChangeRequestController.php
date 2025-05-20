@@ -180,6 +180,7 @@ class ChangeRequestController extends Controller
      */
     public function store(changeRequest_Requests $request)
     {
+        $this->authorize('Create ChangeRequest'); // permission check
         
         if($request->hasFile('technical_attachments')){
         
@@ -440,7 +441,7 @@ class ChangeRequestController extends Controller
      */
     public function update(changeRequest_Requests $request, $id)
     { 
- 
+        $this->authorize('Edit ChangeRequest'); // permission check
         if(isset($request->technical_teams) AND !empty($request->technical_teams))
             { 
                 foreach ($request->technical_teams as $teamId) {
@@ -539,6 +540,7 @@ class ChangeRequestController extends Controller
 
     public function update_attach(attachments_CRS_Request $request)
     {
+        $this->authorize('Edit ChangeRequest'); // permission check
         if ($request->file()) {
             $cr_id = $request->id;
             $this->attachments->add_files($request->file('filesdata'), $cr_id);
@@ -559,10 +561,12 @@ class ChangeRequestController extends Controller
         
     }
     public function  reorderhome(){
+        $this->authorize('Shift ChangeRequest');
         return view("$this->view.shifiting");
        }
        public function reorderChangeRequest(Request $request)
     {
+        $this->authorize('Shift ChangeRequest');
         // Validate the incoming request
         $request->validate([
             'change_request_id' => 'required|exists:change_request,id',

@@ -160,6 +160,7 @@ class ReleaseController extends Controller
      */
     public function store(ReleaseRequest $request)
     {
+        $this->authorize('Create Release'); 
       $this->release->create($request->all());
       
       
@@ -257,6 +258,7 @@ class ReleaseController extends Controller
      */
     public function update(ReleaseRequest $request , $id)
     {
+        $this->authorize('Edit Release'); 
         
         $this->release->update($request->except(['_token', '_method']) , $id);
         return redirect()->back()->with('status' , 'Release Updated Successfully' );
@@ -287,6 +289,8 @@ class ReleaseController extends Controller
 
 
     public function update_release_its_crs(){
+        $this->authorize('Release To CRs'); 
+
         $all_releases =   $this->release->get_iot_releass();
 
         foreach ($all_releases as $key => $value) {
