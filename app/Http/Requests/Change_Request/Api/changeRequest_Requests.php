@@ -6,6 +6,11 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use App\Http\Repository\CustomField\CustomFieldGroupTypeRepository;
+use App\Rules\DivisionManagerExists;
+use App\Rules\CompareOldValue;
+use App\Models\Change_request;
+
+
 
 class changeRequest_Requests extends FormRequest
 {
@@ -46,7 +51,7 @@ class changeRequest_Requests extends FormRequest
             if($field->validation_type_id == 1){
                 if($field->CustomField->name == "division_manager")
                 {
-                    $rules[$field->CustomField->name] = "required|email";
+                    $rules[$field->CustomField->name] = ['required', 'email', new DivisionManagerExists()];
                 }
                 elseif($field->CustomField->name == "creator_mobile_number")
                 {
@@ -73,7 +78,7 @@ class changeRequest_Requests extends FormRequest
             if($field->validation_type_id == 1 && $field->enable ==1){
                 if($field->CustomField->name == "division_manager")
                 {
-                    $rules[$field->CustomField->name] = "required|email";
+                    $rules[$field->CustomField->name] = ['required', 'email', new DivisionManagerExists()];
                 }
                 elseif($field->CustomField->name == "creator_mobile_number")
                 {
@@ -84,6 +89,10 @@ class changeRequest_Requests extends FormRequest
                     $rules[$field->CustomField->name] = "required";
                 }
                 
+            }
+            elseif($field->enable == 0){
+                $oldValue = $this->cr->{$field->CustomField->name};
+                $rules[$field->CustomField->name] = [new CompareOldValue($oldValue)];
             }
         }
         return $rules;
@@ -184,10 +193,12 @@ public function attributes()
 protected function prepareForValidation()
     {
         // Set 'active' to 1 if not present in the request
+        $id = $this->route('change_request'); 
         $this->merge([
             'active' => $this->has('active') ? '1' : '0',//testable
             'testable' => $this->has('testable') ? '1' : '0',//need_ux_ui
             'need_ux_ui' => $this->has('need_ux_ui') ? 1 : 0,
+            'cr' => Change_request::find($id),
 
         ]);
     }
