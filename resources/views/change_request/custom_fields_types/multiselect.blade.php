@@ -123,33 +123,33 @@
                         @endforeach
                         @break
 
-                    @case('technical_teams') 
-                        @if(count($selected_technical_teams) > 0)
+                        @case('technical_teams')
+                            @if(count($selected_technical_teams) > 0)
                                 @if($isEnabled)
-                                    @if($status_name == "Rollback" OR  $status_name == "Pending Rollback" OR  $status_name == "Pending fixation on production")     
-                                            <option  value="">Select...</option>
+                                    @if($status_name == "Rollback" OR $status_name == "Pending Rollback" OR $status_name == "Pending fixation on production")
+                                        <option value="">Select...</option>
                                         @foreach($selected_technical_teams as $team)
-                                            <option  value="{{ $team['id'] }}">{{ $team['title'] }}</option>
+                                            <option value="{{ $team['id'] }}" selected>{{ $team['title'] }}</option>
                                         @endforeach
                                     @else
-                                            <option   value="">Select...</option>
+                                        <option disabled value="">Select...</option>
                                         @foreach($selected_technical_teams as $team)
-                                            <option  value="{{ $team['id'] }}">{{ $team['title'] }}</option>
+                                            <option disabled value="{{ $team['id'] }}" selected>{{ $team['title'] }}</option>
                                         @endforeach
                                     @endif
                                 @else
-                                             <option disabled  value="">Select...</option>
-                                        @foreach($selected_technical_teams as $team)
-                                            <option disabled value="{{ $team['id'] }}">{{ $team['title'] }}</option>
-                                        @endforeach
-                                @endif           
-                        @else
-                             <option value="">Select...</option>
-                            @foreach($technical_teams as $team)
-                                <option  value="{{ $team->id }}">{{ $team->title }}</option>
-                            @endforeach 
-                        @endif
-                    @break
+                                    <option disabled value="">Select...</option>
+                                    @foreach($selected_technical_teams as $team)
+                                        <option disabled value="{{ $team['id'] }}" selected>{{ $team['title'] }}</option>
+                                    @endforeach
+                                @endif
+                            @else
+                                <option value="">Select...</option>
+                                @foreach($technical_teams as $team)
+                                    <option value="{{ $team->id }}">{{ $team->title }}</option>
+                                @endforeach
+                            @endif
+                        @break
 
                     @default
                         @if(isset($customOptions) && count($customOptions))
@@ -162,6 +162,12 @@
                         @endif
                 @endswitch
             </select>
+            {{-- Hidden inputs to preserve POST data when disabled --}}
+            @if(!$isEnabled && count($selected_technical_teams) > 0)
+                @foreach($selected_technical_teams as $team)
+                    <input type="hidden" name="technical_teams[]" value="{{ $team['id'] }}">
+                @endforeach
+            @endif
         @endif
     </div>
 @endif
