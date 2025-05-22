@@ -55,6 +55,8 @@ return [
     'url' => env('APP_URL', 'http://localhost'),
 
     'asset_url' => env('ASSET_URL', null),
+    'check_interval' => env('USER_CHECK_INTERVAL_ACTIVE', 20000),
+
 
     /*
     |--------------------------------------------------------------------------
