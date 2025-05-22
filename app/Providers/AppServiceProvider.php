@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Pagination\Paginator;
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use App\Contracts\ChangeRequest\ChangeRequestRepositoryInterface;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,6 +30,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         //
+        URL::forceRootUrl('https://10.19.44.26'); // replace with your server IP
         Paginator::useBootstrap();
         Schema::defaultstringLength(191);
     }
