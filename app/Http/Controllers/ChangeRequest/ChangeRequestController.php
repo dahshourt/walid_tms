@@ -188,10 +188,13 @@ class ChangeRequestController extends Controller
 
             $validator = Validator::make(
                 $input_data, [
-                'technical_attachments.*' => 'required|mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg|max:2048'
+                'technical_attachments.*' => 'required',
+        'file','mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg',
+        'mimetypes: application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,application/zip,application/x-rar-compressed,image/jpeg,image/png,image/gif,application/vnd.ms-outlook','max:5120'
                 ],[
                     'technical_attachments.*.required' => 'Please upload an attachment',
                     'technical_attachments.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
+                    'technical_attachments.*.mimetypes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
                     'technical_attachments.*.max' => 'Sorry! Maximum allowed size for an attachment is 2MB',
                 ]
             );
@@ -211,13 +214,16 @@ class ChangeRequestController extends Controller
 
             $validator = Validator::make(
                 $input_data, [
-                'business_attachments.*' => 'required|mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg|max:2048'
-                ],[
-                    'business_attachments.*.required' => 'Please upload an attachment',
-                    'business_attachments.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
-                    'business_attachments.*.max' => 'Sorry! Maximum allowed size for an attachment is 2MB',
-                ]
-            );
+                'business_attachments.*' => 'required',
+                'file','mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg',
+                'mimetypes: application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,application/zip,application/x-rar-compressed,image/jpeg,image/png,image/gif,application/vnd.ms-outlook','max:5120'
+                        ],[
+                            'technical_attachments.*.required' => 'Please upload an attachment',
+                            'technical_attachments.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
+                            'technical_attachments.*.mimetypes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
+                            'technical_attachments.*.max' => 'Sorry! Maximum allowed size for an attachment is 2MB',
+                        ]
+                    );
 
             if ($validator->fails()) {
                 //return redirect()->back()->withErrors('File not found.');
@@ -476,13 +482,16 @@ class ChangeRequestController extends Controller
             
             $validator = Validator::make(
                 $input_data, [
-                'technical_attachments.*' => 'required|mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg|max:2048'
-                ],[
-                    'technical_attachments.*.required' => 'Please upload an attachment',
-                    'technical_attachments.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
-                    'technical_attachments.*.max' => 'Sorry! Maximum allowed size for an attachment is 2MB',
-                ]
-            );
+                'technical_attachments.*' => 'required',
+                'file','mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg',
+                'mimetypes: application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,application/zip,application/x-rar-compressed,image/jpeg,image/png,image/gif,application/vnd.ms-outlook','max:5120'
+                        ],[
+                            'technical_attachments.*.required' => 'Please upload an attachment',
+                            'technical_attachments.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
+                            'technical_attachments.*.mimetypes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
+                            'technical_attachments.*.max' => 'Sorry! Maximum allowed size for an attachment is 2MB',
+                        ]
+                    );
 
             if ($validator->fails()) {
                 //return redirect()->back()->withErrors('File not found.');
@@ -499,13 +508,16 @@ class ChangeRequestController extends Controller
 
             $validator = Validator::make(
                 $input_data, [
-                'business_attachments.*' => 'required|mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg|max:2048'
-                ],[
-                    'business_attachments.*.required' => 'Please upload an attachment',
-                    'business_attachments.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
-                    'business_attachments.*.max' => 'Sorry! Maximum allowed size for an attachment is 2MB',
-                ]
-            );
+                'business_attachments.*' => 'required',
+                'file','mimes:docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg',
+                'mimetypes: application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,application/zip,application/x-rar-compressed,image/jpeg,image/png,image/gif,application/vnd.ms-outlook','max:5120'
+                        ],[
+                            'technical_attachments.*.required' => 'Please upload an attachment',
+                            'technical_attachments.*.mimes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
+                            'technical_attachments.*.mimetypes' => 'Only docx,doc,xls,xlsx,pdf,zip,rar,jpeg,jpg,png,gif,msg are allowed',
+                            'technical_attachments.*.max' => 'Sorry! Maximum allowed size for an attachment is 2MB',
+                        ]
+                    );
 
             if ($validator->fails()) {
                 //return redirect()->back()->withErrors('File not found.');

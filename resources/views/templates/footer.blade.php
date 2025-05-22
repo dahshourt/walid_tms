@@ -193,13 +193,13 @@
 
 		$(document).ready(function () {
 			// Apply to all input and textarea
-			$('input[type="text"], textarea').on('input', function () {
+			$('input[type="text"], input[type="email"],textarea').on('input', function () {
 			const cleanVal = stripTags($(this).val());
 			$(this).val(cleanVal);
 			});
 
 			// Prevent HTML tags on paste
-			$('input[type="text"], textarea').on('paste', function (e) {
+			$('input[type="text"], input[type="email"], textarea').on('paste', function (e) {
 			e.preventDefault();
 			const pastedText = (e.originalEvent || e).clipboardData.getData('text');
 			const cleanText = stripTags(pastedText);
