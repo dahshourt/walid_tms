@@ -8,7 +8,13 @@ use Illuminate\Http\Exceptions\HttpResponseException;
 use App\Http\Repository\CustomField\CustomFieldGroupTypeRepository;
 use App\Rules\DivisionManagerExists;
 use App\Rules\CompareOldValue;
+use App\Rules\ValidateStatus;
 use App\Models\Change_request;
+use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
+use Illuminate\Validation\Rule;
+
+
+
 
 
 
@@ -73,8 +79,16 @@ class changeRequest_Requests extends FormRequest
     {
         $formFields=new CustomFieldGroupTypeRepository();
         $formFields = $formFields->CustomFieldsByWorkFlowTypeAndStatus($this->workflow_type_id, 2,$this->old_status_id);
+        $cr = $this->cr;
+        $allowedStatusIds = $cr->set_status->pluck('id')->toArray();
+        //dd($allowedStatusIds);
         $rules = [];
         foreach ($formFields as $field) {
+
+            if ($field->CustomField->name == 'new_status_id') {
+                $rules[$field->CustomField->name] = [new ValidateStatus($allowedStatusIds)];
+                continue;
+            }
             if($field->validation_type_id == 1 && $field->enable ==1){
                 if($field->CustomField->name == "division_manager")
                 {
@@ -87,8 +101,7 @@ class changeRequest_Requests extends FormRequest
                 else
                 {
                     $rules[$field->CustomField->name] = "required";
-                }
-                
+                }   
             }
             elseif($field->enable == 0){
                 $oldValue = $this->cr->{$field->CustomField->name};
@@ -194,11 +207,13 @@ protected function prepareForValidation()
     {
         // Set 'active' to 1 if not present in the request
         $id = $this->route('change_request'); 
+        $repo = new ChangeRequestRepository();
+        $cr = $repo->find($id);
         $this->merge([
             'active' => $this->has('active') ? '1' : '0',//testable
             'testable' => $this->has('testable') ? '1' : '0',//need_ux_ui
             'need_ux_ui' => $this->has('need_ux_ui') ? 1 : 0,
-            'cr' => Change_request::find($id),
+            'cr' => $cr,
 
         ]);
     }
