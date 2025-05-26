@@ -88,7 +88,8 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
                             'custom_field_id' => $customField->id,
                             'custom_field_name' => $key
                         ],
-                        ['custom_field_value' => $value]
+                        ['custom_field_value' => $value,
+                        'user_id' => auth()->id()]
                     );
                 }
             }
@@ -988,6 +989,7 @@ public function findNextAvailableTime($userId, $currentTime)
                         "custom_field_id" =>$custom_field_id->id,
                         "custom_field_name" =>$key,
                         "custom_field_value" =>$value,
+                        "user_id" => auth()->id(),
                     );
                     $this->InsertOrUpdateChangeRequestCustomField($change_request_custom_field);
                 }
@@ -2483,14 +2485,16 @@ public function findNextAvailableTime($userId, $currentTime)
         if($data['custom_field_name'] == 'technical_feedback' ||  $data['custom_field_name'] == 'business_feedback'){
             ChangeRequestCustomField::create(
             ['cr_id' => $data['cr_id'], 'custom_field_id' => $data['custom_field_id'],'custom_field_name' => $data['custom_field_name'],
-            'custom_field_value' => $data['custom_field_value']]
+            'custom_field_value' => $data['custom_field_value'],
+            'user_id' => $data['user_id']]
         );
         }
         else{
 
         ChangeRequestCustomField::updateOrCreate(
             ['cr_id' => $data['cr_id'], 'custom_field_id' => $data['custom_field_id'],'custom_field_name' => $data['custom_field_name']],
-            ['custom_field_value' => $data['custom_field_value']]
+            ['custom_field_value' => $data['custom_field_value'],
+            'user_id' => $data['user_id']]
         );
         }
         return true;

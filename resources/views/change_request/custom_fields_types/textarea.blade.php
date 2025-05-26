@@ -18,7 +18,7 @@
         <textarea name="{{ $fieldName }}" 
                   id="{{ $fieldName }}"
                   class="form-control form-control-lg @error($fieldName) is-invalid @enderror"
-                  {{ $isRequired }} {{ $isDisabled }}>{{ $value }}
+                  {{ $isRequired }} {{ $isDisabled }}>
         </textarea>
         {{-- Error display --}}
         @error($fieldName)
@@ -37,7 +37,7 @@
         <textarea name="{{ $fieldName }}" 
                   id="{{ $fieldName }}"
                   class="form-control form-control-lg @error($fieldName) is-invalid @enderror"
-                  {{ $isRequired }} {{ $isDisabled }}>{{ $value }}
+                  {{ $isRequired }} {{ $isDisabled }}>
         </textarea>
         {{-- Error display --}}
         @error($fieldName)
