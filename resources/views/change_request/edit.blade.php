@@ -166,7 +166,60 @@
 												</div>
 											</form>
 											<!--end::Form-->
-                                            
+
+                                            <!-- start feedback table -->
+                                            <?php
+                                            $technical_feedback = $cr->change_request_custom_fields->where('custom_field_name', 'technical_feedback' )->sortByDesc('updated_at');
+                                            $business_feedback = $cr->change_request_custom_fields->where('custom_field_name', 'business_feedback' )->sortByDesc('updated_at');
+                                             ?>
+                                            <div class="form-group col-md-12" style="float:left">
+                                            @can('View Technical Feedback')
+                                            @if($technical_feedback->count() > 0  )
+                                                    <h5>Technichal Feedback</h5>
+													<table class="table table-bordered">
+                                                        <thead>
+                                                            <tr class="text-center">
+                                                                <th>Feedback</th>
+                                                                <th>Updated By</th>
+                                                                <th>Updated At</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="text-center">
+                                                            @foreach ($technical_feedback as $index => $feedback)
+                                                            <tr>
+                                                                <td>{{ $feedback->custom_field_value }}</td>
+                                                                <td>{{ optional($feedback->user)->user_name ?? 'N/A' }}</td>
+                                                                <td>{{ $feedback->updated_at }}</td>
+                                                            </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                            @endif
+                                            @endcan
+                                            @can('View Business Feedback')
+                                            @if($business_feedback->count() > 0  )
+                                                    <h5>Business Feedback</h5>
+                                                    <table class="table table-bordered">
+                                                        <thead>
+                                                            <tr class="text-center">
+                                                                <th>Feedback</th>
+                                                                <th>Updated By</th>
+                                                                <th>Updated At</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="text-center">
+                                                            @foreach ($business_feedback as $index => $feedback)
+                                                            <tr>
+                                                                <td>{{ $feedback->custom_field_value }}</td>
+                                                                <td>{{ optional($feedback->user)->user_name ?? 'N/A' }}</td>
+                                                                <td>{{ $feedback->updated_at }}</td>
+                                                            </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                            @endif
+                                            @endcan
+                                            <!-- end feedback table -->
 											@if(count($cr['attachments'])  > 0  )
 													<div class="form-group col-md-12" style="float:left">
                                                     @can('View Technichal Attachments')
