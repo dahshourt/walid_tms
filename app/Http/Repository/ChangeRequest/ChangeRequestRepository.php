@@ -976,7 +976,9 @@ public function findNextAvailableTime($userId, $currentTime)
         //$data = $arr->all();
         //$arr = $request->except($except);
         //$data = $request->except($this->getExcludedFields());
-		$data = Arr::except($request->all(), ['_method']);
+        $fileFields = ['technical_attachments', 'business_attachments' , 'cap_users']; 
+        $data = Arr::except($request->all(), array_merge(['_method'], $fileFields));
+		//$data = Arr::except($request->all(), ['_method']);
         //dd($data);
         foreach ($data as $key => $value) {
             if($key != "_token")
@@ -2273,7 +2275,7 @@ public function findNextAvailableTime($userId, $currentTime)
 
    
        
-    $view_statuses->push(99);
+    //$view_statuses->push(99);
     
 
     $crs = Change_request::with('Req_status.status')
@@ -2287,7 +2289,7 @@ public function findNextAvailableTime($userId, $currentTime)
               ->where('active', 1);
         })->orWhere('change_request.chnage_requester_id', $user_id); // Ensure correct column reference
     })
-    ->get();
+    ->paginate(20);
 
     
     return $crs;

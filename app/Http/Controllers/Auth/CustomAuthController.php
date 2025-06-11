@@ -105,7 +105,7 @@ class CustomAuthController extends Controller
                     "roles" => $roles,
                     "default_group" => $default_group,
                     "group_id" => $group_id,
-                    "active" => 1,
+                    "active" => '1',
                 ];
     
                 $user = (new UserRepository)->create($data);
