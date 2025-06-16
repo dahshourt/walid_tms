@@ -48,7 +48,8 @@ class ChangeRequestResource extends JsonResource
             'start_design_time'                 => $this->start_design_time,
             'design_duration'                   => $this->design_duration,
             'cr_no'                             => $this->cr_no,
-            'division_manager'                  => $this->division_manager,
+            'division_manager_id'               => $this->division_manager_id,
+			'division_manager'                  => $this->division_manager,
             'current_status'                    => new ChangeRequestStatusResource($this->current_status),
             'set_status'                        => WorkFlowResource::collection($this->set_status),
             'assign_to'                         => $this->assign_to ? ChangeRequestUserResource::collection($this->assign_to) : null,
@@ -64,7 +65,7 @@ class ChangeRequestResource extends JsonResource
             'impacted_services'                 => $this->impacted_services,
             'impact_during_deployment'          => $this->impact_during_deployment,
             'release_delivery_date'             => $this->release_delivery_date,
-            'release_name'                      => $this->release,
+            'release_name'                      => $this->release_name,
             'release_receiving_date'            => $this->release_receiving_date,
             'need_iot_e2e_testing'              => $this->need_iot_e2e_testing,
             'te_testing_date'                   => $this->te_testing_date,
@@ -77,8 +78,7 @@ class ChangeRequestResource extends JsonResource
             'vendor_id'                         => $this->vendor_id,
             'requester_department'              => $this->requester && isset($this->requester->department) ? $this->requester->department->name :"",
             'attachments'                       => AttachmentsResource::collection($this->attachments),
-            'old_status_id' => $this->Req_status()->latest('id')->first()?->old_status_id ?? '',
-           
+            'old_status_id' => $this->Req_status()->latest('id')->first()?->old_status_id ?? ''
         ];
     }
 }

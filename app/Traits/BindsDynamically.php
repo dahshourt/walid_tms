@@ -30,10 +30,11 @@ trait BindsDynamically
     public function getDataByDynamicTable()
     {
         $model = $this->getModelFromTable();
-        $model = new $model();
+		$model = new $model();
         $data = $model::get();
         return $data;
     }
+
 
     public function newInstance($attributes = [], $exists = false)
     {
@@ -51,7 +52,6 @@ trait BindsDynamically
 
     public function getModelFromTable()
     {
-        
         foreach( $this->getModels() as $class ) {
             if( is_subclass_of( $class, 'Illuminate\Database\Eloquent\Model' ) ) {
                 $model = new $class;

@@ -72,7 +72,8 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
 	protected function getRequiredFields(): array
     {
         return [
-            'title','description','active','developer_id','tester_id','designer_id','requester_id','design_duration','start_design_time','end_design_time','develop_duration','start_develop_time','end_develop_time','test_duration','start_test_time','end_test_time','depend_cr_id','requester_name','requester_email','requester_unit','requester_division_manager','requester_department','application_name','testable','created_at','updated_at','category_id','priority_id','unit_id','department_id','application_id','workflow_type_id','division_manager','creator_mobile_number','calendar','CR_duration','chnage_requester_id','start_CR_time','end_CR_time'
+            'title','description','active','developer_id','tester_id','designer_id','requester_id','design_duration','start_design_time','end_design_time','develop_duration','start_develop_time','end_develop_time','test_duration','start_test_time','end_test_time','depend_cr_id','requester_name','requester_email','requester_unit','requester_division_manager','requester_department','application_name','testable','created_at','updated_at','category_id','priority_id','unit_id','department_id','application_id','workflow_type_id','division_manager','creator_mobile_number','calendar','CR_duration','chnage_requester_id','start_CR_time','end_CR_time','release_name'
+			
         ];
     }
 
@@ -971,7 +972,7 @@ public function findNextAvailableTime($userId, $currentTime)
         //dd($request);
         $this->changeRequest_old = Change_request::find($id);
         //$arr = Arr::except($request, $this->getExcludedFields());
-        $arr = Arr::except($request, $this->getRequiredFields());
+        $arr = Arr::only($request->all(), $this->getRequiredFields());
         //dd($arr);
         //$data = $arr->all();
         //$arr = $request->except($except);
@@ -1000,7 +1001,8 @@ public function findNextAvailableTime($userId, $currentTime)
         }
        
         //$changeRequest = Change_request::where('id', $id)->update($arr->except($this->getExcludedFields()));
-        $changeRequest = Change_request::where('id', $id)->update($arr->only($this->getRequiredFields()));
+		
+        $changeRequest = Change_request::where('id', $id)->update($arr);
         
         return $changeRequest;
 
@@ -1009,7 +1011,7 @@ public function findNextAvailableTime($userId, $currentTime)
 
     public function update($id, $request)
     {
-       //dd($request->all());
+       
         if($request->cab_cr_flag == '1')
         {
             $cr = Change_request::find($id);
@@ -1185,7 +1187,7 @@ public function findNextAvailableTime($userId, $currentTime)
         }
         }
         
-
+		
         //dd($user->role_id);
         $change_request = Change_request::find($id);
         /** check assignments */
@@ -1204,6 +1206,7 @@ public function findNextAvailableTime($userId, $currentTime)
             $request->merge($data);
         }
         //dd($request->all(),$new_status_id, $old_status_id );
+		
         $changeRequest = $this->UpdateCRData($id,$request);
         //$request['assignment_user_id'] = $user->id;
         if($new_status_id) $request['new_status_id'] = $new_status_id;
@@ -2275,7 +2278,7 @@ public function findNextAvailableTime($userId, $currentTime)
 
    
        
-    //$view_statuses->push(99);
+    $view_statuses->push(99);
     
 
     $crs = Change_request::with('Req_status.status')
@@ -2289,7 +2292,7 @@ public function findNextAvailableTime($userId, $currentTime)
               ->where('active', 1);
         })->orWhere('change_request.chnage_requester_id', $user_id); // Ensure correct column reference
     })
-    ->paginate(20);
+    ->get();
 
     
     return $crs;

@@ -65,7 +65,7 @@ class StatusRequest extends FormRequest
 
             'status_name' => ['required','string', 'unique:statuses,status_name,' . request()->status],
             'stage_id' => ['required','integer'],
-			'sla' => ['required','integer'],
+            'sla' => ['required','integer'],
             'active' => ['required','integer'],
             'group_id'   => ['sometimes','array'],
             'group_id.*' => ['integer', 'exists:groups,id'],

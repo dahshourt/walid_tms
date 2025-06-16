@@ -100,7 +100,7 @@ class HomeController extends Controller
 
     public function SelectGroup()
     {
-            return view('auth.select_group');
+		//return view('auth.select_group');
     }
 
     public function storeGroup(Request $request)

@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Change_request_statuse extends Model
+class change_request_statuse extends Model
 {
     use HasFactory;
     public  $table = "change_request_statuses";
@@ -34,13 +34,13 @@ class Change_request_statuse extends Model
     ];
     public function CR()
     {
-        return $this->belongsTo(Change_request::class,'cr_id');// how is it work "belongs_to" ? the right is "belongsTo"
+        return $this->belongs_to(change_request::class,'cr_id');// how is it work "belongs_to" ? the right is "belongsTo"
 
     }
 
     public function change_request_data()
     {
-        return $this->belongsTo(Change_request::class,'cr_id' ,'id');
+        return $this->belongsTo(change_request::class,'cr_id' ,'id');
 
     }
 
@@ -57,7 +57,7 @@ class Change_request_statuse extends Model
     // mahmoud's update
     public function ChangeRequest()
     {
-        return $this->belongsTo(Change_request::class,'cr_id');
+        return $this->belongsTo(change_request::class,'cr_id');
     }
 
     public function wokflow()

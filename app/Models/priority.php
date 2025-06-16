@@ -13,6 +13,3 @@ class Priority extends Model
         'name'
     ];
 }
-
-
-

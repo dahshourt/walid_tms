@@ -27,9 +27,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('login', 'Auth\CustomAuthController@index')->name('login');
 Route::post('login', 'Auth\CustomAuthController@login')->name('login.custom')->middleware('throttle:5,1');
 Route::get('/logout', 'Auth\LoginController@logout');
-Route::get('/inactive-logout','Auth\LoginController@inactive_logout')->name('inactive-logout');
+Route::get('/inactive-logout','Auth\CustomAuthController@inactive_logout')->name('inactive-logout');
 
-Route::get('/check-active','Auth\LoginController@check_active')->name('check-active');
+Route::get('/check-active','Auth\CustomAuthController@check_active')->name('check-active');
 
 
 Route::middleware(['auth'])->group(

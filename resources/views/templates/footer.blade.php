@@ -214,6 +214,27 @@
 		});
 		</script>
 
+@auth
+<script>
+  
+  const CHECK_INTERVAL = {{ config('app.check_interval') }};
+
+    setInterval(() => {
+      
+		$.get( "{{ route('check-active') }}", function( data ) {
+			console.log(data.active);
+			if (data.active == false || data.active === "0" || data.active === 0){
+                    window.location.href = "{{ route('inactive-logout') }}";
+			}
+				
+		});
+	  
+        
+    }, CHECK_INTERVAL);
+</script>
+@endauth
+
+
 		@stack('script')
 	</body>
 	<!--end::Body-->

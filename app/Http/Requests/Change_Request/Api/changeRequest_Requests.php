@@ -209,6 +209,10 @@ protected function prepareForValidation()
         $id = $this->route('change_request'); 
         $repo = new ChangeRequestRepository();
         $cr = $repo->find($id);
+        if(!$cr){
+
+            $cr = $repo->findCr($id);
+        }
         $this->merge([
             'active' => $this->has('active') ? '1' : '0',//testable
             'testable' => $this->has('testable') ? '1' : '0',//need_ux_ui

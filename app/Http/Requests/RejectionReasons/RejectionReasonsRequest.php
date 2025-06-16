@@ -71,11 +71,11 @@ class RejectionReasonsRequest extends FormRequest
     }
 
 
-    // protected function failedValidation(Validator $validator) { 
-    //     throw new HttpResponseException(response()->json([
-    //         'message' => $validator->messages()
-    //       ], 422));
-    // }
+    protected function failedValidation(Validator $validator) { 
+        throw new HttpResponseException(response()->json([
+            'message' => $validator->messages()
+          ], 422));
+    }
 
     
 

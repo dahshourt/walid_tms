@@ -51,7 +51,7 @@
 														<label>Active</label>
 														<div class="checkbox-inline">
 															<label class="checkbox">
-															<input type="checkbox" name="active" value="1" {{ isset($row) && $row->active == 1 ? "checked" : "" }}>
+															<input type="checkbox" name="active" value="1" {{ isset($row) && $row->active == 1 ? "checked" : "" }}  {{ !isset($row) ? "checked" : "" }}>
 															<span></span>Yes</label>
 															
 														</div>

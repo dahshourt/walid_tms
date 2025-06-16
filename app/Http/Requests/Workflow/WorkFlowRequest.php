@@ -44,11 +44,11 @@ class WorkflowRequest extends FormRequest
         $rules = [
             'from_status_id' => ['required','int'],
             // 'from_status_name' => ['required','string'],
-             'to_status_id' => ['required','array'],
-            //'to_status_name' => ['required','array'],
+            // 'to_status_id' => ['required','array'],
+            // 'to_status_name' => ['required','array'],
             // 'default_to_status'=>['sometimes','int'],
             'active' => ['required','int'],
-            'to_status_label' => ['sometimes','nullable','string'],
+            //'to_status_label' => ['sometimes','nullable','string'],
             'default_to_status'=>['sometimes','nullable','int']
 
         ];

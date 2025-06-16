@@ -324,7 +324,7 @@ class ChangeRequestController extends Controller
  
     } 
 
-    public function edit($id,$cab_cr_flag=false , Request $request)
+    public function edit($id,$cab_cr_flag=false)
     {
         $this->authorize('Edit ChangeRequest'); // permission check
         //$this->logs = LogFactory::index();
@@ -336,7 +336,7 @@ class ChangeRequestController extends Controller
         $current_status = Change_request_statuse::where('cr_id', $id)->where('active', '1')->value('new_status_id');
 
         //this condition to check if the division manager approve the CR or not
-        if ($request->has('check_dm') && $user_email === $division_manager && $current_status != '22'){
+        if (request()->has('check_dm') && $user_email === $division_manager && $current_status != '22'){
             return redirect()->back()->with('status', 'You already approved this CR.');
         }
        

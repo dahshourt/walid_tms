@@ -7,22 +7,17 @@
                                     <td>{{  isset($changeRequest->title)?$changeRequest->title :'' }}</td>
                                    
                                     <td>{{ isset($release->name)?$release->name:'' }}</td>
-                                    <td>{{ isset($release->status->name)?$release->status->name :''}}</td>
                                     <td>{{ isset($release->go_live_planned_date)?$release->go_live_planned_date:'' }}</td>
                                     <td>{{isset($release->planned_start_iot_date)? $release->planned_start_iot_date :''}}</td>
                                     <td>{{ isset($release->planned_end_iot_date)?$release->planned_end_iot_date:'' }}</td>
-                                    <td>{{isset($release->actual_start_iot_date)? $release->actual_start_iot_date :''}}</td>
-                                    <td>{{ isset($release->actual_end_iot_date)?$release->actual_end_iot_date:'' }}</td>
+                                    <td>{{isset($release->planned_start_e2e_date)? $release->planned_start_e2e_date :''}}</td>
+                                    <td>{{ isset($release->planned_end_e2e_date)?$release->planned_end_e2e_date:'' }}</td>
                                     <td>{{isset($release->planned_start_uat_date)? $release->planned_start_uat_date :''}}</td>
                                     <td>{{ isset($release->planned_end_uat_date)?$release->planned_end_uat_date:'' }}</td>
-                                    <td>{{isset($release->actual_start_uat_date)? $release->actual_start_uat_date :''}}</td>
-                                    <td>{{ isset($release->actual_end_uat_date)?$release->actual_end_uat_date:'' }}</td>
                                     <td>{{isset($release->planned_start_smoke_test_date)? $release->planned_start_smoke_test_date :''}}</td>
                                     <td>{{ isset($release->planned_end_smoke_test_date)?$release->planned_end_smoke_test_date:'' }}</td>
-                                    <td>{{isset($release->actual_start_smoke_test_date)? $release->actual_start_smoke_test_date :''}}</td>
-                                    <td>{{ isset($release->actual_end_smoke_test_date)?$release->actual_end_smoke_test_date:'' }}</td>
-                                    <td>{{ isset($release->actual_closure_date)?$release->actual_closure_date:'' }}</td>
-                                    
+                                   
+                                    <td>{{ isset($release->status->name)?$release->status->name :''}}</td>
                                     <td style="display: none;">
         <div class="dropdown dropdown-inline">
             <!-- Action buttons -->
