@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Pivotusersrole extends Model
+class pivotusersrole extends Model
 {
     use HasFactory;
     protected $table="pivotusersroles";

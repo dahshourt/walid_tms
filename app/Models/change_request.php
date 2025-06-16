@@ -157,14 +157,14 @@ class Change_request extends Model
     }
 
     public function technical_Cr()
-    { 
+    {
         return $this->hasOne(TechnicalCr::class, 'cr_id', 'id')->where('status', '0');
     }
-
-    public function technical_Cr_first()
+	public function technical_Cr_first()
     {
         return $this->hasOne(TechnicalCr::class, 'cr_id', 'id');
     }
+	
 
     public function current_status()
     {
@@ -306,12 +306,6 @@ class Change_request extends Model
         }
        
         return $status;
-    }
-
-
-    public function technicalTeams()
-    {
-        return $this->belongsToMany(TechnicalTeam::class, 'change_request_technical_team', 'cr_id', 'technical_team_id');
     }
 	
 	

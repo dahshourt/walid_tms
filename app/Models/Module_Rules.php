@@ -16,7 +16,7 @@ class Module_Rules extends Model
 
     public function permission()
 {
-    return $this->hasMany(Permission::class, 'module_rule_id');
+    return $this->hasMany(permission::class, 'module_rule_id');
 
 }
 }

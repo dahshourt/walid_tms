@@ -3,8 +3,8 @@
 		<!--begin::Header Mobile-->
 		<div id="kt_header_mobile" class="header-mobile">
 			<!--begin::Logo-->
-			<a href="{{ url('/') }}">
-				<img alt="Logo" src="{{asset('public/logo-we.jpg')}}" class="logo-default max-h-30px" />
+			<a href="index.html">
+				<img alt="Logo" src="assets/media/logos/logo-letter-1.png" class="logo-default max-h-30px" />
 			</a>
 			<!--end::Logo-->
 			<!--begin::Toolbar-->

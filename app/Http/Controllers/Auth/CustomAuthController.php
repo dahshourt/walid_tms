@@ -239,4 +239,22 @@ class CustomAuthController extends Controller
             return response()->json(['msg' => [__('messages.failed_request')]], 403);
         }
     }
+	
+	public function check_active(){
+
+        return response()->json([
+            'active' => Auth::check() ? Auth::user()->active : false
+        ]);
+    }
+	
+	public function inactive_logout(){
+
+		Auth::logout();
+	   
+		return redirect('/login')->withErrors(['msg' => "Login error. Please contact administration."])->withInput();;
+
+
+
+	}
+	
 }

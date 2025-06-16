@@ -3,7 +3,7 @@
 namespace App\Rules;
 
 use Illuminate\Contracts\Validation\Rule;
-use App\Models\change_request;
+use App\Models\Change_request;
 
 class checkCRS implements Rule
 {

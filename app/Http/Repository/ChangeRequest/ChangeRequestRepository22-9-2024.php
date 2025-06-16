@@ -504,22 +504,22 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
    // $dates = $this->GetLastCRDate($id, $user->id, 'tester_id', 'end_test_time', $request['test_duration'], 'test');
 
 
-    // public function GetLastCRDate($id, $user_id, $column, $end_date_column, $duration, $action)
-    // {
-    //     $user = \Auth::user();
-    //     $last_end_date = change_request::where($column, $user_id)->where('id', '!=', $id)->max($end_date_column);
-    //     if ($last_end_date == '' or $last_end_date < date('Y-m-d H:i:s')) {
-    //         $new_start_date = date('Y-m-d H:i:s', strtotime('+3 hours'));
-    //     } else {
-    //         $new_start_date = date('Y-m-d H:i:s', strtotime('+1 hours', strtotime($last_end_date)));
-    //     }
+    public function GetLastCRDate($id, $user_id, $column, $end_date_column, $duration, $action)
+    {
+        $user = \Auth::user();
+        $last_end_date = change_request::where($column, $user_id)->where('id', '!=', $id)->max($end_date_column);
+        if ($last_end_date == '' or $last_end_date < date('Y-m-d H:i:s')) {
+            $new_start_date = date('Y-m-d H:i:s', strtotime('+3 hours'));
+        } else {
+            $new_start_date = date('Y-m-d H:i:s', strtotime('+1 hours', strtotime($last_end_date)));
+        }
 
-    //     $new_start_date = date('Y-m-d H:i:s', $this->setToWorkingDate(strtotime($new_start_date)));
-    //     //$new_start_date = date("Y-m-d H:i:s", strtotime('+3 hours', strtotime($new_start_date)));
-    //     $new_end_date = $this->generate_end_date($this->setToWorkingDate(strtotime($new_start_date)), $duration, 0, $user->usr_id, $action);
+        $new_start_date = date('Y-m-d H:i:s', $this->setToWorkingDate(strtotime($new_start_date)));
+        //$new_start_date = date("Y-m-d H:i:s", strtotime('+3 hours', strtotime($new_start_date)));
+        $new_end_date = $this->generate_end_date($this->setToWorkingDate(strtotime($new_start_date)), $duration, 0, $user->usr_id, $action);
 
-    //     return [$new_start_date, $new_end_date];
-    // }
+        return [$new_start_date, $new_end_date];
+    }
     public function GetLastCRPhase($id, $column, $end_date_column, $duration, $action) 
     {
         $user = \Auth::user();

@@ -57,6 +57,12 @@ class CabUserRepository implements CabUserRepositoryInterface
 	}
 
 
+    public function getUsersBySystem($system_id)
+    {
+        return SystemUserCab::where('system_id', $system_id)->where('active','1')->get();	
+    }
+
+
     
 	
 

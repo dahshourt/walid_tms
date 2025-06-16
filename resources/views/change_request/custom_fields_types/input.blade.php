@@ -1,49 +1,41 @@
-@if($item->CustomField->type === 'input')
-    @php
-        $fieldName = $item->CustomField->name;
-        $fieldLabel = $item->CustomField->label;
-        $isRequired = isset($item->validation_type_id) && $item->validation_type_id == 1;
-        $isEnabled = isset($item->enable) && $item->enable == 1;
-        $inputType = $fieldName === 'division_manager' ? 'email' : 'text';
-        $inputValue = isset($cr) ? old($fieldName, $custom_field_value) : old($fieldName);
-    @endphp
+@if($item->CustomField->type == "input")
+                                                  
 
-    <div class="col-md-6 change-request-form-field field_{{ $fieldName }}">
-        <label for="{{ $fieldName }}">
-            {{ $fieldLabel }}
-            @if($isRequired)
-                <span style="color: red;">*</span>
-            @endif
-        </label>
-
-        @if($isEnabled)
-            @if(isset($cr) || $fieldName !== 'division_manager')
-                <input 
-                    type="{{ $inputType }}" 
-                    name="{{ $fieldName }}" 
-                    class="form-control form-control-lg @error($fieldName) is-invalid @enderror" 
-                    value="{{ $inputValue }}" 
-                    {{ $isRequired ? 'required' : '' }}
-                />
-                @error($fieldName)
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
+<div class="col-md-6 change-request-form-field field_{{$item->CustomField->name}}">
+    
+    @if(isset($cr))
+        <label for="user_type">{{ $item->CustomField->label }} </label>
+    @else
+        <label for="user_type">{{ $item->CustomField->label }} </label>
+    @endif
+    @if( isset($item->validation_type_id)&&($item->validation_type_id==1))
+        <span style="color: red;">*</span>
+    @endif
+        @if((isset($item->enable)&&($item->enable==1)))
+            @if(isset($cr))
+                <input type="text" name="{{ $item->CustomField->name }}" class="form-control form-control-lg" value="{{ old($item->CustomField->name, $custom_field_value) }}" @if(isset($item->validation_type_id) && $item->validation_type_id == 1) required @endif  />
             @else
-                <input 
-                    type="email" 
-                    id="division_manager" 
-                    name="{{ $fieldName }}" 
-                    class="form-control form-control-lg @error($fieldName) is-invalid @enderror" 
-                    value="{{ $inputValue }}" 
-                    {{ $isRequired ? 'required' : '' }}
-                />
-                @error($fieldName)
-                    <small class="text-danger">{{ $message }}</small>
-                @enderror
-                <small id="email_feedback" class="form-text text-danger"></small>
+                @if($item->CustomField->name === 'division_manager')
+                    <input type="email" id="division_manager" name="{{ $item->CustomField->name }}" 
+                        class="form-control form-control-lg @error($item->CustomField->name) is-invalid @enderror" 
+                        @if(isset($item->validation_type_id) && $item->validation_type_id == 1) required @endif value="{{ old($item->CustomField->name) }}"/>
+                        @error($item->CustomField->name)
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
+                    <small id="email_feedback" class="form-text text-danger"></small>
+                @else
+                    <input type="text" name="{{ $item->CustomField->name }}" 
+                        class="form-control form-control-lg @error($item->CustomField->name) is-invalid @enderror" 
+                        @if(isset($item->validation_type_id) && $item->validation_type_id == 1) required @endif value="{{ old($item->CustomField->name) }}" />
+                        @error($item->CustomField->name)
+                            <small class="text-danger">{{ $message }}</small>
+                        @enderror
+                @endif
             @endif
-        @elseif(isset($cr))
-            <label class="form-control form-control-lg">{{ $cr->{$fieldName} }}</label>
+        @else
+            @if(isset($cr))
+                <label class="form-control form-control-lg">{{ ($cr->{$item->CustomField->name}) }} </label>
+            @endif
         @endif
-    </div>
+</div>                                                      
 @endif
