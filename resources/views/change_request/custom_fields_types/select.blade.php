@@ -52,7 +52,85 @@
 
                 {{-- Custom logic for statuses --}}
                 @if($item->CustomField->name == "new_status_id")
-                    <option value="{{$cr->getCurrentStatus()?->status?->status_name}}" disabled selected>{{ $cr->getCurrentStatus()?->status?->status_name }}</option>
+                {{-- Default selected option from current workflow status --}}
+<option value="{{ $cr->getCurrentStatus()?->status?->id ?? '' }}" disabled selected>
+    {{ $cr->getCurrentStatus()?->status?->status_name ?? 'Select Status' }}
+</option>
+
+@foreach($cr->set_status as $status)
+    @php
+        $toStatus = $status->workflowstatus[0]->to_status ?? null;
+    @endphp
+
+    @if($toStatus)
+        {{-- If test_duration is 0, null, or empty: allow ID 20 --}}
+        @if($cr->test_duration === '0' || $cr->test_duration === null || $cr->test_duration === '')
+            @if($toStatus->id == 20)
+                <option value="{{ $status->id }}" 
+                    {{ $custom_field_value == $status->id ? 'selected' : '' }}
+                    data-status-name="{{ $toStatus->status_name }}"
+                    data-defect="{{ $toStatus->defect }}">
+                    @if($toStatus->high_level)
+                        {{ $toStatus->high_level->name }}
+                    @elseif($status->to_status_label)
+                        {{ $status->to_status_label }}
+                    @else
+                        {{ $toStatus->status_name }}
+                    @endif
+                </option>
+ <!-- @else
+                            <option value="{{ $status->id }}" 
+                                {{ $custom_field_value == $status->id ? 'selected' : '' }}
+                                data-status-name="{{ $status->workflowstatus[0]->to_status->status_name }}"
+                                data-defect="{{ $status->workflowstatus[0]->to_status->defect }}">
+                                @if($status->workflowstatus[0]->to_status->high_level)
+                                    {{$status->workflowstatus[0]->to_status->high_level->name}}
+                                @elseif($status->to_status_label)
+                                    {{$status->to_status_label }}
+                                @else
+                                    {{$status->workflowstatus[0]->to_status->status_name }}
+                                @endif
+                            </option> -->
+                        @endif
+
+           
+        @else
+            {{-- Else: only allow ID 11 --}}
+            @if($toStatus->id != 20)
+            @if($toStatus->id == 11)
+                <option value="{{ $status->id }}" 
+                    {{ $custom_field_value == $status->id ? 'selected' : '' }}
+                    data-status-name="{{ $toStatus->status_name }}"
+                    data-defect="{{ $toStatus->defect }}">
+                    @if($toStatus->high_level)
+                        {{ $toStatus->high_level->name }}
+                    @elseif($status->to_status_label)
+                        {{ $status->to_status_label }}
+                    @else
+                        {{ $toStatus->status_name }}
+                    @endif
+                </option>
+                @else
+                            <option value="{{ $status->id }}" 
+                                {{ $custom_field_value == $status->id ? 'selected' : '' }}
+                                data-status-name="{{ $status->workflowstatus[0]->to_status->status_name }}"
+                                data-defect="{{ $status->workflowstatus[0]->to_status->defect }}">
+                                @if($status->workflowstatus[0]->to_status->high_level)
+                                    {{$status->workflowstatus[0]->to_status->high_level->name}}
+                                @elseif($status->to_status_label)
+                                    {{$status->to_status_label }}
+                                @else
+                                    {{$status->workflowstatus[0]->to_status->status_name }}
+                                @endif
+                            </option>
+                        
+            @endif
+            @endif
+        @endif
+    @endif
+@endforeach
+
+<!-- <option value="{{$cr->getCurrentStatus()?->status?->status_name}}" disabled selected>{{ $cr->getCurrentStatus()?->status?->status_name }}</option>
                     @foreach($cr->set_status as $status)
                         @if($status->same_time == 1)
                             <option value="{{ $status->id }}" {{ $custom_field_value == $status->id ? 'selected' : '' }}>{{ $status->to_status_label }}</option>
@@ -70,7 +148,8 @@
                                 @endif
                             </option>
                         @endif
-                    @endforeach
+                    @endforeach -->
+
                 @elseif($item->CustomField->name == "release_name")
                     <option value=""> select </option>
                     @foreach($cr->get_releases() as $release)
