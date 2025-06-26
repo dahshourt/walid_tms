@@ -121,6 +121,10 @@
 		{
 			submitButton.prop("disabled", false);
 		}
+		else if(workflow_type_id == 13)
+		{
+			submitButton.prop("disabled", false);
+		}
 		else
 		{
 			submitButton.prop("disabled", true);
