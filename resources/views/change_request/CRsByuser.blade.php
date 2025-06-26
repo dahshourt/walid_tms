@@ -67,6 +67,7 @@
 													<option value="In House" {{ request('workflow_type', 'In House') == 'In House' ? 'selected' : '' }}>In House</option>
 													<option value="Vendor" {{ request('workflow_type') == 'Vendor' ? 'selected' : '' }}>Vendor</option>
 													<option value="Promo" {{ request('workflow_type') == 'Promo' ? 'selected' : '' }}>Promo</option>
+													<option value="On Going" {{ request('workflow_type') == 'On Going' ? 'selected' : '' }}>On Going</option>
 
 
 												</select>

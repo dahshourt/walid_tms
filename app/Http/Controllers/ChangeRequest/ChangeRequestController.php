@@ -661,7 +661,7 @@ class ChangeRequestController extends Controller
       //  $collection = $collection->toArray();
       
         $r=new ChangeRequestRepository();
-        $crs_in_queues=  $r->getAll()->pluck("id");
+        $crs_in_queues= 0;
         // echo"<pre>";
         // print_r($crs_in_queues->toArray());
         // echo "</pre>"; die;

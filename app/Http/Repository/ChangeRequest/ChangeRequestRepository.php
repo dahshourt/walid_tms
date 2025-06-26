@@ -1461,11 +1461,14 @@ public function findNextAvailableTime($userId, $currentTime)
 
 
         }
-       
+		$group_data = Group::find($group);
+		$group_applications = $group_data->group_applications->pluck('application_id')->toArray();
         $view_statuses = $this->getViewStatuses($group);
         
         
-        $changeRequests = Change_request::with('RequestStatuses.status')->whereHas('RequestStatuses', function ($query) use ($group, $view_statuses) {
+        $changeRequests = Change_request::with('RequestStatuses.status');
+		if($group_applications) $changeRequests = $changeRequests->whereIn('application_id', $group_applications);
+		$changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $view_statuses) {
             $query->where('active', '1')->whereIn('new_status_id', $view_statuses)
 
 
@@ -2212,10 +2215,10 @@ public function findNextAvailableTime($userId, $currentTime)
     }
 
     $view_statuses = $this->getViewStatuses();
-
+	//dd($view_statuses);
    
-       
-    $view_statuses->push(99);
+    $view_statuses[] = 99;   
+    //$view_statuses->push(99);
     
 
     $crs = Change_request::with('Req_status.status')
@@ -2229,7 +2232,7 @@ public function findNextAvailableTime($userId, $currentTime)
               ->where('active', 1);
         })->orWhere('change_request.chnage_requester_id', $user_id); // Ensure correct column reference
     })
-    ->get();
+    ->paginate(50);
 
     
     return $crs;
