@@ -337,7 +337,13 @@ class ChangeRequestController extends Controller
 
         //this condition to check if the division manager approve the CR or not
         if (request()->has('check_dm') && $user_email === $division_manager && $current_status != '22'){
-            return redirect()->back()->with('status', 'You already approved this CR.');
+            return response()->view("$this->view.action_response", [
+                'isSuccess' => false,
+                'title' => 'Error',
+                'message' => 'You already took action on this CR',
+                'status' => 400
+            ], 400);
+            //return response('You already approved this CR.', 400);
         }
        
         if($cab_cr_flag)
@@ -676,5 +682,124 @@ class ChangeRequestController extends Controller
         return view("$this->view.CRsByuser",compact('collection', 'user_name'));
 
     }*/
-  
+
+    public function handleDivisionManagerAction(Request $request)
+    {
+
+        $cr_id = $request->query('crId');
+        $action = $request->query('action');
+        $token = $request->query('token');
+
+        $cr = Change_request::find($cr_id);
+       
+
+
+        if (!$cr_id || !$action || !$token) {
+            return response()->view("$this->view.action_response", [
+                'isSuccess' => false,
+                'title' => 'Error',
+                'message' => 'Invalid request. Missing parameters.',
+                'status' => 400
+            ], 400);
+        }
+
+        $cr = Change_request::find($cr_id);
+        if (!$cr) {
+            return response()->view("$this->view.action_response", [
+                'isSuccess' => false,
+                'title' => 'Error',
+                'message' => 'Change Request not found.',
+                'status' => 404
+            ], 404);
+            //return response("Change Request not found.", 404);
+        }
+
+        $expectedToken = md5($cr->id . $cr->created_at . env('APP_KEY'));
+
+        if ($token !== $expectedToken) {
+            return response()->view("$this->view.action_response", [
+                'isSuccess' => false,
+                'title' => 'Error',
+                'message' => 'Unauthorized access. Invalid token.',
+                'status' => 403
+            ], 403);
+            //return response("Unauthorized access. Invalid token.", 403);
+        }
+
+        $workflow_type_id = $cr->workflow_type_id;
+        $current_status = Change_request_statuse::where('cr_id', $cr_id)->where('active', '1')->value('new_status_id');
+
+         //this condition to check if the division manager take action on the CR
+        if ($current_status != '22'){
+            if($current_status == '19'){
+                return response()->view("$this->view.action_response", [
+                    'isSuccess' => false,
+                    'title' => 'Error',
+                    'message' => 'You already rejected this CR.',
+                    'status' => 400
+                ], 400);
+                //return response('You already rejected this CR.', 400);
+            }
+            else{
+                return response()->view("$this->view.action_response", [
+                    'isSuccess' => false,
+                    'title' => 'Error',
+                    'message' => 'You already approved this CR.',
+                    'status' => 400
+                ], 400);
+                //return response('You already approved this CR.', 400);
+            }
+        }
+
+        if($workflow_type_id == 3){
+            if($action === 'approve'){
+                $workflowIdForAction = 36;
+            }else{
+                $workflowIdForAction = 35;
+            }
+        }
+        if($workflow_type_id == 5){
+            if($action === 'approve'){
+                $workflowIdForAction = 188;
+            }else{
+                $workflowIdForAction = 184;
+            }
+        }
+        $repo = new ChangeRequestRepository();
+
+        $updateRequest = new \Illuminate\Http\Request([
+            'old_status_id' => $current_status,   
+            'new_status_id' => $workflowIdForAction, 
+        ]);
+
+        $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
+        
+        
+        if ($action === 'approve') {
+            return response()->view("$this->view.action_response", [
+                'isSuccess' => true,
+                'title' => 'Success',
+                'message' => 'CR #'. $cr_id . ' has been successfully approved.',
+                'status' => 200
+            ], 200);
+            //return response("CR #$cr_id has been successfully approved.");
+        } elseif ($action === 'reject') {
+            return response()->view("$this->view.action_response", [
+                'isSuccess' => false,
+                'title' => 'Error',
+                'message' => 'CR #' . $cr_id . ' has been successfully rejected.',
+                'status' => 200
+            ], 200);
+            //return response("CR #$cr_id has been successfully rejected.");
+        } else {
+            return response()->view("$this->view.action_response", [
+                'isSuccess' => false,
+                'title' => 'Error',
+                'message' => 'Invalid action specified.',
+                'status' => 400
+            ], 400);
+            //return response("Invalid action specified.", 400);
+        }
+    }
+
 }

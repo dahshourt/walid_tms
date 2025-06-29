@@ -31,6 +31,8 @@ Route::get('/inactive-logout','Auth\CustomAuthController@inactive_logout')->name
 
 Route::get('/check-active','Auth\CustomAuthController@check_active')->name('check-active');
 
+Route::get('/cr/division_manager/action', 'ChangeRequest\ChangeRequestController@handleDivisionManagerAction')
+    ->name('cr.division_manager.action');
 
 Route::middleware(['auth'])->group(
     function () {

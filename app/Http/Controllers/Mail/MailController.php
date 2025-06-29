@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Models\User;
 use App\Models\MailTemplate;
 use App\Models\Group;
+use App\Models\change_request;
 
 
 class MailController extends Controller
@@ -116,10 +117,23 @@ class MailController extends Controller
         //$cr_link = route('edit.cr', $cr);
         $cr_link = route('edit.cr', ['id' => $cr, 'check_dm' => 1]);
 
+        $cr_model = Change_request::find($cr);
+        $token = md5($cr_model->id . $cr_model->created_at . env('APP_KEY')); 
+        $approveLink = route('cr.division_manager.action', [
+            'crId' => $cr,
+            'action' => 'approve',
+            'token' => $token
+        ]);
+        $rejectLink = route('cr.division_manager.action', [
+            'crId' => $cr,
+            'action' => 'reject',
+            'token' => $token
+        ]);
+
         $templateContent = [
             'subject' => "CR #$cr has been created",
             'body' => "Dear $first_name, <br><br>"
-            . "Please Check CR#$cr has been created"
+            . "CR#$cr has been created and waiting for your action."
             . "<br><br>"
             . "TMS (Ref: CR ID #<a href='$cr_link'>$cr</a>)"
             . "<br><br>"
@@ -128,13 +142,17 @@ class MailController extends Controller
             . "CR Description: $description"
             . "<br><br>"
             . "Requester: $requester_name"
-            . "<br>"
+            . "<div style='margin: 25px 0;'>"
+            . "<a href='$approveLink' style='background-color: #4CAF50; color: white; padding: 10px 20px; margin-right: 10px; text-decoration: none; border-radius: 4px;'>Approve</a>"
+            . " <a href='$rejectLink' style='background-color: #f44336; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;'>Reject</a>"
+            . "</div>"
+            . "<br><br>"
             . "Thank You",
         ];
 
         try {
-            // Send the email
-            Mail::to($division_manager_email)->cc($requester_email)->send(new TestMail($templateContent));
+            //Send the email
+            Mail::to($division_manager_email)->send(new TestMail($templateContent));
     
             return response()->json(['success' => 'Email sent successfully.']);
         } catch (\Exception $e) {
