@@ -1227,19 +1227,21 @@ public function findNextAvailableTime($userId, $currentTime)
         }
         $workflow = NewWorkFlow::find($new_status_id);
         $change_request = Change_request::find($id);
-      
-        
-      
         
         if(isset(\Auth::user()->id) && \Auth::user()->id != null)
         {
             $user_id = \Auth::user()->id   ;    
         }else{
-            $user_id = $request['assign_to'] ;
+            $division_manger = $change_request->division_manager;
+            $user = User::where('email',$division_manger)->first();
+            if ($user) {
+                $user_id = $user->id;
+            }
+            else{
+                $user_id = $request['assign_to'] ;
+            }
         }
          
-
-
          if (isset($request['old_status_id'])) {
            
             $old_status_id = $request['old_status_id'];  
@@ -1247,7 +1249,6 @@ public function findNextAvailableTime($userId, $currentTime)
            
             $old_status_id = $request->old_status_id;  
         }
-
 
         if ($workflow) {
             $count_all_technical_teams_per_status = $count_approved_technical_teams_per_status= 0;

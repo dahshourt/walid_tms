@@ -16,3 +16,4 @@ yarn-error.log
 package-lock.json
 default(1)
 /public/uploads
+.vscode/sftp.json
