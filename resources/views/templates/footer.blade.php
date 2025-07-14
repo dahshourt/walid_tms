@@ -178,9 +178,10 @@
 		$(document).ready(function() {
 			$('#dfUsageTable').DataTable({
 				"searching": true,
-				"paging":   false,
+				"paging":   true,
         		"ordering": false,
-        		"info":     false
+        		"info":     false,
+				"pageLength": 50
 			});
 		});
 

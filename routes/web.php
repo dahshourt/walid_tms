@@ -2,6 +2,8 @@
 
 
 use Illuminate\Support\Facades\Route;
+use App\Services\EwsMailReader;
+
 
 
 
@@ -166,6 +168,19 @@ Route::middleware(['auth'])->group(
         Route::patch('defect_update/{id}','Defect\DefectController@update');
         Route::get('defects', 'Defect\DefectController@index');
         Route::get('show_defect/{id}', 'Defect\DefectController@show');
+
+
+        //test ews
+
+        /*Route::get('/test-ews', function () {
+            $emails = app(EwsMailReader::class)->handleApprovals();
+        
+            //foreach ($emails as $email) {
+            //    echo "<h2>{$email['subject']}</h2>";
+            //    echo "<p><strong>From:</strong> {$email['from']}<br><strong>Date:</strong> {$email['date']}</p>";
+            //    echo "<div style='padding:10px; border:1px solid #ccc; margin-bottom:15px;'>{$email['body']}</div>";
+            //}
+        });*/
 
 
 });

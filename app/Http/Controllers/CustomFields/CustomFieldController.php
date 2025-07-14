@@ -312,7 +312,6 @@ class CustomFieldController extends Controller
    
     }//specialviewsearch
     public function specialviewupdate(){
-
         $parent_id = isset(request()->route()->getAction()['parent'])?request()->route()->getAction()['parent']: false;
      //  echo   $parent_id ; die;
       $statuses=new StatusRepository();
