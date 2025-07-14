@@ -117,6 +117,7 @@ class MailController extends Controller
         //$cr_link = route('edit.cr', $cr);
         $cr_link = route('edit.cr', ['id' => $cr, 'check_dm' => 1]);
 
+        /*
         $cr_model = Change_request::find($cr);
         $token = md5($cr_model->id . $cr_model->created_at . env('APP_KEY')); 
         $approveLink = route('cr.division_manager.action', [
@@ -128,30 +129,40 @@ class MailController extends Controller
             'crId' => $cr,
             'action' => 'reject',
             'token' => $token
-        ]);
+        ]); 
+        . "<div style='margin: 25px 0;'>"
+        . "<a href='$approveLink' style='background-color: #4CAF50; color: white; padding: 10px 20px; margin-right: 10px; text-decoration: none; border-radius: 4px;'>Approve</a>"
+        . " <a href='$rejectLink' style='background-color: #f44336; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;'>Reject</a>"
+        . "</div>"
+        */
 
         $templateContent = [
-            'subject' => "CR #$cr has been created",
-            'body' => "Dear $first_name, <br><br>"
-            . "CR#$cr has been created and waiting for your action."
-            . "<br><br>"
-            . "TMS (Ref: CR ID #<a href='$cr_link'>$cr</a>)"
-            . "<br><br>"
-            . "CR Subject: $title"
-            . "<br>"
-            . "CR Description: $description"
-            . "<br><br>"
-            . "Requester: $requester_name"
-            . "<div style='margin: 25px 0;'>"
-            . "<a href='$approveLink' style='background-color: #4CAF50; color: white; padding: 10px 20px; margin-right: 10px; text-decoration: none; border-radius: 4px;'>Approve</a>"
-            . " <a href='$rejectLink' style='background-color: #f44336; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;'>Reject</a>"
-            . "</div>"
-            . "<br><br>"
-            . "Thank You",
+            'subject' => "CR #$cr - Awaiting Your Approval",
+            'body' => "Dear $first_name,<br><br>"
+        
+                . "A Change Request (CR) with ID <strong>#<a href='$cr_link'>$cr</a></strong> has been created and is currently "
+                . "<strong>awaiting your approval or rejection</strong> as the requester's Division Manager.<br><br>"
+        
+                . "<ul>"
+                . "<li><strong>CR Subject:</strong> $title</li>"
+                . "<li><strong>CR Description:</strong> $description</li>"
+                . "<li><strong>Requester:</strong> $requester_name</li>"
+                . "<li><strong>Reference:</strong> CR ID #$cr</li>"
+                . "</ul><br>"
+        
+                . "Please respond to this email with your <strong>approved</strong> for approval or <strong>rejected</strong> for rejection.<br><br>"
+        
+                . "Thank you in advance for your prompt action.<br><br>"
+        
+                . "<strong>Note:</strong> This is an automated message sent by the <strong>IT TMS System</strong>.<br>"
+                . "<strong>Best regards,</strong><br>"
+                . "<strong>TMS</strong>"
         ];
+        
 
         try {
-            //Send the email
+            //Send the email <a href='$cr_link'>$cr</a>
+            //Mail::to($division_manager_email)->cc(['anan.latif@te.eg', 'reem.mahrous@te.eg', 'adel.atef@te.eg', 'yousry.mostafa@te.eg', 'yasmine.mamdouh@te.eg'])->send(new TestMail($templateContent));
             Mail::to($division_manager_email)->send(new TestMail($templateContent));
     
             return response()->json(['success' => 'Email sent successfully.']);

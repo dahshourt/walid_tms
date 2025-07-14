@@ -29,7 +29,7 @@ class Kernel extends ConsoleKernel
     {
          $schedule->command('update_releae_and_crs')->daily();
          $schedule->command('CalendarUpdateStatus:run')->daily();
-
+         $schedule->command('email:process-approvals')->everyMinute();
     }
 
     /**
