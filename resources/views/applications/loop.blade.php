@@ -4,7 +4,7 @@
                                 <tr>
                                     <th scope="row">{{ $item->id }}</th>
                                     <td>{{ $item->name }}</td>
-                                    <td>{{ $item->workflow_type }}</td>
+                                    <td>{{ $item->workflow_type->name }}</td>
                                     
                                     <td>
 

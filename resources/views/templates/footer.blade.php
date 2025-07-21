@@ -144,7 +144,7 @@
 		$('#status_id').select2({
         	placeholder: "Select group/groups",
         });
-		$('._change_active').on('click', function(){
+		$('._change_active').on('click', function(){//_approved_active
 			var id = $(this).attr('data-id');
 			Swal.fire({
 				title: "Are you sure?",
@@ -175,12 +175,85 @@
 			});
     	});
 
+		$('._approved_active').on('click', function() {
+    var id = $(this).attr('data-id');
+    var token = $(this).attr('data-token');
+	let baseUrl = '{{ url("/change_request/approved_active") }}';
+let fullUrl = `${baseUrl}?crId=${id}&action=approve&token=${token}`;
+    Swal.fire({
+        title: "Are you sure?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: fullUrl,
+                type: 'GET',
+                success: function(msg) {
+                    if (msg.status === 200 && msg.isSuccess) {
+                        toastr.success(msg.message);
+                        
+                    } else {
+                        toastr.error(msg.message || "Action failed.");
+                    }
+					window.location.reload();
+                },
+                error: function(xhr, status, error) {
+                    toastr.error("Something went wrong: " + error);
+                    alert("Error: " + error + "\nStatus: " + status + "\nResponse: " + xhr.responseText);
+                    window.location.reload();
+                }
+            });
+        }
+    });
+});
+
+$('._rejected_active').on('click', function() {
+    var id = $(this).attr('data-id');
+    var token = $(this).attr('data-token');
+	let baseUrl = '{{ url("/change_request/approved_active") }}';
+let fullUrl = `${baseUrl}?crId=${id}&action=reject&token=${token}`;
+    Swal.fire({
+        title: "Are you sure?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: fullUrl,
+                type: 'GET',
+                success: function(msg) {
+                    if (msg.status === 200 && !msg.isSuccess) {
+                        toastr.success(msg.message);
+                       
+                    } else {
+                        toastr.error(msg.message || "Action failed.");
+                    }
+					window.location.reload();
+                },
+                error: function(xhr, status, error) {
+                    toastr.error("Something went wrong: " + error);
+                    alert("Error: " + error + "\nStatus: " + status + "\nResponse: " + xhr.responseText);
+                  //  window.location.reload();
+                }
+            });
+        }
+    });
+});
+
 		$(document).ready(function() {
 			$('#dfUsageTable').DataTable({
 				"searching": true,
-				"paging":   false,
+				"paging":   true,
         		"ordering": false,
-        		"info":     false
+        		"info":     false,
+				"pageLength": 50
 			});
 		});
 

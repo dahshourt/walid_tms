@@ -154,6 +154,19 @@ class ParentController extends Controller
 		$crs =   $crs->ListCRsByWorkflowType($request->workflowtype);
 		return view("$this->view.list_crs",compact('crs'));
 	}
+	
+	
+	public function download($id)
+	{
+		$file = $this->parent->find($id);
+        $filePath = public_path('uploads/' . $file->file); // in config
+    //dd($filePath);
+        if (file_exists($filePath)) {
+            return response()->download($filePath, $file->file);
+        }
+
+        return redirect()->back()->withErrors('File not found.');
+	}
 
 
    

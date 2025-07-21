@@ -83,6 +83,18 @@ class ChangeRequestController extends Controller
         }
         
     }
+
+    public function dvision_manager_cr()
+    {
+
+        $title = 'CR Waiting Approval';
+        $collection = $this->changerequest->dvision_manager_cr();
+        
+        return view("$this->view.dvision_manager_cr",compact('collection','title'));
+    }
+
+
+
       public function selectGroup($groupId)
 {
    
@@ -803,5 +815,110 @@ class ChangeRequestController extends Controller
             //return response("Invalid action specified.", 400);
         }
     }
+
+
+    public function handleDivisionManagerAction1(Request $request)
+{
+    
+    $cr_id = $request->query('crId');
+     $action = $request->query('action');  
+    $token = $request->query('token');
+
+    if (!$cr_id || !$action || !$token) {
+        return response()->json([
+            'isSuccess' => false,
+            'message' => 'Invalid request. Missing parameters.',
+        ], 400);
+    }
+
+    $cr = Change_request::find($cr_id);
+   // die($cr);
+    if (!$cr) {
+        return response()->json([
+            'isSuccess' => false,
+            'message' => 'Change Request not found.',
+        ], 404);
+    }
+
+    $expectedToken = md5($cr->id . $cr->created_at . env('APP_KEY'));
+    if ($token !== $expectedToken) {
+        return response()->json([
+            'isSuccess' => false,
+            'message' => 'Unauthorized access. Invalid token.',
+        ], 403);
+    }
+
+    $workflow_type_id = $cr->workflow_type_id;
+    $current_status = Change_request_statuse::where('cr_id', $cr_id)->where('active', '1')->value('new_status_id');
+
+    if ($current_status != '22') {
+        if ($current_status == '19') {
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'You already rejected this CR.',
+            ], 400);
+        } else {
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'You already approved this CR.',
+            ], 400);
+        }
+    }
+
+    // Determine next status based on workflow_type_id
+    if ($workflow_type_id == 3) {
+        $workflowIdForAction = $action === 'approve' ? 36 : 35;
+    } elseif ($workflow_type_id == 5) {
+        $workflowIdForAction = $action === 'approve' ? 188 : 184;
+    } else {
+        return response()->json([
+            'isSuccess' => false,
+            'message' => 'Unsupported workflow type.',
+        ], 400);
+    }
+
+    $repo = new ChangeRequestRepository();
+    $updateRequest = new \Illuminate\Http\Request([
+        'old_status_id' => $current_status,
+        'new_status_id' => $workflowIdForAction,
+    ]);
+    $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
+
+    if ($action === 'approve') {
+        return response()->json([
+            'isSuccess' => true,
+            'message' => 'CR #' . $cr_id . ' has been successfully approved.',
+        ], 200);
+    } elseif ($action === 'reject') {
+        return response()->json([
+            'isSuccess' => true,
+            'message' => 'CR #' . $cr_id . ' has been successfully rejected.',
+        ], 200);
+    } else {
+        return response()->json([
+            'isSuccess' => false,
+            'message' => 'Invalid action specified.',
+        ], 400);
+    }
+}
+
+    public function approved_active(Request $request){
+
+        
+        
+        $id=$request->id;
+		   $changerequest = $this->changerequest->UpateChangeRequestStatus($id,$request);
+		   
+		  // $this->changerequest->updateStatus($id);
+		   
+         
+		    return response()->json([
+            'message' => 'Updated Successfully',
+            'status' => 'success'
+        ]);
+
+		  
+		
+	}
 
 }

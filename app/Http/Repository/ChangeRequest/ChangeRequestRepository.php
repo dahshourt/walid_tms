@@ -1577,6 +1577,41 @@ public function findNextAvailableTime($userId, $currentTime)
    
         return $changeRequests;
     }
+    public function dvision_manager_cr($group = null)
+    {
+        $user_email = auth()->user()->email;
+    
+        if (empty($group)) {
+            $group = session('default_group') ?? auth()->user()->default_group;
+        }
+    
+        // Load up to 1000 requests for manual filtering
+        $allRequests = Change_request::with(['RequestStatuses.status'])
+             ->where('division_manager',$user_email) // Uncomment if needed
+            ->orderBy('id', 'DESC')->limit(50)
+           
+            ->get();
+    
+        // Use full PHP-based filtering with getCurrentStatus()
+        $filtered = $allRequests->filter(function ($item) {
+            $status = $item->getCurrentStatus();
+            return $status && $status->status && $status->status->id == 22;
+        });
+    
+        // Manual pagination
+        $perPage = request()->get('per_page', 10); // Default to 10 if not provided
+        $page = request()->get('page', 1);
+        
+        $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
+            $filtered->forPage($page, $perPage),
+            $filtered->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+    
+        return $paginated;
+    }
 
     public function delete($id)
     {
@@ -2809,5 +2844,7 @@ public function findNextAvailableTime($userId, $currentTime)
         }
 
     }
+
+
 
 }
