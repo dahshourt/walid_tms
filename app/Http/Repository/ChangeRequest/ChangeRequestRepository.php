@@ -2810,6 +2810,4 @@ public function findNextAvailableTime($userId, $currentTime)
 
     }
 
-
-
 }
