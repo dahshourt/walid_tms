@@ -44,6 +44,11 @@ class UserRepository implements UserRepositoryInterface
     {
         return User::with('defualt_group','user_report_to.user')->get();
     }
+	
+	 public function getAllWithActive()
+    {
+        return User::with('defualt_group','user_report_to.user')->where('active', '1')->get();
+    }
 
     public function paginateAll()
     {
@@ -215,7 +220,20 @@ class UserRepository implements UserRepositoryInterface
 
     public function get_user_by_department_id($id)
     {
-        return User::where('department_id', $id)->get();
+        return User::where('department_id', $id)->where('active', '1')->get();
+    }
+	
+	public function get_user_by_group_id($id)
+    {
+		$users = User::where(function($query) use ($id){
+                 $query->where('default_group', $id);
+                 $query->where('active', '1');
+             })
+             ->orwhereHas('user_groups', function($query) use ($id){
+                 $query->where('group_id', $id);
+             })->get();
+		return $users;	 
+        //return User::where('default_group', $id)->where('active', '1')->get();
     }
 
 
@@ -224,7 +242,7 @@ class UserRepository implements UserRepositoryInterface
         $app_groups = Application::find($app_id)->group_applications()->pluck('group_id')->toArray();
         //dd($app_groups);
         //return User::where('department_id', $id)->get();
-        return User::whereIn('default_group', $app_groups)->get();
+        return User::whereIn('default_group', $app_groups)->where('active', '1')->get();
     }
 
     public function CheckUniqueEmail($email)

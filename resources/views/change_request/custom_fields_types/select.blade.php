@@ -79,6 +79,11 @@
                 @else
                     @if((isset($item->enable) && ($item->enable == 1)))
                         <option value="">Select</option>
+						@if($item->CustomField->name == "rtm_member")
+                            @foreach($rtm_members as $rtm_member)
+                                <option value="{{ $rtm_member->id }}" {{ old($rtm_member->user_name, $custom_field_value) == $rtm_member->id ? 'selected' : '' }}>{{ $rtm_member->user_name }}</option>
+                            @endforeach
+                        @endif
                         @if($item->CustomField->name == "developer_id")
                             @foreach($developer_users as $developer)
                                 <option value="{{ $developer->id }}" {{ old($developer->user_name, $custom_field_value) == $developer->id ? 'selected' : '' }}>{{ $developer->user_name }}</option>
@@ -96,8 +101,12 @@
                         @endif
 
                         @foreach($item->CustomField->getCustomFieldValue() as $value)
-                            @unless(in_array($item->CustomField->name, ['developer_id', 'tester_id', 'designer_id']))
-                                <option value="{{ $value->id }}" {{ old($item->CustomField->name, $custom_field_value) == $value->id ? 'selected' : '' }}>{{ $value->name }}</option>
+                            @unless(in_array($item->CustomField->name, ['developer_id', 'tester_id', 'designer_id','rtm_member']))
+                                <option value="{{ $value->id }}" {{ old($item->CustomField->name, $custom_field_value) == $value->id ? 'selected' : '' }}>{{ $value->name }} 
+								@if($item->CustomField->name == "parent_id")
+								- ({{ $value->change_request->application->name }}) - ({{ $value->change_request->description }})
+								@endif	
+								</option>
                             @endunless
                         @endforeach
                     @else

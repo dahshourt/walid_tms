@@ -11,7 +11,7 @@ class Application extends Model
 
 
     protected $fillable = [
-       'id', 'name','active','workflow_type_id'
+       'id', 'name','active','workflow_type_id','file'
     ];
     public function workflow_type()
     {

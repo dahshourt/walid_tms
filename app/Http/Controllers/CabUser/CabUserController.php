@@ -44,7 +44,7 @@ class CabUserController extends Controller
     public function create()
     { 
         $this->authorize('Create Cab User'); // permission check
-        $users = (new UserRepository)->getAll();
+        $users = (new UserRepository)->getAllWithActive();
         $applications = (new ApplicationRepository)->getAll();
 
         return view("$this->view.create",compact('users','applications'));
@@ -86,12 +86,12 @@ class CabUserController extends Controller
     
     public function destroy()
     {
-        $this->authorize('Delete Division'); // permission check
+        $this->authorize('Delete Cab User'); // permission check
         
     }
 	public function updateactive(Request $request)
     {
-        $this->authorize('Active Division'); // permission check
+        $this->authorize('Active Cab User'); // permission check
         
         $data = $this->cab_user->find($request->id);
 		$this->cab_user->updateactive($data->active,$request->id);

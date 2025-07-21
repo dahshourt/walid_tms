@@ -47,6 +47,11 @@ class ParentRepository implements ParentRepositoryInterface
       
       $data['name']=$request['name'];
       $data['active']="1";
+	  
+		$file = $this->UploadParentFile($request['approval_file']);
+		$data['file'] = $file;
+		unset($request['approval_file']);
+	  
         
         return Parents_crs::create($data);
     }
@@ -58,6 +63,12 @@ class ParentRepository implements ParentRepositoryInterface
 
     public function update($request, $id)
     {
+		if(isset($request['approval_file']))
+		{
+			$file = $this->UploadParentFile($request['approval_file']);
+			$request['file'] = $file;
+		}
+		unset($request['approval_file']);
         return Parents_crs::where('id', $id)->update($request);
     }
 
@@ -75,5 +86,17 @@ public function updateactive($active,$id){
 		}
 		
 	}
+	
+	
+	
+	public function UploadParentFile($approval_file)
+	{
+		$filename = time() . "." . $approval_file->getClientOriginalExtension();
+		$original_file_name = $approval_file->getClientOriginalName();
+		$approval_file->move(public_path() . "/uploads/", $original_file_name);
+		$file_path = public_path() . "/uploads/" . $original_file_name;
+		return $original_file_name;
+	}
+	
 
 }

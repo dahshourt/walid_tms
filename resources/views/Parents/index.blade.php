@@ -125,6 +125,7 @@
 												<tr>
 													<th>#</th>
 													<th>cr number</th>
+													<th>cr description</th>
 													<th>application name</th>
 													@can('Active Parent') 
 													<th>status</th>

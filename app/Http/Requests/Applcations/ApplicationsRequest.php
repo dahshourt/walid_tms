@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Appliucations;
+namespace App\Http\Requests\Applcations;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
@@ -42,8 +42,9 @@ class ApplicationsRequest extends FormRequest
     public function createRules()
     {
         return [
-            'name' => ['required','string', 'unique:rejection_reasons'],
-            'active' => ['required','int'],
+            'name' => ['required','string', 'unique:applications'],
+            'workflow_type_id' => ['required'],
+            //'active' => ['required','int'],
             
         ];
     }
@@ -58,17 +59,12 @@ class ApplicationsRequest extends FormRequest
        
         
         return [
-            'name' => ['required','string', 'unique:rejection_reasons,name,'.$this->id],
-            'active' => ['required','int'],
+            'name' => ['required','string', 'unique:applications,name,'.$this->id],
+            'workflow_type_id' => ['required'],
+            //'active' => ['required','int'],
         ];
     }
 
-
-    protected function failedValidation(Validator $validator) { 
-        throw new HttpResponseException(response()->json([
-            'message' => $validator->messages()
-          ], 422));
-    }
 
     
 

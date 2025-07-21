@@ -4,7 +4,7 @@ namespace App\Contracts\ChangeRequest;
 
 interface ChangeRequestRepositoryInterface
 {
-    public function create(array $request): int;
+    public function create(array $request): array;
 
     public function ShowChangeRequestData($id, $group);
 

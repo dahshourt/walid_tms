@@ -53,7 +53,7 @@
                                     <tr>
                                         <td>
                                         @can('Edit ChangeRequest')
-                                            <a href='{{ url("$route") }}/{{ $item["id"] }}/edit'>{{ $item['id'] }}</a>
+                                            <a href='{{ url("$route") }}/{{ $item["id"] }}/edit'>{{ $item['cr_no'] }}</a>
                                         @endcan    
                                         </td>
                                         <td>{{ $item['title'] ?? "" }}</td>

@@ -61,7 +61,7 @@ class GroupRequest extends FormRequest
             'parent_id' => ['nullable','integer', 'exists:groups,id'],
             'head_group_name' => ['nullable','string'],
             'head_group_email' => ['nullable','email'],
-            'application_id' => ['required'],
+            //'application_id' => ['required'],
         ];
     }
 
@@ -88,7 +88,7 @@ class GroupRequest extends FormRequest
             'parent_id' => ['nullable', 'integer', 'exists:groups,id'],
             'head_group_name' => ['nullable', 'string'],
             'head_group_email' => ['nullable', 'email'],
-            'application_id' => ['required'],
+            //'application_id' => ['required'],
            
         ];
     }

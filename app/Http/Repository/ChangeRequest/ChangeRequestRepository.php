@@ -29,13 +29,41 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
     {
         return Change_request::find($id);
     }
+	
+	public function ListCRsByWorkflowType($workflow_type_id)
+    {
+        return Change_request::where('workflow_type_id',$workflow_type_id)->get();
+    }
+	
+	public function LastCRNo()
+    {
+        $ChangeRequest = Change_request::orderby('id', 'desc')->first();
 
+        return isset($ChangeRequest) ? $ChangeRequest->cr_no + 1 : 1;
+    }
+
+	public function AddCrNobyWorkflow($workflow_type_id): int
+	{
+		$ChangeRequest = Change_request::where('workflow_type_id',$workflow_type_id)->orderby('cr_no', 'desc')->first();
+		//dd($ChangeRequest);
+		if($workflow_type_id == 5)
+		{
+			$first_cr_no = 2000;
+		}
+		else
+		{
+			$first_cr_no = 6000;
+		}
+		$cr_no = isset($ChangeRequest) && $ChangeRequest->cr_no ? $ChangeRequest->cr_no + 1 : $first_cr_no;
+		return $cr_no;
+	}
+	
     protected function prepareCreateData(array $data, int $defaultStatus): array
     {
         $data['requester_id'] = Auth::id();
         $data['requester_name'] = Auth::user()->user_name;
         $data['requester_email'] = Auth::user()->email;
-        $data['cr_no'] = $this->LastCRNo();
+        $data['cr_no'] = $this->AddCrNobyWorkflow($data['workflow_type_id']);
         //$data['old_status_id'] = $defaultStatus;
         //$data['new_status_id'] = $defaultStatus;
         //dd($data);
@@ -72,7 +100,7 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
 	protected function getRequiredFields(): array
     {
         return [
-            'title','description','active','developer_id','tester_id','designer_id','requester_id','design_duration','start_design_time','end_design_time','develop_duration','start_develop_time','end_develop_time','test_duration','start_test_time','end_test_time','depend_cr_id','requester_name','requester_email','requester_unit','requester_division_manager','requester_department','application_name','testable','created_at','updated_at','category_id','priority_id','unit_id','department_id','application_id','workflow_type_id','division_manager','creator_mobile_number','calendar','CR_duration','chnage_requester_id','start_CR_time','end_CR_time','release_name'
+            'title','description','active','developer_id','tester_id','designer_id','requester_id','design_duration','start_design_time','end_design_time','develop_duration','start_develop_time','end_develop_time','test_duration','start_test_time','end_test_time','depend_cr_id','requester_name','requester_email','requester_unit','requester_division_manager','requester_department','application_name','testable','created_at','updated_at','category_id','priority_id','unit_id','department_id','application_id','workflow_type_id','division_manager','creator_mobile_number','calendar','CR_duration','chnage_requester_id','start_CR_time','end_CR_time','release_name','cr_no'
 			
         ];
     }
@@ -98,13 +126,14 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
     }
 
 
-    public function create(array $data): int
+    public function create(array $data): array
     {
         
         $workflow = new NewWorkflowRepository();
         //$this->logRepository = new LogRepository();
         $defaultStatus = $workflow->getFirstCreationStatus($data['workflow_type_id'])->from_status_id;
         $data = $this->prepareCreateData($data, $defaultStatus);
+		//dd($data);
         $changeRequest = Change_request::create($data);
 
         $statusdata = $this->prepareStatusData($data, $defaultStatus);
@@ -121,16 +150,19 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
         $mailController = new MailController();
 
         // send mail to requester
-        $mailController->notifyRequesterCrCreated($statusdata['requester_email'] , $changeRequest->id);
+        $mailController->notifyRequesterCrCreated($statusdata['requester_email'] , $changeRequest->id,$changeRequest->cr_no);
 
         // send mail to division manager
 		if(isset($statusdata['division_manager']))
 		{
-			$mailController->notifyDivisionManager($statusdata['division_manager'] , $statusdata['requester_email'], $changeRequest->id ,$statusdata['title'] , $statusdata['description'] , $statusdata['requester_name']);	
+			$mailController->notifyDivisionManager($statusdata['division_manager'] , $statusdata['requester_email'], $changeRequest->id ,$statusdata['title'] , $statusdata['description'] , $statusdata['requester_name'],$changeRequest->cr_no);	
 		}
         
 
-        return $changeRequest->id;
+        return [
+		"id"=>$changeRequest->id,
+		"cr_no"=>$changeRequest->cr_no,
+		];
     }
 
 
@@ -948,12 +980,7 @@ public function findNextAvailableTime($userId, $currentTime)
     }
 
 
-    public function LastCRNo()
-    {
-        $ChangeRequest = Change_request::orderby('id', 'desc')->first();
-
-        return isset($ChangeRequest) ? $ChangeRequest->cr_no + 1 : 1;
-    }
+    
 
     public function ShowChangeRequestData($id, $group)
     { //$str = Change_request::with('current_status.status.to_status_workflow.to_status')
@@ -1293,12 +1320,19 @@ public function findNextAvailableTime($userId, $currentTime)
       
         
       
-        
         if(isset(\Auth::user()->id) && \Auth::user()->id != null)
         {
             $user_id = \Auth::user()->id   ;    
         }else{
-            $user_id = $request['assign_to'] ;
+            $division_manger = $change_request->division_manager;
+            $user = User::where('email',$division_manger)->first();
+            if ($user) {
+                $user_id = $user->id;
+            }
+            else{
+                $user_id = $request['assign_to'] ;
+            }
+            
         }
          
 
@@ -2253,7 +2287,7 @@ public function findNextAvailableTime($userId, $currentTime)
     public function searhchangerequest($id)
     {
         $user_flage = Auth::user()->flag;
-		$changeRequest = Change_request::with('Release')->where('id', $id)->first();
+		$changeRequest = Change_request::with('Release')->where('id', $id)->ORWhere('cr_no',$id)->first();
         /* if ($user_flage == '0') {
             $changeRequest = Change_request::with("Release")->where('id', $id)->where('requester_id', auth::user()->id)->first();
         } else {
@@ -2319,9 +2353,15 @@ public function findNextAvailableTime($userId, $currentTime)
         foreach ($request_query as $key => $field_value) {
             if (!empty($field_value)) {
                 switch ($key) {
-                    case 'title':
-                        $CRs = $CRs->where($key, 'LIKE', "%$field_value%");
+                    case 'id':
+                        $CRs = 	$CRs->where(function($query) use ($field_value){
+									$query->where('id', $field_value);
+									$query->ORwhere('cr_no', $field_value);
+								});
                         break;
+					case 'title':
+                        $CRs = $CRs->where($key, 'LIKE', "%$field_value%");
+                        break;	
                     case 'created_at':
                         $CRs = $CRs->whereDate($key, '=', Carbon::createFromTimestamp($field_value / 1000)->format('Y-m-d'));
                         break;

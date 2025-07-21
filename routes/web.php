@@ -2,6 +2,8 @@
 
 
 use Illuminate\Support\Facades\Route;
+use App\Services\EwsMailReader;
+
 
 
 
@@ -31,6 +33,8 @@ Route::get('/inactive-logout','Auth\CustomAuthController@inactive_logout')->name
 
 Route::get('/check-active','Auth\CustomAuthController@check_active')->name('check-active');
 
+Route::get('/cr/division_manager/action', 'ChangeRequest\ChangeRequestController@handleDivisionManagerAction')
+    ->name('cr.division_manager.action');
 
 Route::middleware(['auth'])->group(
     function () {
@@ -79,6 +83,11 @@ Route::middleware(['auth'])->group(
        Route::post('stage/updateactive', 'Stages\StageController@updateactive');
        Route::resource('parents', Parents\ParentController::class);
         Route::post('parent/updateactive', 'Parents\ParentController@updateactive');
+        Route::get('list/CRs/by/workflowtype', 'Parents\ParentController@ListCRsbyWorkflowtype');
+		Route::get('parent/file/download/{id}','Parents\ParentController@download')->name('parent.download');
+		
+		
+		
        Route::resource('high_level_status', highLevelStatuses\highLevelStatusesControlller::class);
        Route::post('high_level_status/updateactive', 'highLevelStatuses\highLevelStatusesControlller@updateactive');
        //Route::resource('workflows', Workflow\WorkflowController::class);
@@ -100,10 +109,11 @@ Route::middleware(['auth'])->group(
        Route::get('advanced/search/result', 'Search\SearchController@AdvancedSearchResult')->name('advanced.search.result');;
         Route::get('/search/advanced_search', 'CustomFields\CustomFieldGroupTypeController@AllCustomFieldsWithSelectedByformType')->name('advanced.search');
 
-       //Route::resource('applications', Applications\ApplicationController::class);
-      // Route::post('applications/updateactive', 'Applications\ApplicationController@updateactive');
+		Route::resource('applications', Applications\ApplicationController::class);
+		Route::post('applications/updateactive', 'Applications\ApplicationController@updateactive');
+		Route::get('app/file/download/{id}','Applications\ApplicationController@download')->name('app.download');
       
-      Route::post('advanced-search-requests/export', 'Search\SearchController@AdvancedSearchResultExport')->name('advanced.search.export');;
+		Route::post('advanced-search-requests/export', 'Search\SearchController@AdvancedSearchResultExport')->name('advanced.search.export');;
 
        Route::resource('rejection_reasons', RejectionReasons\RejectionReasonsController::class);
        Route::post('rejection_reasons/updateactive', 'RejectionReasons\RejectionReasonsController@updateactive');
@@ -164,6 +174,19 @@ Route::middleware(['auth'])->group(
         Route::patch('defect_update/{id}','Defect\DefectController@update');
         Route::get('defects', 'Defect\DefectController@index');
         Route::get('show_defect/{id}', 'Defect\DefectController@show');
+
+
+        //test ews
+
+        /*Route::get('/test-ews', function () {
+            $emails = app(EwsMailReader::class)->handleApprovals();
+        
+            //foreach ($emails as $email) {
+            //    echo "<h2>{$email['subject']}</h2>";
+            //    echo "<p><strong>From:</strong> {$email['from']}<br><strong>Date:</strong> {$email['date']}</p>";
+            //    echo "<div style='padding:10px; border:1px solid #ccc; margin-bottom:15px;'>{$email['body']}</div>";
+            //}
+        });*/
 
 
 });
