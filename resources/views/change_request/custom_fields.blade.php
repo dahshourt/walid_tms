@@ -20,3 +20,63 @@
 @include("$view.custom_fields_types.button")     
 @include("$view.custom_fields_types.date")                                                 
 @endforeach
+<!-- <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const statusSelect = document.querySelector('[name="new_status_id"]');
+        const designEstimationInput = document.querySelector('[name="design_estimation"]');
+
+        if (statusSelect && designEstimationInput) {
+            statusSelect.addEventListener('change', function () {
+                const selectedStatus = parseInt(this.value);
+                const designEstimation = parseFloat(designEstimationInput.value) || 0;
+
+                // Get the selected option's display text
+                const selectedOptionText = this.options[this.selectedIndex]?.text;
+
+                if (selectedStatus === 44 && designEstimation > 0) {
+                    alert(
+                        `Error: You selected status "${selectedOptionText}", but design estimation is greater than 0.`
+                    );
+                    this.value = 'Design estimation'; // Optional: reset selection
+                }
+            });
+        }
+    });
+</script> -->
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('form'); // Adjust selector if needed
+        const statusSelect = document.querySelector('[name="new_status_id"]');
+        const designEstimationInput = document.querySelector('[name="design_estimation"]');
+
+        if (form && statusSelect && designEstimationInput) {
+            form.addEventListener('submit', function (e) {
+                const selectedStatus = parseInt(statusSelect.value) || 0;
+                const designEstimation = parseFloat(designEstimationInput.value);
+                
+                const invalidCondition =
+                    (selectedStatus === 44 && designEstimation > 0) ||
+                    (selectedStatus === 43 && (!designEstimation || designEstimation === 0));
+
+                if (invalidCondition) {
+                    e.preventDefault();
+
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Invalid Combination',
+                        text: 'The provided estimation value is not compatible with the selected workflow',
+                        confirmButtonText: 'OK'
+                    });
+
+                    // Optional: Reset status
+                    statusSelect.value = 'Design estimation';
+                }
+            });
+        }
+    });
+</script>
+
+
+
+
