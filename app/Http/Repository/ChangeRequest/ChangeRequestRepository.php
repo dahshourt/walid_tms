@@ -128,7 +128,7 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
 
     public function create(array $data): array
     {
-        
+        $CustomFieldData = $data;
         $workflow = new NewWorkflowRepository();
         //$this->logRepository = new LogRepository();
         $defaultStatus = $workflow->getFirstCreationStatus($data['workflow_type_id'])->from_status_id;
@@ -136,7 +136,7 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
 		//dd($data);
         $changeRequest = Change_request::create($data);
 
-        $statusdata = $this->prepareStatusData($data, $defaultStatus);
+        $statusdata = $this->prepareStatusData($CustomFieldData, $defaultStatus);
         //$data = $request;
         //$data = Arr::except($request, ['technical_attachments', 'business_attachments']);
         $this->handleCustomFields($changeRequest->id, $statusdata);
