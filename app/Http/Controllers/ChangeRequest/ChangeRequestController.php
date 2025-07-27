@@ -177,7 +177,7 @@ class ChangeRequestController extends Controller
         $target_system_id = request()->target_system_id;
         $target_system = $this->applications->find($target_system_id);                            
         $workflow_type_id = $this->applications->workflowType($target_system_id)->id;
-        
+         
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowType($workflow_type_id, $form_type);
         $title = "Create $target_system->name CR";
         return view("$this->view.create",compact('CustomFields','workflow_type_id','target_system','title'));
@@ -243,7 +243,17 @@ class ChangeRequestController extends Controller
                 return redirect()->back()->withInput()->withErrors($validator);
             }
         }
+       
+           $parentCR = DB::table('parents_crs')
+            ->where('id', $request->parent_id)
+            ->value('name');
+ 
+          $res =  UserFactory::index()->get_parent_cr_user($parentCR);
+            //$res[0]->id
+            $request['developer_id'] = $res[0]->id;
+        //dd($request);
         $cr_data = $this->changerequest->create($request->all()); 
+
 		$cr_id = $cr_data['id'];
 		$cr_no = $cr_data['cr_no'];
         /*if ($request->file()) {
@@ -271,7 +281,7 @@ class ChangeRequestController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function show($id)
-    { 
+    {  
         $this->authorize('Show ChangeRequest'); // permission check
         $cr = $this->changerequest->findById($id);
         if(!$cr)
@@ -338,7 +348,7 @@ class ChangeRequestController extends Controller
     } 
 
     public function edit($id,$cab_cr_flag=false)
-    {
+    { 
         $this->authorize('Edit ChangeRequest'); // permission check
         //$this->logs = LogFactory::index();
 
@@ -403,9 +413,18 @@ class ChangeRequestController extends Controller
             } // to check if the user has access to edit this cr or not 
         }
        
-        
+     /*  $results = DB::table('change_request_custom_fields as flds')
+        ->leftJoin('parents_crs as pcrs', 'pcrs.id', '=', 'flds.custom_field_value')
+        ->where('flds.cr_id', $id)
+        ->where('flds.custom_field_id', 32)
+        ->select('pcrs.name')
+        ->get();
+        $parent_CR = $results[0]->name;*/
+          //dd($parent_CR);
         //dd($cr->change_request_custom_fields);
         $developer_users =  UserFactory::index()->get_user_by_group($cr->application_id);
+       //  $developer_users =  UserFactory::index()->get_parent_cr_user($parent_CR);
+        
         $sa_users =  UserFactory::index()->get_user_by_department_id(6);
         $testing_users =  UserFactory::index()->get_user_by_department_id(3);
         $work= $cr->workflow_type_id;
@@ -426,7 +445,7 @@ class ChangeRequestController extends Controller
         $status_id = $cr->getCurrentStatus()->status->id;
         $status_name = $cr->getCurrentStatus()->status->name;
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus($workflow_type_id, $form_type, $status_id);
-         
+        
         $all_defects = $this->defects->all_defects($id);
         $technical_team_disabled = ChangeRequestTechnicalTeam::where('cr_id', $id)->get();
         $ApplicationImpact = ApplicationImpact::where('application_id', $cr->application_id)->select('impacts_id')->get();

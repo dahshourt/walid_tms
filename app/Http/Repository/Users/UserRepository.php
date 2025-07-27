@@ -10,6 +10,7 @@ use App\Models\SystemUserCab;
 use App\Models\UserGroups;
 use App\Models\Application;
 use App\Models\Pivotusersrole;
+use App\Models\Change_request;
 use App\Http\Repository\Roles\RolesRepository;
 use DB;
 
@@ -245,6 +246,20 @@ class UserRepository implements UserRepositoryInterface
         return User::whereIn('default_group', $app_groups)->where('active', '1')->get();
     }
 
+    public function get_parent_cr_user($parent_CR)
+    {
+        $parentCRUser = Change_request::find($parent_CR);
+        $user_id = $parentCRUser->developer_id;
+          $user =  User::where('id', $user_id)->where('active', '1')->get();
+     
+        return $user ;
+    }
+
+     /*  public function find($id)
+    {
+        return User::with('user_groups.group')->find($id);
+    }
+*/
     public function CheckUniqueEmail($email)
     {
         return User::where('email',$email)->first();
