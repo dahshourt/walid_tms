@@ -163,7 +163,7 @@ class ChangeRequestController extends Controller
     {
         $this->authorize('Create ChangeRequest');
         $get_workflow_subtype =  $this->workflow_type->get_workflow_all_subtype_without_release();
-        $target_systems = $this->applications->getAll();
+        $target_systems = $this->applications->getAllActive();
         return view("$this->view.list_work_flow",compact('target_systems'));
     }
 
@@ -479,7 +479,8 @@ class ChangeRequestController extends Controller
           }
           //dd($mails);
           $mail =  new MailController();
-          $mail->send_mail_to_cap_users($mails, $id);
+          //dd($request->cr->cr_no);
+          $mail->send_mail_to_cap_users($mails, $id, $request->cr->cr_no);
       }
       
 

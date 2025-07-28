@@ -17,6 +17,10 @@ class ApplicationRepository implements ApplicationRepositoryInterface
     {
         return Application::all();
     }
+    public function getAllActive()
+    {
+        return Application::where('active', '1')->get();
+    }
     public function paginateAll()
     {
         return Application::latest()->paginate(10);
