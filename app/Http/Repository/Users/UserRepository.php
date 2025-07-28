@@ -248,8 +248,7 @@ class UserRepository implements UserRepositoryInterface
         //return User::where('department_id', $id)->get();
         return User::whereIn('default_group', $app_groups)->where('active', '1')->get();
     }
-
-    public function get_parent_cr_user($parent_CR)
+	public function get_parent_cr_user($parent_CR)
     {
         $parentCRUser = Change_request::find($parent_CR);
         $user_id = $parentCRUser->developer_id;
@@ -263,6 +262,7 @@ class UserRepository implements UserRepositoryInterface
         return User::with('user_groups.group')->find($id);
     }
 */
+
     public function CheckUniqueEmail($email)
     {
         return User::where('email',$email)->first();
@@ -271,7 +271,23 @@ class UserRepository implements UserRepositoryInterface
 
     public function get_users_cap($system_id)
     {
-        return SystemUserCab::where('system_id',$system_id)->where('active','1')->get();
+        return SystemUserCab::where('system_id',$system_id)->where('active','1')->whereHas('user', function($query) {
+                 $query->where('active','1');
+             })->get();
+    }
+	
+	
+	public function GetAssignmentUsersByViewGroups($group_ids)
+    {
+		$users = User::where(function($query) use ($group_ids){
+                 $query->whereIn('default_group', $group_ids);
+                 $query->where('active', '1');
+             })
+             ->orwhereHas('user_groups', function($query) use ($group_ids){
+                 $query->whereIn('group_id', $group_ids);
+             })->get();
+		return $users;	 
+        //return User::where('default_group', $id)->where('active', '1')->get();
     }
 
 
