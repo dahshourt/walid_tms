@@ -243,6 +243,8 @@ class ChangeRequestController extends Controller
                 return redirect()->back()->withInput()->withErrors($validator);
             }
         }
+		if(isset($request->parent_id))
+		{
 		$parentCR = DB::table('parents_crs')
             ->where('id', $request->parent_id)
             ->value('name');
@@ -251,6 +253,9 @@ class ChangeRequestController extends Controller
             //$res[0]->id
             $request['developer_id'] = $res[0]->id;
         //dd($request);
+			
+		}
+		
         $cr_data = $this->changerequest->create($request->all()); 
 		$cr_id = $cr_data['id'];
 		$cr_no = $cr_data['cr_no'];
