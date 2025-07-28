@@ -15,11 +15,10 @@ class GroupRepository implements GroupRepositoryInterface
 
     public function StoreApplicationGroup($group_id,$request)
     {
-        // echo $group_id;
-        // print_r($request); die;
+        GroupApplications::where('group_id',$group_id)->delete();
         if(isset($group_id) && !empty($request))
         {
-            GroupApplications::where('group_id',$group_id)->delete();
+            
             foreach($request as $key=>$value)
             {
                 $group_applications = new GroupApplications;

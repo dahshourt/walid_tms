@@ -11,6 +11,8 @@ use App\Http\Repository\Departments\DepartmentRepository;
 use App\Http\Repository\Groups\GroupRepository;
 use App\Http\Repository\Units\UnitRepository;
 use App\Http\Repository\Roles\RolesRepository;
+use App\Http\Repository\Workflow\Workflow_type_repository;
+use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 
 use Illuminate\Http\Request;
 
@@ -55,9 +57,10 @@ class ParentController extends Controller
         //
 
         $this->authorize('Create Parent'); // permission check
-        
+        $workflow=new Workflow_type_repository();
+		$workflow_subtype =   $workflow->get_workflow_all_subtype();
 
-        return view("$this->view.create");
+        return view("$this->view.create",compact('workflow_subtype'));
     }
 
     /**
@@ -80,8 +83,12 @@ class ParentController extends Controller
     {
         $this->authorize('Edit Parent'); // permission check
         $row = $this->parent->find($id);
-       
-        return view("$this->view.edit",compact('row'));
+		$workflow=new Workflow_type_repository();
+		$workflow_subtype =   $workflow->get_workflow_all_subtype();
+		
+		$crs=new ChangeRequestRepository();
+		$crs =   $crs->ListCRsByWorkflowType($row->change_request->workflow_type_id);
+        return view("$this->view.edit",compact('row','workflow_subtype','crs'));
 
     }
 
@@ -138,6 +145,27 @@ class ParentController extends Controller
 
 		  
 		
+	}
+	
+	
+	public function ListCRsbyWorkflowtype(Request $request)
+	{
+		$crs=new ChangeRequestRepository();
+		$crs =   $crs->ListCRsByWorkflowType($request->workflowtype);
+		return view("$this->view.list_crs",compact('crs'));
+	}
+	
+	
+	public function download($id)
+	{
+		$file = $this->parent->find($id);
+        $filePath = public_path('uploads/' . $file->file); // in config
+    //dd($filePath);
+        if (file_exists($filePath)) {
+            return response()->download($filePath, $file->file);
+        }
+
+        return redirect()->back()->withErrors('File not found.');
 	}
 
 

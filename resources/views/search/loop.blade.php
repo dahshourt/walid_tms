@@ -6,11 +6,11 @@
 									@if(in_array($cr->id, $crs_in_queues->toArray()))
                                         @if(!(($cr->workflow_type_id == 5) && (in_array($cr->Req_status()->latest('id')->first()?->new_status_id, [66, 67, 68, 69]))))
                                         @can('Edit ChangeRequest')
-                                            <a href='{{ url("$route") }}/{{ $cr->id }}/edit'>{{ $cr->id }} </a>
+                                            <a href='{{ url("$route") }}/{{ $cr->id }}/edit'>{{ $cr->cr_no }} </a>
                                         @endcan 
 										@endif
                                     @else
-										 <a href='{{ url("$route") }}/{{ $cr->id }}'>{{ $cr->id }} </a>
+										 <a href='{{ url("$route") }}/{{ $cr->id }}'>{{ $cr->cr_no }} </a>
 									@endif		
                                     </th>
                                     @if($cr->workflow_type_id == 5)

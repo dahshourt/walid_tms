@@ -31,7 +31,9 @@ trait BindsDynamically
     {
         $model = $this->getModelFromTable();
 		$model = new $model();
-        $data = $model::get();
+		if($this->tableName == "users") $data = $model::where('active','1')->get();
+		else $data = $model::get();
+        
         return $data;
     }
 

@@ -10,6 +10,7 @@ use App\Models\SystemUserCab;
 use App\Models\UserGroups;
 use App\Models\Application;
 use App\Models\Pivotusersrole;
+use App\Models\Change_request;
 use App\Http\Repository\Roles\RolesRepository;
 use DB;
 
@@ -43,6 +44,11 @@ class UserRepository implements UserRepositoryInterface
     public function getAll()
     {
         return User::with('defualt_group','user_report_to.user')->get();
+    }
+	
+	 public function getAllWithActive()
+    {
+        return User::with('defualt_group','user_report_to.user')->where('active', '1')->get();
     }
 
     public function paginateAll()
@@ -218,7 +224,20 @@ class UserRepository implements UserRepositoryInterface
 
     public function get_user_by_department_id($id)
     {
-        return User::where('department_id', $id)->get();
+        return User::where('department_id', $id)->where('active', '1')->get();
+    }
+	
+	public function get_user_by_group_id($id)
+    {
+		$users = User::where(function($query) use ($id){
+                 $query->where('default_group', $id);
+                 $query->where('active', '1');
+             })
+             ->orwhereHas('user_groups', function($query) use ($id){
+                 $query->where('group_id', $id);
+             })->get();
+		return $users;	 
+        //return User::where('default_group', $id)->where('active', '1')->get();
     }
 
 
@@ -227,9 +246,23 @@ class UserRepository implements UserRepositoryInterface
         $app_groups = Application::find($app_id)->group_applications()->pluck('group_id')->toArray();
         //dd($app_groups);
         //return User::where('department_id', $id)->get();
-        return User::whereIn('default_group', $app_groups)->get();
+        return User::whereIn('default_group', $app_groups)->where('active', '1')->get();
     }
 
+    public function get_parent_cr_user($parent_CR)
+    {
+        $parentCRUser = Change_request::find($parent_CR);
+        $user_id = $parentCRUser->developer_id;
+          $user =  User::where('id', $user_id)->where('active', '1')->get();
+     
+        return $user ;
+    }
+
+     /*  public function find($id)
+    {
+        return User::with('user_groups.group')->find($id);
+    }
+*/
     public function CheckUniqueEmail($email)
     {
         return User::where('email',$email)->first();

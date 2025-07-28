@@ -154,7 +154,7 @@
 										<!--begin::Card-->
 										<div class="card card-custom gutter-b example example-compact">
 											<div class="card-header">
-												<h3 class="card-title">{{ $form_title.' #  '.$cr->id }}</h3>
+												<h3 class="card-title">{{ $form_title.' #  '.$cr->cr_no }}</h3>
 												
 											</div>
 											<!--begin::Form-->
@@ -210,7 +210,143 @@
 												</div>
 
 												
-                                                
+                                                 <?php
+                                            $technical_feedback = $cr->change_request_custom_fields->where('custom_field_name', 'technical_feedback' )->sortByDesc('updated_at');
+                                            $business_feedback = $cr->change_request_custom_fields->where('custom_field_name', 'business_feedback' )->sortByDesc('updated_at');
+                                             ?>
+                                            <div class="form-group col-md-12" style="float:left">
+                                            @can('View Technical Feedback')
+                                            @if($technical_feedback->count() > 0  )
+                                                    <h5>Technichal Feedback</h5>
+													<table class="table table-bordered">
+                                                        <thead>
+                                                            <tr class="text-center">
+                                                                <th>Feedback</th>
+                                                                <th>Updated By</th>
+                                                                <th>Updated At</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="text-center">
+                                                            @foreach ($technical_feedback as $index => $feedback)
+                                                            <tr>
+                                                                <td>{{ $feedback->custom_field_value }}</td>
+                                                                <td>{{ optional($feedback->user)->user_name ?? 'N/A' }}</td>
+                                                                <td>{{ $feedback->updated_at }}</td>
+                                                            </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                            @endif
+                                            @endcan
+                                            @can('View Business Feedback')
+                                            @if($business_feedback->count() > 0  )
+                                                    <h5>Business Feedback</h5>
+                                                    <table class="table table-bordered">
+                                                        <thead>
+                                                            <tr class="text-center">
+                                                                <th>Feedback</th>
+                                                                <th>Updated By</th>
+                                                                <th>Updated At</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="text-center">
+                                                            @foreach ($business_feedback as $index => $feedback)
+                                                            <tr>
+                                                                <td>{{ $feedback->custom_field_value }}</td>
+                                                                <td>{{ optional($feedback->user)->user_name ?? 'N/A' }}</td>
+                                                                <td>{{ $feedback->updated_at }}</td>
+                                                            </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                            @endif
+                                            @endcan
+                                            <!-- end feedback table -->
+											@if(count($cr['attachments'])  > 0  )
+													<div class="form-group col-md-12" style="float:left">
+                                                    @can('View Technichal Attachments')
+                                                    <h5>Technichal Attachments</h5>
+													<table class="table table-bordered">
+                                                        <thead>
+                                                            <tr class="text-center">
+                                                                <th>#</th>
+                                                                <th>File Name</th>
+                                                                <th>User Name</th>
+                                                                <th>Uploaded At</th>
+                                                                <th>File Size (MB)</th>
+                                                                <th>Download</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="text-center">
+                                                            @foreach ($cr['attachments'] as $key => $file)
+                                                            @if ($file->flag == 1)
+                                                            <tr>
+                                                                <td>{{ ++$key }}</td>
+                                                                <td>{{ $file->file }}</td>
+                                                                <td>{{ $file->user->user_name }} ({{ $file->user->defualt_group->title }})</td>
+                                                                <td>{{ $file->created_at }}</td>
+                                                                <td>
+                                                                    @if (isset($file->size)) <!-- Ensure the file size is available -->
+                                                                    {{ round($file->size / 1024) }} KB
+                                                                    @else
+                                                                        N/A
+                                                                    @endif
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    <a href="{{ route('files.download', $file->id) }}" class="btn btn-light btn-sm">
+                                                                        Download
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                            @endif
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                    @endcan
+                                                    @can('View Business Attachments')
+                                                    <h5>Business Attachments</h5>
+                                                    <table class="table table-bordered">
+                                                        <thead>
+                                                            <tr class="text-center">
+                                                                <th>#</th>
+                                                                <th>File Name</th>
+                                                                <th>User Name</th>
+                                                                <th>Uploaded At</th>
+                                                                <th>File Size (MB)</th>
+                                                                <th>Download</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="text-center">
+                                                            @foreach ($cr['attachments'] as $key => $file)
+                                                            @if ($file->flag == 2)
+                                                            <tr>
+                                                                <td>{{ ++$key }}</td>
+                                                                <td>{{ $file->file }}</td>
+                                                                <td>{{ $file->user->user_name }} ({{ $file->user->defualt_group->title }})</td>
+                                                                <td>{{ $file->created_at }}</td>
+                                                                <td>
+                                                                    @if (isset($file->size)) <!-- Ensure the file size is available -->
+                                                                    {{ round($file->size / 1024) }} KB
+                                                                    @else
+                                                                        N/A
+                                                                    @endif
+                                                                </td>
+                                                                <td class="text-center">
+                                                                    <a href="{{ route('files.download', $file->id) }}" class="btn btn-light btn-sm">
+                                                                        Download
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                            @endif
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                                    @endcan
+
+													</div>
+													@endif
+											
+											</div>
 												
 										
 											<!--end::Form-->
@@ -221,6 +357,10 @@
 										@endcan	
 
 										@include("$view.cr_logs")
+										
+										
+										
+										
 
 
 

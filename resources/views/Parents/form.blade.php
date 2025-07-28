@@ -19,13 +19,48 @@
 													<div class="form-group form-group-last">
 														
 													</div>
+													
+													
+													<div class="form-group">
+														<label for="wf_type_id">Work Flow Type:</label>
+														<select class="form-control" id="wf_type_id">
+															<option value="">Choose...</option>
+															@foreach ($workflow_subtype as $type)
+															<option value="{{ $type->id }}" {{ isset($row) && $row->change_request->workflow_type_id == $type->id ? "selected" : "" }} >{{ $type->name }}</option>
+															@endforeach
+														</select>
+														
+													</div>
+													
+													<div class="form-group">
+														<label for="name">CRs:</label>
+														<span id="list_crs">
+															<select class="form-control" id="name" name="name">
+																<option value="">Choose...</option>
+																@if(isset($row))
+																	@foreach ($crs as $cr)
+																		<option value="{{ $cr->id }}" {{ isset($row) && $row->name == $cr->id ? "selected" : "" }}>{{ $cr->cr_no }} - ({{ $cr->application->name }}) - ({{ $cr->description }})</option>
+																	@endforeach
+																@endif	
+															</select>
+														</span>
+														{!! $errors->first('name', '<span class="form-control-feedback">:message</span>') !!}
+													</div>
 
 													
 
-													<div class="form-group">
+													{{--<div class="form-group">
 														<label>cr number:</label>
 														<input type="text" class="form-control form-control-lg" placeholder="Name" name="name" value="{{ isset($row) ? $row->name : old('name') }}" />
 														{!! $errors->first('name', '<span class="form-control-feedback">:message</span>') !!}
+													</div>--}}
+													
+													
+													<div class="form-group">
+														<label>Approval File</label>
+															<div class="col-md-6">
+																<input type="file" name="approval_file" class="form-control form-control-lg" />
+															</div>
 													</div>
 													
 													<div class="form-group">
@@ -37,6 +72,30 @@
 															
 														</div>
 													</div>
+													
+													
+													@if(isset($row) && $row->file)
+													<table class="table table-bordered">
+                                                        <thead>
+                                                            <tr class="text-center">
+                                                                <th>File Name</th>
+																<th>Download</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="text-center">
+                                                            
+                                                            <tr>
+                                                                <td>{{ $row->file }}</td>
+                                                                <td class="text-center">
+																
+                                                                    <a href="{{ route('parent.download', $row->id) }}" class="btn btn-light btn-sm">
+                                                                        Download
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+													@endif
 													
 													
 													
@@ -52,14 +111,14 @@
 @push('script')
 
 <script>
-$('#user_type').change(function() {
-    if ($(this).val() != 1) {
-        $(".local_password_div").show();
-    }
-	else
-	{
-		$(".local_password_div").hide();
-	}
+$('#wf_type_id').change(function() {
+   if(this.value !== "")
+    {
+        $('#page-spinner').removeClass('hidden');
+        $.get("{{ url('/') }}/list/CRs/by/workflowtype", { workflowtype: this.value }, function(data) {
+            $("#list_crs").html(data);
+        });
+    }  
 });
 
 </script>

@@ -10,23 +10,23 @@
 									@if(request('workflow_type') == 'Promo')
                                         
                                         @if($item->getCurrentStatus() && isset($item->getCurrentStatus()->status)&&isset($status_promo_view) && in_array($item->getCurrentStatus()->status->id, $status_promo_view))
-											<a href='{{ url("$route") }}/{{ $item->id }}/edit'>{{ $item['id'] }} </a>
+											<a href='{{ url("$route") }}/{{ $item->id }}/edit'>{{ $item['cr_no'] }} </a>
                                         @else
-                                            <a href='{{ url("$route") }}/{{ $item["id"] }}'>{{ $item['id'] }} </a>
+                                            <a href='{{ url("$route") }}/{{ $item["id"] }}'>{{ $item['cr_no'] }} </a>
                                         @endif
 									@else	
                                         @if($item->getCurrentStatus() && isset($item->getCurrentStatus()->status) && in_array($item->getCurrentStatus()->status->id, [64, 79,41,44]))
-                                            <a href='{{ url("$route") }}/{{ $item->id }}/edit'>{{ $item['id'] }} </a>
+                                            <a href='{{ url("$route") }}/{{ $item->id }}/edit'>{{ $item['cr_no'] }} </a>
                                         @else
-                                            <a href='{{ url("$route") }}/{{ $item["id"] }}'>{{ $item['id'] }} </a>
+                                            <a href='{{ url("$route") }}/{{ $item["id"] }}'>{{ $item['cr_no'] }} </a>
                                         @endif
 									@endif
                                     </td>
                                     @else
                                         @can('Show ChangeRequest')
-                                            <td><a href='{{ url("$route") }}/{{ $item->id }}'>{{ $item['id'] }} </a></td>
+                                            <td><a href='{{ url("$route") }}/{{ $item->id }}'>{{ $item['cr_no'] }} </a></td>
                                         @else
-                                            <td>{{ $item['id'] }} </td>
+                                            <td>{{ $item['cr_no'] }} </td>
                                         @endcan
                                     @endcan
 

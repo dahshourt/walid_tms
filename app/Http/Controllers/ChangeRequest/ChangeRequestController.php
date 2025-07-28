@@ -23,7 +23,7 @@ use App\Factories\Defect\DefectFactory;
 use App\Http\Resources\CustomFieldSelectedGroupResource;
 use App\Models\Group;
 use App\Models\Change_request;
-use App\Models\attachements_crs;
+use App\Models\Attachements_crs as attachements_crs;
 use App\Models\User; 
 use App\Models\Defect; 
 use App\Models\WorkFlowType;
@@ -83,6 +83,18 @@ class ChangeRequestController extends Controller
         }
         
     }
+
+    public function dvision_manager_cr()
+    {
+
+        $title = 'CR Waiting Approval';
+        $collection = $this->changerequest->dvision_manager_cr();
+        
+        return view("$this->view.dvision_manager_cr",compact('collection','title'));
+    }
+
+
+
       public function selectGroup($groupId)
 {
    
@@ -165,7 +177,7 @@ class ChangeRequestController extends Controller
         $target_system_id = request()->target_system_id;
         $target_system = $this->applications->find($target_system_id);                            
         $workflow_type_id = $this->applications->workflowType($target_system_id)->id;
-        
+         
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowType($workflow_type_id, $form_type);
         $title = "Create $target_system->name CR";
         return view("$this->view.create",compact('CustomFields','workflow_type_id','target_system','title'));
@@ -231,8 +243,19 @@ class ChangeRequestController extends Controller
                 return redirect()->back()->withInput()->withErrors($validator);
             }
         }
-        $cr_id = $this->changerequest->create($request->all()); 
+       
+           $parentCR = DB::table('parents_crs')
+            ->where('id', $request->parent_id)
+            ->value('name');
+ 
+          $res =  UserFactory::index()->get_parent_cr_user($parentCR);
+            //$res[0]->id
+            $request['developer_id'] = $res[0]->id;
+        //dd($request);
+        $cr_data = $this->changerequest->create($request->all()); 
 
+		$cr_id = $cr_data['id'];
+		$cr_no = $cr_data['cr_no'];
         /*if ($request->file()) {
             $this->attachments->add_files($request->file('attach'), $cr_id);
         }*/
@@ -246,7 +269,7 @@ class ChangeRequestController extends Controller
             $this->attachments->add_files($request->file('business_attachments'), $cr_id, 2);
             
         }
-        return redirect()->back()->with('status' , 'Created Successfully CR#'.$cr_id  );
+        return redirect()->back()->with('status' , 'Created Successfully CR#'.$cr_no  );
         
     }
   
@@ -258,7 +281,7 @@ class ChangeRequestController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function show($id)
-    { 
+    {  
         $this->authorize('Show ChangeRequest'); // permission check
         $cr = $this->changerequest->findById($id);
         if(!$cr)
@@ -325,7 +348,7 @@ class ChangeRequestController extends Controller
     } 
 
     public function edit($id,$cab_cr_flag=false)
-    {
+    { 
         $this->authorize('Edit ChangeRequest'); // permission check
         //$this->logs = LogFactory::index();
 
@@ -390,9 +413,18 @@ class ChangeRequestController extends Controller
             } // to check if the user has access to edit this cr or not 
         }
        
-        
+     /*  $results = DB::table('change_request_custom_fields as flds')
+        ->leftJoin('parents_crs as pcrs', 'pcrs.id', '=', 'flds.custom_field_value')
+        ->where('flds.cr_id', $id)
+        ->where('flds.custom_field_id', 32)
+        ->select('pcrs.name')
+        ->get();
+        $parent_CR = $results[0]->name;*/
+          //dd($parent_CR);
         //dd($cr->change_request_custom_fields);
         $developer_users =  UserFactory::index()->get_user_by_group($cr->application_id);
+       //  $developer_users =  UserFactory::index()->get_parent_cr_user($parent_CR);
+        
         $sa_users =  UserFactory::index()->get_user_by_department_id(6);
         $testing_users =  UserFactory::index()->get_user_by_department_id(3);
         $work= $cr->workflow_type_id;
@@ -403,6 +435,7 @@ class ChangeRequestController extends Controller
         // }
       
         $cap_users =  UserFactory::index()->get_users_cap($cr->application_id);
+        $rtm_members =  UserFactory::index()->get_user_by_group_id(23);
         $technical_teams = Group::where('technical_team','1')->get();
         $form_type = 2; // create CR form type id
         $workflow_type_id = $cr->workflow_type_id;
@@ -412,7 +445,7 @@ class ChangeRequestController extends Controller
         $status_id = $cr->getCurrentStatus()->status->id;
         $status_name = $cr->getCurrentStatus()->status->name;
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus($workflow_type_id, $form_type, $status_id);
-         
+        
         $all_defects = $this->defects->all_defects($id);
         $technical_team_disabled = ChangeRequestTechnicalTeam::where('cr_id', $id)->get();
         $ApplicationImpact = ApplicationImpact::where('application_id', $cr->application_id)->select('impacts_id')->get();
@@ -427,7 +460,7 @@ class ChangeRequestController extends Controller
         $reminder_promo_tech_teams = array();
         $reminder_promo_tech_teams = $cr->technical_Cr ? $cr->technical_Cr->technical_cr_team->where('status','0')->pluck('group')->pluck('title')->toArray(): array();
         $reminder_promo_tech_teams_text = implode(',',$reminder_promo_tech_teams);
-        return view("$this->view.edit",compact('selected_technical_teams','man_day' ,'technical_team_disabled' ,'status_name' ,'ApplicationImpact' ,'cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag','technical_teams','all_defects','reminder_promo_tech_teams','reminder_promo_tech_teams_text'));  
+        return view("$this->view.edit",compact('selected_technical_teams','man_day' ,'technical_team_disabled' ,'status_name' ,'ApplicationImpact' ,'cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag','technical_teams','all_defects','reminder_promo_tech_teams','reminder_promo_tech_teams_text','rtm_members'));  
 
     }
 
@@ -801,5 +834,110 @@ class ChangeRequestController extends Controller
             //return response("Invalid action specified.", 400);
         }
     }
+
+
+    public function handleDivisionManagerAction1(Request $request)
+{
+    
+    $cr_id = $request->query('crId');
+     $action = $request->query('action');  
+    $token = $request->query('token');
+
+    if (!$cr_id || !$action || !$token) {
+        return response()->json([
+            'isSuccess' => false,
+            'message' => 'Invalid request. Missing parameters.',
+        ], 400);
+    }
+
+    $cr = Change_request::find($cr_id);
+   // die($cr);
+    if (!$cr) {
+        return response()->json([
+            'isSuccess' => false,
+            'message' => 'Change Request not found.',
+        ], 404);
+    }
+
+    $expectedToken = md5($cr->id . $cr->created_at . env('APP_KEY'));
+    if ($token !== $expectedToken) {
+        return response()->json([
+            'isSuccess' => false,
+            'message' => 'Unauthorized access. Invalid token.',
+        ], 403);
+    }
+
+    $workflow_type_id = $cr->workflow_type_id;
+    $current_status = Change_request_statuse::where('cr_id', $cr_id)->where('active', '1')->value('new_status_id');
+
+    if ($current_status != '22') {
+        if ($current_status == '19') {
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'You already rejected this CR.',
+            ], 400);
+        } else {
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'You already approved this CR.',
+            ], 400);
+        }
+    }
+
+    // Determine next status based on workflow_type_id
+    if ($workflow_type_id == 3) {
+        $workflowIdForAction = $action === 'approve' ? 36 : 35;
+    } elseif ($workflow_type_id == 5) {
+        $workflowIdForAction = $action === 'approve' ? 188 : 184;
+    } else {
+        return response()->json([
+            'isSuccess' => false,
+            'message' => 'Unsupported workflow type.',
+        ], 400);
+    }
+
+    $repo = new ChangeRequestRepository();
+    $updateRequest = new \Illuminate\Http\Request([
+        'old_status_id' => $current_status,
+        'new_status_id' => $workflowIdForAction,
+    ]);
+    $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
+
+    if ($action === 'approve') {
+        return response()->json([
+            'isSuccess' => true,
+            'message' => 'CR #' . $cr_id . ' has been successfully approved.',
+        ], 200);
+    } elseif ($action === 'reject') {
+        return response()->json([
+            'isSuccess' => true,
+            'message' => 'CR #' . $cr_id . ' has been successfully rejected.',
+        ], 200);
+    } else {
+        return response()->json([
+            'isSuccess' => false,
+            'message' => 'Invalid action specified.',
+        ], 400);
+    }
+}
+
+    public function approved_active(Request $request){
+
+        
+        
+        $id=$request->id;
+		   $changerequest = $this->changerequest->UpateChangeRequestStatus($id,$request);
+		   
+		  // $this->changerequest->updateStatus($id);
+		   
+         
+		    return response()->json([
+            'message' => 'Updated Successfully',
+            'status' => 'success'
+        ]);
+
+		  
+		
+	}
 
 }

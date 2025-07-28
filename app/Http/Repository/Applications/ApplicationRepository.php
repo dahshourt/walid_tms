@@ -23,7 +23,12 @@ class ApplicationRepository implements ApplicationRepositoryInterface
     }
     public function create($request)
     {
-        return Application::create($request);
+		$file = $this->UploadSystemFile($request['app_file']);
+		$request['file'] = $file;
+		unset($request['app_file']);
+		//dd($request);
+		$application = Application::create($request);
+        return $application->id;
     }
 
     public function delete($id)
@@ -33,6 +38,13 @@ class ApplicationRepository implements ApplicationRepositoryInterface
 
     public function update($request, $id)
     {
+		
+		if(isset($request['app_file']))
+		{
+			$file = $this->UploadSystemFile($request['app_file']);
+			$request['file'] = $file;
+		}
+		unset($request['app_file']);
         return Application::where('id', $id)->update($request);
     }
 
@@ -46,7 +58,7 @@ class ApplicationRepository implements ApplicationRepositoryInterface
         $application = Application::find($id);
         return $application->workflow_type;
     }
-public function updateactive($active,$id){
+	public function updateactive($active,$id){
 		if($active){
 		return 	$this->update(['active'=>'0'],$id);
 		} else{
@@ -96,5 +108,18 @@ public function updateactive($active,$id){
         
          
     }
+	
+	
+	public function UploadSystemFile($app_file)
+	{
+		$filename = time() . "." . $app_file->getClientOriginalExtension();
+		$original_file_name = $app_file->getClientOriginalName();
+		$app_file->move(public_path() . "/uploads/", $original_file_name);
+		$file_path = public_path() . "/uploads/" . $original_file_name;
+		return $original_file_name;
+	}
+	
+	
+	
 
 }

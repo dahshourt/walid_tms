@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Applications;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Validation\ValidatesRequests;
-use App\Http\Requests\Applications\ApplicationRequest;
+use App\Http\Requests\Applcations\ApplicationsRequest;
 use App\Factories\Applications\ApplicationFactory;
+use App\Http\Repository\Workflow\Workflow_type_repository;
 
 class ApplicationController extends Controller
 {
@@ -28,16 +29,89 @@ class ApplicationController extends Controller
 
     public function index()
     {
+		$this->authorize('List Applications'); // permission check
         $collection = $this->Application->getAll();
         return view("$this->view.index",compact('collection'));
     }
+    
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    { 
+		$this->authorize('Create Application');
+		$workflow=new Workflow_type_repository();
+		$workflow_subtype =   $workflow->get_workflow_all_subtype();
+        return view("$this->view.create",compact('workflow_subtype'));
+    }
+
+    /**
+     * Send or resend the verification code.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @throws \Illuminate\Validation\ValidationException
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function store(ApplicationsRequest $request)
+    {
+        $this->Application->create($request->all());
+        return redirect()->back()->with('status' , 'Added Successfully' );
+    }
+
+
     public function edit($id)
     {
+		$this->authorize('Edit Application');
         $row = $this->Application->find($id);
-       
-        return view("$this->view.edit",compact('row'));
+		$workflow=new Workflow_type_repository();
+		$workflow_subtype =   $workflow->get_workflow_all_subtype();
+        return view("$this->view.edit",compact('row','workflow_subtype'));
+    }
 
+    /**
+     * Send or resend the verification code.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @throws \Illuminate\Validation\ValidationException
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function update(ApplicationsRequest $request, $id)
+    {
+        $this->Application->update($request->except(['_token', '_method']),$id);
+        return redirect()->back()->with('status' , 'Updated Successfully' );
     }
     
+    public function destroy()
+    {
+        $this->authorize('Delete Cab User'); // permission check
+        
+    }
+	public function updateactive(Request $request)
+    {
+        
+        $data = $this->Application->find($request->id);
+		$this->Application->updateactive($data->active,$request->id);
+		   
+		    return response()->json([
+            'message' => 'Updated Successfully',
+            'status' => 'success'
+        ]);	
+	} //end method
 
+   
+	public function download($id)
+	{
+		$file = $this->Application->find($id);
+        $filePath = public_path('uploads/' . $file->file); // in config
+    //dd($filePath);
+        if (file_exists($filePath)) {
+            return response()->download($filePath, $file->file);
+        }
+
+        return redirect()->back()->withErrors('File not found.');
+	}
+   
+   
 }

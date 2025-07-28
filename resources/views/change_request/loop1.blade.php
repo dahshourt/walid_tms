@@ -28,24 +28,36 @@ $check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_
                                         @endcan
                                     @endcan
                                     <th scope="row">{{ $item->title}}</th>
+                                    <th scope="row">{{ $item->description}}</th>
                                     <td>{{ $item->getCurrentStatus() && $item->getCurrentStatus()->status ? $item->getCurrentStatus()->status->status_name : "" }}</td>
                                     @if(!empty($roles_name) && isset($roles_name[0]) && $roles_name[0] != "Viewer")
-                                    <td>{{ $item['design_duration'] }}</td>
-                                    <td>{{ $item['start_design_time'] }}</td>
-                                    <td>{{ $item['end_design_time'] }}</td>
-                                    <td>{{ $item['develop_duration'] }}</td>
-                                    <td>{{ $item['start_develop_time'] }}</td>
-                                    <td>{{ $item['end_develop_time'] }}</td>
-                                    <td>{{ $item['test_duration'] }}</td>
-                                    <td>{{ $item['start_test_time'] }}</td>
-                                    <td>{{ $item['end_test_time'] }}</td>
-                                    <td>{{ $item['CR_duration'] }}</td>
-                                    <td>{{ $item['start_CR_time'] }}</td>
-                                    <td>{{ $item['end_CR_time'] }}</td>
+                                   
                                     @endif
-                                    <td>
+                                    @php
+    $token = md5($item->id . $item->created_at . env('APP_KEY'));
+@endphp
+
+<td>
+    <div class="d-inline-flex gap-2">
+        <button type="button" class="btn btn-outline-success btn-sm _approved_active"
+                data-id="{{ $item->id }}"
+                data-token="{{ $token }}">
+            ✅ Approved
+        </button>
+        <button type="button" class="btn btn-outline-danger btn-sm _rejected_active"
+                data-id="{{ $item->id }}"
+                data-token="{{ $token }}">
+            ❌ Rejected
+        </button>
+    </div>
+</td>
+
+
+                                        <td>
                                         <div class="d-inline-flex">
-                                        @can('Show ChangeRequest')
+
+                                   
+                                        <!-- @can('Show ChangeRequest')
                                         <a href='{{ url("$route") }}/{{ $item->id }}' class="btn btn-sm btn-clean btn-icon mr-2" title="Show details">
                                             <span class="svg-icon svg-icon-md">
                                                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
@@ -56,7 +68,7 @@ $check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_
                                                 </svg>
                                             </span>
                                         </a>
-                                        @endcan
+                                        @endcan -->
                                         @can('Edit ChangeRequest')
                                       
                                        <?php 

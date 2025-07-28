@@ -21,7 +21,7 @@
                 <div class="col-md-12">
                     <div class="card card-custom gutter-b example example-compact">
                         <div class="card-header">
-                            <h3 class="card-title">Update Defect For CR#_{{$defect_data->cr_id}}</h3>
+                            <h3 class="card-title">Update Defect For CR#_{{$defect_data->change_request->cr_no}}</h3>
                         </div>
                         
                         

@@ -46,18 +46,18 @@ class MailController extends Controller
         return response()->json(['message' => 'Mail sent successfully']);
     } // end method
 
-    public function notifyRequesterCrCreated($requester_email , $cr){
+    public function notifyRequesterCrCreated($requester_email , $cr,$cr_no){
         $email_parts = explode('.', explode('@', $requester_email)[0]);
         $first_name = ucfirst($email_parts[0]); 
 
         $cr_link = route('show.cr', $cr);
 
         $templateContent = [
-            'subject' => "CR #$cr has been created",
+            'subject' => "CR #$cr_no has been created",
             'body' => "Dear $first_name, <br><br>"
-            ."CR #$cr has been created successfully."
+            ."CR #$cr_no has been created successfully."
             ."<br><br>"
-            ."You can review it here: <a href='$cr_link'>CR: #$cr</a>"
+            ."You can review it here: <a href='$cr_link'>CR: #$cr_no</a>"
             ."<br><br>"
             ."Thank you",
         ];
@@ -104,7 +104,7 @@ class MailController extends Controller
         return true;
     }
 
-    public function notifyDivisionManager($division_manager_email , $requester_email, $cr , $title, $description , $requester_name){
+    public function notifyDivisionManager($division_manager_email , $requester_email, $cr , $title, $description , $requester_name,$cr_no){
         
         $template = MailTemplate::where('name' ,'Notify Division Manager')->first();
         if (!$template) {
@@ -137,20 +137,20 @@ class MailController extends Controller
         */
 
         $templateContent = [
-            'subject' => "CR #$cr - Awaiting Your Approval",
+            'subject' => "CR #$cr_no - Awaiting Your Approval",
             'body' => "Dear $first_name,<br><br>"
         
-                . "A Change Request (CR) with ID <strong>#<a href='$cr_link'>$cr</a></strong> has been created and is currently "
+                . "A Change Request (CR) with ID <strong>#<a href='$cr_link'>$cr_no</a></strong> has been created and is currently "
                 . "<strong>awaiting your approval or rejection</strong> as the requester's Division Manager.<br><br>"
         
                 . "<ul>"
                 . "<li><strong>CR Subject:</strong> $title</li>"
                 . "<li><strong>CR Description:</strong> $description</li>"
                 . "<li><strong>Requester:</strong> $requester_name</li>"
-                . "<li><strong>Reference:</strong> CR ID #$cr</li>"
+                . "<li><strong>Reference:</strong> CR ID #$cr_no</li>"
                 . "</ul><br>"
         
-                . "Please respond to this email with your <strong>approved</strong> for approval or <strong>rejected</strong> for rejection.<br><br>"
+                . "Please respond <strong>All</strong> to this mail with <strong>approved</strong> or <strong>rejected</strong>.<br><br>"
         
                 . "Thank you in advance for your prompt action.<br><br>"
         
@@ -162,8 +162,8 @@ class MailController extends Controller
 
         try {
             //Send the email <a href='$cr_link'>$cr</a>
-            //Mail::to($division_manager_email)->cc(['anan.latif@te.eg', 'reem.mahrous@te.eg', 'adel.atef@te.eg', 'yousry.mostafa@te.eg', 'yasmine.mamdouh@te.eg'])->send(new TestMail($templateContent));
-            Mail::to($division_manager_email)->send(new TestMail($templateContent));
+            Mail::to($division_manager_email)->cc(['anan.latif@te.eg', 'reem.mahrous@te.eg', 'adel.atef@te.eg', 'yousry.mostafa@te.eg', 'it.qa@te.eg'])->send(new TestMail($templateContent));
+            //Mail::to($division_manager_email)->send(new TestMail($templateContent));
     
             return response()->json(['success' => 'Email sent successfully.']);
         } catch (\Exception $e) {
@@ -206,5 +206,4 @@ class MailController extends Controller
 
     // to send the mail
     //sendMailByTemplate('Template Name', 'recipient@example.com', ['cc@example.com']);
-
 }

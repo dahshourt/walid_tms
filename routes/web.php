@@ -38,7 +38,8 @@ Route::get('/cr/division_manager/action', 'ChangeRequest\ChangeRequestController
 
 Route::middleware(['auth'])->group(
     function () {
-       
+       Route::get('/change_request/approved_active', 'ChangeRequest\ChangeRequestController@handleDivisionManagerAction1');
+       // Route::post('/change_request/rejected_active', 'ChangeRequest\ChangeRequestController@rejected_active');
         Route::get('/statistics', 'HomeController@StatisticsDashboard');
         Route::get('/dashboard', 'HomeController@StatisticsDashboard');
 
@@ -83,6 +84,11 @@ Route::middleware(['auth'])->group(
        Route::post('stage/updateactive', 'Stages\StageController@updateactive');
        Route::resource('parents', Parents\ParentController::class);
         Route::post('parent/updateactive', 'Parents\ParentController@updateactive');
+        Route::get('list/CRs/by/workflowtype', 'Parents\ParentController@ListCRsbyWorkflowtype');
+		Route::get('parent/file/download/{id}','Parents\ParentController@download')->name('parent.download');
+		
+		
+		
        Route::resource('high_level_status', highLevelStatuses\highLevelStatusesControlller::class);
        Route::post('high_level_status/updateactive', 'highLevelStatuses\highLevelStatusesControlller@updateactive');
        //Route::resource('workflows', Workflow\WorkflowController::class);
@@ -104,10 +110,11 @@ Route::middleware(['auth'])->group(
        Route::get('advanced/search/result', 'Search\SearchController@AdvancedSearchResult')->name('advanced.search.result');;
         Route::get('/search/advanced_search', 'CustomFields\CustomFieldGroupTypeController@AllCustomFieldsWithSelectedByformType')->name('advanced.search');
 
-       //Route::resource('applications', Applications\ApplicationController::class);
-      // Route::post('applications/updateactive', 'Applications\ApplicationController@updateactive');
+		Route::resource('applications', Applications\ApplicationController::class);
+		Route::post('applications/updateactive', 'Applications\ApplicationController@updateactive');
+		Route::get('app/file/download/{id}','Applications\ApplicationController@download')->name('app.download');
       
-      Route::post('advanced-search-requests/export', 'Search\SearchController@AdvancedSearchResultExport')->name('advanced.search.export');;
+		Route::post('advanced-search-requests/export', 'Search\SearchController@AdvancedSearchResultExport')->name('advanced.search.export');;
 
        Route::resource('rejection_reasons', RejectionReasons\RejectionReasonsController::class);
        Route::post('rejection_reasons/updateactive', 'RejectionReasons\RejectionReasonsController@updateactive');
@@ -122,6 +129,7 @@ Route::middleware(['auth'])->group(
         Route::get('change_request/listcrsbyuser', 'ChangeRequest\ChangeRequestController@list_crs_by_user');
         
         Route::resource('change_request', 'ChangeRequest\ChangeRequestController');
+        Route::get('change_request2/dvision_manager_cr', 'ChangeRequest\ChangeRequestController@dvision_manager_cr')->name('dvision_manager_cr');
         Route::get('change_request1/asd/{group?}', 'ChangeRequest\ChangeRequestController@asd')->name('change_request.asd');
         Route::post('/select-group/{group}', 'ChangeRequest\ChangeRequestController@selectGroup')->name('select_group');
 

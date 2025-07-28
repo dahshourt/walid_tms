@@ -3,7 +3,7 @@
 @foreach ($collection as $item)
                                 <tr>
                                     <th scope="row">{{ $item->id }}</th>
-                                    <td>{{ $item->cr_id }}</td>  
+                                    <td>{{ $item->change_request->cr_no }}</td>  
                                     <td>{{ $item->current_status->name }}</td> 
                                     <td>{{ $item->subject }}</td>
                                     
