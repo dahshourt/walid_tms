@@ -30,7 +30,7 @@ class CustomFieldGroupTypeController extends Controller
         // Ensure the user is authenticated
          $this->middleware(function ($request, $next) {
 			$this->user= \Auth::user();
-			if(!$this->user->hasRole('Super Admin') && !$this->user->can('Access CustomFields'))
+			if(!$this->user->hasRole('Super Admin') && !$this->user->can('Access CustomFields') && !$this->user->can('Access Advanced Search'))
 			{
 				abort(403, 'This action is unauthorized.');
 			}	
@@ -199,7 +199,7 @@ class CustomFieldGroupTypeController extends Controller
     {
         // Log the entire request data
      
-        $this->custom_field_group_type->deleteCFs();
+    
         if (isset($request->custom_field_id)) {
             $column_value = $request->group_id ? $request->group_id : $request->wf_type_id;
             $column = $request->group_id ? "group_id" : "wf_type_id";
@@ -210,7 +210,7 @@ class CustomFieldGroupTypeController extends Controller
                 \DB::beginTransaction();
     
                 // Delete existing custom field group types
-                //$this->custom_field_group_type->deleteCFs();
+                $this->custom_field_group_type->deleteCFs();
               
                 // Loop through each custom field ID
                 foreach ($request->custom_field_id as $key => $value) {
@@ -244,7 +244,6 @@ class CustomFieldGroupTypeController extends Controller
                 \DB::commit();
     
                 // Redirect back with a success message
-                //dd("walid");
                 return redirect()->back()->with('success', 'Custom fields saved successfully.');
             } catch (\Exception $e) {
                 \DB::rollBack();

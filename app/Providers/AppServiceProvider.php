@@ -30,14 +30,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         //
-<<<<<<< HEAD
         //URL::forceRootUrl('https://10.19.44.26'); // replace with your server IP
         Paginator::useBootstrap();
         Schema::defaultstringLength(191);
-=======
-        // URL::forceRootUrl('https://10.19.44.26/index.php'); // replace with your server IP
-        // Paginator::useBootstrap();
-        // Schema::defaultstringLength(191);
->>>>>>> 4f5cf38c3277ea55b9a091740684484b5af15008
     }
 }

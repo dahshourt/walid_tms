@@ -150,12 +150,12 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
         $mailController = new MailController();
 
         // send mail to requester
-        $mailController->notifyRequesterCrCreated($statusdata['requester_email'] , $changeRequest->id,$changeRequest->cr_no);
+        $mailController->notifyRequesterCrCreated($statusdata['requester_email'] , $changeRequest->id, $changeRequest->cr_no);
 
         // send mail to division manager
 		if(isset($statusdata['division_manager']))
 		{
-			$mailController->notifyDivisionManager($statusdata['division_manager'] , $statusdata['requester_email'], $changeRequest->id ,$statusdata['title'] , $statusdata['description'] , $statusdata['requester_name'],$changeRequest->cr_no);	
+			$mailController->notifyDivisionManager($statusdata['division_manager'] , $statusdata['requester_email'], $changeRequest->id ,$statusdata['title'] , $statusdata['description'] , $statusdata['requester_name'], $changeRequest->cr_no);	
 		}
         
 
