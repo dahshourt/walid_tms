@@ -11,14 +11,25 @@
                 <option value="{{$target_system->id}}">{{$target_system->name}}</option>
             </select>
         @elseif($item->CustomField->name == "cr_member")
-            <select name="{{ $item->CustomField->name }}" class="form-control form-control-lg">
+            <select name="{{ $item->CustomField->name }}" class="form-control form-control-lg"
+			@cannot('Set Time For Another User') disabled @endcannot >
                 <option value="">Select</option>
+				
                 @foreach($item->CustomField->getCustomFieldValue() as $value)
                     @if($value->defualt_group->title === 'CR Team Admin')
                         <option value="{{ $value->id }}" {{ $custom_field_value == $value->id ? 'selected' : '' }}>{{ $value->name }}</option>
                     @endif
                 @endforeach
             </select>
+		 @elseif($item->CustomField->name == "assignment_user_id")
+            <select name="{{ $item->CustomField->name }}" class="form-control form-control-lg"
+			@cannot('Set Time For Another User') disabled @endcannot >
+                <option value="">Select</option>
+				
+                @foreach($assignment_users as $assignment_user)
+                        <option value="{{ $assignment_user->id }}" {{ old($assignment_user->user_name, $custom_field_value) == $assignment_user->id ? 'selected' : '' }}>{{ $assignment_user->user_name }}</option>
+                @endforeach
+            </select>	
         @elseif($item->CustomField->name == "deployment_impact")
             <select name="{{ $item->CustomField->name }}" class="form-control form-control-lg">
                 <option value="">Select</option>
@@ -37,7 +48,7 @@
             <select name="{{ $item->CustomField->name }}" id="{{ $item->CustomField->name }}" class="form-control form-control-lg" 
                 @if(isset($item->validation_type_id) && $item->validation_type_id == 1) required @endif
                 @cannot('Set Time For Another User')
-                    @if(in_array($item->CustomField->name, ['tester_id', 'designer_id', 'developer_id']))
+                    @if(in_array($item->CustomField->name, ['tester_id', 'designer_id', 'developer_id','rtm_member']))
                         disabled
                     @endif
                 @endcannot
@@ -158,6 +169,11 @@
                 @else
                     @if((isset($item->enable) && ($item->enable == 1)))
                         <option value="">Select</option>
+						@if($item->CustomField->name == "rtm_member")
+                            @foreach($rtm_members as $rtm_member)
+                                <option value="{{ $rtm_member->id }}" {{ old($rtm_member->user_name, $custom_field_value) == $rtm_member->id ? 'selected' : '' }}>{{ $rtm_member->user_name }}</option>
+                            @endforeach
+                        @endif
                         @if($item->CustomField->name == "developer_id")
                             @foreach($developer_users as $developer)
                                 <option value="{{ $developer->id }}" {{ old($developer->user_name, $custom_field_value) == $developer->id ? 'selected' : '' }}>{{ $developer->user_name }}</option>
@@ -175,8 +191,15 @@
                         @endif
 
                         @foreach($item->CustomField->getCustomFieldValue() as $value)
-                            @unless(in_array($item->CustomField->name, ['developer_id', 'tester_id', 'designer_id']))
-                                <option value="{{ $value->id }}" {{ old($item->CustomField->name, $custom_field_value) == $value->id ? 'selected' : '' }}>{{ $value->name }}</option>
+                            @unless(in_array($item->CustomField->name, ['developer_id', 'tester_id', 'designer_id','rtm_member']))
+                                <option value="{{ $value->id }}" {{ old($item->CustomField->name, $custom_field_value) == $value->id ? 'selected' : '' }}>
+								@if($item->CustomField->name == "parent_id")
+									{{ $value->change_request->cr_no }} 
+								- ({{ $value->change_request->application->name }}) - ({{ $value->change_request->description }})
+								@else
+									{{ $value->name }} 
+								@endif	
+								</option>
                             @endunless
                         @endforeach
                     @else
