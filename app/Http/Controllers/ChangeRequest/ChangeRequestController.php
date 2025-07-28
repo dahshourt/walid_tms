@@ -177,7 +177,7 @@ class ChangeRequestController extends Controller
         $target_system_id = request()->target_system_id;
         $target_system = $this->applications->find($target_system_id);                            
         $workflow_type_id = $this->applications->workflowType($target_system_id)->id;
-         
+        
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowType($workflow_type_id, $form_type);
         $title = "Create $target_system->name CR";
         return view("$this->view.create",compact('CustomFields','workflow_type_id','target_system','title'));
@@ -243,8 +243,7 @@ class ChangeRequestController extends Controller
                 return redirect()->back()->withInput()->withErrors($validator);
             }
         }
-       
-           $parentCR = DB::table('parents_crs')
+		$parentCR = DB::table('parents_crs')
             ->where('id', $request->parent_id)
             ->value('name');
  
@@ -253,7 +252,6 @@ class ChangeRequestController extends Controller
             $request['developer_id'] = $res[0]->id;
         //dd($request);
         $cr_data = $this->changerequest->create($request->all()); 
-
 		$cr_id = $cr_data['id'];
 		$cr_no = $cr_data['cr_no'];
         /*if ($request->file()) {
@@ -281,7 +279,7 @@ class ChangeRequestController extends Controller
      * @return \Illuminate\Http\Response
      */
     public function show($id)
-    {  
+    { 
         $this->authorize('Show ChangeRequest'); // permission check
         $cr = $this->changerequest->findById($id);
         if(!$cr)
@@ -319,36 +317,11 @@ class ChangeRequestController extends Controller
     public function edit_cab($id)
     {
         
-         return $this->edit($id,true);
-         //dd($cr->change_request_custom_fields);
-//          $developer_users =  UserFactory::index()->get_user_by_department_id(2);
-//          $sa_users =  UserFactory::index()->get_user_by_department_id(4);
-//          $testing_users =  UserFactory::index()->get_user_by_department_id(3);
-//          $work= $cr->workflow_type_id;
-//          $cond = in_array($cr->RequestStatuses->last()?->new_status_id, [66, 67, 68, 69]);
-//          if(($work==5)&&$cond)
-//          {
-//              return redirect()->to('/change_request');
-//          }
-       
-//          $cab_cr_flag = true;
-         
-//          $form_type = 2; // create CR form type id
-//          $workflow_type_id = $cr->workflow_type_id;
-//          //$logs_ers = $this->logs->get_by_cr_id($id);
-//          $logs_ers = $cr->logs;
-//          //$CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowType($workflow_type_id, $form_type);
-//          $status_id = $cr->getCurrentStatus()->status->id;
-//          $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus($workflow_type_id, $form_type, $status_id);
-//  //    echo"<pre>";
-//  //        print_r($CustomFields);
-//  //        echo"</pre>"; die;
-//          return view("$this->view.edit",compact('CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag'));  
- 
-    } 
+        return $this->edit($id,true);
+	} 
 
     public function edit($id,$cab_cr_flag=false)
-    { 
+    {
         $this->authorize('Edit ChangeRequest'); // permission check
         //$this->logs = LogFactory::index();
 
@@ -413,27 +386,13 @@ class ChangeRequestController extends Controller
             } // to check if the user has access to edit this cr or not 
         }
        
-     /*  $results = DB::table('change_request_custom_fields as flds')
-        ->leftJoin('parents_crs as pcrs', 'pcrs.id', '=', 'flds.custom_field_value')
-        ->where('flds.cr_id', $id)
-        ->where('flds.custom_field_id', 32)
-        ->select('pcrs.name')
-        ->get();
-        $parent_CR = $results[0]->name;*/
-          //dd($parent_CR);
+        
         //dd($cr->change_request_custom_fields);
         $developer_users =  UserFactory::index()->get_user_by_group($cr->application_id);
-       //  $developer_users =  UserFactory::index()->get_parent_cr_user($parent_CR);
-        
         $sa_users =  UserFactory::index()->get_user_by_department_id(6);
         $testing_users =  UserFactory::index()->get_user_by_department_id(3);
         $work= $cr->workflow_type_id;
-        // $cond = in_array($cr->RequestStatuses->last()?->new_status_id, [66, 67, 68, 69]);
-        // if(($work==5)&&$cond)
-        // {
-        //     return redirect()->to('/change_request');
-        // }
-      
+        
         $cap_users =  UserFactory::index()->get_users_cap($cr->application_id);
         $rtm_members =  UserFactory::index()->get_user_by_group_id(23);
         $technical_teams = Group::where('technical_team','1')->get();
@@ -443,9 +402,9 @@ class ChangeRequestController extends Controller
         $logs_ers = $cr->logs;
         //$CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowType($workflow_type_id, $form_type);
         $status_id = $cr->getCurrentStatus()->status->id;
-        $status_name = $cr->getCurrentStatus()->status->name;
+		$status_name = $cr->getCurrentStatus()->status->name;
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus($workflow_type_id, $form_type, $status_id);
-        
+         
         $all_defects = $this->defects->all_defects($id);
         $technical_team_disabled = ChangeRequestTechnicalTeam::where('cr_id', $id)->get();
         $ApplicationImpact = ApplicationImpact::where('application_id', $cr->application_id)->select('impacts_id')->get();
@@ -460,7 +419,12 @@ class ChangeRequestController extends Controller
         $reminder_promo_tech_teams = array();
         $reminder_promo_tech_teams = $cr->technical_Cr ? $cr->technical_Cr->technical_cr_team->where('status','0')->pluck('group')->pluck('title')->toArray(): array();
         $reminder_promo_tech_teams_text = implode(',',$reminder_promo_tech_teams);
-        return view("$this->view.edit",compact('selected_technical_teams','man_day' ,'technical_team_disabled' ,'status_name' ,'ApplicationImpact' ,'cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag','technical_teams','all_defects','reminder_promo_tech_teams','reminder_promo_tech_teams_text','rtm_members'));  
+		
+		
+		$view_by_groups = $cr->getCurrentStatus()->status->group_statuses->where('type','2')->pluck('group_id')->toArray();
+		$assignment_users = UserFactory::index()->GetAssignmentUsersByViewGroups($view_by_groups);
+		
+        return view("$this->view.edit",compact('selected_technical_teams','man_day' ,'technical_team_disabled' ,'status_name' ,'ApplicationImpact' ,'cap_users','CustomFields','cr', 'workflow_type_id', 'logs_ers','developer_users','sa_users','testing_users','cab_cr_flag','technical_teams','all_defects','reminder_promo_tech_teams','reminder_promo_tech_teams_text','rtm_members','assignment_users'));  
 
     }
 
