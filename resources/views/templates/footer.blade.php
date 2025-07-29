@@ -175,13 +175,16 @@
 			});
     	});
 
-		$('._approved_active').on('click', function() {
+		$('._approved_active').on('click', function () {
     var id = $(this).attr('data-id');
     var token = $(this).attr('data-token');
-	let baseUrl = '{{ url("/change_request/approved_active") }}';
-let fullUrl = `${baseUrl}?crId=${id}&action=approve&token=${token}`;
+    var action = $(this).attr('data-action'); // 👈 Get the action (approve or reject)
+    
+    let baseUrl = '{{ url("/change_request/approved_active") }}';
+    let fullUrl = `${baseUrl}?crId=${id}&action=${action}&token=${token}`;
+
     Swal.fire({
-        title: "Are you sure?",
+        title: `Are you sure you want to ${action}?`,
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -192,16 +195,19 @@ let fullUrl = `${baseUrl}?crId=${id}&action=approve&token=${token}`;
             $.ajax({
                 url: fullUrl,
                 type: 'GET',
-                success: function(msg) {
+                success: function (msg) {
                     if (msg.status === 200 && msg.isSuccess) {
-                        toastr.success(msg.message);
-                        
+                        if (action === 'reject') {
+                            toastr.warning(msg.message);
+                        } else {
+                            toastr.success(msg.message);
+                        }
                     } else {
                         toastr.error(msg.message || "Action failed.");
                     }
-					window.location.reload();
+                    window.location.reload();
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     toastr.error("Something went wrong: " + error);
                     alert("Error: " + error + "\nStatus: " + status + "\nResponse: " + xhr.responseText);
                     window.location.reload();
@@ -210,6 +216,7 @@ let fullUrl = `${baseUrl}?crId=${id}&action=approve&token=${token}`;
         }
     });
 });
+
 
 $('._rejected_active').on('click', function() {
     var id = $(this).attr('data-id');
