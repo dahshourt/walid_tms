@@ -88,6 +88,7 @@ class MailController extends Controller
                 ."<br><br>"
                 ."You can review it here: <a href='$cr_link'>CR: #$cr_no</a>"
                 ."<br><br>"
+                ."<strong>Please Note:</strong> If no action is taken within <strong>2 Working Days,</strong> the system will treat this as a <strong>passive confirmation</strong> and proceed accordingly.<br><br>"
                 ."TMS Automation <br><br> Thank you",
             ];
 
