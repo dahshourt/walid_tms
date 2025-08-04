@@ -443,7 +443,23 @@ class ChangeRequestController extends Controller
         }
 
         return redirect()->back()->withErrors('File not found.');
-    }
+    } // end download
+
+    public function deleteFile($id)
+    {
+        $file = attachements_crs::findOrFail($id);
+        if(!auth()->user()->hasRole('Super Admin') && auth()->user()->id != $file->user->id)
+        {
+            return redirect()->back()->withErrors('You are not allowed to delete this file.');
+        }
+        $deleted = $this->attachments->delete_file($id);
+        if ($deleted) {
+            return redirect()->back()->with('success','File deleted successfully.');
+        }
+        
+        return redirect()->back()->withErrors('File not found.');
+        
+    } // end delete
  
     /**
      * Update the specified resource in storage.
@@ -920,5 +936,7 @@ class ChangeRequestController extends Controller
 		  
 		
 	}
+
+
 
 }

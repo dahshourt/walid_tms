@@ -5,6 +5,7 @@ namespace App\Http\Repository\ChangeRequest;
 use App\Contracts\ChangeRequest\AttachmentsCRSRepositoryInterface;
 use App\Models\Attachements_crs;
 use Auth;
+use App\Http\Repository\Logs\LogRepository;
 // declare Entities
 class AttachmentsCRSRepository implements AttachmentsCRSRepositoryInterface
 {
@@ -68,5 +69,23 @@ class AttachmentsCRSRepository implements AttachmentsCRSRepositoryInterface
         }
 
 
+    }
+
+    public function delete_file($id)
+    {
+        $file = attachements_crs::findOrFail($id);
+        $filePath = public_path('uploads/' . $file['file_name']); // in config
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+
+        $log = new LogRepository();
+        $log->create([
+            'cr_id' => $file->cr_id,
+            'user_id' => Auth::user()->id,
+            'log_text' => 'File ' . $file->file . ' deleted by ' . Auth::user()->user_name,
+        ]);
+        
+       return $file->delete();
     }
 }
