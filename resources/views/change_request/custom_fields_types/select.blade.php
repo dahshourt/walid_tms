@@ -75,8 +75,8 @@
 
     @if($toStatus)
         {{-- If test_duration is 0, null, or empty: allow ID 20 --}}
-        @if($cr->test_duration === '0' || $cr->test_duration === null || $cr->test_duration === '')
-            @if($toStatus->id == 20)
+        @if($cr->test_duration === 0 || $cr->test_duration === null || $cr->test_duration === '')
+            @if($toStatus->id == 20 ||$toStatus->id == 48)
                 <option value="{{ $status->id }}" 
                     {{ $custom_field_value == $status->id ? 'selected' : '' }}
                     data-status-name="{{ $toStatus->status_name }}"
@@ -107,8 +107,23 @@
            
         @else
             {{-- Else: only allow ID 11 --}}
-            @if($toStatus->id != 20)
-            @if($toStatus->id == 11)
+            @if($toStatus->id != 20) 
+            @if($toStatus->id == 74)
+                <option value="{{ $status->id }}" 
+                    {{ $custom_field_value == $status->id ? 'selected' : '' }}
+                    data-status-name="{{ $toStatus->status_name }}"
+                    data-defect="{{ $toStatus->defect }}">
+                    @if($toStatus->high_level)
+                        {{ $toStatus->high_level->name }}
+                    @elseif($status->to_status_label)
+                        {{ $status->to_status_label }}
+                    @else
+                        {{ $toStatus->status_name }}
+                    @endif
+                </option>
+                @else
+                @if($toStatus->id != 48) 
+            @if($toStatus->id == 21)
                 <option value="{{ $status->id }}" 
                     {{ $custom_field_value == $status->id ? 'selected' : '' }}
                     data-status-name="{{ $toStatus->status_name }}"
@@ -137,6 +152,13 @@
                         
             @endif
             @endif
+                        
+            @endif
+            @endif
+
+       
+
+
         @endif
     @endif
 @endforeach
