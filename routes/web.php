@@ -139,6 +139,7 @@ Route::middleware(['auth'])->group(
 
         Route::get('change_request/workflow/type', 'ChangeRequest\ChangeRequestController@Allsubtype');
         Route::get('files/download/{id}','ChangeRequest\ChangeRequestController@download')->name('files.download');
+        Route::get('files/delete/{id}','ChangeRequest\ChangeRequestController@deleteFile')->name('files.delete');
 
         // send mail routes
         //Route::get('manual_email', 'Mail\MailController@index');
