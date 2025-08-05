@@ -32,7 +32,7 @@ class AutoApproveCabUsers extends Command
              
             $requestData = [
                 'old_status_id' => '38',
-                'new_status_id' => '40',
+                'new_status_id' => '160',
                 'cab_cr_flag' => '1',
                 'user_id' => $user_id,
             ];
