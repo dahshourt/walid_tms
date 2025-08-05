@@ -30,7 +30,7 @@ class CustomFieldGroupTypeController extends Controller
         // Ensure the user is authenticated
          $this->middleware(function ($request, $next) {
 			$this->user= \Auth::user();
-			if(!$this->user->hasRole('Super Admin') && !$this->user->can('Access CustomFields'))
+			if(!$this->user->hasRole('Super Admin') && !$this->user->can('Access CustomFields') && !$this->user->can('Access Advanced Search'))
 			{
 				abort(403, 'This action is unauthorized.');
 			}	

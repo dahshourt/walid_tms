@@ -187,7 +187,7 @@
         }
         return true;
     }
-    $(function(){
+    /*$(function(){
         $('#advanced_search').on('submit',function(e){
             var oneFilled = checkFields($(this));
             if(oneFilled) {
@@ -197,7 +197,7 @@
                 toastr.error('NO FIELDS FILLED OUT!');
             }
         });
-    });
+    }); */
 /* var hasInput=false;
     $("#advanced_search").on("submit", function(){
         if(!hasInput){

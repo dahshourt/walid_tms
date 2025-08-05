@@ -232,7 +232,7 @@
                                                                 <th>User Name</th>
                                                                 <th>Uploaded At</th>
                                                                 <th>File Size (MB)</th>
-                                                                <th>Download</th>
+                                                                <th>Action</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody class="text-center">
@@ -254,6 +254,11 @@
                                                                     <a href="{{ route('files.download', $file->id) }}" class="btn btn-light btn-sm">
                                                                         Download
                                                                     </a>
+                                                                    @if($file->user->id == \Auth::user()->id || \Auth::user()->hasRole('Super Admin'))
+                                                                    <a href="{{ route('files.delete', $file->id) }}" class="btn btn-danger btn-sm">
+                                                                        Delete
+                                                                    </a>
+                                                                    @endif
                                                                 </td>
                                                             </tr>
                                                             @endif
@@ -271,7 +276,7 @@
                                                                 <th>User Name</th>
                                                                 <th>Uploaded At</th>
                                                                 <th>File Size (MB)</th>
-                                                                <th>Download</th>
+                                                                <th>Action</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody class="text-center">
@@ -293,6 +298,11 @@
                                                                     <a href="{{ route('files.download', $file->id) }}" class="btn btn-light btn-sm">
                                                                         Download
                                                                     </a>
+                                                                    @if($file->user->id == \Auth::user()->id || \Auth::user()->hasRole('Super Admin'))
+                                                                    <a href="{{ route('files.delete', $file->id) }}" class="btn btn-danger btn-sm">
+                                                                        Delete
+                                                                    </a> 
+                                                                    @endif
                                                                 </td>
                                                             </tr>
                                                             @endif

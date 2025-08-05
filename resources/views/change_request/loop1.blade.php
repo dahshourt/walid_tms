@@ -39,18 +39,23 @@ $check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_
 
 <td>
     <div class="d-inline-flex gap-2">
-        <button type="button" class="btn btn-outline-success btn-sm _approved_active"
+        <button type="button"
+                class="btn btn-outline-success btn-sm _approved_active"
                 data-id="{{ $item->id }}"
-                data-token="{{ $token }}">
-            ✅ Approved
+                data-token="{{ $token }}"
+                data-action="approve">
+            ✅ Approve
         </button>
-        <button type="button" class="btn btn-outline-danger btn-sm _rejected_active"
+        <button type="button"
+                class="btn btn-outline-danger btn-sm _approved_active"
                 data-id="{{ $item->id }}"
-                data-token="{{ $token }}">
-            ❌ Rejected
+                data-token="{{ $token }}"
+                data-action="reject">
+            ❌ Reject
         </button>
     </div>
 </td>
+
 
 
                                         <td>

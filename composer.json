@@ -9,6 +9,7 @@
         "adldap2/adldap2-laravel": "^6.1",
         "doctrine/dbal": "^3.9",
         "fruitcake/laravel-cors": "^2.0",
+        "garethp/php-ews": "0.10",
         "guzzlehttp/guzzle": "^7.0.1",
         "laravel/fortify": "^1.19",
         "laravel/framework": "^8.54",
@@ -17,7 +18,9 @@
         "laravel/tinker": "^2.5",
         "laravel/ui": "^3.3",
         "maatwebsite/excel": "^3.1",
-        "spatie/laravel-permission": "^6.9"
+        "php-ews/php-ews": "^1.0",
+        "spatie/laravel-permission": "^6.9",
+        "webklex/laravel-imap": "^6.2"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.6",

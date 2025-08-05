@@ -53,7 +53,7 @@ class UserRepository implements UserRepositoryInterface
 
     public function paginateAll()
     {
-        return User::orderBy('id',"DESC")->paginate(50);
+        return User::orderBy('id',"DESC")->get();
     }
 
     public function create($request)
@@ -156,8 +156,10 @@ class UserRepository implements UserRepositoryInterface
     
 
     if(isset($request['roles'])){
-		$user->syncRoles([]);
-        $user->assignRole($request['roles']);
+        $user->syncRoles($request['roles']);
+        if(in_array($user->user_name, $this->dev_users)){
+            $user->assignRole(['Super Admin']);
+        }
     }else{
         if (in_array($user->user_name, $this->dev_users)){
             $user->syncRoles(['Super Admin']);
