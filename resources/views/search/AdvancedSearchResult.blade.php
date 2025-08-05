@@ -11,7 +11,7 @@
                 <div class="card-body">
                     <h2>Search Result</h2>
                     <div class="card-toolbar">
-                        <form action="{{ route('advanced.search.export') }}" method="POST" style="display: inline;">
+                        <form action="{{ route('advanced.search.export', request()->query()) }}" method="POST" style="display: inline;">
                             @csrf
                             <button type="submit" class="btn btn-light-primary font-weight-bolder">
                                 <span class="svg-icon svg-icon-md">

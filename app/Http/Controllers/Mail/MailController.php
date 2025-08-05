@@ -76,6 +76,9 @@ class MailController extends Controller
     } // end method
      
 
+    
+
+
     public function send_mail_to_cap_users($users_mail,$cr_id, $cr_no)
     {
         
@@ -163,9 +166,10 @@ class MailController extends Controller
 
         try {
             //Send the email <a href='$cr_link'>$cr</a>
-            //Mail::to($division_manager_email)->cc(['anan.latif@te.eg', 'reem.mahrous@te.eg', 'adel.atef@te.eg', 'yousry.mostafa@te.eg', 'it.qa@te.eg'])->send(new TestMail($templateContent));
-            Mail::to($division_manager_email)->send(new TestMail($templateContent));
-    
+			 Mail::to($division_manager_email)->cc(config('constants.division_managers_mails'))->send(new TestMail($templateContent));
+            //Mail::to($division_manager_email)->send(new TestMail($templateContent));
+            //Mail::to($division_manager_email)->send(new TestMail($templateContent));
+
             return response()->json(['success' => 'Email sent successfully.']);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to send email.', 'details' => $e->getMessage()], 500);

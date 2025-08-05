@@ -1,0 +1,290 @@
+<?php
+namespace App\Services\ChangeRequest;
+
+use App\Models\{
+    Change_request, 
+    User, 
+    CabCr, 
+    CabCrUser, 
+    TechnicalCr, 
+    TechnicalCrTeam, 
+    NewWorkFlow,
+    CustomField,
+    ChangeRequestCustomField,
+    Change_request_statuse
+};
+use App\Http\Repository\{
+    Logs\LogRepository,
+    ChangeRequest\ChangeRequestStatusRepository,
+    ChangeRequest\ChangeRequestRepository
+};
+use App\Services\ChangeRequest\{
+    ChangeRequestEstimationService,
+    ChangeRequestStatusService,
+    ChangeRequestValidationService
+};
+use App\Traits\ChangeRequest\ChangeRequestConstants;
+use Auth;
+use Illuminate\Support\Arr;
+
+class ChangeRequestUpdateService
+{
+    use ChangeRequestConstants;
+
+    protected $logRepository;
+    protected $statusRepository;
+    protected $estimationService;
+    protected $validationService;
+    protected $statusService;
+    private $changeRequest_old;
+
+    public function __construct() {
+        $this->logRepository = new LogRepository();
+        $this->statusRepository = new ChangeRequestStatusRepository();
+        $this->estimationService = new ChangeRequestEstimationService();
+        $this->validationService = new ChangeRequestValidationService();
+        $this->statusService = new ChangeRequestStatusService();
+    }
+
+    public function update($id, $request)
+    {
+        $this->changeRequest_old = Change_request::find($id);
+        
+        // Handle CAB CR validation
+        if ($this->handleCabCrValidation($id, $request)) {
+            return true;
+        }
+
+        // Handle technical team validation
+        if ($this->handleTechnicalTeamValidation($id, $request)) {
+            return true;
+        }
+
+        // Handle user assignments
+        $this->handleUserAssignments($id, $request);
+
+        // Handle CAB users if provided
+        $this->handleCabUsers($id, $request);
+
+        // Handle technical teams
+        $this->handleTechnicalTeams($id, $request);
+
+        // Calculate estimations if needed
+        $this->handleEstimations($id, $request);
+
+        // Update the change request data
+        $this->updateCRData($id, $request);
+
+        // Update assignments in status table
+        $this->updateStatusAssignments($id, $request);
+
+        // Update status if needed
+        if (isset($request->new_status_id)) {
+            //$this->statusRepository->updateChangeRequestStatus($id, $request);
+            $this->statusService->updateChangeRequestStatus($id, $request);
+        }
+
+        // Log the update
+        $this->logRepository->logCreate($id, $request, $this->changeRequest_old, 'create');
+
+        return true;
+    }
+
+    protected function handleCabCrValidation($id, $request): bool
+    {
+        if ($request->cab_cr_flag != '1') {
+            return false;
+        }
+
+        $user_id = Auth::user()->id;
+        $cabCr = CabCr::where("cr_id", $id)->where('status', '0')->first();
+        $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
+
+        unset($request['cab_cr_flag']);
+
+        if ($checkWorkflowType) { // reject
+            $cabCr->status = '2';
+            $cabCr->save();
+            $cabCr->cab_cr_user()->where('user_id', $user_id)->update(['status' => '2']);
+        } else { // approve
+            $cabCr->cab_cr_user()->where('user_id', $user_id)->update(['status' => '1']);
+
+            $countAllUsers = $cabCr->cab_cr_user->count();
+            $countApprovedUsers = $cabCr->cab_cr_user->where('status', '1')->count();
+
+            if ($countAllUsers > $countApprovedUsers) {
+                $this->updateCRData($id, $request);
+                return true;
+            } else {
+                $cabCr->status = '1';
+                $cabCr->save();
+            }
+        }
+
+        return false;
+    }
+
+    protected function handleTechnicalTeamValidation($id, $request): bool
+    {
+        return $this->validationService->handleTechnicalTeamValidation($id, $request);
+    }
+
+    protected function handleUserAssignments($id, $request): void
+    {
+        $user = $request['assign_to'] ? User::find($request['assign_to']) : Auth::user();
+
+        if ($this->needsAssignmentUpdate($request)) {
+            $request['assignment_user_id'] = $user->id;
+        }
+    }
+
+    protected function needsAssignmentUpdate($request): bool
+    {
+        return (isset($request['dev_estimation'])) || 
+               (isset($request['testing_estimation'])) || 
+               (isset($request['design_estimation'])) || 
+               ($request['assign_to']) || 
+               (isset($request['CR_estimation']));
+    }
+
+    protected function handleCabUsers($id, $request): void
+    {
+        if (empty($request->cap_users)) {
+            return;
+        }
+
+        $record = CabCr::create([
+            'cr_id' => $id,
+            'status' => "0",
+        ]);
+
+        foreach ($request->cap_users as $userId) {
+            CabCrUser::create([
+                'user_id' => $userId,
+                'cab_cr_id' => $record->id,
+                'status' => "0",
+            ]);
+        }
+    }
+
+    protected function handleTechnicalTeams($id, $request): void
+    {
+        if (empty($request->technical_teams)) {
+            return;
+        }
+
+        $newStatusId = $request->new_status_id ?? null;
+        $workflow = $newStatusId ? NewWorkFlow::find($newStatusId) : null;
+
+        $record = TechnicalCr::create([
+            'cr_id' => $id,
+            'status' => "0",
+        ]);
+
+        foreach ($request->technical_teams as $groupId) {
+            TechnicalCrTeam::create([
+                'group_id' => $groupId,
+                'technical_cr_id' => $record->id,
+                'current_status_id' => $workflow ? $workflow->workflowstatus[0]->to_status_id : null,
+                'status' => "0",
+            ]);
+        }
+    }
+
+    protected function handleEstimations($id, $request): void
+    {
+        $changeRequest = Change_request::find($id);
+        $user = $request['assign_to'] ? User::find($request['assign_to']) : Auth::user();
+
+        if ($this->needsEstimationCalculation($request)) {
+            $data = $this->estimationService->calculateEstimation($id, $changeRequest, $request, $user);
+            $request->merge($data);
+        }
+    }
+
+    protected function needsEstimationCalculation($request): bool
+    {
+        return (isset($request['CR_duration']) && $request['CR_duration'] != '') ||
+               (isset($request['dev_estimation']) && $request['dev_estimation'] != '') ||
+               (isset($request['design_estimation']) && $request['design_estimation'] != '') ||
+               (isset($request['testing_estimation']) && $request['testing_estimation'] != '');
+    }
+
+    public function updateCRData($id, $request)
+    {
+        $arr = Arr::only($request->all(), $this->getRequiredFields());
+        $fileFields = ['technical_attachments', 'business_attachments', 'cap_users'];
+        $data = Arr::except($request->all(), array_merge(['_method'], $fileFields));
+
+        $this->handleCustomFieldUpdates($id, $data);
+
+        return Change_request::where('id', $id)->update($arr);
+    }
+
+    protected function handleCustomFieldUpdates($id, $data): void
+    {
+        foreach ($data as $key => $value) {
+            if ($key != "_token") {
+                $customFieldId = CustomField::findId($key);
+                if ($customFieldId && $value) {
+                    $changeRequestCustomField = [
+                        "cr_id" => $id,
+                        "custom_field_id" => $customFieldId->id,
+                        "custom_field_name" => $key,
+                        "custom_field_value" => $value,
+                        "user_id" => auth()->id(),
+                    ];
+                    $this->insertOrUpdateChangeRequestCustomField($changeRequestCustomField);
+                }
+            }
+        }
+    }
+
+    protected function insertOrUpdateChangeRequestCustomField(array $data): void
+    {
+        if (in_array($data['custom_field_name'], ['technical_feedback', 'business_feedback'])) {
+            ChangeRequestCustomField::create([
+                'cr_id' => $data['cr_id'], 
+                'custom_field_id' => $data['custom_field_id'],
+                'custom_field_name' => $data['custom_field_name'],
+                'custom_field_value' => $data['custom_field_value'],
+                'user_id' => $data['user_id']
+            ]);
+        } else {
+            ChangeRequestCustomField::updateOrCreate(
+                [
+                    'cr_id' => $data['cr_id'], 
+                    'custom_field_id' => $data['custom_field_id'],
+                    'custom_field_name' => $data['custom_field_name']
+                ],
+                [
+                    'custom_field_value' => $data['custom_field_value'],
+                    'user_id' => $data['user_id']
+                ]
+            );
+        }
+    }
+
+    protected function updateStatusAssignments($id, $request): void
+    {
+        $oldStatusId = $request->old_status_id ?? null;
+
+        if (isset($request->assignment_user_id) && $oldStatusId) {
+            Change_request_statuse::where('cr_id', $id)
+                ->where('new_status_id', $oldStatusId)
+                ->where('active', '1')
+                ->update(['assignment_user_id' => $request->assignment_user_id]);
+        }
+
+        // Handle specific member assignments
+        $memberFields = ['cr_member', 'rtm_member'];
+        foreach ($memberFields as $field) {
+            if (isset($request->$field) && $oldStatusId) {
+                Change_request_statuse::where('cr_id', $id)
+                    ->where('new_status_id', $oldStatusId)
+                    ->where('active', '1')
+                    ->update(['assignment_user_id' => $request->$field]);
+            }
+        }
+    }
+}
