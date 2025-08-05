@@ -150,11 +150,11 @@
 												<div class="card-footer" style="width: 100%;float: right;">
                                                     @if(count($cr->set_status) > 0)
                                                         @if($cr->getCurrentStatus()?->status?->id == 68 && $workflow_type_id == 9 && count($reminder_promo_tech_teams) > 0)
-                                                            <button type="button" class="btn btn-success mr-2" id="show_error_message">
+                                                            <button type="button" id="submit_button" class="btn btn-success mr-2" id="show_error_message">
                                                                 Submit
                                                             </button>
                                                         @else
-                                                            <button type="submit" class="btn btn-success mr-2">
+                                                            <button type="submit" id="submit_button" class="btn btn-success mr-2">
                                                                 Submit
                                                             </button>
                                                         @endif
@@ -386,13 +386,10 @@
         var status = $('select[name="new_status_id"] option:selected').val();
         if (status === "Reject" || status === "Closed" || status === "CR Closed") {
             $('input, select, textarea').prop('disabled', true);
-        } else {
-            //$('input, select, textarea').prop('disabled', false);
-        }
+        } 
         $('#new_status_id').prop('disabled', false);
     });
-
-
+	
 $(window).on("load", function () {
     $(".field_rejection_reason_id").hide();
     const statusField = document.querySelector('select[name="new_status_id"]');
@@ -442,8 +439,10 @@ $(window).on("load", function () {
     function handlecapusersVisibility() {
         if (isStatusReject()) {
             $(".field_cap_users").show();
+			$('select[name="cap_users[]"]').prop('required', true);
         } else {
             $(".field_cap_users").hide();
+			$('select[name="cap_users[]"]').prop('required', false);
         }
     }
 

@@ -149,23 +149,33 @@ class ReleaseRepository implements ReleasesRepositoryInterface
 
     public function update_crs_of_release($release_id, $next_status)
     {
-      
         $change_request = new ChangeRequestRepository();
         $crs_matched_entred_release = $change_request->get_change_request_by_release($release_id);
         //dd($crs_matched_entred_release[0]->CurrentRequestStatuses->new_status_id);
-       // dd($crs_matched_entred_release[1]->CurrentRequestStatuses->new_status_id);
-         
+        // dd($crs_matched_entred_release[1]->CurrentRequestStatuses->new_status_id);
+        //dd($crs_matched_entred_release);
 
-         foreach ($crs_matched_entred_release as $key => $value) {
-            $request =  [
-            'new_status_id' => "$next_status", 
-            'old_status_id' => $crs_matched_entred_release[$key]->CurrentRequestStatuses->new_status_id,
-            'assign_to' =>  1,
-        ];
-        $requestCollection = collect($request);
-        //dd($requestCollection);
+        foreach ($crs_matched_entred_release as $key => $value) {
+            $old_status_id = $crs_matched_entred_release[$key]->CurrentRequestStatuses->new_status_id;
+            //dd($old_status_id);
+            $workflow = NewWorkFlow::where('from_status_id', $old_status_id)
+            ->where('type_id', 5) 
+            ->whereHas('workflowstatus', function ($query) use ($next_status) {
+                $query->where('to_status_id', $next_status);
+            })->first();
+            //dd($workflow);
+            if($workflow){
+                $request =  [
+                    'new_workflow_id' => $workflow->id,
+                    'new_status_id' => "$next_status", 
+                    'old_status_id' => $crs_matched_entred_release[$key]->CurrentRequestStatuses->new_status_id,
+                    'assign_to' =>  1,
+                ];
+                $requestCollection = collect($request);
+                //dd($requestCollection);
             //echo $value->id . "<br />";
-            $updated = $change_request->UpateChangeRequestReleaseStatus($value->id, $requestCollection);
+            $updated = $change_request->UpateChangeRequestStatus($value->id, $requestCollection);
+            }
         }
         //dd(' crs');
     }

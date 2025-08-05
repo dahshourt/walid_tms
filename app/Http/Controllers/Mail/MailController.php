@@ -88,6 +88,7 @@ class MailController extends Controller
                 ."<br><br>"
                 ."You can review it here: <a href='$cr_link'>CR: #$cr_no</a>"
                 ."<br><br>"
+                ."<strong>Please Note:</strong> If no action is taken within <strong>2 Working Days,</strong> the system will treat this as a <strong>passive confirmation</strong> and proceed accordingly.<br><br>"
                 ."TMS Automation <br><br> Thank you",
             ];
 
@@ -162,7 +163,8 @@ class MailController extends Controller
 
         try {
             //Send the email <a href='$cr_link'>$cr</a>
-            Mail::to($division_manager_email)->cc(['anan.latif@te.eg', 'reem.mahrous@te.eg', 'adel.atef@te.eg', 'yousry.mostafa@te.eg', 'it.qa@te.eg'])->send(new TestMail($templateContent));
+			 Mail::to($division_manager_email)->cc(config('constants.division_managers_mails'))->send(new TestMail($templateContent));
+            //Mail::to($division_manager_email)->send(new TestMail($templateContent));
             //Mail::to($division_manager_email)->send(new TestMail($templateContent));
     
             return response()->json(['success' => 'Email sent successfully.']);

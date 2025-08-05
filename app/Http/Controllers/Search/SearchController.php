@@ -83,7 +83,8 @@ class SearchController extends Controller
         //$change_request_custom_fields = $cr->change_request_custom_fields;
         //dd($change_request_custom_fields->where('custom_field_name','title')->first()->custom_field_value);
         $r=new ChangeRequestRepository();
-        $crs_in_queues=  $r->getAll()->pluck("id");
+        $crs_in_queues=  $r->getAllWithoutPagination()->pluck("id");
+		
         return view("$this->view.index",compact('cr','crs_in_queues'));
     }
 
@@ -108,15 +109,20 @@ class SearchController extends Controller
         $crs_in_queues = $r->getAll()->pluck("id");
         
         // Pass the transformed data to the view
-        session(['advanced_search_items' => $alldata]);
+        //session(['advanced_search_items' => $alldata]);
+		//session()->put('advanced_search_items', $alldata);
         return view("$this->view.AdvancedSearchResult", ['totalCount'=>$totalCount,'items' => $collection, 'crs_in_queues' => $crs_in_queues]);
     }
     public function AdvancedSearchResultExport(Request $request)
     {
+		//dd($request->all());
         $this->authorize('Access Advanced Search'); // permission check
         
-        
-        $items = session('advanced_search_items', []);
+        $alldata=$this->changerequest->AdvancedSearchResult(1);
+        $items = $alldata;
+		//dd($items);
+		//$items = \Session::get('advanced_search_items');
+		
         // If you want to return the view with items (for debugging purposes):
         // return view("$this->view.AdvancedSearchResult", ['items' => $collection]);
 

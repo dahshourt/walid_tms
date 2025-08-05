@@ -23,9 +23,13 @@ class ApplicationRepository implements ApplicationRepositoryInterface
     }
     public function create($request)
     {
+		
+		if(isset($request['app_file']))
+		{
 		$file = $this->UploadSystemFile($request['app_file']);
 		$request['file'] = $file;
 		unset($request['app_file']);
+		}
 		//dd($request);
 		$application = Application::create($request);
         return $application->id;
@@ -72,6 +76,11 @@ class ApplicationRepository implements ApplicationRepositoryInterface
     public function application_based_on_workflow($workflowTypeId)
     {
          return Application::where('workflow_type_id', $workflowTypeId)->get();
+    }
+	
+	public function get_app_id_by_name($name)
+    {
+         return Application::where('name', $name)->first();
     }
 
     public function get_crs_group_bu_applications($applications_req, $workflow_type_req)

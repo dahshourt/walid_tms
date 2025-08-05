@@ -73,7 +73,6 @@ class ChangeRequestController extends Controller
     {
         try {
         $this->authorize('List change requests'); // permission check
-       
         $collection = $this->changerequest->getAll();
         
         return view("$this->view.index",compact('collection'));
@@ -243,7 +242,7 @@ class ChangeRequestController extends Controller
                 return redirect()->back()->withInput()->withErrors($validator);
             }
         }
-		if(isset($request->parent_id))
+		/* if(isset($request->parent_id))
 		{
 		$parentCR = DB::table('parents_crs')
             ->where('id', $request->parent_id)
@@ -254,7 +253,7 @@ class ChangeRequestController extends Controller
             $request['developer_id'] = $res[0]->id;
         //dd($request);
 			
-		}
+		} */
 		
         $cr_data = $this->changerequest->create($request->all()); 
 		$cr_id = $cr_data['id'];
@@ -384,16 +383,30 @@ class ChangeRequestController extends Controller
             } //to check if the cr exists or not
     
             $cr = $this->changerequest->find($id);
-          
+			//dd($cr);
             if(!$cr)
             {
-                return redirect()->back()->with('status' , 'You have no access to edit this CR' );
+                return redirect()->to('/change_request')->with('status' , 'You have no access to edit this CR' );
             } // to check if the user has access to edit this cr or not 
         }
        
         
         //dd($cr->change_request_custom_fields);
-        $developer_users =  UserFactory::index()->get_user_by_group($cr->application_id);
+		if($cr->workflow_type_id == 13)
+		{
+			
+			$parentCR = DB::table('parents_crs')
+            ->where('id', $cr->change_request_custom_fields->where('custom_field_name', 'parent_id')->values()->toArray()[0]['custom_field_value'])
+            ->value('application_name');
+			$res =  ApplicationFactory::index()->get_app_id_by_name($parentCR);
+			if($res) $developer_users =  UserFactory::index()->get_user_by_group($res->id);
+			else $developer_users =  UserFactory::index()->get_user_by_group($cr->application_id);
+		}
+		else
+		{
+			$developer_users =  UserFactory::index()->get_user_by_group($cr->application_id);	
+		}
+        
         $sa_users =  UserFactory::index()->get_user_by_department_id(6);
         $testing_users =  UserFactory::index()->get_user_by_department_id(3);
         $work= $cr->workflow_type_id;

@@ -39,7 +39,7 @@
 																<option value="">Choose...</option>
 																@if(isset($row))
 																	@foreach ($crs as $cr)
-																		<option value="{{ $cr->id }}" {{ isset($row) && $row->name == $cr->id ? "selected" : "" }}>{{ $cr->cr_no }} - ({{ $cr->application->name }}) - ({{ $cr->description }})</option>
+																		<option value="{{ $cr->id }}" {{ isset($row) && $row->name == $cr->id ? "selected" : "" }}>{{ $cr->id }} - ({{ $cr->application->name }}) - ({{ $cr->description }})</option>
 																	@endforeach
 																@endif	
 															</select>
