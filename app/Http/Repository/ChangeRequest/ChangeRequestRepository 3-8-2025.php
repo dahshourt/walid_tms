@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Repository\ChangeRequest;
-
 use App\Contracts\ChangeRequest\ChangeRequestRepositoryInterface;
 // declare Entities
 use App\Http\Repository\Logs\LogRepository;

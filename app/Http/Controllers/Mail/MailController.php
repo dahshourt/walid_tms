@@ -76,6 +76,9 @@ class MailController extends Controller
     } // end method
      
 
+    
+
+
     public function send_mail_to_cap_users($users_mail,$cr_id, $cr_no)
     {
         
