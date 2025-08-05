@@ -1087,7 +1087,6 @@ public function findNextAvailableTime($userId, $currentTime)
                     $CabCr->save();
                 }
             }
-            dd('nm');
         }
         unset($request['cab_cr_flag']); 
         
