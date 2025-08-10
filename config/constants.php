@@ -30,5 +30,14 @@ return [
 	'mails' =>
 	    [
 			'cr_manager' => 'sara.mostafa@te.eg'
+		],
+		'division_managers_mails' =>
+		[
+			
+			//'anan.latif@te.eg', 
+			//'reem.mahrous@te.eg', 
+			//'adel.atef@te.eg', 
+			//'yousry.mostafa@te.eg', 
+			//'it.qa@te.eg'
 		]
 ];

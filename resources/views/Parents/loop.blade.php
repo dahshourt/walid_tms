@@ -3,8 +3,8 @@
 @foreach ($collection as $item)
                                 <tr>
                                     <th scope="row">{{ $item->id }}</th>
-                                    <td>{{ $item->name }}</td>
-                                    <td>{{ $item->description }}</td>
+                                    <td>{{ $item->change_request->id }}</td>
+                                    <td>{{ $item->change_request->description }}</td>
                                     <td>{{ $item->application_name }}</td>
                                     @can('Active Parent')
                                     <td>

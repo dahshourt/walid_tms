@@ -1039,29 +1039,19 @@ public function findNextAvailableTime($userId, $currentTime)
 
     public function update($id, $request)
     {
-		 
+		
         if($request->cab_cr_flag == '1')
         {
-            
-            $cr = Change_request::find($id); 
-            if(@Auth::user()->id)
-            {
-                $user_id = @Auth::user()->id;
-            }
-            else
-            {
-                $user_id = $request->user_id;
-            }
-            
+            $cr = Change_request::find($id);
+            $user_id = Auth::user()->id;
             $CabCr = CabCr::where("cr_id",$id)->where('status','0')->first();
-            
             $status = $request->new_status_id;
             //$new_workflow  = new NewWorkFlow();
             $check_workflow_type  = NewWorkFlow::find($request->new_status_id)->workflow_type;
             //$to_statsus =  $new_workflow->workflowstatus[$status]->new_workflow_id;
-            //unset($request['cab_cr_flag']);
+            unset($request['cab_cr_flag']);
             if($check_workflow_type)//reject
-            { 
+            {
                 $CabCr->status = '2';
                 $CabCr->save();
                 $CabCr->cab_cr_user()->where('user_id', $user_id)->update([
@@ -1069,7 +1059,7 @@ public function findNextAvailableTime($userId, $currentTime)
                 ]);
             }
             else//approve
-            {         
+            {           
                 $CabCr->cab_cr_user()->where('user_id', $user_id)->update([
                     'status' => '1'
                 ]);
@@ -1087,6 +1077,7 @@ public function findNextAvailableTime($userId, $currentTime)
                     $CabCr->save();
                 }
             }
+            
         }
         unset($request['cab_cr_flag']); 
         
