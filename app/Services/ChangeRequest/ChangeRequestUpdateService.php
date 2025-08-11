@@ -277,7 +277,7 @@ class ChangeRequestUpdateService
         }
 
         // Handle specific member assignments
-        $memberFields = ['cr_member', 'rtm_member'];
+        $memberFields = ['cr_member', 'rtm_member','assignment_user_id','tester_id','developer_id','designer_id'];
         foreach ($memberFields as $field) {
             if (isset($request->$field) && $oldStatusId) {
                 Change_request_statuse::where('cr_id', $id)
