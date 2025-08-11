@@ -18,25 +18,28 @@ class AutoApproveCabUsers extends Command
         $thresholdDate = Carbon::now()->subDays(2);
 
         // Get users who are not approved and older than 2 days
-        $users = DB::table('cab_cr_users')
-            ->where('status', '0')
-            ->where('created_at', '<=', $thresholdDate)
+       $users = DB::table('cab_cr_users')
+            ->join('cab_crs', 'cab_crs.id', '=', 'cab_cr_users.cab_cr_id')
+            ->where('cab_cr_users.status', '0')
+             ->where('cab_crs.status', '0')
+            ->where('cab_cr_users.created_at', '<=', $thresholdDate)
             ->get();
 
         $repo = new ChangeRequestRepository();
         $approvedCount = 0;
 
         foreach ($users as $user) {
-            $crId = $user->cab_cr_id;
+            $crId = $user->cr_id;
+           
             $user_id = $user->user_id;
              
             $requestData = [
                 'old_status_id' => '38',
-                'new_status_id' => '40',
+                'new_status_id' => '160',
                 'cab_cr_flag' => '1',
                 'user_id' => $user_id,
             ];
-
+             
             try {
                 
                 $repo->update($crId, (object)$requestData);

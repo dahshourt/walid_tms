@@ -1069,7 +1069,7 @@ public function findNextAvailableTime($userId, $currentTime)
                 ]);
             }
             else//approve
-            {         
+            {        
                 $CabCr->cab_cr_user()->where('user_id', $user_id)->update([
                     'status' => '1'
                 ]);
@@ -1077,12 +1077,12 @@ public function findNextAvailableTime($userId, $currentTime)
                 $count_all_users = $CabCr->cab_cr_user->count();// get count for all users that are approve CR
                 $count_approved_users = $CabCr->cab_cr_user->where('status','1')->count();// get count for all users that need to take action on cr}
                 if($count_all_users > $count_approved_users)
-                {
+                { 
                     $this->UpdateCRData($id,$request);
                     return true;
                 }
                 else
-                {
+                { 
                     $CabCr->status = '1';
                     $CabCr->save();
                 }
