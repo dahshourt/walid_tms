@@ -25,6 +25,62 @@
 		</div>
 
 		<div class="form-group">
+			<label for="#">Unit Manager:</label>
+			<select class="form-control form-control-lg select4" id="#" name="unit_id"  >
+				<option value="">Select...</option>
+				@foreach($unit_manager as $item)
+					<option value="{{ $item->id }}" 
+						@if($row->unit_id == $item->id)
+							selected 
+						@elseif(old('unit_id') && in_array($item->id, old('unit_id')))
+							selected 
+						@endif>
+						{{ $item->manager_name }}
+					</option>
+				@endforeach
+			</select>
+    		{!! $errors->first('unit_id', '<span class="form-control-feedback">:message</span>') !!}
+		</div>
+
+		<div class="form-group">
+			<label for="#">Devision Manager:</label>
+			<select class="form-control form-control-lg select3" id="#" name="division_manager_id"  >
+				<option value="">Select...</option>
+				@foreach($devision_manager as $item)
+				 
+					<option value="{{ $item->id }}" 
+						@if($row->division_manager_id == $item->id)
+							selected 
+						@elseif(old('division_manager_id') && in_array($item->id, old('division_manager_id')))
+							selected 
+						@endif>
+						{{ $item->name }}
+					</option>
+				@endforeach
+			</select>
+    		{!! $errors->first('division_manager_id', '<span class="form-control-feedback">:message</span>') !!}
+		</div>
+
+		<div class="form-group">
+			<label for="#">Director:</label>
+			<select class="form-control form-control-lg select5" id="#" name="director_id"  >
+				<option value="">Select...</option>
+				@foreach($directors as $item)
+					<option value="{{ $item->id }}" 
+						@if($row->director_id == $item->id)
+							selected 
+						@elseif(old('director_id') && in_array($item->id, old('director_id')))
+							selected 
+						@endif>
+						{{ $item->user_name }}
+					</option>
+				@endforeach
+			</select>
+    		{!! $errors->first('director_id', '<span class="form-control-feedback">:message</span>') !!}
+		</div>
+		
+
+		<div class="form-group">
 			<label for="user_type">Description</label>
 			<input type="text" name="description"  class="form-control form-control-lg" place_holder="Enter Group Description..."  value="{{ isset($row) ? $row->description : old('description') }}"  />
 			{!! $errors->first('description', '<span class="form-control-feedback">:message</span>') !!}
@@ -38,21 +94,21 @@
 
 		</div>
 		<div class="form-group">
-    <label for="status_id">Applications:</label>
-    <select class="form-control form-control-lg select2" id="status_id" name="application_id[]" multiple="multiple">
-        @foreach($applications as $item)
-            <option value="{{ $item->id }}" 
-                @if(isset($row) && $row->group_applications->contains('application_id', $item->id)) 
-                    selected 
-                @elseif(old('application_id') && in_array($item->id, old('application_id')))
-                    selected 
-                @endif>
-                {{ $item->name }}
-            </option>
-        @endforeach
-    </select>
-    {!! $errors->first('application_id', '<span class="form-control-feedback">:message</span>') !!}
-</div>
+			<label for="status_id">Applications:</label>
+			<select class="form-control form-control-lg select2" id="status_id" name="application_id[]" multiple="multiple">
+				@foreach($applications as $item)
+					<option value="{{ $item->id }}" 
+						@if(isset($row) && $row->group_applications->contains('application_id', $item->id)) 
+							selected 
+						@elseif(old('application_id') && in_array($item->id, old('application_id')))
+							selected 
+						@endif>
+						{{ $item->name }}
+					</option>
+				@endforeach
+			</select>
+    		{!! $errors->first('application_id', '<span class="form-control-feedback">:message</span>') !!}
+		</div>
 		<div class="form-group">
 			<label for="user_type">Parent</label>
 			<select name="parent_id" class="form-control form-control-lg">
