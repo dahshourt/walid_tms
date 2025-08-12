@@ -30,7 +30,7 @@ class AutoApproveCabUsers extends Command
 
         foreach ($users as $user) {
             $crId = $user->cr_id;
-           
+            
             $user_id = $user->user_id;
              
             $requestData = [
