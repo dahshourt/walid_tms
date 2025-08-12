@@ -121,6 +121,13 @@ class MailController extends Controller
         //$cr_link = route('edit.cr', $cr);
         $cr_link = route('edit.cr', ['id' => $cr, 'check_dm' => 1]);
 
+        $reply_to_email = config('mail.from.address');
+        $subject = "Re: CR #$cr_no - Awaiting Your Approval";
+
+        $approve_link = "mailto:$reply_to_email?subject=" . rawurlencode($subject) . "&body=approved";
+        $reject_link = "mailto:$reply_to_email?subject=" . rawurlencode($subject) . "&body=rejected";
+
+
         /*
         $cr_model = Change_request::find($cr);
         $token = md5($cr_model->id . $cr_model->created_at . env('APP_KEY')); 
@@ -153,8 +160,12 @@ class MailController extends Controller
                 . "<li><strong>Requester:</strong> $requester_name</li>"
                 . "<li><strong>Reference:</strong> CR ID #$cr_no</li>"
                 . "</ul><br>"
+                . "<div style='margin: 25px 0;'>"
+                . "<a href='$approve_link' style='background-color: #4CAF50; color: white; padding: 10px 20px; margin-right: 10px; text-decoration: none; border-radius: 4px;'>Approve </a>"
+                . " <a href='$reject_link' style='background-color: #f44336; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;'>Reject</a>"
+                . "</div><br>"
         
-                . "Please respond <strong>All</strong> to this mail with <strong>approved</strong> or <strong>rejected</strong>.<br><br>"
+                . "Alternatively, you can respond <strong>All</strong> to this mail with <strong>approved</strong> or <strong>rejected</strong>.<br><br>"
         
                 . "Thank you in advance for your prompt action.<br><br>"
         
