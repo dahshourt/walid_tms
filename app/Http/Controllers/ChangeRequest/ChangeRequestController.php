@@ -170,7 +170,8 @@ class ChangeRequestController extends Controller
     /**
      * Enhanced group selection with validation
      */
-    public function selectUserGroup(?int $group = null)
+    // selectUserGroup Function
+    public function asd(?int $group = null)
     {
         if (!$group) {
             return redirect()->back()->with('error', 'No group provided.');

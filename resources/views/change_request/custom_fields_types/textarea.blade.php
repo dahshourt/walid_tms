@@ -45,8 +45,27 @@
         @enderror
     </div>
 
-    @else
+    @elseif($fieldName == 'description')
 
+    <div class="col-md-6 change-request-form-field field_{{ $item->CustomField->name }}">
+        {{-- Label --}}
+        <label for="{{ $item->CustomField->name }}">{{ $item->CustomField->label }}</label>
+        @if(isset($item->validation_type_id) && $item->validation_type_id == 1)
+            <span class="text-danger">*</span>
+        @endif
+        {{-- Textarea --}}
+        <textarea name="{{ $fieldName }}" 
+                  id="{{ $fieldName }}"
+                  class="form-control form-control-lg @error($fieldName) is-invalid @enderror"
+                  rows="6"
+                  {{ $isRequired }} {{ $isDisabled }}>{{ $value }}
+        </textarea>
+        {{-- Error display --}}
+        @error($fieldName)
+            <small class="text-danger d-block">{{ $message }}</small>
+        @enderror
+    </div>
+    @else
     <div class="col-md-6 change-request-form-field field_{{ $item->CustomField->name }}">
         {{-- Label --}}
         <label for="{{ $item->CustomField->name }}">{{ $item->CustomField->label }}</label>
@@ -59,8 +78,6 @@
                   class="form-control form-control-lg @error($fieldName) is-invalid @enderror"
                   {{ $isRequired }} {{ $isDisabled }}>{{ $value }}
         </textarea>
-
-        
 
         {{-- Error display --}}
         @error($fieldName)
