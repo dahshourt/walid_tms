@@ -142,7 +142,7 @@ class ChangeRequestEstimationService
                     'test'
                 );
 
-                $data['start_test_time'] = $testDates[0] ?? '';
+                 $data['start_test_time'] = $testDates[0] ?? ''; 
                 $data['end_test_time'] = $testDates[1] ?? '';
             }
         }
@@ -296,14 +296,49 @@ class ChangeRequestEstimationService
      */
     protected function getLastEndDate($id, $userId, $column, $lastEndDate, $duration, $action): array
     {
-        $newStartDate = date('Y-m-d H:i:s', strtotime('+1 hours', strtotime($lastEndDate)));
-        $newStartDate = date('Y-m-d H:i:s', $this->setToWorkingDate(strtotime($newStartDate)));
-        
-        $now = Carbon::now();
-        if (!Carbon::parse($newStartDate)->gt(Carbon::now())) {
-            $newStartDate = date('Y-m-d H:i:s');
+        // Map actions to their respective start/end dependencies
+        $actionConfig = [
+            'dev'  => ['prevField' => 'end_design_time',   'maxField' => 'end_develop_time'],
+            'test' => ['prevField' => 'end_develop_time',  'maxField' => 'end_test_time'],
+        ];
+    
+        // If action not recognized, return lastEndDate as is
+        if (!isset($actionConfig[$action])) {
+            return [$lastEndDate, $lastEndDate];
         }
-
+    
+        $prevField = $actionConfig[$action]['prevField']; // Dependency from same CR
+        $maxField  = $actionConfig[$action]['maxField'];  // Max from other CRs for same user
+    
+        // 1️⃣ Get dependency end time for the same CR
+        $dependencyEnd = Change_request::where('id', $id)->value($prevField);
+    
+        // 2️⃣ Get last occupied time for this user in other CRs
+        $lastOccupied = Change_request::where($column, $userId)
+            ->where('id', '!=', $id)
+            ->max($maxField);
+    
+        // 3️⃣ Determine latest blocking time
+        $latestBlockingTime = max(
+            strtotime($dependencyEnd ?? '1970-01-01'),
+            strtotime($lastOccupied ?? '1970-01-01'),
+            strtotime($lastEndDate ?? '1970-01-01')
+        );
+    
+        // 4️⃣ New start date = +1 hour after blocking time
+        $newStartDate = date('Y-m-d H:i:s', strtotime('+1 hour', $latestBlockingTime));
+    
+        // 5️⃣ Align to working date
+        $newStartDate = date('Y-m-d H:i:s', $this->setToWorkingDate(strtotime($newStartDate)));
+    
+        // 6️⃣ If start is in the past, use now
+        if (!Carbon::parse($newStartDate)->gt(Carbon::now())) {
+            $newStartDate = Carbon::createFromTimestamp(
+                $this->setToWorkingDate(strtotime(Carbon::now()))
+            )->format('Y-m-d H:i:s');
+        }
+    
+        // 7️⃣ Generate end date
         $newEndDate = $this->generateEndDate(
             $this->setToWorkingDate(strtotime($newStartDate)),
             $duration,
@@ -311,9 +346,10 @@ class ChangeRequestEstimationService
             $userId,
             $action
         );
-
+    
         return [$newStartDate, $newEndDate];
     }
+    
 
     /**
      * Set date to working hours and days
