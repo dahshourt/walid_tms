@@ -17,6 +17,7 @@ use jamesiarmes\PhpEws\ArrayType\NonEmptyArrayOfBaseFolderIdsType;
 use jamesiarmes\PhpEws\Enumeration\ItemQueryTraversalType;
 use jamesiarmes\PhpEws\Request\GetItemType;
 use jamesiarmes\PhpEws\Type\ItemIdType;
+use App\Models\Change_request;
 
 class EwsMailReader
 {
@@ -68,7 +69,7 @@ class EwsMailReader
                 $items[] = $message->ItemId;
             }
         }
-        // dd('Ahmed');
+        //dd($items);
         if (empty($items)) {
             return [];
         }
@@ -126,7 +127,8 @@ class EwsMailReader
                 continue; 
             }
 
-            $crId      = (int) $m[1];
+            $crNo      = (int) $m[1];
+            $crId      = Change_request::where('cr_no', $crNo)->value('id');
             $bodyPlain = strip_tags($message['body']);
             $action    = $this->determineAction($bodyPlain);
 

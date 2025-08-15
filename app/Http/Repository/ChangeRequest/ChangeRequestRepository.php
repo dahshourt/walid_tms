@@ -3,6 +3,7 @@ namespace App\Http\Repository\ChangeRequest;
 
 use App\Contracts\ChangeRequest\ChangeRequestRepositoryInterface;
 use App\Models\Change_request;
+use App\Models\Change_request_statuse;
 use App\Services\ChangeRequest\{
     ChangeRequestCreationService,
     ChangeRequestUpdateService,

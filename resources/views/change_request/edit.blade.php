@@ -469,7 +469,9 @@ $(window).on("load", function () {
 
 $(document).ready(function () {
     const statusField = $('select[name="new_status_id"]'); 
-    const workLoadField = $(".field_cr_workload input");  
+    const workLoadField = $(".field_cr_workload input");
+    //const technicalAttachmentField = $(".field_technical_attachments input"); 
+    const technicalAttachmentField = $('input[name="technical_attachments[]"]'); 
 
     //console.log("Status Field and Work Load Field Found");
 
@@ -477,13 +479,22 @@ $(document).ready(function () {
     function handleWorkLoadValidation() {
         const selectedStatus = statusField.find("option:selected").text().trim();  
         //console.log("Selected Status:", selectedStatus); 
+        //console.log("Technical Attachment Field:", technicalAttachmentField.length ? "Found" : "Not found");
 
 
         if (selectedStatus === "Release Plan") {
             workLoadField.prop("required", true); // mandatory
-            console.log("Work Load is now mandatory");
+            //console.log("Work Load is now mandatory");
         } else if (selectedStatus === "Pending Business") {
             workLoadField.prop("required", false); // optional
+        }
+
+        if (selectedStatus === "Test Case Approval") {
+            technicalAttachmentField.prop("required", true); // mandatory
+            //console.log("Technical Attachment is now mandatory");
+        }
+        else {
+            technicalAttachmentField.prop("required", false); // optional
         }
     }
 
