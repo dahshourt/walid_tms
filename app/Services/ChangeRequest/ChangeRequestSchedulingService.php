@@ -6,28 +6,99 @@ use Carbon\Carbon;
 
 class ChangeRequestSchedulingService
 {
+    // public function reorderTimes($crId): array
+    // {
+    //     try {
+    //         $cr = Change_request::find($crId);
+
+    //         if (!$cr) {
+    //             return [
+    //                 'status' => false,
+    //                 'message' => "Change Request with ID {$crId} not found."
+    //             ];
+    //         }
+
+          
+    //         $cr_found_design=Change_request::with('RequestStatuses')
+    //         ->where('designer_id', $cr->designer_id)
+    //         ->where('id', $crId)
+           
+    //         ->whereHas('RequestStatuses', function ($query) {
+    //           $query->whereIn('new_status_id', [15, 7]);
+    //         })
+    //         ->first();
+    
+    //         if ($cr_found_design) {
+    //             $this->processDesignPhase($cr);
+    //         }
+    //         if (!$cr_found_design) {
+    //             $this->processDevelopmentPhase($cr);
+    //             $this->processTestingPhase($cr);
+    //             $this->reorderQueuedRequests($cr, $crId);
+    //         }
+    //      // die("walid");
+            
+
+    //         return [
+    //             'status' => true,
+    //             'message' => "Successfully reordered times for CR ID {$crId} and related queued CRs."
+    //         ];
+
+    //     } catch (\Exception $e) {
+    //         return [
+    //             'status' => false,
+    //             'message' => 'An error occurred while reordering the times: ' . $e->getMessage()
+    //         ];
+    //     }
+    // }
     public function reorderTimes($crId): array
     {
         try {
             $cr = Change_request::find($crId);
-
+    
             if (!$cr) {
                 return [
                     'status' => false,
                     'message' => "Change Request with ID {$crId} not found."
                 ];
             }
+    
+            $priority = request()->has('priority');
+    
+            // Check statuses
+            $hasDevelopStatus = $cr->RequestStatuses()
+                ->whereIn('new_status_id', [10, 8])
+                ->exists();
+    
+            $hasDesignStatus = $cr->RequestStatuses()
+                ->whereIn('new_status_id', [15, 7])
+                ->exists();
 
-            $this->processDesignPhase($cr);
-            $this->processDevelopmentPhase($cr);
-            $this->processTestingPhase($cr);
-            $this->reorderQueuedRequests($cr, $crId);
+                $hasTestStatus = $cr->RequestStatuses()
+                ->whereIn('new_status_id', [13, 11])
+                ->exists();
 
+                if($hasTestStatus){
+                    $this->processtestPhase($cr, $priority);
+
+                }
+    
+            if ($hasDevelopStatus) {
+                $this->processDevelopPhase($cr, $priority);
+                $this->reorderAllTesterQueues();
+    
+            }
+    
+            if ($hasDesignStatus) {
+                $this->processDesignPhase($cr);
+            }
+    
+            // After reordering develop phase, reorder ALL tester queues to avoid conflicts
+           
             return [
                 'status' => true,
-                'message' => "Successfully reordered times for CR ID {$crId} and related queued CRs."
+                'message' => "Successfully reordered times for CR ID {$crId}."
             ];
-
         } catch (\Exception $e) {
             return [
                 'status' => false,
@@ -35,7 +106,363 @@ class ChangeRequestSchedulingService
             ];
         }
     }
+    protected function processTestPhase($cr): void
+{
+    if (!$cr || $cr->test_duration <= 0) {
+        return;
+    }
 
+    // Find the last booked CR for this tester
+    $activeCr = Change_request::where('tester_id', $cr->tester_id)
+        ->where('id', '!=', $cr->id)
+        ->orderBy('end_test_time', 'desc')
+        ->first();
+
+    $hasPriority = request()->has('priority');
+
+    if ($activeCr && !$hasPriority && $activeCr->end_test_time) {
+        // Tester is busy → start after their last test finishes
+        $startTestTime = Carbon::parse($activeCr->end_test_time);
+    } else {
+        // Tester is free OR priority CR → start now at working hours
+        $startTestTime = Carbon::createFromTimestamp(
+            $this->setToWorkingDate(Carbon::now()->timestamp)
+        );
+
+        // Set current CR status to active testing (13)
+        $cr->RequestStatuses()->update(['new_status_id' => 13]);
+
+        if ($hasPriority) {
+            // Demote other CRs in testing from 13 to 11 (queued)
+            Change_request::where('tester_id', $cr->tester_id)
+                ->where('id', '!=', $cr->id)
+                ->whereHas('RequestStatuses', function ($query) {
+                    $query->where('new_status_id', 13);
+                })
+                ->each(function ($otherCr) {
+                    $otherCr->RequestStatuses()->update(['new_status_id' => 11]);
+                });
+        }
+    }
+
+    // Calculate end time for this CR
+    $endTestTime = Carbon::parse(
+        $this->generateEndDate(
+            $startTestTime->timestamp,
+            $cr->test_duration,
+            false,
+            $cr->tester_id,
+            'test'
+        )
+    );
+
+    $cr->update([
+        'start_test_time' => $startTestTime->format('Y-m-d H:i:s'),
+        'end_test_time'   => $endTestTime->format('Y-m-d H:i:s'),
+    ]);
+
+    // Reorder queued CRs (status 11 only)
+    $queue = Change_request::where('tester_id', $cr->tester_id)
+        ->where('id', '!=', $cr->id)
+        ->whereHas('RequestStatuses', function ($query) {
+            $query->where('new_status_id', 11); // queued test
+        })
+        ->orderBy('id')
+        ->get();
+
+    foreach ($queue as $queuedCr) {
+        if (!empty($queuedCr->test_duration) && $queuedCr->test_duration > 0) {
+            // Start after the last CR in the tester's queue
+            $startTestTime = Carbon::parse($endTestTime);
+
+            $endTestTime = Carbon::parse(
+                $this->generateEndDate(
+                    $startTestTime->timestamp,
+                    $queuedCr->test_duration,
+                    false,
+                    $queuedCr->tester_id,
+                    'test'
+                )
+            );
+
+            $queuedCr->update([
+                'start_test_time' => $startTestTime->format('Y-m-d H:i:s'),
+                'end_test_time'   => $endTestTime->format('Y-m-d H:i:s'),
+            ]);
+        }
+    }
+}
+
+    protected function processDevelopPhase($cr, $priority = false): void
+    {
+        if (!$cr || $cr->develop_duration <= 0) {
+            return;
+        }
+    
+        if ($priority) {
+            // Make this CR active
+            $cr->RequestStatuses()->update(['new_status_id' => 10]);
+    
+            // Demote other active CRs for this developer to queued
+            Change_request::where('developer_id', $cr->developer_id)
+                ->where('id', '!=', $cr->id)
+                ->whereHas('RequestStatuses', fn($q) => $q->where('new_status_id', 10))
+                ->each(function ($other) {
+                    $other->RequestStatuses()->update(['new_status_id' => 8]);
+                });
+    
+            $startTime = Carbon::createFromTimestamp(
+                $this->setToWorkingDate(Carbon::now()->timestamp)
+            );
+        } else {
+            // Find last active CR for this developer
+            $lastCr = Change_request::where('developer_id', $cr->developer_id)
+                ->where('id', '!=', $cr->id)
+                ->whereHas('RequestStatuses', function ($q) {
+                    $q->where('new_status_id', '=', 10);
+                })
+                ->orderBy('end_develop_time', 'desc')
+                ->first();
+    
+            if ($lastCr) {
+                $startTime = Carbon::parse($lastCr->end_develop_time);
+                $cr->RequestStatuses()->update(['new_status_id' => 8]); // queued
+            } else {
+                $startTime = Carbon::createFromTimestamp(
+                    $this->setToWorkingDate(Carbon::now()->timestamp)
+                );
+                $cr->RequestStatuses()->update(['new_status_id' => 10]); // active
+            }
+        }
+    
+        // Develop end time
+        $endTime = Carbon::parse(
+            $this->generateEndDate(
+                $startTime->timestamp,
+                $cr->develop_duration,
+                false,
+                $cr->developer_id,
+                'develop'
+            )
+        );
+    
+        // Test start & end time
+        $startTestTime = $endTime;
+        $endTestTime = Carbon::parse(
+            $this->generateEndDate(
+                $startTestTime->timestamp,
+                $cr->test_duration,
+                false,
+                $cr->tester_id,
+                'test'
+            )
+        );
+    
+        // Update CR
+        $cr->update([
+            'start_develop_time' => $startTime->format('Y-m-d H:i:s'),
+            'end_develop_time'   => $endTime->format('Y-m-d H:i:s'),
+            'start_test_time'    => $startTestTime->format('Y-m-d H:i:s'),
+            'end_test_time'      => $endTestTime->format('Y-m-d H:i:s'),
+        ]);
+    
+        // Reorder queued CRs for this developer
+        $this->reorderDeveloperQueueSequentialFromCR($cr);
+    }
+    
+    /**
+     * Reorder queued CRs for a developer starting from the given CR's end time
+     */
+    protected function reorderDeveloperQueueSequentialFromCR($cr): void
+    {
+        $developerId = $cr->developer_id;
+        $startTime = Carbon::parse($cr->end_develop_time);
+    
+        $queued = Change_request::where('developer_id', $developerId)
+            ->where('id', '!=', $cr->id)
+            ->whereHas('RequestStatuses', function ($q) {
+                $q->where('new_status_id', 8)
+                  ->where('new_status_id', '!=', 10);
+            })
+            ->orderBy('start_develop_time')
+            ->get();
+    
+        foreach ($queued as $qcr) {
+            $phaseEnd = Carbon::parse(
+                $this->generateEndDate(
+                    $startTime->timestamp,
+                    $qcr->develop_duration,
+                    false,
+                    $developerId,
+                    'develop'
+                )
+            );
+    
+            // Set test start right after develop
+            $startTestTime = $phaseEnd;
+            $endTestTime = Carbon::parse(
+                $this->generateEndDate(
+                    $startTestTime->timestamp,
+                    $qcr->test_duration,
+                    false,
+                    $qcr->tester_id,
+                    'test'
+                )
+            );
+    
+            $qcr->update([
+                'start_develop_time' => $startTime->format('Y-m-d H:i:s'),
+                'end_develop_time'   => $phaseEnd->format('Y-m-d H:i:s'),
+                'start_test_time'    => $startTestTime->format('Y-m-d H:i:s'),
+                'end_test_time'      => $endTestTime->format('Y-m-d H:i:s'),
+            ]);
+    
+            $startTime = $phaseEnd;
+        }
+    }
+    protected function reorderAllTesterQueues(): void
+{
+    $testerIds = Change_request::whereNotNull('tester_id')
+        ->distinct()
+        ->pluck('tester_id');
+
+    foreach ($testerIds as $testerId) {
+        $this->reorderSingleTesterQueue($testerId);
+    }
+}
+
+/**
+ * Reorder a single tester's queue sequentially
+ */
+protected function reorderSingleTesterQueue(int $testerId): void
+{
+    $crList = Change_request::where('tester_id', $testerId)
+        ->orderBy('start_test_time')
+        ->get();
+
+    $startTime = null;
+
+    foreach ($crList as $cr) {
+        // Start after develop ends if first in queue
+        if (!$startTime) {
+            $startTime = Carbon::parse($cr->end_develop_time);
+        } else {
+            // Avoid overlap
+            if (Carbon::parse($cr->start_test_time)->lt($startTime)) {
+                $cr->start_test_time = $startTime->format('Y-m-d H:i:s');
+            }
+        }
+
+        // End time
+        $endTime = Carbon::parse(
+            $this->generateEndDate(
+                Carbon::parse($cr->start_test_time)->timestamp,
+                $cr->test_duration,
+                false,
+                $testerId,
+                'test'
+            )
+        );
+
+        // Update CR
+        $cr->update([
+            'start_test_time' => $startTime->format('Y-m-d H:i:s'),
+            'end_test_time'   => $endTime->format('Y-m-d H:i:s'),
+        ]);
+
+        // Next CR starts after this CR finishes
+        $startTime = $endTime;
+    }
+}
+    protected function processDesignPhase($cr): void
+    {
+        if (!$cr || $cr->design_duration <= 0) {
+            return;
+        }
+    
+        // Find if there is already an active CR (status 15) for this designer
+        $activeCr = Change_request::where('designer_id', $cr->designer_id)
+            ->where('id', '!=', $cr->id)
+            ->whereHas('RequestStatuses', function ($query) {
+                $query->where('new_status_id', 15);
+            })
+            ->orderBy('end_design_time', 'desc')
+            ->first();
+    
+        $hasPriority = request()->has('priority');
+    
+        if ($activeCr && !$hasPriority) {
+            // Normal CR → start after current active CR finishes
+            $startDesignTime = Carbon::parse($activeCr->end_design_time);
+        } else {
+            // Has priority OR no active CR → start now
+            $startDesignTime = Carbon::createFromTimestamp(
+                $this->setToWorkingDate(Carbon::now()->timestamp)
+            );
+    
+            // Set current CR to status 15
+            $cr->RequestStatuses()->update(['new_status_id' => 15]);
+    
+            if ($hasPriority) {
+                // Demote other CRs from 15 → 7
+                Change_request::where('designer_id', $cr->designer_id)
+                    ->where('id', '!=', $cr->id)
+                    ->whereHas('RequestStatuses', function ($query) {
+                        $query->where('new_status_id', 15);
+                    })
+                    ->each(function ($otherCr) {
+                        $otherCr->RequestStatuses()->update(['new_status_id' => 7]);
+                    });
+            }
+        }
+    
+        // Calculate end time for this CR
+        $endDesignTime = Carbon::parse(
+            $this->generateEndDate(
+                $startDesignTime->timestamp,
+                $cr->design_duration,
+                false,
+                $cr->designer_id,
+                'design'
+            )
+        );
+    
+        $cr->update([
+            'start_design_time' => $startDesignTime->format('Y-m-d H:i:s'),
+            'end_design_time'   => $endDesignTime->format('Y-m-d H:i:s'),
+        ]);
+    
+        // Reorder queued CRs (status 7 only)
+        $queue = Change_request::where('designer_id', $cr->designer_id)
+            ->where('id', '!=', $cr->id)
+            ->whereHas('RequestStatuses', function ($query) {
+                $query->where('new_status_id', 7);
+            })
+            ->orderBy('id')
+            ->get();
+    
+        foreach ($queue as $queuedCr) {
+            if (!empty($queuedCr->design_duration) && $queuedCr->design_duration > 0) {
+                $startDesignTime = Carbon::parse($endDesignTime);
+    
+                $endDesignTime = Carbon::parse(
+                    $this->generateEndDate(
+                        $startDesignTime->timestamp,
+                        $queuedCr->design_duration,
+                        false,
+                        $queuedCr->designer_id,
+                        'design'
+                    )
+                );
+    
+                $queuedCr->update([
+                    'start_design_time' => $startDesignTime->format('Y-m-d H:i:s'),
+                    'end_design_time'   => $endDesignTime->format('Y-m-d H:i:s'),
+                ]);
+            }
+        }
+    }
+    
     public function reorderChangeRequests($crId)
     {
         $changeRequest = Change_request::find($crId);
@@ -91,53 +518,188 @@ class ChangeRequestSchedulingService
         ];
     }
 
-    protected function processDesignPhase($cr): void
-    {
-        if ($cr->design_duration <= 0) {
-            return;
-        }
+    // protected function processDesignPhase($cr): void
+    // {
+    //     if ($cr->design_duration <= 0) {
+    //         return;
+    //     }
 
-        $currentTime = Carbon::now()->timestamp;
+    //     if (!$cr) {
+    //         return;
+    //         // return [
+    //         //     'status' => 'error',
+    //         //     'message' => "Change Request with ID {$crId} not found."
+    //         // ];
+    //     }
+   
+    //         if (!request()->has('priority')) {
+
+    //             $q = Change_request::with('RequestStatuses')
+    //             ->where('designer_id', $cr->designer_id)
+    //             ->where('id', $crId)
+               
+    //             ->whereHas('RequestStatuses', function ($query) {
+    //                 $query->where('new_status_id', 15); // Only those with status = 15
+    //             })
+    //             ->first();
+            
+    //            // dd($q);
+               
+    // if($q){
+    //    return ;
+ 
+    //     // return [
+    //     //     'status' => 'error',
+    //     //     'message' => "Change Request with ID  is aleady working on it."
+    //     // ];
+    // }
+    //         } else {
+
+             
+    //                 $cr->RequestStatuses()->update(['new_status_id' => 15]);
+                   
+                
+    //         }
+         
+ 
+
+
+    //         // Fetch all CRs of the same designer, ordered by end time
+    //         $designerCrs = Change_request::with('RequestStatuses')
+    //             ->where('designer_id', $cr->designer_id)
+    //             ->where('id', '!=', $cr->id)
+    //             ->get();
+    //             $startDesignTime = Carbon::createFromTimestamp($this->setToWorkingDate(Carbon::now()->timestamp));
+    //             if (!request()->has('priority')) {
+    //             // Find the latest CR with status 15
+    //         $crWithStatus15 = $designerCrs
+    //             ->filter(function ($item) {
+    //                 return $item->RequestStatuses->contains(function ($status) {
+    //                     return $status->new_status_id == 15;
+    //                 });
+    //             })
+    //             ->sortByDesc('end_design_time')
+    //             ->first();
+    
+    //         // Default start time is now
+          
+    
+    //         if ($crWithStatus15) {
+    //             $startDesignTime = Carbon::parse($crWithStatus15->end_design_time);
+    //         }
+    //     }
+    //         // Calculate end time for current CR
+    //         $endDesignTime = Carbon::parse(
+    //             $this->generateEndDate(
+    //                 $startDesignTime->timestamp,
+    //                 $cr->design_duration,
+    //                 false,
+    //                 $cr->designer_id,
+    //                 'design'
+    //             )
+    //         );
+    
+    //         // Update current CR
+    //         $cr->update([
+    //             'start_design_time' => $startDesignTime->format('Y-m-d H:i:s'),
+    //             'end_design_time'   => $endDesignTime->format('Y-m-d H:i:s'),
+    //         ]);
+    //         if (!request()->has('priority')) {
+    //         // Now reorder remaining CRs (excluding the current one)
+    //         $queue = Change_request::where('designer_id', $cr->designer_id)
+    //         ->where('id', '!=', $cr->id)
+    //         // ->whereDoesntHave('RequestStatuses', function ($query) {
+    //         //     $query->where('new_status_id', 15); // Exclude CRs with status = 15
+    //         // })
+    //         ->whereHas('RequestStatuses', function ($query) {
+    //             $query->where('new_status_id', 7); // Exclude CRs with status = 15
+    //         })
+    //         ->orderBy('id')
+    //         ->get();
+    //         } else{
+    //             $queue = Change_request::where('designer_id', $cr->designer_id)
+    //             ->where('id', '!=', $cr->id)
+    //             ->whereHas('RequestStatuses', function ($query) {
+    //                 $query->whereIn('new_status_id', [15, 7]);
+    //             })
+    //             ->orderBy('id')
+    //             ->get();
+            
+
+    //         }
+    
+    //         foreach ($queue as $queuedCr) {
+    //             if (!empty($queuedCr->design_duration) && $queuedCr->design_duration > 0) {
+    //                 if (request()->has('priority')) {
+    //                 $queuedCr->RequestStatuses()->where('new_status_id', 15)->update(['new_status_id' => 7]);
+    //                 }
+    //                 $startDesignTime = Carbon::parse($endDesignTime);
+    
+    //                 $endDesignTime = Carbon::parse(
+    //                     $this->generateEndDate(
+    //                         $startDesignTime->timestamp,
+    //                         $queuedCr->design_duration,
+    //                         false,
+    //                         $queuedCr->designer_id,
+    //                         'design'
+    //                     )
+    //                 );
+    
+    //                 $queuedCr->update([
+    //                     'start_design_time' => $startDesignTime->format('Y-m-d H:i:s'),
+    //                     'end_design_time'   => $endDesignTime->format('Y-m-d H:i:s'),
+    //                 ]);
+    //             }
+    //         }
+    
+           
         
-        if (isset($cr->start_design_time) && Carbon::parse($cr->start_design_time)->isFuture()) {
-            $startDesignTime = Carbon::createFromTimestamp($this->setToWorkingDate($currentTime));
-            $endDesignTime = Carbon::parse(
-                $this->generateEndDate(
-                    $startDesignTime->timestamp,
-                    $cr->design_duration,
-                    false,
-                    $cr->designer_id,
-                    'design'
-                )
-            );
 
-            $conflictingCR = $this->isDesignerBusy(
-                $cr->designer_id, 
-                $startDesignTime, 
-                $cr->design_duration, 
-                $endDesignTime, 
-                $cr->id
-            );
+         
+    //     // $currentTime = Carbon::now()->timestamp;
+        
+    //     // if (isset($cr->start_design_time) && Carbon::parse($cr->start_design_time)->isFuture()) {
+    //     //     $startDesignTime = Carbon::createFromTimestamp($this->setToWorkingDate($currentTime));
+    //     //     $endDesignTime = Carbon::parse(
+    //     //         $this->generateEndDate(
+    //     //             $startDesignTime->timestamp,
+    //     //             $cr->design_duration,
+    //     //             false,
+    //     //             $cr->designer_id,
+    //     //             'design'
+    //     //         )
+    //     //     );
 
-            if ($conflictingCR) {
-                $startDesignTime = $this->resolveDesignConflict($conflictingCR, $cr);
-                $endDesignTime = Carbon::parse(
-                    $this->generateEndDate(
-                        $startDesignTime->timestamp,
-                        $cr->design_duration,
-                        false,
-                        $cr->designer_id,
-                        'design'
-                    )
-                );
-            }
+    //     //     $conflictingCR = $this->isDesignerBusy(
+    //     //         $cr->designer_id, 
+    //     //         $startDesignTime, 
+    //     //         $cr->design_duration, 
+    //     //         $endDesignTime, 
+    //     //         $cr->id
+    //     //     );
 
-            $cr->update([
-                'start_design_time' => $startDesignTime->format('Y-m-d H:i:s'),
-                'end_design_time' => $endDesignTime->format('Y-m-d H:i:s'),
-            ]);
-        }
-    }
+    //     //     if ($conflictingCR) {
+    //     //         $startDesignTime = $this->resolveDesignConflict($conflictingCR, $cr);
+    //     //         $endDesignTime = Carbon::parse(
+    //     //             $this->generateEndDate(
+    //     //                 $startDesignTime->timestamp,
+    //     //                 $cr->design_duration,
+    //     //                 false,
+    //     //                 $cr->designer_id,
+    //     //                 'design'
+    //     //             )
+    //     //         );
+    //     //     }
+
+    //     //     $cr->update([
+    //     //         'start_design_time' => $startDesignTime->format('Y-m-d H:i:s'),
+    //     //         'end_design_time' => $endDesignTime->format('Y-m-d H:i:s'),
+    //     //     ]);
+    //     // }
+
+
+     
+    // }
 
     protected function processDevelopmentPhase($cr): void
     {
@@ -247,8 +809,7 @@ class ChangeRequestSchedulingService
     protected function reorderQueuedRequests($cr, $crId): void
     {
         $queue = Change_request::where(function ($query) use ($cr) {
-            $query->where('designer_id', $cr->designer_id)
-                  ->orWhere('developer_id', $cr->developer_id)
+            $query->Where('developer_id', $cr->developer_id)
                   ->orWhere('tester_id', $cr->tester_id);
         })
         ->where('id', '!=', $crId)
@@ -262,27 +823,27 @@ class ChangeRequestSchedulingService
 
     protected function adjustQueuedRequest($queuedCr, $cr): void
     {
-        // Design Phase
-        if ($queuedCr->designer_id == $cr->designer_id && 
-            !empty($queuedCr->design_duration) && 
-            $queuedCr->design_duration > 0) {
+        // // Design Phase
+        // if ($queuedCr->designer_id == $cr->designer_id && 
+        //     !empty($queuedCr->design_duration) && 
+        //     $queuedCr->design_duration > 0) {
             
-            $startDesignTime = Carbon::parse($cr->end_design_time);
-            $endDesignTime = Carbon::parse(
-                $this->generateEndDate(
-                    $startDesignTime->timestamp,
-                    $queuedCr->design_duration,
-                    false,
-                    $queuedCr->designer_id,
-                    'design'
-                )
-            );
+        //     $startDesignTime = Carbon::parse($cr->end_design_time);
+        //     $endDesignTime = Carbon::parse(
+        //         $this->generateEndDate(
+        //             $startDesignTime->timestamp,
+        //             $queuedCr->design_duration,
+        //             false,
+        //             $queuedCr->designer_id,
+        //             'design'
+        //         )
+        //     );
 
-            $queuedCr->update([
-                'start_design_time' => $startDesignTime->format('Y-m-d H:i:s'),
-                'end_design_time' => $endDesignTime->format('Y-m-d H:i:s'),
-            ]);
-        }
+        //     $queuedCr->update([
+        //         'start_design_time' => $startDesignTime->format('Y-m-d H:i:s'),
+        //         'end_design_time' => $endDesignTime->format('Y-m-d H:i:s'),
+        //     ]);
+        // }
 
         // Development Phase
         if ($queuedCr->developer_id == $cr->developer_id && 
@@ -323,7 +884,7 @@ class ChangeRequestSchedulingService
         if ($queuedCr->tester_id == $cr->tester_id && 
             !empty($queuedCr->test_duration) && 
             $queuedCr->test_duration > 0) {
-            
+          
             $startTestTime = Carbon::parse($cr->end_test_time ?? $cr->end_develop_time);
             $endTestTime = Carbon::parse(
                 $this->generateEndDate(
@@ -617,11 +1178,26 @@ class ChangeRequestSchedulingService
 
     protected function adjustTimesForChangeRequest($crId, $changeRequest): void
     {
+        $cr = Change_request::find($crId);
+        $cr_found_design=Change_request::with('RequestStatuses')
+        ->where('designer_id', $cr->designer_id)
+        ->where('id', $crId)
+       
+        ->whereHas('RequestStatuses', function ($query) {
+          $query->whereIn('new_status_id', [15, 7]);
+        })
+        ->first();
+
+        if ($cr_found_design) {
+            $this->processDesignPhase($changeRequest);
+        }
         // Implementation for adjusting times for a specific change request
         // This would include the complex logic from the original method
-        $this->processDesignPhase($changeRequest);
-        $this->processDevelopmentPhase($changeRequest);
+        if (!$cr_found_design) {
+            $this->processDevelopmentPhase($changeRequest);
         $this->processTestingPhase($changeRequest);
+        }
+      
     }
 
     protected function shiftQueue($userId, $roleColumn, $targetCrId): void
