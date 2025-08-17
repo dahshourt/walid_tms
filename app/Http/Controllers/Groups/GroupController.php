@@ -8,6 +8,10 @@ use App\Http\Requests\Groups\GroupRequest;
 use App\Factories\Groups\GroupFactory;
 use Illuminate\Http\Request;
 use App\Http\Repository\Applications\ApplicationRepository;
+use App\Http\Repository\divisionManager\DivisionManagerRepository;
+use App\Http\Repository\Units\UnitRepository;
+use App\Models\Director;
+
 class GroupController extends Controller
 {
     use ValidatesRequests;
@@ -38,19 +42,33 @@ class GroupController extends Controller
         $row = $this->group->find($id);
         $parent_id = null ;
         $parent_groups = $this->group->getAllWithFilter($parent_id);
+         $unit_manager=new UnitRepository();
+        $devision_manager = new DivisionManagerRepository();
+         $unit_manager = $unit_manager->getAll();
+        $devision_manager = $devision_manager->get();
+        $directors = Director::all();
+        
         $app=new ApplicationRepository();
         $applications=$app->getAll();
-        return view("$this->view.edit",compact('parent_groups','row','applications'));
+        return view("$this->view.edit",compact('parent_groups','row','applications', 'unit_manager', 'devision_manager', 'directors'));
     }
     
     public function create()
-    {
+    { 
         $this->authorize('Create Group'); // permission check
         $parent_id = null ;
         $parent_groups = $this->group->getAllWithFilter($parent_id);
+        $unit_manager=new UnitRepository();
+        $devision_manager = new DivisionManagerRepository();
+         
+        
+        $unit_manager = $unit_manager->getAll();
+        $devision_manager = $devision_manager->get();
+        $directors = Director::all();
+        
         $app=new ApplicationRepository();
         $applications=$app->getAll();
-        return view("$this->view.create",compact('parent_groups','applications'));
+        return view("$this->view.create",compact('parent_groups','applications', 'unit_manager', 'devision_manager', 'directors'));
     }
 
     public function store(GroupRequest $request)

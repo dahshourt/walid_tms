@@ -18,6 +18,11 @@ class DivisionManagerRepository implements DivisionManagerRepositoryInterface
         return DivisionManagers::latest()->paginate(10);
     }
 
+    public function get()
+    {
+        return DivisionManagers::all();
+    }
+
     public function create($request)
     {
         
