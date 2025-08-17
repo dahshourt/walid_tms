@@ -177,7 +177,7 @@ Route::middleware(['auth'])->group(
         Route::patch('defect_update/{id}','Defect\DefectController@update');
         Route::get('defects', 'Defect\DefectController@index');
         Route::get('show_defect/{id}', 'Defect\DefectController@show');
-
+        Route::resource('sla-calculations', sla\SlaCalculationController::class);
 
         //test ews
 
