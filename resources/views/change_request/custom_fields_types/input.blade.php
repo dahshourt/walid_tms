@@ -23,6 +23,16 @@
                             <small class="text-danger">{{ $message }}</small>
                         @enderror
                     <small id="email_feedback" class="form-text text-danger"></small>
+                @elseif(in_array($item->CustomField->name, ['requester_name', 'requester_email']))
+                    <input type="{{ $item->CustomField->name === 'requester_email' ? 'email' : 'text' }}" 
+                           name="{{ $item->CustomField->name }}" 
+                           class="form-control form-control-lg @error($item->CustomField->name) is-invalid @enderror" 
+                           value="{{ $item->CustomField->name === 'requester_name' ? auth()->user()->name : auth()->user()->email }}" 
+                           readonly 
+                           @if(isset($item->validation_type_id) && $item->validation_type_id == 1) required @endif />
+                    @error($item->CustomField->name)
+                        <small class="text-danger">{{ $message }}</small>
+                    @enderror
                 @else
                     <input type="text" name="{{ $item->CustomField->name }}" 
                         class="form-control form-control-lg @error($item->CustomField->name) is-invalid @enderror" 

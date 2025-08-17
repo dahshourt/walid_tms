@@ -104,7 +104,7 @@ class EwsMailReader
         
     }
 
-    protected function determineAction(string $text): ?string
+    /*protected function determineAction(string $text): ?string
     {
         $text = strtolower($text);
         if (strpos($text, 'approved') !== false) {
@@ -113,6 +113,27 @@ class EwsMailReader
         if (strpos($text, 'rejected') !== false) {
             return 'rejected';
         }
+        return null;
+    }*/
+
+    protected function determineAction(string $text): ?string
+    {
+        $text = strtolower($text);
+        $posApproved = strrpos($text, 'approved');
+        $posRejected = strrpos($text, 'rejected');
+
+        if ($posApproved === false && $posRejected === false) {
+            return null;
+        }
+
+        if ($posApproved > $posRejected) {
+            return 'approved';
+        }
+
+        if ($posRejected !== false) {
+            return 'rejected';
+        }
+
         return null;
     }
 
@@ -135,6 +156,8 @@ class EwsMailReader
             if (!$action) {
                 continue; 
             }
+            //\Log::warning("EWS Mail Reader: CR #{$crId} The Body is: {$action}");
+            \Log::warning("EWS Mail Reader: CR #{$crId} The Action is: {$action}");
 
             $this->processCrAction($crId, $action, $message['from']);
         }
@@ -186,7 +209,7 @@ class EwsMailReader
 
         try {
             $repo->UpateChangeRequestStatus($crId, $req);
-            \Log::info("EWS Mail Reader: CR #{$crId} {$action}d successfully by {$fromEmail}");
+            \Log::info("EWS Mail Reader: CR #{$crId} {$action} successfully by {$fromEmail}");
         } catch (\Throwable $e) {
             \Log::error("EWS Mail Reader: Failed to {$action} CR #{$crId} → " . $e->getMessage());
         }

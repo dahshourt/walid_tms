@@ -58,7 +58,7 @@
                                         </td>
                                         <td>{{ $item['title'] ?? "" }}</td>
                                         <td>{{ $item['category']['name'] ?? "" }}</td>
-                                        <td>{{ $item['application']['name'] ?? "" }}</td>
+                                        <td>{{ $item['release']['name'] ?? "" }}</td>
                                         <td>{{ $item->getCurrentStatus()->status->status_name ?? "" }}</td>
                                         <td>{{ $item['requester_name'] ?? "" }}</td>
                                         <td>{{ $item['requester_email'] ?? "" }}</td>
