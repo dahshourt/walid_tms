@@ -104,7 +104,7 @@
 		<script src="{{asset('public/new_theme/assets/js/pages/crud/forms/widgets/select2.js')}}"></script>
 		<script src="{{asset('public/new_theme/toastr.min.js')}}"></script>
 		<!--end::Page Scripts-->
-		<script src="{{asset('public/new_theme/assets/css/charts.css')}}"></script>
+		<script src="{{asset('public/new_theme/assets/js/chart.js')}}"></script>
 
 
 
@@ -175,16 +175,13 @@
 			});
     	});
 
-		$('._approved_active').on('click', function () {
+		$('._approved_active').on('click', function() {
     var id = $(this).attr('data-id');
     var token = $(this).attr('data-token');
-    var action = $(this).attr('data-action'); // 👈 Get the action (approve or reject)
-    
-    let baseUrl = '{{ url("/change_request/approved_active") }}';
-    let fullUrl = `${baseUrl}?crId=${id}&action=${action}&token=${token}`;
-
+	let baseUrl = '{{ url("/change_request/approved_active") }}';
+let fullUrl = `${baseUrl}?crId=${id}&action=approve&token=${token}`;
     Swal.fire({
-        title: `Are you sure you want to ${action}?`,
+        title: "Are you sure?",
         icon: "warning",
         showCancelButton: true,
         confirmButtonColor: "#3085d6",
@@ -195,19 +192,16 @@
             $.ajax({
                 url: fullUrl,
                 type: 'GET',
-                success: function (msg) {
+                success: function(msg) {
                     if (msg.status === 200 && msg.isSuccess) {
-                        if (action === 'reject') {
-                            toastr.warning(msg.message);
-                        } else {
-                            toastr.success(msg.message);
-                        }
+                        toastr.success(msg.message);
+                        
                     } else {
                         toastr.error(msg.message || "Action failed.");
                     }
-                    window.location.reload();
+					window.location.reload();
                 },
-                error: function (xhr, status, error) {
+                error: function(xhr, status, error) {
                     toastr.error("Something went wrong: " + error);
                     alert("Error: " + error + "\nStatus: " + status + "\nResponse: " + xhr.responseText);
                     window.location.reload();
@@ -216,7 +210,6 @@
         }
     });
 });
-
 
 $('._rejected_active').on('click', function() {
     var id = $(this).attr('data-id');
@@ -302,9 +295,9 @@ let fullUrl = `${baseUrl}?crId=${id}&action=reject&token=${token}`;
     setInterval(() => {
       
 		$.get( "{{ route('check-active') }}", function( data ) {
-			console.log(data.active);
+			console.log("check-active",data.active);
 			if (data.active == false || data.active === "0" || data.active === 0){
-                    window.location.href = "{{ route('inactive-logout') }}";
+                    //window.location.href = "{{ route('inactive-logout') }}";
 			}
 				
 		});

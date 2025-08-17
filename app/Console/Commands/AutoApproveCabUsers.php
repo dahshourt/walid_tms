@@ -15,7 +15,17 @@ class AutoApproveCabUsers extends Command
 
     public function handle()
     {
-        $thresholdDate = Carbon::now()->subDays(2);
+        $daysToSubtract = 2;
+		$thresholdDate = Carbon::now();
+
+		while ($daysToSubtract > 0) {
+			$thresholdDate->subDay();
+
+			// Skip Friday (5) and Saturday (6) according to ISO-8601 (Mon=1, Sun=7)
+			if (!in_array($thresholdDate->dayOfWeekIso, [5, 6])) {
+				$daysToSubtract--;
+			}
+		}
 
         // Get users who are not approved and older than 2 days
        $users = DB::table('cab_cr_users')
@@ -30,19 +40,26 @@ class AutoApproveCabUsers extends Command
 
         foreach ($users as $user) {
             $crId = $user->cr_id;
-           
+            
             $user_id = $user->user_id;
              
-            $requestData = [
+           /*  $requestData = [
                 'old_status_id' => '38',
                 'new_status_id' => '160',
                 'cab_cr_flag' => '1',
                 'user_id' => $user_id,
             ];
-             
+             dd((object)$requestData);
+			  */
+			$requestData = new \Illuminate\Http\Request([
+				'old_status_id' => '38',
+                'new_status_id' => '160',
+                'cab_cr_flag' => '1',
+                'user_id' => $user_id,
+			]); 
             try {
                 
-                $repo->update($crId, (object)$requestData);
+                $repo->update($crId, $requestData);
                 $approvedCount++;
             } catch (\Exception $e) {
                 Log::error("Failed to update CR ID {$crId}: " . $e->getMessage());

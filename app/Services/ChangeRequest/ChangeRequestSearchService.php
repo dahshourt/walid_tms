@@ -134,8 +134,8 @@ class ChangeRequestSearchService
 
         $groups = ($userEmail === $divisionManager) 
             ? Group::pluck('id')->toArray()
-            : auth()->user()->user_groups->pluck('group_id')->toArray();
-
+            : array($this->resolveGroup());
+            //: auth()->user()->user_groups->pluck('group_id')->toArray();
         $promoGroups = [50];
         $groups = array_merge($groups, $promoGroups);
 
