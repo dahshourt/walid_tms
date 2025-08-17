@@ -32,6 +32,8 @@ License: You must have a valid license purchased only from themeforest(the above
 		<link href="{{asset('public/new_theme/assets/plugins/custom/prismjs/prismjs.bundle.css')}}" rel="stylesheet" type="text/css" />
 		<link href="{{asset('public/new_theme/assets/css/style.bundle.css')}}" rel="stylesheet" type="text/css" />
 		<link href="{{asset('public/new_theme/sweetalert2.min.css')}}" rel="stylesheet" type="text/css" />
+		<link src="{{asset('public/new_theme/assets/css/charts.css')}}" rel="stylesheet" type="text/css"></link>
+
 		<!--end::Global Theme Styles-->
 		<!--begin::Layout Themes(used by all pages)-->
 		<!--end::Layout Themes-->

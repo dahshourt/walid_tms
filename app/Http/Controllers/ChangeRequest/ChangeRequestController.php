@@ -127,6 +127,47 @@ class ChangeRequestController extends Controller
             return redirect('/')->with('error', 'You do not have permission to access this page.');
         }
     }
+	public function asd($group = null)
+
+	{
+		
+		$gr = Group::find($group);
+
+		if ($gr) {
+			session(['default_group_name' => $gr->title]);
+		} else {
+			session()->forget('default_group_name'); // Clear the name if the group is not found
+		}
+
+		// Check if group is provided in the URL; if not, handle the absence
+		if (!$group) {
+			return redirect()->back()->with('error', 'No group provided.');
+		}
+		session(['default_group' => $group]);
+		// Fetch all user groups for the dropdown
+		$userGroups = auth()->user()->user_groups()->with('group')->get();
+
+		// Check if the provided group exists in the user's groups
+		$selectedGroup = $userGroups->pluck('group.id')->contains($group);
+
+		if (!$selectedGroup) {
+			// If the group does not exist in the user's groups, return back with an error message
+			return redirect()->back()->with('error', 'You do not have access to this group.');
+		}
+		$selectedGroup = Group::find($group);
+		session()->put('current_group',$group);   
+		session()->put('current_group_name',$selectedGroup->title);   
+		return redirect()->back(); 
+		//session()->set('current_group',$group);    
+		// // Fetch the selected group object
+		// $selectedGroup = Group::find($group);
+
+		// // Fetch change request collection filtered by the group from the URL
+		// $collection = $this->changerequest->getAll($group);
+
+		// // Return the view with the selected group and user groups
+		// return view("$this->view.index", compact('collection', 'selectedGroup', 'userGroups'));
+	}
 
     /**
      * Display change requests waiting for division manager approval
@@ -418,7 +459,7 @@ class ChangeRequestController extends Controller
             $this->assignTechnicalTeams($request, $id);
             
             // Handle CAP users email notification
-            $this->handleCapUsersNotification($request, $id);
+            
             
             // Validate attachments
             $this->validateAttachments($request);
@@ -432,6 +473,8 @@ class ChangeRequestController extends Controller
             
             // Handle file uploads
             $this->handleFileUploads($request, $id);
+			
+			$this->handleCapUsersNotification($request, $id);
             
             DB::commit();
             
@@ -866,10 +909,11 @@ class ChangeRequestController extends Controller
                 $emails[] = $user->email;
             }
         }
+		$cr = Change_request::find($id);
 
         if (!empty($emails)) {
             $mail = new MailController();
-            $mail->send_mail_to_cap_users($emails, $id);
+            $mail->send_mail_to_cap_users($emails, $id,$cr->cr_no);
         }
     }
 
