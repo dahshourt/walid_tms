@@ -149,7 +149,7 @@ class ChangeRequestStatusService
         $request
     ): void {
         $technicalTeamCounts = $this->getTechnicalTeamCounts($changeRequest->id, $statusData['old_status_id']);
-        //dd($changeRequest->id, $statusData, $workflow, $technicalTeamCounts);
+        
         $this->updateCurrentStatus($changeRequest->id, $statusData, $workflow, $technicalTeamCounts);
         
         $this->createNewStatuses($changeRequest, $statusData, $workflow, $userId, $request);
@@ -254,7 +254,8 @@ class ChangeRequestStatusService
             ->where('old_status_id', $currentStatus->old_status_id)
             ->where('active', self::ACTIVE_STATUS)
             ->get();
-        //dd($dependentStatuses,$currentStatus->old_status_id,$workflowActive,self::COMPLETED_STATUS);
+		//dd($dependentStatuses,$workflowActive);
+        //if ($workflowActive == self::COMPLETED_STATUS) {
         if (!$workflowActive) {
             // Abnormal workflow - deactivate all dependent statuses
             $dependentStatuses->each(function ($status) {
@@ -284,6 +285,7 @@ class ChangeRequestStatusService
                 $workflow, 
                 $statusData['old_status_id']
             );
+
             $statusData = $this->buildStatusData(
                 $changeRequest->id,
                 $statusData['old_status_id'],
@@ -319,28 +321,39 @@ class ChangeRequestStatusService
         NewWorkFlow $workflow, 
         int $oldStatusId
     ): string {
-        //
-        // Technical review status always gets active status
-        if ($oldStatusId == self::TECHNICAL_REVIEW_STATUS) {
-            return self::ACTIVE_STATUS;
-        }
-
-        // Check workflow dependencies
-        if (!$this->checkWorkflowDependencies($changeRequestId, $workflowStatus)) {
-            return self::INACTIVE_STATUS;
-        }
-
-        // Check dependent workflows for normal workflow
-        //if ($workflow->workflow_type == self::WORKFLOW_NORMAL) {
-        $workflowActive = $workflow->workflow_type == self::WORKFLOW_NORMAL 
-            ? self::INACTIVE_STATUS 
-            : self::COMPLETED_STATUS;
-        //dd($workflowActive,$this->checkDependentWorkflows($changeRequestId, $workflow),$changeRequestId, $workflow);            
-        if ($workflowActive) {
-            return $this->checkDependentWorkflows($changeRequestId, $workflow);
-        }
-
-        return self::INACTIVE_STATUS;
+		
+		$active = self::INACTIVE_STATUS;
+		$cr_status = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('new_status_id',  $oldStatusId)->first();
+		
+		$all_depend_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $cr_status->old_status_id)->get();
+		$depend_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $cr_status->old_status_id)->where('active','2')->get();
+		
+		$depend_active_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $cr_status->old_status_id)->where('active', '1')->get();
+		if($depend_statuses->count() == $all_depend_statuses->count())
+		{
+			foreach($depend_statuses as $status)
+			{
+				
+				$get_next_workflow = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $status->new_status_id)->first();
+				if($get_next_workflow)
+				{
+					$check_special_workflow = NewWorkFlow::where('from_status_id', $get_next_workflow->old_status_id)->where('type_id',$workflow->type_id)->whereHas('workflowstatus', function ($query) use ($get_next_workflow) {
+						$query->where('to_status_id', $get_next_workflow->new_status_id);
+					})->first();
+					 if($check_special_workflow->workflow_type == 1)
+					{
+						$get_next_workflow->update(['active' => self::ACTIVE_STATUS]);
+						$active = 0;
+						return $active;
+					} 
+				}
+				
+			}
+		}
+		$active = $depend_active_statuses->count() > 0 ? self::INACTIVE_STATUS : self::ACTIVE_STATUS;
+		
+		return $active;
+		
     }
 
     /**
@@ -351,6 +364,7 @@ class ChangeRequestStatusService
         if (!$workflowStatus->dependency_ids) {
             return true;
         }
+
         $dependencyIds = array_diff(
             $workflowStatus->dependency_ids, 
             [$workflowStatus->new_workflow_id]
