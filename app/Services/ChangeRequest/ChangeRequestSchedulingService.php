@@ -51,9 +51,11 @@ class ChangeRequestSchedulingService
     //         ];
     //     }
     // }
-    public function reorderTimes($crId): array
+    public function reorderTimes($id): array
     {
         try {
+
+            $crId = Change_request::where('cr_no', $id)->first()->id;
             $cr = Change_request::find($crId);
     
             if (!$cr) {
@@ -438,7 +440,7 @@ protected function reorderSingleTesterQueue(int $testerId): void
             ->whereHas('RequestStatuses', function ($query) {
                 $query->where('new_status_id', 7);
             })
-            ->orderBy('id')
+            ->orderBy('start_design_time')
             ->get();
     
         foreach ($queue as $queuedCr) {
@@ -463,8 +465,13 @@ protected function reorderSingleTesterQueue(int $testerId): void
         }
     }
     
-    public function reorderChangeRequests($crId)
+    public function reorderChangeRequests($id)
     {
+      
+
+        $crId = Change_request::where('cr_no', $id)->first()->id;
+
+    
         $changeRequest = Change_request::find($crId);
 
         if (!$changeRequest) {
@@ -1176,8 +1183,10 @@ protected function reorderSingleTesterQueue(int $testerId): void
         return $now->lessThan($start);
     }
 
-    protected function adjustTimesForChangeRequest($crId, $changeRequest): void
+    protected function adjustTimesForChangeRequest($id, $changeRequest): void
     {
+
+        $crId = Change_request::where('cr_no', $id)->first()->id;
         $cr = Change_request::find($crId);
         $cr_found_design=Change_request::with('RequestStatuses')
         ->where('designer_id', $cr->designer_id)
