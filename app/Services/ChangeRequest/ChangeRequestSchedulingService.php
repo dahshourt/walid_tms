@@ -3,7 +3,11 @@ namespace App\Services\ChangeRequest;
 
 use App\Models\{Change_request, User, Group};
 use Carbon\Carbon;
-
+use App\Http\Repository\{
+    Logs\LogRepository,
+    ChangeRequest\ChangeRequestStatusRepository,
+    ChangeRequest\ChangeRequestRepository
+};
 class ChangeRequestSchedulingService
 {
     // public function reorderTimes($crId): array
@@ -128,6 +132,20 @@ class ChangeRequestSchedulingService
         ->orderBy('end_test_time', 'desc')
         ->first();
 
+
+        $Cr_test_in_progress = Change_request::where('tester_id', $cr->tester_id)
+        ->where('id', '=', $cr->id)
+        ->whereHas('RequestStatuses', function ($query) {
+            $query->where('new_status_id', 74);
+        })
+       
+        ->first();
+
+        if($Cr_test_in_progress){
+            throw new \Exception("test phase already in progress for CR ID {$cr->id}.");
+
+        }
+
     $hasPriority = request()->has('priority');
 
     if ($activeCr && !$hasPriority && $activeCr->end_test_time) {
@@ -140,18 +158,67 @@ class ChangeRequestSchedulingService
         );
 
         // Set current CR status to active testing (13)
-        $cr->RequestStatuses()->update(['new_status_id' => 13]);
+      //  $cr->RequestStatuses()->update(['new_status_id' => 13]);
 
         if ($hasPriority) {
+
+            $repo = new \App\Http\Repository\ChangeRequest\ChangeRequestRepository();
+
+            $req = new \Illuminate\Http\Request([
+                'old_status_id' => 11,
+                'new_status_id' => 139,
+                //propagate sender email for repo user resolution logic
+                'assign_to'     => null,
+            ]);
+    
+         
+                $repo->UpateChangeRequestStatus($cr->id, $req);
             // Demote other CRs in testing from 13 to 11 (queued)
             Change_request::where('tester_id', $cr->tester_id)
                 ->where('id', '!=', $cr->id)
                 ->whereHas('RequestStatuses', function ($query) {
-                    $query->where('new_status_id', 13);
+                    $query->where('new_status_id', 74);
                 })
                 ->each(function ($otherCr) {
-                    $otherCr->RequestStatuses()->update(['new_status_id' => 11]);
-                });
+
+
+                    // $otherCr->RequestStatuses()->update(['new_status_id' => 7]);
+
+                    $lastTwoStatuses = $otherCr->AllRequestStatuses()
+                    ->orderBy('id', 'desc')
+                    ->take(2)
+                    ->get();
+                   
+    
+                 
+
+                    if ($lastTwoStatuses->count() == 2) {
+                        $latest   = $lastTwoStatuses[0]; // newest
+                        $previous = $lastTwoStatuses[1]; // before newest
+        //die("ddd");
+     
+                        // 2️⃣ Make latest inactive
+                        $latest->timestamps = false;
+                        $latest->update(['active' => '0']);
+                     
+                        // 3️⃣ Insert a copy of previous with active=1
+                   
+                  
+                        $request=$otherCr->RequestStatuses()->create([
+ 'old_status_id' => $previous->old_status_id,
+ 'new_status_id' => $previous->new_status_id,
+ 'assign_to'     => $previous->assign_to,
+ 'active'        => '1',
+ 'user_id'       => $previous->user_id,
+ 'created_at'    => now(),
+ 'updated_at'    => now(),
+]);
+
+//$this->logRepository->logCreate($otherCr->id, $request, $otherCr, 'create');
+                    }
+                
+
+                 });
         }
     }
 
@@ -242,9 +309,46 @@ class ChangeRequestSchedulingService
             Change_request::where('developer_id', $cr->developer_id)
                 ->where('id', '!=', $cr->id)
                 ->whereHas('RequestStatuses', fn($q) => $q->where('new_status_id', 10))
-                ->each(function ($other) {
-                    $other->RequestStatuses()->update(['new_status_id' => 8]);
-                });
+                ->each(function ($otherCr) {
+
+
+                    // $otherCr->RequestStatuses()->update(['new_status_id' => 7]);
+
+                    $lastTwoStatuses = $otherCr->AllRequestStatuses()
+                    ->orderBy('id', 'desc')
+                    ->take(2)
+                    ->get();
+                   
+    
+                 
+
+                    if ($lastTwoStatuses->count() == 2) {
+                        $latest   = $lastTwoStatuses[0]; // newest
+                        $previous = $lastTwoStatuses[1]; // before newest
+        //die("ddd");
+     
+                        // 2️⃣ Make latest inactive
+                        $latest->timestamps = false;
+                        $latest->update(['active' => '0']);
+                     
+                        // 3️⃣ Insert a copy of previous with active=1
+                   
+                  
+$request=$otherCr->RequestStatuses()->create([
+ 'old_status_id' => $previous->old_status_id,
+ 'new_status_id' => $previous->new_status_id,
+ 'assign_to'     => $previous->assign_to,
+ 'active'        => '1',
+ 'user_id'       => $previous->user_id,
+ 'created_at'    => now(),
+ 'updated_at'    => now(),
+]);
+
+
+                    }
+                
+
+                 });
     
             $startTime = Carbon::createFromTimestamp(
                 $this->setToWorkingDate(Carbon::now()->timestamp)
@@ -261,12 +365,60 @@ class ChangeRequestSchedulingService
     
             if ($lastCr) {
                 $startTime = Carbon::parse($lastCr->end_develop_time);
-                $cr->RequestStatuses()->update(['new_status_id' => 8]); // queued
+
+
+                $repo = new \App\Http\Repository\ChangeRequest\ChangeRequestRepository();
+
+                $req = new \Illuminate\Http\Request([
+                    'old_status_id' => 8,
+                    'new_status_id' => 48,
+                    //propagate sender email for repo user resolution logic
+                    'assign_to'     => null,
+                ]);
+        
+             
+                    $repo->UpateChangeRequestStatus($cr->id, $req);
+               // $cr->RequestStatuses()->update(['new_status_id' => 8]); // queued
             } else {
                 $startTime = Carbon::createFromTimestamp(
                     $this->setToWorkingDate(Carbon::now()->timestamp)
                 );
-                $cr->RequestStatuses()->update(['new_status_id' => 10]); // active
+              //  $cr->RequestStatuses()->update(['new_status_id' => 10]); // active
+
+              $lastTwoStatuses = $cr->AllRequestStatuses()
+              ->orderBy('id', 'desc')
+              ->take(2)
+              ->get();
+             
+
+           
+
+              if ($lastTwoStatuses->count() == 2) {
+                  $latest   = $lastTwoStatuses[0]; // newest
+                  $previous = $lastTwoStatuses[1]; // before newest
+  //die("ddd");
+
+                  // 2️⃣ Make latest inactive
+                  $latest->timestamps = false;
+                  $latest->update(['active' => '0']);
+               
+                  // 3️⃣ Insert a copy of previous with active=1
+             
+            
+$cr->RequestStatuses()->create([
+'old_status_id' => $previous->old_status_id,
+'new_status_id' => $previous->new_status_id,
+'assign_to'     => $previous->assign_to,
+'active'        => '1',
+'user_id'       => $previous->user_id,
+'created_at'    => now(),
+'updated_at'    => now(),
+]);
+
+
+              }
+
+
             }
         }
     

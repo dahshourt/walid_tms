@@ -58,6 +58,7 @@ class LogRepository implements LogRepositoryInterface
 
     public function logCreate($id, $request, $changeRequest_old, $type = 'create')
     {
+        die('ddd');
         $log = new LogRepository();
         $user = \Auth::user();
 
