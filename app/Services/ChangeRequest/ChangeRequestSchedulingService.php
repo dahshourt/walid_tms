@@ -71,7 +71,18 @@ class ChangeRequestSchedulingService
             $hasDevelopStatus = $cr->RequestStatuses()
                 ->whereIn('new_status_id', [10, 8])
                 ->exists();
-    
+                
+
+// Get the actual records instead of just exists()
+
+
+
+                if ($hasDevelopStatus) {
+                    
+                    $this->processDevelopPhase($cr, $priority);
+                    $this->reorderAllTesterQueues();
+        
+                }
             $hasDesignStatus = $cr->RequestStatuses()
                 ->whereIn('new_status_id', [15, 7])
                 ->exists();
@@ -85,11 +96,7 @@ class ChangeRequestSchedulingService
 
                 }
     
-            if ($hasDevelopStatus) {
-                $this->processDevelopPhase($cr, $priority);
-                $this->reorderAllTesterQueues();
-    
-            }
+           
     
             if ($hasDesignStatus) {
                 $this->processDesignPhase($cr);
@@ -102,6 +109,7 @@ class ChangeRequestSchedulingService
                 'message' => "Successfully reordered times for CR ID {$crId}."
             ];
         } catch (\Exception $e) {
+            
             return [
                 'status' => false,
                 'message' => 'An error occurred while reordering the times: ' . $e->getMessage()
@@ -111,7 +119,7 @@ class ChangeRequestSchedulingService
     protected function processTestPhase($cr): void
 {
     if (!$cr || $cr->test_duration <= 0) {
-        return;
+        throw new \Exception("Invalid CR or no test duration.");
     }
 
     // Find the last booked CR for this tester
@@ -197,13 +205,38 @@ class ChangeRequestSchedulingService
 
     protected function processDevelopPhase($cr, $priority = false): void
     {
+        
         if (!$cr || $cr->develop_duration <= 0) {
-            return;
+            throw new \Exception("Invalid CR or no develop duration.");
         }
-    
+       
+       $Cr_develop_in_progress = Change_request::where('developer_id', $cr->developer_id)
+            ->where('id', '=', $cr->id)
+            ->whereHas('RequestStatuses', function ($query) {
+                $query->where('new_status_id', 10);
+            })
+           
+            ->first();
+
+            if( $Cr_develop_in_progress){
+                throw new \Exception("develop phase already in progress for CR ID {$cr->id}.");
+
+            }
         if ($priority) {
             // Make this CR active
-            $cr->RequestStatuses()->update(['new_status_id' => 10]);
+          //  $cr->RequestStatuses()->update(['new_status_id' => 10]);
+
+          $repo = new \App\Http\Repository\ChangeRequest\ChangeRequestRepository();
+
+          $req = new \Illuminate\Http\Request([
+              'old_status_id' => 8,
+              'new_status_id' => 48,
+              //propagate sender email for repo user resolution logic
+              'assign_to'     => null,
+          ]);
+  
+       
+              $repo->UpateChangeRequestStatus($cr->id, $req);
     
             // Demote other active CRs for this developer to queued
             Change_request::where('developer_id', $cr->developer_id)
@@ -379,9 +412,12 @@ protected function reorderSingleTesterQueue(int $testerId): void
     protected function processDesignPhase($cr): void
     {
         if (!$cr || $cr->design_duration <= 0) {
-            return;
+            throw new \Exception("Invalid CR or no design duration.");
         }
     
+
+
+
         // Find if there is already an active CR (status 15) for this designer
         $activeCr = Change_request::where('designer_id', $cr->designer_id)
             ->where('id', '!=', $cr->id)
@@ -390,6 +426,19 @@ protected function reorderSingleTesterQueue(int $testerId): void
             })
             ->orderBy('end_design_time', 'desc')
             ->first();
+
+            $Cr_design_in_progress = Change_request::where('designer_id', $cr->designer_id)
+            ->where('id', '=', $cr->id)
+            ->whereHas('RequestStatuses', function ($query) {
+                $query->where('new_status_id', 15);
+            })
+           
+            ->first();
+
+            if( $Cr_design_in_progress){
+                throw new \Exception("Design phase already in progress for CR ID {$cr->id}.");
+
+            }
     
         $hasPriority = request()->has('priority');
     
@@ -402,8 +451,22 @@ protected function reorderSingleTesterQueue(int $testerId): void
                 $this->setToWorkingDate(Carbon::now()->timestamp)
             );
     
+  $repo = new \App\Http\Repository\ChangeRequest\ChangeRequestRepository();
+
+        $req = new \Illuminate\Http\Request([
+            'old_status_id' => 7,
+            'new_status_id' => 46,
+            //propagate sender email for repo user resolution logic
+            'assign_to'     => null,
+        ]);
+
+     
+            $repo->UpateChangeRequestStatus($cr->id, $req);
+          
+
+
             // Set current CR to status 15
-            $cr->RequestStatuses()->update(['new_status_id' => 15]);
+           // $cr->RequestStatuses()->update(['new_status_id' => 15]);
     
             if ($hasPriority) {
                 // Demote other CRs from 15 → 7
@@ -413,8 +476,46 @@ protected function reorderSingleTesterQueue(int $testerId): void
                         $query->where('new_status_id', 15);
                     })
                     ->each(function ($otherCr) {
-                        $otherCr->RequestStatuses()->update(['new_status_id' => 7]);
+
+
+                       // $otherCr->RequestStatuses()->update(['new_status_id' => 7]);
+
+                       $lastTwoStatuses = $otherCr->AllRequestStatuses()
+                       ->orderBy('id', 'desc')
+                       ->take(2)
+                       ->get();
+                      
+       
+                    
+
+                       if ($lastTwoStatuses->count() == 2) {
+                           $latest   = $lastTwoStatuses[0]; // newest
+                           $previous = $lastTwoStatuses[1]; // before newest
+           //die("ddd");
+        
+                           // 2️⃣ Make latest inactive
+                           $latest->timestamps = false;
+                           $latest->update(['active' => '0']);
+                        
+                           // 3️⃣ Insert a copy of previous with active=1
+                      
+                     
+$otherCr->RequestStatuses()->create([
+    'old_status_id' => $previous->old_status_id,
+    'new_status_id' => $previous->new_status_id,
+    'assign_to'     => $previous->assign_to,
+    'active'        => '1',
+    'user_id'       => $previous->user_id,
+    'created_at'    => now(),
+    'updated_at'    => now(),
+]);
+
+
+                       }
+                   
+
                     });
+                   // die("walid");
             }
         }
     

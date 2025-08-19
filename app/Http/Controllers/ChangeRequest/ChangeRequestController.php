@@ -604,11 +604,11 @@ class ChangeRequestController extends Controller
     public function reorderChangeRequest(Request $request)
     {
         $this->authorize('Shift ChangeRequest');
-        
+      
         $request->validate([
             'change_request_id' => 'required|exists:change_request,cr_no',
         ]);
-
+      
         $crId = $request->input('change_request_id');
         $repository = new ChangeRequestRepository();
         $result = $repository->reorderTimes($crId);
@@ -616,7 +616,9 @@ class ChangeRequestController extends Controller
         if ($result['status']) {
             return redirect()->back()->with('success', $result['message']);
         }
-
+        if (!$result['status']) {
+            return redirect()->back()->with('error', $result['message']);
+        }
         return redirect()->back()->with('error', $result['message']);
     }
 
