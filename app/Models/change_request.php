@@ -229,7 +229,10 @@ class Change_request extends Model
                     ->where('active', '1')
                     ->orderBy('id', 'DESC');
     }
-
+    public function AllRequestStatuses()
+    {
+        return $this->hasMany(Change_request_statuse::class, 'cr_id','id') ->orderBy('id', 'DESC');
+    }
     /**
      * Get the current request status.
      */

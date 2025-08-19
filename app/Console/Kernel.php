@@ -16,7 +16,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
            \App\Console\Commands\UpdateReleaseAndCrs::class,
            \App\Console\Commands\UpdateToNextStatusAsCalendar::class, // Fixed class name
-           \App\Console\Commands\EwsListenerCommand::class,
+         //  \App\Console\Commands\EwsListenerCommand::class,
 
     ];
 
