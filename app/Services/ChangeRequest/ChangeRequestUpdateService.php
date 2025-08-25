@@ -48,6 +48,7 @@ class ChangeRequestUpdateService
 
     public function update($id, $request)
     {
+     
         $this->changeRequest_old = Change_request::find($id);
         
         // Handle CAB CR validation
@@ -59,7 +60,7 @@ class ChangeRequestUpdateService
         if ($this->handleTechnicalTeamValidation($id, $request)) {
             return true;
         }
-
+       
         // Handle user assignments
         $this->handleUserAssignments($id, $request);
 
@@ -71,13 +72,13 @@ class ChangeRequestUpdateService
 
         // Calculate estimations if needed
         $this->handleEstimations($id, $request);
-
+      
         // Update the change request data
         $this->updateCRData($id, $request);
-
+       
         // Update assignments in status table
         $this->updateStatusAssignments($id, $request);
-
+      
         // Update status if needed
         if (isset($request->new_status_id)) {
             //$this->statusRepository->updateChangeRequestStatus($id, $request);
@@ -86,7 +87,7 @@ class ChangeRequestUpdateService
 
         // Log the update
         $this->logRepository->logCreate($id, $request, $this->changeRequest_old, 'create');
-
+       
         return true;
     }
 
