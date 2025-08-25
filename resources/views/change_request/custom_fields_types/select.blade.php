@@ -162,7 +162,7 @@
         @endif
     @endif
 @endforeach
-
+<div id="reason-wrapper"></div>
 <!-- <option value="{{$cr->getCurrentStatus()?->status?->status_name}}" disabled selected>{{ $cr->getCurrentStatus()?->status?->status_name }}</option>
                     @foreach($cr->set_status as $status)
                         @if($status->same_time == 1)
@@ -311,6 +311,46 @@ document.addEventListener("DOMContentLoaded", function () {
             handleStatusChange(this.value);
         });
     }
+
+
+    const select = document.querySelector('select[name="new_status_id"]');
+    const reasonWrapper = document.getElementById('reason-wrapper');
+
+    if (!select || !reasonWrapper) return;
+
+    select.addEventListener('change', function () {
+        const selectedValue = parseInt(this.value);
+
+        // Current status from backend (Blade injects it here)
+        const currentValue = {{ $cr->getCurrentStatus()?->status?->id ?? 'null' }};
+        
+        // If current = 91 and user selects 200
+        if (currentValue === 91 && selectedValue === 200) {
+            // Inject new "reason" select if not already added
+            if (!document.querySelector('select[name="reason"]')) {
+                const reasonSelect = document.createElement('select');
+                reasonSelect.name = "reason";
+                reasonSelect.classList.add("form-control", "mt-2");
+
+                // Add options
+                // [1, 2, 3, 4].forEach(num => {
+                //     const opt = document.createElement('option');
+                //     opt.value = num;
+                //     opt.textContent = "Reason " + num;
+                //     reasonSelect.appendChild(opt);
+                // });
+
+                reasonWrapper.appendChild(reasonSelect);
+            }
+        } else {
+            // If user changes to something else, remove reason select if it exists
+            const existing = document.querySelector('select[name="reason"]');
+            if (existing) {
+                existing.remove();
+            }
+        }
+    });
+
 });
 </script>
 

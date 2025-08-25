@@ -451,6 +451,7 @@ class ChangeRequestController extends Controller
      */
     public function update(changeRequest_Requests $request, int $id)
     {
+      
         $this->authorize('Edit ChangeRequest');
         
         DB::beginTransaction();
