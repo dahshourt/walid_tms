@@ -10,6 +10,15 @@ use App\Http\Repository\{
 };
 class ChangeRequestSchedulingService
 {
+
+    protected $logRepository;
+
+    public function __construct()
+    {
+        $this->logRepository = new LogRepository();
+        //$this->changeRequestStatusRepository = new ChangeRequestStatusRepository();
+        //$this->workflowRepository = new NewWorkflowRepository();
+    }
     // public function reorderTimes($crId): array
     // {
     //     try {
@@ -65,7 +74,7 @@ class ChangeRequestSchedulingService
             if (!$cr) {
                 return [
                     'status' => false,
-                    'message' => "Change Request with ID {$crId} not found."
+                    'message' => "Change Request with ID {$cr->cr_no} not found."
                 ];
             }
     
@@ -92,7 +101,7 @@ class ChangeRequestSchedulingService
                 ->exists();
 
                 $hasTestStatus = $cr->RequestStatuses()
-                ->whereIn('new_status_id', [13, 11])
+                ->whereIn('new_status_id', [74, 11])
                 ->exists();
 
                 if($hasTestStatus){
@@ -110,20 +119,177 @@ class ChangeRequestSchedulingService
            
             return [
                 'status' => true,
-                'message' => "Successfully reordered times for CR ID {$crId}."
+                'message' => "Successfully reordered times for CR ID {$cr->cr_no}."
             ];
         } catch (\Exception $e) {
-            
+           
             return [
                 'status' => false,
                 'message' => 'An error occurred while reordering the times: ' . $e->getMessage()
             ];
         }
     }
-    protected function processTestPhase($cr): void
+//     protected function processTestPhase($cr): void
+// {
+//     if (!$cr || $cr->test_duration <= 0) {
+//         throw new \Exception("Invalid CR or no test duration.");
+//     }
+
+//     // Find the last booked CR for this tester
+//     $activeCr = Change_request::where('tester_id', $cr->tester_id)
+//         ->where('id', '!=', $cr->id)
+//         ->orderBy('end_test_time', 'desc')
+//         ->first();
+
+
+//         $Cr_test_in_progress = Change_request::where('tester_id', $cr->tester_id)
+//         ->where('id', '=', $cr->id)
+//         ->whereHas('RequestStatuses', function ($query) {
+//             $query->where('new_status_id', 74);
+//         })
+       
+//         ->first();
+
+//         if($Cr_test_in_progress){
+//             throw new \Exception("test phase already in progress for CR ID {$cr->id}.");
+
+//         }
+
+//     $hasPriority = request()->has('priority');
+
+//     if ($activeCr && !$hasPriority && $activeCr->end_test_time) {
+//         // Tester is busy → start after their last test finishes
+//         $startTestTime = Carbon::parse($activeCr->end_test_time);
+//     } else {
+//         // Tester is free OR priority CR → start now at working hours
+//         $startTestTime = Carbon::createFromTimestamp(
+//             $this->setToWorkingDate(Carbon::now()->timestamp)
+//         );
+
+//         // Set current CR status to active testing (13)
+//       //  $cr->RequestStatuses()->update(['new_status_id' => 13]);
+
+//         if ($hasPriority) {
+
+//             $repo = new \App\Http\Repository\ChangeRequest\ChangeRequestRepository();
+
+//             $req = new \Illuminate\Http\Request([
+//                 'old_status_id' => 11,
+//                 'new_status_id' => 139,
+//                 //propagate sender email for repo user resolution logic
+//                 'assign_to'     => null,
+//             ]);
+    
+//         //    $this->logRepository->logCreate($cr->id, $req, $cr, 'create');
+//                 $repo->UpateChangeRequestStatus($cr->id, $req);
+//             // Demote other CRs in testing from 13 to 11 (queued)
+//             Change_request::where('tester_id', $cr->tester_id)
+//                 ->where('id', '!=', $cr->id)
+//                 ->whereHas('RequestStatuses', function ($query) {
+//                     $query->where('new_status_id', 74);
+//                 })
+//                 ->each(function ($otherCr) {
+
+
+//                     // $otherCr->RequestStatuses()->update(['new_status_id' => 7]);
+
+//                     $lastTwoStatuses = $otherCr->AllRequestStatuses()
+//                     ->orderBy('id', 'desc')
+//                     ->take(2)
+//                     ->get();
+                   
+    
+                 
+
+//                     if ($lastTwoStatuses->count() == 2) {
+//                         $latest   = $lastTwoStatuses[0]; // newest
+//                         $previous = $lastTwoStatuses[1]; // before newest
+//         //die("ddd");
+     
+//                         // 2️⃣ Make latest inactive
+//                         $latest->timestamps = false;
+//                         $latest->update(['active' => '0']);
+                     
+//                         // 3️⃣ Insert a copy of previous with active=1
+                   
+                  
+//                         $request=$otherCr->RequestStatuses()->create([
+//  'old_status_id' => $previous->old_status_id,
+//  'new_status_id' => $previous->new_status_id,
+//  'assign_to'     => $previous->assign_to,
+//  'active'        => '1',
+//  'user_id'       => $previous->user_id,
+//  'created_at'    => now(),
+//  'updated_at'    => now(),
+// ]);
+// //$this->logRepository->logCreate($cr->id, $req, $cr, 'create');
+// //$this->logRepository->logCreate($otherCr->id, $request, $otherCr, 'create');
+
+// $newReq = new \Illuminate\Http\Request($request->toArray());
+// $this->logRepository->logCreate($otherCr->id, $newReq, $otherCr, 'create');
+//                     }
+                
+
+//                  });
+//         }
+//     }
+
+//     // Calculate end time for this CR
+//     $endTestTime = Carbon::parse(
+//         $this->generateEndDate(
+//             $startTestTime->timestamp,
+//             $cr->test_duration,
+//             false,
+//             $cr->tester_id,
+//             'test'
+//         )
+//     );
+
+//     $cr->update([
+//         'start_test_time' => $startTestTime->format('Y-m-d H:i:s'),
+//         'end_test_time'   => $endTestTime->format('Y-m-d H:i:s'),
+//     ]);
+
+//     // Reorder queued CRs (status 11 only)
+//     $queue = Change_request::where('tester_id', $cr->tester_id)
+//         ->where('id', '!=', $cr->id)
+//         ->whereHas('RequestStatuses', function ($query) {
+//             $query->where('new_status_id', 11); // queued test
+//         })
+//         ->orderBy('id')
+//         ->get();
+
+//     foreach ($queue as $queuedCr) {
+//         if (!empty($queuedCr->test_duration) && $queuedCr->test_duration > 0) {
+//             // Start after the last CR in the tester's queue
+//             $startTestTime = Carbon::parse($endTestTime);
+
+//             $endTestTime = Carbon::parse(
+//                 $this->generateEndDate(
+//                     $startTestTime->timestamp,
+//                     $queuedCr->test_duration,
+//                     false,
+//                     $queuedCr->tester_id,
+//                     'test'
+//                 )
+//             );
+
+//             $queuedCr->update([
+//                 'start_test_time' => $startTestTime->format('Y-m-d H:i:s'),
+//                 'end_test_time'   => $endTestTime->format('Y-m-d H:i:s'),
+//             ]);
+//         }
+//     }
+// }
+protected function processTestPhase($cr): void 
 {
     if (!$cr || $cr->test_duration <= 0) {
         throw new \Exception("Invalid CR or no test duration.");
+    }
+
+    // Initialize logRepository if not exists
+    if (!isset($this->logRepository)) {
+        $this->logRepository = new \App\Http\Repository\LogRepository();
     }
 
     // Find the last booked CR for this tester
@@ -132,19 +298,16 @@ class ChangeRequestSchedulingService
         ->orderBy('end_test_time', 'desc')
         ->first();
 
-
-        $Cr_test_in_progress = Change_request::where('tester_id', $cr->tester_id)
+    $Cr_test_in_progress = Change_request::where('tester_id', $cr->tester_id)
         ->where('id', '=', $cr->id)
         ->whereHas('RequestStatuses', function ($query) {
             $query->where('new_status_id', 74);
         })
-       
         ->first();
 
-        if($Cr_test_in_progress){
-            throw new \Exception("test phase already in progress for CR ID {$cr->id}.");
-
-        }
+    if ($Cr_test_in_progress) {
+        throw new \Exception("Test phase already in progress for CR ID {$cr->cr_no}.");
+    }
 
     $hasPriority = request()->has('priority');
 
@@ -157,68 +320,26 @@ class ChangeRequestSchedulingService
             $this->setToWorkingDate(Carbon::now()->timestamp)
         );
 
-        // Set current CR status to active testing (13)
-      //  $cr->RequestStatuses()->update(['new_status_id' => 13]);
-
         if ($hasPriority) {
-
             $repo = new \App\Http\Repository\ChangeRequest\ChangeRequestRepository();
-
             $req = new \Illuminate\Http\Request([
                 'old_status_id' => 11,
                 'new_status_id' => 139,
-                //propagate sender email for repo user resolution logic
-                'assign_to'     => null,
+                'assign_to' => null,
             ]);
-    
-         
-                $repo->UpateChangeRequestStatus($cr->id, $req);
-            // Demote other CRs in testing from 13 to 11 (queued)
+            
+            $this->logRepository->logCreate($cr->id, $req, $cr, 'shifting');
+            $repo->UpateChangeRequestStatus($cr->id, $req);
+
+            // Demote other CRs in testing from active to queued
             Change_request::where('tester_id', $cr->tester_id)
                 ->where('id', '!=', $cr->id)
                 ->whereHas('RequestStatuses', function ($query) {
                     $query->where('new_status_id', 74);
                 })
                 ->each(function ($otherCr) {
-
-
-                    // $otherCr->RequestStatuses()->update(['new_status_id' => 7]);
-
-                    $lastTwoStatuses = $otherCr->AllRequestStatuses()
-                    ->orderBy('id', 'desc')
-                    ->take(2)
-                    ->get();
-                   
-    
-                 
-
-                    if ($lastTwoStatuses->count() == 2) {
-                        $latest   = $lastTwoStatuses[0]; // newest
-                        $previous = $lastTwoStatuses[1]; // before newest
-        //die("ddd");
-     
-                        // 2️⃣ Make latest inactive
-                        $latest->timestamps = false;
-                        $latest->update(['active' => '0']);
-                     
-                        // 3️⃣ Insert a copy of previous with active=1
-                   
-                  
-                        $request=$otherCr->RequestStatuses()->create([
- 'old_status_id' => $previous->old_status_id,
- 'new_status_id' => $previous->new_status_id,
- 'assign_to'     => $previous->assign_to,
- 'active'        => '1',
- 'user_id'       => $previous->user_id,
- 'created_at'    => now(),
- 'updated_at'    => now(),
-]);
-
-//$this->logRepository->logCreate($otherCr->id, $request, $otherCr, 'create');
-                    }
-                
-
-                 });
+                    $this->demoteCrFromTesting($otherCr);
+                });
         }
     }
 
@@ -235,10 +356,67 @@ class ChangeRequestSchedulingService
 
     $cr->update([
         'start_test_time' => $startTestTime->format('Y-m-d H:i:s'),
-        'end_test_time'   => $endTestTime->format('Y-m-d H:i:s'),
+        'end_test_time' => $endTestTime->format('Y-m-d H:i:s'),
     ]);
 
     // Reorder queued CRs (status 11 only)
+    $this->reorderQueuedCrs($cr, $endTestTime);
+}
+
+/**
+ * Demote a CR from testing status back to queued
+ */
+private function demoteCrFromTesting($otherCr): void
+{
+    try {
+        $lastTwoStatuses = $otherCr->AllRequestStatuses()
+            ->orderBy('id', 'desc')
+            ->take(2)
+            ->get();
+
+        if ($lastTwoStatuses->count() == 2) {
+            $latest = $lastTwoStatuses[0]; // newest
+            $previous = $lastTwoStatuses[1]; // before newest
+
+            // Make latest inactive
+            $latest->timestamps = false;
+            $latest->update(['active' => '0']);
+
+            // Insert a copy of previous status with active=1
+            $newStatusRecord = $otherCr->RequestStatuses()->create([
+                'old_status_id' => $previous->old_status_id,
+                'new_status_id' => $previous->new_status_id,
+                'assign_to' => $previous->assign_to,
+                'active' => '1',
+                'user_id' => $previous->user_id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            // Create a proper request object for logging
+            $logRequest = new \Illuminate\Http\Request([
+                'old_status_id' => $previous->old_status_id,
+                'new_status_id' => 139,
+                'assign_to' => $previous->assign_to,
+            ]);
+
+            // Log the status change
+            $this->logRepository->logCreate($otherCr->id, $logRequest, $otherCr, 'shifting');
+        }
+    } catch (\Exception $e) {
+        \Log::error('Error demoting CR from testing', [
+            'cr_id' => $otherCr->id,
+            'error' => $e->getMessage()
+        ]);
+        // Don't throw here to avoid breaking the main process
+    }
+}
+
+/**
+ * Reorder queued CRs after current CR
+ */
+private function reorderQueuedCrs($cr, $endTestTime): void
+{
     $queue = Change_request::where('tester_id', $cr->tester_id)
         ->where('id', '!=', $cr->id)
         ->whereHas('RequestStatuses', function ($query) {
@@ -247,12 +425,13 @@ class ChangeRequestSchedulingService
         ->orderBy('id')
         ->get();
 
+    $currentEndTime = $endTestTime;
+
     foreach ($queue as $queuedCr) {
         if (!empty($queuedCr->test_duration) && $queuedCr->test_duration > 0) {
             // Start after the last CR in the tester's queue
-            $startTestTime = Carbon::parse($endTestTime);
-
-            $endTestTime = Carbon::parse(
+            $startTestTime = Carbon::parse($currentEndTime);
+            $newEndTestTime = Carbon::parse(
                 $this->generateEndDate(
                     $startTestTime->timestamp,
                     $queuedCr->test_duration,
@@ -264,12 +443,14 @@ class ChangeRequestSchedulingService
 
             $queuedCr->update([
                 'start_test_time' => $startTestTime->format('Y-m-d H:i:s'),
-                'end_test_time'   => $endTestTime->format('Y-m-d H:i:s'),
+                'end_test_time' => $newEndTestTime->format('Y-m-d H:i:s'),
             ]);
+
+            // Update for next iteration
+            $currentEndTime = $newEndTestTime;
         }
     }
 }
-
     protected function processDevelopPhase($cr, $priority = false): void
     {
         
@@ -286,7 +467,7 @@ class ChangeRequestSchedulingService
             ->first();
 
             if( $Cr_develop_in_progress){
-                throw new \Exception("develop phase already in progress for CR ID {$cr->id}.");
+                throw new \Exception("develop phase already in progress for CR ID {$cr->cr_no}.");
 
             }
         if ($priority) {
@@ -302,7 +483,7 @@ class ChangeRequestSchedulingService
               'assign_to'     => null,
           ]);
   
-       
+          $this->logRepository->logCreate($cr->id, $req, $cr, 'shifting');
               $repo->UpateChangeRequestStatus($cr->id, $req);
     
             // Demote other active CRs for this developer to queued
@@ -334,15 +515,25 @@ class ChangeRequestSchedulingService
                         // 3️⃣ Insert a copy of previous with active=1
                    
                   
-$request=$otherCr->RequestStatuses()->create([
- 'old_status_id' => $previous->old_status_id,
- 'new_status_id' => $previous->new_status_id,
- 'assign_to'     => $previous->assign_to,
- 'active'        => '1',
- 'user_id'       => $previous->user_id,
- 'created_at'    => now(),
- 'updated_at'    => now(),
-]);
+                        $newStatusRecord = $otherCr->RequestStatuses()->create([
+                            'old_status_id' => $previous->old_status_id,
+                            'new_status_id' => $previous->new_status_id,
+                            'assign_to' => $previous->assign_to,
+                            'active' => '1',
+                            'user_id' => $previous->user_id,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+            
+                        // Create a proper request object for logging
+                        $logRequest = new \Illuminate\Http\Request([
+                            'old_status_id' => $previous->old_status_id,
+                            'new_status_id' => 48,
+                            'assign_to' => $previous->assign_to,
+                        ]);
+            
+                        // Log the status change
+                        $this->logRepository->logCreate($otherCr->id, $logRequest, $otherCr, 'shifting');
 
 
                     }
@@ -376,7 +567,7 @@ $request=$otherCr->RequestStatuses()->create([
                     'assign_to'     => null,
                 ]);
         
-             
+                $this->logRepository->logCreate($cr->id, $req, $cr, 'shifting');
                     $repo->UpateChangeRequestStatus($cr->id, $req);
                // $cr->RequestStatuses()->update(['new_status_id' => 8]); // queued
             } else {
@@ -405,15 +596,25 @@ $request=$otherCr->RequestStatuses()->create([
                   // 3️⃣ Insert a copy of previous with active=1
              
             
-$cr->RequestStatuses()->create([
-'old_status_id' => $previous->old_status_id,
-'new_status_id' => $previous->new_status_id,
-'assign_to'     => $previous->assign_to,
-'active'        => '1',
-'user_id'       => $previous->user_id,
-'created_at'    => now(),
-'updated_at'    => now(),
-]);
+                  $newStatusRecord = $cr->RequestStatuses()->create([
+                    'old_status_id' => $previous->old_status_id,
+                    'new_status_id' => $previous->new_status_id,
+                    'assign_to' => $previous->assign_to,
+                    'active' => '1',
+                    'user_id' => $previous->user_id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+    
+                // Create a proper request object for logging
+                $logRequest = new \Illuminate\Http\Request([
+                    'old_status_id' => $previous->old_status_id,
+                    'new_status_id' => 48,
+                    'assign_to' => $previous->assign_to,
+                ]);
+    
+                // Log the status change
+                $this->logRepository->logCreate($cr->id, $logRequest, $cr, 'shifting');
 
 
               }
@@ -588,7 +789,7 @@ protected function reorderSingleTesterQueue(int $testerId): void
             ->first();
 
             if( $Cr_design_in_progress){
-                throw new \Exception("Design phase already in progress for CR ID {$cr->id}.");
+                throw new \Exception("Design phase already in progress for CR ID {$cr->cr_no}.");
 
             }
     
@@ -612,7 +813,7 @@ protected function reorderSingleTesterQueue(int $testerId): void
             'assign_to'     => null,
         ]);
 
-     
+        $this->logRepository->logCreate($cr->id, $req, $cr, 'shifting');
             $repo->UpateChangeRequestStatus($cr->id, $req);
           
 
@@ -652,15 +853,25 @@ protected function reorderSingleTesterQueue(int $testerId): void
                            // 3️⃣ Insert a copy of previous with active=1
                       
                      
-$otherCr->RequestStatuses()->create([
-    'old_status_id' => $previous->old_status_id,
-    'new_status_id' => $previous->new_status_id,
-    'assign_to'     => $previous->assign_to,
-    'active'        => '1',
-    'user_id'       => $previous->user_id,
-    'created_at'    => now(),
-    'updated_at'    => now(),
-]);
+                           $newStatusRecord = $otherCr->RequestStatuses()->create([
+                            'old_status_id' => $previous->old_status_id,
+                            'new_status_id' => $previous->new_status_id,
+                            'assign_to' => $previous->assign_to,
+                            'active' => '1',
+                            'user_id' => $previous->user_id,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+            
+                        // Create a proper request object for logging
+                        $logRequest = new \Illuminate\Http\Request([
+                            'old_status_id' => $previous->old_status_id,
+                            'new_status_id' => 46,
+                            'assign_to' => $previous->assign_to,
+                        ]);
+            
+                        // Log the status change
+                        $this->logRepository->logCreate($otherCr->id, $logRequest, $otherCr, 'shifting');
 
 
                        }

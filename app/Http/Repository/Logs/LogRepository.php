@@ -58,7 +58,7 @@ class LogRepository implements LogRepositoryInterface
 
     public function logCreate($id, $request, $changeRequest_old, $type = 'create')
     {
-       
+      
         $log = new LogRepository();
         $user = \Auth::user();
 
@@ -66,6 +66,10 @@ class LogRepository implements LogRepositoryInterface
 
         if ($type === 'create') {
             $this->createLog($log, $id, $user->id, 'Issue opened by ' . $user->user_name);
+            return true;
+        }
+        if ($type === 'shifting') {
+            $this->createLog($log, $id, $user->id, 'CR shifted by admin : ' . $user->user_name);
             return true;
         }
 
@@ -135,6 +139,7 @@ class LogRepository implements LogRepositoryInterface
 
         // Status change
         if (isset($request->new_status_id)) {
+           // echo $request->new_status_id; die;
             $workflow = NewWorkFlow::find($request->new_status_id);
             $status_title = $workflow->workflowstatus->count() > 1 
                 ? $workflow->to_status_label 
