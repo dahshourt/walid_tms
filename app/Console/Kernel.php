@@ -32,6 +32,8 @@ class Kernel extends ConsoleKernel
          $schedule->command('CalendarUpdateStatus:run')->daily();
          $schedule->command('email:process-approvals')->everyFiveMinutes();
          $schedule->command('cab:approve-users')->daily();
+         $schedule->command('cron:escalation')->everyFiveMinutes();
+
     }
 
     /**
