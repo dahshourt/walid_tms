@@ -125,6 +125,7 @@
 												<tr>
 													<th>#</th>
 													<th>Rejection Reasons</th>
+													<th>Workflow Type</th>
 													@can('Active RejectionReason')
 													<th>status</th>
 													@endcan

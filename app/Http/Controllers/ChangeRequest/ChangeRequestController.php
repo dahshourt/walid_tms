@@ -22,6 +22,7 @@ use App\Factories\Users\UserFactory;
 use App\Factories\Defect\DefectFactory;
 use App\Models\Group;
 use App\Models\Change_request;
+use App\Http\Repository\RejectionReasons\RejectionReasonsRepository;
 use App\Models\Attachements_crs;
 use App\Models\User;
 use App\Models\Defect;
@@ -820,8 +821,13 @@ class ChangeRequestController extends Controller
             ->where('custom_field_name', 'man_days')
             ->values()
             ->toArray();
+         $reject= new   RejectionReasonsRepository();
+         $rejects=$reject->workflows($workflow_type_id);
 
-        return compact(
+        //  echo "<pre>";
+        //  print_r( $rejects);
+        //  echo "</pre>"; die;
+        return compact('rejects',
             'selected_technical_teams', 'man_day', 'technical_team_disabled', 'status_name',
             'ApplicationImpact', 'cap_users', 'CustomFields', 'cr', 'workflow_type_id',
             'logs_ers', 'developer_users', 'sa_users', 'testing_users', 'technical_teams',

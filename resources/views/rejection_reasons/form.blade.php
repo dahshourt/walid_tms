@@ -19,7 +19,18 @@
 													<div class="form-group form-group-last">
 														
 													</div>
-
+													<div class="form-group">
+        <label for="type_id">Workflow Type:</label>
+        <select class="form-control form-control-lg" id="type_id" name="workflow_type_id" >
+            <option value="">Select</option>
+            @foreach($types as $item)
+                <option value="{{ $item->id }}" {{ isset($row) && $row->workflow_type_id == $item->id ? "selected" : "" }}>
+                    {{ $item->name }}
+                </option>
+            @endforeach
+        </select>
+        {!! $errors->first('workflow_type_id', '<span class="form-control-feedback">:message</span>') !!}
+    </div>
 													
 
 													<div class="form-group">

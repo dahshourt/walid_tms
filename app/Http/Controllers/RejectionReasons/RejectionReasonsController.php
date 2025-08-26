@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use App\Http\Requests\RejectionReasons\RejectionReasonsRequest;
 use App\Factories\RejectionReasons\RejectionReasonsFactory;
+use App\Http\Repository\Workflow\Workflow_type_repository;
 use Illuminate\Http\Request;
 
 class RejectionReasonsController extends Controller
@@ -38,8 +39,8 @@ class RejectionReasonsController extends Controller
         //
         $this->authorize('Create RejectionReason'); // permission check
         
-
-        return view("$this->view.create");
+        $types = (new Workflow_type_repository)->get_workflow_all_subtype();
+        return view("$this->view.create",compact('types'));
     }
     /**
      * Send or resend the verification code.
@@ -51,7 +52,7 @@ class RejectionReasonsController extends Controller
     public function store(RejectionReasonsRequest $request)
     {
         $this->authorize('Create RejectionReason'); // permission check
-        die("sss");
+      
         
         $this->rejectionReason->create($request->all());
         return redirect()->route("$this->view.index")->with('message' , 'Created Successfully' );
@@ -62,8 +63,8 @@ class RejectionReasonsController extends Controller
 
         $this->authorize('Edit RejectionReason'); // permission check
         $row = $this->rejectionReason->find($id);
-       
-        return view("$this->view.edit",compact('row'));
+        $types = (new Workflow_type_repository)->get_workflow_all_subtype();
+        return view("$this->view.edit",compact('row','types'));
 
     }
     /**

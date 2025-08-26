@@ -28,7 +28,7 @@ class RejectionReasonsRepository implements RejectionReasonsRepositoryInterface
     {
         return RejectionReasons::destroy($id);
     }
-
+   
     public function update($request, $id)
     {
         return RejectionReasons::where('id', $id)->update($request);
@@ -38,6 +38,12 @@ class RejectionReasonsRepository implements RejectionReasonsRepositoryInterface
     {
       
         return RejectionReasons::find($id);
+    }
+
+    public function workflows($id)
+    {
+      
+        return RejectionReasons::where('workflow_type_id', $id)->where('active',1)->get();
     }
 public function updateactive($active,$id){
 		if($active){
