@@ -35,6 +35,11 @@ class GroupRepository implements GroupRepositoryInterface
         return Group::with('children','parent')->get();
     }
 
+    public function getAllActive()
+    {
+        return Group::with('children','parent')->where('active', '1')->get();
+    }
+
     public function getAllWithFilter($parent_id)
     {
         if($parent_id)
