@@ -4,6 +4,7 @@
                                 <tr>
                                     <th scope="row">{{ $item->id }}</th>
                                     <td>{{ $item->name }}</td>
+                                    <td>{{ $item?->workflowType?->name }}</td>
 
                                     @can('Active RejectionReason')
                                     <td>

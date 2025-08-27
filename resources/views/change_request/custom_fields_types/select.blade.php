@@ -30,6 +30,21 @@
                         <option value="{{ $assignment_user->id }}" {{ old($assignment_user->user_name, $custom_field_value) == $assignment_user->id ? 'selected' : '' }}>{{ $assignment_user->user_name }}</option>
                 @endforeach
             </select>	
+
+            @elseif($item->CustomField->name == "rejection_reason_id")
+            
+            <select name="{{ $item->CustomField->name }}" class="form-control form-control-lg">
+                <option value="">Select</option>
+                @if(!empty($rejects))
+              
+                @foreach($rejects as $reject)
+                <option value="{{$reject?->id}}">{{$reject?->name}}</option>
+                @endforeach
+                @endif
+               
+</select>
+
+
         @elseif($item->CustomField->name == "deployment_impact")
             <select name="{{ $item->CustomField->name }}" class="form-control form-control-lg">
                 <option value="">Select</option>
@@ -319,13 +334,13 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!select || !reasonWrapper) return;
 
     select.addEventListener('change', function () {
-        const selectedValue = parseInt(this.value);
+        const selectedLabel = this.options[this.selectedIndex].text.trim();
 
         // Current status from backend (Blade injects it here)
         const currentValue = {{ $cr->getCurrentStatus()?->status?->id ?? 'null' }};
         
         // If current = 91 and user selects 200
-        if (currentValue === 91 && selectedValue === 200) {
+        if (selectedLabel.toLowerCase() === "reject") {
             // Inject new "reason" select if not already added
             if (!document.querySelector('select[name="reason"]')) {
                 const reasonSelect = document.createElement('select');
