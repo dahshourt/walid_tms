@@ -333,7 +333,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
     if (!select || !reasonWrapper) return;
 
-    select.addEventListener('change', function () {
+    <?php if(isset($cr)): ?>
+        select.addEventListener('change', function () {
         const selectedLabel = this.options[this.selectedIndex].text.trim();
 
         // Current status from backend (Blade injects it here)
@@ -367,6 +368,8 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
 });
+<?php endif;?>
+
 </script>
 
 

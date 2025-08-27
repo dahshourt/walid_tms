@@ -278,8 +278,12 @@ class ChangeRequestController extends Controller
             $workflow_type_id, 
             self::FORM_TYPE_CREATE
         );
-        
-        $title = "Create {$target_system->name} CR";
+        $title = (!empty($workflow_type_id) && $workflow_type_id == 9)
+        ? "Create {$target_system->name} Promo" 
+        : "Create {$target_system->name} CR" ;
+
+
+       // $title = "Create {$target_system->name} CR";
         
         return view("{$this->view}.create", compact(
             'CustomFields', 
@@ -362,15 +366,18 @@ class ChangeRequestController extends Controller
         
         $logs_ers = $cr->logs;
         $technical_teams = Group::where('technical_team', '1')->get();
-        $title = 'View Change Request';
-
+        $title = (!empty($workflow_type_id) && $workflow_type_id == 9) ? "View Promo":
+        "View Change Request";
+        $form_title = (!empty($workflow_type_id) && $workflow_type_id == 9)
+        ? "Promo"
+        : view()->shared('form_title'); 
         return view("{$this->view}.show", compact(
             'CustomFields', 
             'cr', 
             'status_name', 
             'title', 
             'logs_ers', 
-            'technical_teams'
+            'technical_teams','form_title'
         ));
     }
 
@@ -823,11 +830,19 @@ class ChangeRequestController extends Controller
             ->toArray();
          $reject= new   RejectionReasonsRepository();
          $rejects=$reject->workflows($workflow_type_id);
-
+         $form_title = (!empty($workflow_type_id) && $workflow_type_id == 9)
+         ? "Promo"
+         : view()->shared('form_title');   
+         
+         $title = (!empty($workflow_type_id) && $workflow_type_id == 9)
+         ? "List Promo"
+         : view()->shared('title'); 
+         
+        
         //  echo "<pre>";
         //  print_r( $rejects);
         //  echo "</pre>"; die;
-        return compact('rejects',
+        return compact('rejects','form_title','title',
             'selected_technical_teams', 'man_day', 'technical_team_disabled', 'status_name',
             'ApplicationImpact', 'cap_users', 'CustomFields', 'cr', 'workflow_type_id',
             'logs_ers', 'developer_users', 'sa_users', 'testing_users', 'technical_teams',
