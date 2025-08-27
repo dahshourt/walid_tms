@@ -31,6 +31,11 @@ class Workflow_type_repository implements workflow_type_contracts
     public function get_workflow_all_subtype_without_release()
     {
          
+        return WorkFlowType::select("id" ,"name","parent_id")->WhereNotNull('parent_id')->where('id','<',6)->get();
+    }
+
+    public function get_all_active_workflow()
+    {
         return WorkFlowType::select("id" ,"name","parent_id")->WhereNotNull('parent_id')->where('active','1')->get();
     }
     

@@ -41,7 +41,7 @@ class ProcessEmailApprovals extends Command
     {
         try {
             $mailReader = new EwsMailReader();
-            $result = $mailReader->handleApprovals(10); //Process up to 10 messages
+            $result = $mailReader->handleApprovals(20); //Process up to 20 messages
             $this->info("Checked inbox and processed approvals.");
             
             return 0;
