@@ -32,7 +32,7 @@ class EwsMailReader
         $this->client = new Client($host, $username, $password, Client::VERSION_2016);
     }
 
-    public function readInbox($limit = 5)
+    public function readInbox($limit)
     {
         
         //Find items in Inbox
@@ -95,6 +95,7 @@ class EwsMailReader
                     'from'    => $msg->From->Mailbox->EmailAddress ?? '(Unknown)',
                     'date'    => $msg->DateTimeReceived ?? '',
                     'body'    => $msg->Body ? $msg->Body->_ : '(No Body)',
+                    'id'      => $msg->ItemId,
                 ];
             }
         }
@@ -145,21 +146,40 @@ class EwsMailReader
         foreach ($messages as $message) {
 
             if (!preg_match('/CR\s*#(\d+)\s*-.*Awaiting Your Approval/i', $message['subject'], $m)) {
+                \Log::warning("EWS Mail Reader: There is no CR number found in the mail subject or the subject does not match the pattern, the mail will be moved to Archive");
+                $this->moveToArchive([$message['id']]);
                 continue; 
             }
 
             $crNo      = (int) $m[1];
-            $crId      = Change_request::where('cr_no', $crNo)->value('id');
+            
+            try {
+                $crId = Change_request::where('cr_no', $crNo)->value('id');
+                
+                if (!$crId) {
+                    \Log::warning("EWS Mail Reader: CR #{$crNo} not found in the database, the mail will be moved to Archive");
+                    $this->moveToArchive([$message['id']]);
+                    continue;
+                }
+            } catch (\Exception $e) {
+                \Log::error("EWS Mail Reader: Database error while looking up CR #{$crNo}: " . $e->getMessage());
+                continue;
+            }
+            
             $bodyPlain = strip_tags($message['body']);
             $action    = $this->determineAction($bodyPlain);
 
             if (!$action) {
+                \Log::warning("EWS Mail Reader: There is no action found in the mail for CR #{$crId}, the mail will be moved to Archive");
+                $this->moveToArchive([$message['id']]);
                 continue; 
             }
-            //\Log::warning("EWS Mail Reader: CR #{$crId} The Body is: {$action}");
             \Log::warning("EWS Mail Reader: CR #{$crId} The Action is: {$action}");
 
             $this->processCrAction($crId, $action, $message['from']);
+            
+            // Move the processed message to Archive folder
+            $this->moveToArchive([$message['id']]);
         }
     }
 
@@ -214,43 +234,103 @@ class EwsMailReader
             \Log::error("EWS Mail Reader: Failed to {$action} CR #{$crId} → " . $e->getMessage());
         }
     }
-    // not works need fixing
-    
-    protected function getOrCreateArchiveFolder()
+
+    protected function getArchiveFolder()
     {
-        // find the Archive folder
-        $findFolder = new \jamesiarmes\PhpEws\Request\FindFolderType();
-        $findFolder->Traversal = \jamesiarmes\PhpEws\Enumeration\FolderQueryTraversalType::DEEP;
-        $findFolder->FolderShape = new \jamesiarmes\PhpEws\Type\FolderResponseShapeType();
-        $findFolder->FolderShape->BaseShape = \jamesiarmes\PhpEws\Enumeration\DefaultShapeNamesType::ALL_PROPERTIES;
+        // Try to find Archive folder by searching from different folders
+        $searchRoots = [
+            \jamesiarmes\PhpEws\Enumeration\DistinguishedFolderIdNameType::INBOX,
+            //\jamesiarmes\PhpEws\Enumeration\DistinguishedFolderIdNameType::DELETEDITEMS,
+            \jamesiarmes\PhpEws\Enumeration\DistinguishedFolderIdNameType::DRAFTS
+        ];
         
-        // Search in the root folder
-        $parentFolder = new \jamesiarmes\PhpEws\Type\DistinguishedFolderIdType();
-        $parentFolder->Id = \jamesiarmes\PhpEws\Enumeration\DistinguishedFolderIdNameType::INBOX;
-        $findFolder->ParentFolderIds = new \jamesiarmes\PhpEws\ArrayType\NonEmptyArrayOfBaseFolderIdsType();
-        $findFolder->ParentFolderIds->DistinguishedFolderId[] = $parentFolder;
-        
-        // Filter for the Archive folder
-        $findFolder->Restriction = new \jamesiarmes\PhpEws\Type\RestrictionType();
-        $findFolder->Restriction->IsEqualTo = new \jamesiarmes\PhpEws\Type\IsEqualToType();
-        $findFolder->Restriction->IsEqualTo->FieldURI = new \jamesiarmes\PhpEws\Type\PathToUnindexedFieldType();
-        $findFolder->Restriction->IsEqualTo->FieldURI->FieldURI = 'folder:DisplayName';
-        $findFolder->Restriction->IsEqualTo->FieldURIOrConstant = new \jamesiarmes\PhpEws\Type\FieldURIOrConstantType();
-        $findFolder->Restriction->IsEqualTo->FieldURIOrConstant->Constant = new \jamesiarmes\PhpEws\Type\ConstantValueType();
-        $findFolder->Restriction->IsEqualTo->FieldURIOrConstant->Constant->Value = 'Archives';
-        
-        try {
-            $response = $this->client->FindFolder($findFolder);
-            
-            // If we found the Archive folder, return its ID
-            if (isset($response->ResponseMessages->FindFolderResponseMessage->RootFolder->Folders->Folder[0])) {
-                $folder = $response->ResponseMessages->FindFolderResponseMessage->RootFolder->Folders->Folder[0];
-                return $folder->FolderId;
+        foreach ($searchRoots as $rootType) {
+            try {
+                // Get the folder to find its parent
+                $getFolder = new \jamesiarmes\PhpEws\Request\GetFolderType();
+                $getRootFolder = new \jamesiarmes\PhpEws\Type\DistinguishedFolderIdType();
+                $getRootFolder->Id = $rootType;
+                
+                $getFolder->FolderIds = new \jamesiarmes\PhpEws\ArrayType\NonEmptyArrayOfBaseFolderIdsType();
+                $getFolder->FolderIds->DistinguishedFolderId[] = $getRootFolder;
+                $getFolder->FolderShape = new \jamesiarmes\PhpEws\Type\FolderResponseShapeType();
+                $getFolder->FolderShape->BaseShape = \jamesiarmes\PhpEws\Enumeration\DefaultShapeNamesType::ALL_PROPERTIES;
+                
+                $folderResponse = $this->client->GetFolder($getFolder);
+                
+                // Extract parent folder ID
+                $parentFolderId = null;
+                if (isset($folderResponse->ResponseMessages->GetFolderResponseMessage)) {
+                    foreach ($folderResponse->ResponseMessages->GetFolderResponseMessage as $responseMessage) {
+                        if ($responseMessage->ResponseClass === 'Success' && isset($responseMessage->Folders->Folder)) {
+                            $folders = $responseMessage->Folders->Folder;
+                            if (!is_array($folders)) {
+                                $folders = [$folders];
+                            }
+                            foreach ($folders as $folder) {
+                                if (isset($folder->ParentFolderId)) {
+                                    $parentFolderId = $folder->ParentFolderId;
+                                    break 2;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if (!$parentFolderId) {
+                    continue; // Try next root type
+                }
+                
+                // Now search for Archive in this parent folder
+                $findFolder = new \jamesiarmes\PhpEws\Request\FindFolderType();
+                $findFolder->Traversal = \jamesiarmes\PhpEws\Enumeration\FolderQueryTraversalType::SHALLOW;
+                $findFolder->FolderShape = new \jamesiarmes\PhpEws\Type\FolderResponseShapeType();
+                $findFolder->FolderShape->BaseShape = \jamesiarmes\PhpEws\Enumeration\DefaultShapeNamesType::ALL_PROPERTIES;
+                
+                $findFolder->ParentFolderIds = new \jamesiarmes\PhpEws\ArrayType\NonEmptyArrayOfBaseFolderIdsType();
+                $findFolder->ParentFolderIds->FolderId[] = $parentFolderId;
+                
+                // Search for folder with DisplayName = "Archive"
+                $isEqualTo = new \jamesiarmes\PhpEws\Type\IsEqualToType();
+                $isEqualTo->FieldURI = new \jamesiarmes\PhpEws\Type\PathToUnindexedFieldType();
+                $isEqualTo->FieldURI->FieldURI = 'folder:DisplayName';
+                $isEqualTo->FieldURIOrConstant = new \jamesiarmes\PhpEws\Type\FieldURIOrConstantType();
+                $isEqualTo->FieldURIOrConstant->Constant = new \jamesiarmes\PhpEws\Type\ConstantValueType();
+                $isEqualTo->FieldURIOrConstant->Constant->Value = 'Archive';
+                
+                $findFolder->Restriction = new \jamesiarmes\PhpEws\Type\RestrictionType();
+                $findFolder->Restriction->IsEqualTo = $isEqualTo;
+
+                $response = $this->client->FindFolder($findFolder);
+                
+                // Check if we found the Archive folder
+                if (isset($response->ResponseMessages->FindFolderResponseMessage)) {
+                    foreach ($response->ResponseMessages->FindFolderResponseMessage as $responseMessage) {
+                        if ($responseMessage->ResponseClass === 'Success' && 
+                            isset($responseMessage->RootFolder->Folders->Folder)) {
+                            
+                            $folders = $responseMessage->RootFolder->Folders->Folder;
+                            if (!is_array($folders)) {
+                                $folders = [$folders];
+                            }
+                            
+                            foreach ($folders as $folder) {
+                                if (isset($folder->DisplayName) && $folder->DisplayName === 'Archive') {
+                                    \Log::info('EWS Mail Reader: Archive folder found successfully using root: ' . $rootType);
+                                    return $folder->FolderId;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+            } catch (\Exception $e) {
+                \Log::debug("EWS Mail Reader: Failed to search from root $rootType: " . $e->getMessage());
+                continue; // Try next root
             }
-        } catch (\Exception $e) {
-            \Log::error('Error finding Archive folder: ' . $e->getMessage());
         }
-        
+        throw new \Exception('Archive folder not found in any of the searched locations');
+
     }
 
     protected function moveToArchive($items)
@@ -260,38 +340,58 @@ class EwsMailReader
         }
 
         try {
-            // Get or create the Archive folder
-            $archiveFolderId = $this->getOrCreateArchiveFolder();
+            $archiveFolderId = $this->getArchiveFolder();
             
-            // Create move request
-            $moveRequest = new \jamesiarmes\PhpEws\Request\MoveItemType();
-            $moveRequest->ToFolderId = new \jamesiarmes\PhpEws\Type\TargetFolderIdType();
-            $moveRequest->ToFolderId->FolderId = $archiveFolderId;
+            if (!$archiveFolderId) {
+                throw new \Exception('Failed to get or create Archive folder');
+            }
             
-            // Add items to move
-            $moveRequest->ItemIds = new \jamesiarmes\PhpEws\ArrayType\NonEmptyArrayOfBaseItemIdsType();
-            $moveRequest->ItemIds->ItemId = $items;
+            // Process items in batches to avoid timeouts
+            $batchSize = 10;
+            $chunks = array_chunk($items, $batchSize);
+            $success = true;
             
-            // Set to move (not copy)
-            $moveRequest->ReturnNewItemIds = false;
-            
-            // Execute the move
-            $response = $this->client->MoveItem($moveRequest);
-            
-            // Check for errors
-            if (isset($response->ResponseMessages->MoveItemResponseMessage)) {
-                foreach ($response->ResponseMessages->MoveItemResponseMessage as $message) {
-                    if ($message->ResponseClass !== 'Success') {
-                        \Log::error('Failed to move message to Archive: ' . 
-                            ($message->MessageText ?? 'Unknown error'));
-                        return false;
+            foreach ($chunks as $chunk) {
+                $moveRequest = new \jamesiarmes\PhpEws\Request\MoveItemType();
+                $moveRequest->ToFolderId = new \jamesiarmes\PhpEws\Type\TargetFolderIdType();
+                $moveRequest->ToFolderId->FolderId = $archiveFolderId;
+                
+                $moveRequest->ItemIds = new \jamesiarmes\PhpEws\ArrayType\NonEmptyArrayOfBaseItemIdsType();
+                
+                // Convert each item to ItemIdType
+                foreach ($chunk as $item) {
+                    $itemId = new \jamesiarmes\PhpEws\Type\ItemIdType();
+                    $itemId->Id = $item->Id;
+                    $itemId->ChangeKey = $item->ChangeKey;
+                    $moveRequest->ItemIds->ItemId[] = $itemId;
+                }
+                
+                // Set to move (not copy)
+                $moveRequest->ReturnNewItemIds = false;
+                
+                try {
+                    $response = $this->client->MoveItem($moveRequest);
+                    
+                    // Check for errors in the response
+                    if (isset($response->ResponseMessages->MoveItemResponseMessage)) {
+                        foreach ($response->ResponseMessages->MoveItemResponseMessage as $message) {
+                            if ($message->ResponseClass !== 'Success') {
+                                $errorMsg = $message->MessageText ?? 'Unknown error';
+                                \Log::error("Failed to move message to Archive: $errorMsg");
+                                $success = false;
+                            }
+                        }
                     }
+                } catch (\Exception $e) {
+                    \Log::error('Error moving messages to Archive: ' . $e->getMessage());
+                    $success = false;
                 }
             }
             
-            return true;
+            return $success;
+            
         } catch (\Exception $e) {
-            \Log::error('Error moving messages to Archive: ' . $e->getMessage());
+            \Log::error('Error in moveToArchive: ' . $e->getMessage());
             return false;
         }
     }
