@@ -64,7 +64,7 @@ class UserController extends Controller
         $this->authorize('Create User'); // permission check
 
         $departments = (new DepartmentRepository)->getAll();
-        $groups = (new GroupRepository)->getAll();
+        $groups = (new GroupRepository)->getAllActive();
         $units = (new UnitRepository)->getAll();
         $roles = (new RolesRepository)->list();
         $permissions = (new PermissionRepository)->list();
@@ -94,7 +94,7 @@ class UserController extends Controller
 
         $row = $this->user->find($id);
         $departments = (new DepartmentRepository)->getAll();
-        $groups = (new GroupRepository)->getAll();
+        $groups = (new GroupRepository)->getAllActive();
         $units = (new UnitRepository)->getAll();
         $roles = (new RolesRepository)->list();
         $permissions = (new PermissionRepository)->list();

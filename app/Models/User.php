@@ -76,7 +76,9 @@ class User extends Authenticatable
 
     public function user_groups()
     {
-        return $this->hasMany(UserGroups::class, 'user_id', 'id');
+        return $this->hasMany(UserGroups::class, 'user_id', 'id')->whereHas('group', function($query) {
+            $query->where('active', '1');
+        });
     }
     public function user_report_to()
     {
