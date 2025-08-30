@@ -48,27 +48,78 @@
 
     {{-- SLA Time Input --}}
     <div class="form-group">
-        <label for="sla_time">SLA Time:</label>
+        <label for="sla_time">SLA For Unit:</label>
         <input 
             type="number" 
-            id="sla_time"
-            name="sla_time" 
+            id="unit_sla_time"
+            name="unit_sla_time" 
             class="form-control" 
-            placeholder="Enter SLA Time" 
-            value="{{ isset($row) ? $row->sla_time : old('sla_time') }}" 
+            placeholder="SLA For Unit" 
+            value="{{ isset($row) ? $row->unit_sla_time : old('sla_time') }}" 
         />
         {!! $errors->first('sla_time', '<span class="form-control-feedback">:message</span>') !!}
     </div>
 
     {{-- SLA Type Dropdown --}}
     <div class="form-group">
-        <label for="sla_type">SLA Type:</label>
-        <select id="sla_type" name="type" class="form-control">
+        <label for="sla_type">SLA Type For Unit:</label>
+        <select id="sla_type" name="sla_type_unit" class="form-control">
             <option value="">-- Select Type --</option>
-            <option value="day" {{ (isset($row) && $row->type == 'day') || old('type') == 'day' ? 'selected' : '' }}>Day</option>
-            <option value="hour" {{ (isset($row) && $row->type == 'hour') || old('type') == 'hour' ? 'selected' : '' }}>Hour</option>
+            <option value="day" {{ (isset($row) && $row->sla_type_unit == 'day') || old('type') == 'day' ? 'selected' : '' }}>Day</option>
+            <option value="hour" {{ (isset($row) && $row->sla_type_unit == 'hour') || old('type') == 'hour' ? 'selected' : '' }}>Hour</option>
         </select>
         {!! $errors->first('sla_type', '<span class="form-control-feedback">:message</span>') !!}
     </div>
+
+        <div class="form-group">
+        <label for="sla_time">SLA For Division:</label>
+        <input 
+            type="number" 
+            id="division_sla_time"
+            name="division_sla_time" 
+            class="form-control" 
+            placeholder="SLA For Division" 
+            value="{{ isset($row) ? $row->division_sla_time : old('sla_time') }}" 
+        />
+        {!! $errors->first('sla_time', '<span class="form-control-feedback">:message</span>') !!}
+    </div>
+
+     {{-- SLA Type Dropdown --}}
+    <div class="form-group">
+        <label for="sla_type">SLA Type For Division:</label>
+        <select id="sla_type" name="sla_type_division" class="form-control">
+            <option value="">-- Select Type --</option>
+            <option value="day" {{ (isset($row) && $row->sla_type_division == 'day') || old('type') == 'day' ? 'selected' : '' }}>Day</option>
+            <option value="hour" {{ (isset($row) && $row->sla_type_division == 'hour') || old('type') == 'hour' ? 'selected' : '' }}>Hour</option>
+        </select>
+        {!! $errors->first('sla_type', '<span class="form-control-feedback">:message</span>') !!}
+    </div>
+
+        <div class="form-group">
+        <label for="sla_time">SLA For Director:</label>
+        <input 
+            type="number" 
+            id="director_sla_time"
+            name="director_sla_time" 
+            class="form-control" 
+            placeholder="SLA For Director" 
+            value="{{ isset($row) ? $row->director_sla_time : old('sla_time') }}" 
+        />
+        {!! $errors->first('sla_time', '<span class="form-control-feedback">:message</span>') !!}
+    </div>
+
+
+    {{-- SLA Type Dropdown --}}
+    <div class="form-group">
+        <label for="sla_type">SLA Type For Director:</label>
+        <select id="sla_type" name="sla_type_director" class="form-control">
+            <option value="">-- Select Type --</option>
+            <option value="day" {{ (isset($row) && $row->sla_type_director == 'day') || old('type') == 'day' ? 'selected' : '' }}>Day</option>
+            <option value="hour" {{ (isset($row) && $row->sla_type_director == 'hour') || old('type') == 'hour' ? 'selected' : '' }}>Hour</option>
+        </select>
+        {!! $errors->first('sla_type', '<span class="form-control-feedback">:message</span>') !!}
+    </div>
+
+    
 
 </div>

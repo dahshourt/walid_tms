@@ -28,39 +28,69 @@ class EscalationCron extends Command
      */
     public function handle()
     {
+        $now = Carbon::now();
+        
         // Step 1: Fetch SLA rules
         $slaRecords = DB::table('sla_calculations')->get();
 
         foreach ($slaRecords as $sla) {
-            // Calculate SLA deadline considering business hours/days
-            $deadline = $sla->type === 'day'
-                ? $this->addBusinessDays(Carbon::parse($sla->created_at), $sla->sla_time)
-                : $this->addBusinessHours(Carbon::parse($sla->created_at), $sla->sla_time);
-
-            // Step 2: Find change_request_statuses that exceeded SLA
-            $violations = DB::table('change_request_statuses')
+            // Step 2: Find change_request_statuses that match this SLA rule
+            $changeRequests = DB::table('change_request_statuses')
                 ->where('new_status_id', $sla->status_id)
                 ->where('active', '1')
-                ->where('created_at', '<=', $deadline)
                 ->get();
 
-            foreach ($violations as $violation) {
-                // Step 3: Join with groups + managers
-                $group = DB::table('groups')
-                    ->where('id', $sla->group_id)
-                    ->first();
+            foreach ($changeRequests as $changeRequest) {
+                // Calculate SLA deadlines from when the status was set
+                $statusSetTime = Carbon::parse($changeRequest->created_at);
+                
+                // Use separate type fields for each level
+                $unitDeadline = $sla->sla_type_unit === 'day'
+                    ? $this->addBusinessDays($statusSetTime->copy(), $sla->unit_sla_time)
+                    : $this->addBusinessHours($statusSetTime->copy(), $sla->unit_sla_time);
+                    
+                $divisionDeadline = $sla->sla_type_division === 'day'
+                    ? $this->addBusinessDays($statusSetTime->copy(), $sla->division_sla_time)
+                    : $this->addBusinessHours($statusSetTime->copy(), $sla->division_sla_time);
+                    
+                $directorDeadline = $sla->sla_type_director === 'day'
+                    ? $this->addBusinessDays($statusSetTime->copy(), $sla->division_sla_time)
+                    : $this->addBusinessHours($statusSetTime->copy(), $sla->division_sla_time);
 
-                if ($group) {
-                    $director = DB::table('directors')->where('id', $group->director_id)->first();
-                    $divisionManager = DB::table('division_managers')->where('id', $group->division_manager_id)->first();
-                    $unit = DB::table('units')->where('id', $group->unit_id)->first();
+                // Step 3: Check which SLA levels have been violated
+                $unitViolated = $now->gt($unitDeadline);
+                $divisionViolated = $now->gt($divisionDeadline);
+                $directorViolated = $now->gt($directorDeadline);
 
-                    $directorEmail = $director?->email;
-                    $divisionManagerEmail = $divisionManager?->division_manager_email;
-                    $unitManager = $unit?->manager_name;
+                if ($unitViolated || $divisionViolated || $directorViolated) {
+                    // Step 4: Get group and manager details
+                    $group = DB::table('groups')
+                        ->where('id', $sla->group_id)
+                        ->first();
 
-                    // Step 4: Send escalation email
-                    $this->sendEscalationMail($violation, $group, $directorEmail, $divisionManagerEmail, $unitManager);
+                    if ($group) {
+                        $director = DB::table('directors')->where('id', $group->director_id)->first();
+                        $divisionManager = DB::table('division_managers')->where('id', $group->division_manager_id)->first();
+                        $unit = DB::table('units')->where('id', $group->unit_id)->first();
+                        
+                        // Step 5: Send escalation emails based on violation level
+                        $this->sendEscalationMails(
+                            $changeRequest, 
+                            $group, 
+                            $director, 
+                            $divisionManager, 
+                            $unit,
+                            $unitViolated,
+                            $divisionViolated,
+                            $directorViolated,
+                            [
+                                'unit_deadline' => $unitDeadline,
+                                'division_deadline' => $divisionDeadline,
+                                'director_deadline' => $directorDeadline,
+                                'status_set_time' => $statusSetTime
+                            ]
+                        );
+                    }
                 }
             }
         }
@@ -144,13 +174,89 @@ class EscalationCron extends Command
         return $date->isFriday() || $date->isSaturday();
     }
 
-    private function sendEscalationMail($violation, $group, $director, $divisionManager, $unit)
+    /**
+     * Send escalation emails based on violation levels with progressive escalation
+     */
+    private function sendEscalationMails($changeRequest, $group, $director, $divisionManager, $unit, 
+                                       $unitViolated, $divisionViolated, $directorViolated, $deadlines)
     {
-        // 👇 Replace with your built-in mail function
-        // Example:
-         Mail::to([$director, $divisionManager, $unit])
-             ->send(new EscalationMail($violation, $group));
+        // Get existing escalation logs for this CR and status
+        $existingLogs = DB::table('escalation_logs')
+            ->where('cr_id', $changeRequest->cr_id)
+            ->first();
 
-        $this->info("Escalation email sent for CR ID {$violation->cr_id} to group {$group->id}");
+        $now = Carbon::now();
+
+        // Step 1: Check Unit Escalation
+        if ($unitViolated && (!$existingLogs || !$existingLogs->unit_sent)) {
+            if ($unit && $unit->manager_name) {
+                // Send to unit manager
+                Mail::to($unit->manager_name)
+                    ->send(new EscalationMail($changeRequest, $group, 'Unit Level', $deadlines));
+
+                // Log or update escalation
+                if ($existingLogs) {
+                    DB::table('escalation_logs')
+                        ->where('id', $existingLogs->id)
+                        ->update([
+                            'unit_sent' => 1,
+                            'sent_at' => $now,
+                            'updated_at' => $now
+                        ]);
+                } else {
+                    DB::table('escalation_logs')->insert([
+                        'cr_id' => $changeRequest->cr_id,
+                        'unit_sent' => 1,
+                        'division_sent' => 0,
+                        'director_sent' => 0,
+                        'sent_at' => $now,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                }
+
+                $this->info("Unit escalation sent for CR ID {$changeRequest->cr_id}");
+            }
+        }
+
+        // Step 2: Check Division Escalation (only if unit was already sent)
+        if ($divisionViolated && $existingLogs && $existingLogs->unit_sent && !$existingLogs->division_sent) {
+            if ($divisionManager && $divisionManager->division_manager_email) {
+                // Send to division manager
+                Mail::to($divisionManager->division_manager_email)
+                    ->send(new EscalationMail($changeRequest, $group, 'Division Level', $deadlines));
+
+                // Update escalation log
+                DB::table('escalation_logs')
+                    ->where('id', $existingLogs->id)
+                    ->update([
+                        'division_sent' => 1,
+                        'sent_at' => $now,
+                        'updated_at' => $now
+                    ]);
+
+                $this->info("Division escalation sent for CR ID {$changeRequest->cr_id}");
+            }
+        }
+
+        // Step 3: Check Director Escalation (only if both unit and division were sent)
+        if ($directorViolated && $existingLogs && $existingLogs->unit_sent && $existingLogs->division_sent && !$existingLogs->director_sent) {
+            if ($director && $director->email) {
+                // Send to director
+                Mail::to($director->email)
+                    ->send(new EscalationMail($changeRequest, $group, 'Director Level', $deadlines));
+
+                // Update escalation log
+                DB::table('escalation_logs')
+                    ->where('id', $existingLogs->id)
+                    ->update([
+                        'director_sent' => 1,
+                        'sent_at' => $now,
+                        'updated_at' => $now
+                    ]);
+
+                $this->info("Director escalation sent for CR ID {$changeRequest->cr_id}");
+            }
+        }
     }
 }

@@ -12,7 +12,9 @@ class SlaCalculation extends Model
     protected $table = 'sla_calculations';
 
     protected $fillable = [
-        'sla_time',
+        'unit_sla_time',
+        'division_sla_time',
+        'director_sla_time',
         'type',
         'status_id',
         'group_id',
