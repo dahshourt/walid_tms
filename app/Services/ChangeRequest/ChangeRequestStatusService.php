@@ -7,6 +7,7 @@ use App\Models\Change_request_statuse as ChangeRequestStatus;
 use App\Models\NewWorkFlow;
 use App\Models\TechnicalCr;
 use App\Models\Status;
+use App\Models\NewWorkFlowStatuses;
 use App\Models\User;
 use App\Http\Controllers\Mail\MailController;
 use App\Http\Repository\ChangeRequest\ChangeRequestStatusRepository;
@@ -22,7 +23,10 @@ class ChangeRequestStatusService
     private const ACTIVE_STATUS = '1';
     private const INACTIVE_STATUS = '0';
     private const COMPLETED_STATUS = '2';
-    
+
+    // flag to determine if the workflow is active or not to send email to the dev team.
+    private $active_flag = '0';
+
     private $statusRepository;
     private $mailController;
 
@@ -154,7 +158,7 @@ class ChangeRequestStatusService
         
         $this->createNewStatuses($changeRequest, $statusData, $workflow, $userId, $request);
         
-        $this->handleNotifications($statusData, $changeRequest->id);
+        $this->handleNotifications($statusData, $changeRequest->id, $request);
     }
 
     /**
@@ -329,6 +333,7 @@ class ChangeRequestStatusService
 		$depend_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $cr_status->old_status_id)->where('active','2')->get();
 		
 		$depend_active_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $cr_status->old_status_id)->where('active', '1')->get();
+        //dd($cr_status,$all_depend_statuses,$depend_statuses,$depend_active_statuses);
 		if($depend_statuses->count() == $all_depend_statuses->count())
 		{
 			foreach($depend_statuses as $status)
@@ -351,7 +356,7 @@ class ChangeRequestStatusService
 			}
 		}
 		$active = $depend_active_statuses->count() > 0 ? self::INACTIVE_STATUS : self::ACTIVE_STATUS;
-		
+		$this->active_flag = $active;
 		return $active;
 		
     }
@@ -448,8 +453,9 @@ class ChangeRequestStatusService
     /**
      * Handle email notifications
      */
-    private function handleNotifications(array $statusData, int $changeRequestId): void
+    private function handleNotifications(array $statusData, int $changeRequestId, $request): void
     {
+        //dd($request->all());
         // Notify CR Manager when status changes from 99 to 101
         if ($statusData['old_status_id'] == 99 && 
             $this->hasStatusTransition($changeRequestId, 101)) {
@@ -463,6 +469,26 @@ class ChangeRequestStatusService
                 ]);
             }
         }
+       
+       // Notify Dev Team When status changes to Technical Estimation or Pending Implementation or Technical Implementation
+       $assigned_user_id = null;
+       if(isset($request->assignment_user_id)){
+            $assigned_user_id = $request->assignment_user_id;
+       }
+       $devTeamStatuses = [config('change_request.status_ids.technical_estimation'),config('change_request.status_ids.pending_implementation'),config('change_request.status_ids.technical_implementation')];
+       $newStatusId = NewWorkFlowStatuses::where('new_workflow_id', $statusData['new_status_id'])->get()->pluck('to_status_id')->toArray();
+       //dd($newStatusId);
+       if (array_intersect($devTeamStatuses, $newStatusId) && $this->active_flag == '1') {
+           try {
+                $this->mailController->notifyDevTeam($changeRequestId , $statusData['old_status_id'] , $newStatusId, $assigned_user_id);
+            } catch (\Exception $e) {
+                Log::error('Failed to send Dev Team notification', [
+                    'change_request_id' => $changeRequestId,
+                    'error' => $e->getMessage()
+                ]);
+            }
+       }
+
     }
 
     /**
@@ -474,4 +500,6 @@ class ChangeRequestStatusService
             ->where('new_status_id', $toStatusId)
             ->exists();
     }
+
+    
 }
