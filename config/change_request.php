@@ -67,6 +67,9 @@ return [
     |
     */
     'status_ids' => [
+        'technical_estimation' => 4,
+        'pending_implementation' => 8,
+        'technical_implementation' => 10,
         'pending_production_deployment' => 127,
         'production_deployment' => 128,
         'business_approval' => 22,
