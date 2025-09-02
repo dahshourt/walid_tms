@@ -48,8 +48,11 @@ class ChangeRequestUpdateService
 
     public function update($id, $request)
     {
+       // Change_request::find($id)
+        //echo $id; die;
      
         $this->changeRequest_old = Change_request::find($id);
+       
         
         // Handle CAB CR validation
         if ($this->handleCabCrValidation($id, $request)) {
@@ -63,19 +66,19 @@ class ChangeRequestUpdateService
        
         // Handle user assignments
         $this->handleUserAssignments($id, $request);
-
+       
         // Handle CAB users if provided
         $this->handleCabUsers($id, $request);
-
+       
         // Handle technical teams
         $this->handleTechnicalTeams($id, $request);
-
+       
         // Calculate estimations if needed
         $this->handleEstimations($id, $request);
       
         // Update the change request data
         $this->updateCRData($id, $request);
-       
+        //die("wwrrwalid");
         // Update assignments in status table
         $this->updateStatusAssignments($id, $request);
       
@@ -216,7 +219,7 @@ class ChangeRequestUpdateService
         $arr = Arr::only($request->all(), $this->getRequiredFields());
         $fileFields = ['technical_attachments', 'business_attachments', 'cap_users','technical_teams'];
         $data = Arr::except($request->all(), array_merge(['_method'], $fileFields));
-
+      
         $this->handleCustomFieldUpdates($id, $data);
 
         return Change_request::where('id', $id)->update($arr);
@@ -224,8 +227,10 @@ class ChangeRequestUpdateService
 
     protected function handleCustomFieldUpdates($id, $data): void
     {
+
+
         foreach ($data as $key => $value) {
-            if ($key != "_token") {
+            if ($key != "_token" || $key === 'cr') {
                 $customFieldId = CustomField::findId($key);
                 if ($customFieldId && $value) {
                     $changeRequestCustomField = [

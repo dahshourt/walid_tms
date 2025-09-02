@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\MailTemplate;
 use App\Models\Group;
 use App\Models\change_request;
+use App\Models\Status;
 
 
 class MailController extends Controller
@@ -75,9 +76,53 @@ class MailController extends Controller
 
     } // end method
      
+    public function notifyDevTeam($cr_id , $old_status_id , $new_status_id, $assigned_user_id){
+        $recipients = [];
+        $cr_link = route('show.cr', $cr_id);
 
+        $cr = Change_request::find($cr_id);
+        $cr_no = $cr->cr_no;
+        $cr_title = $cr->title;
+        $app_id = $cr->application_id;
+        $group_id = $cr->application->group_applications->first()->group_id;
+        $group_name = Group::where('id', $group_id)->value('title');
+        $mail = Group::where('id', $group_id)->value('head_group_email');
+        $old_status = Status::where('id', $old_status_id)->value('status_name');
+        $new_status = Status::where('id', $new_status_id)->value('status_name');
+        /*if($assigned_user_id){
+            $assigned_user = User::where('id', $assigned_user_id)->value('email');
+            $recipients[] = $assigned_user;
+        }*/
+        if(isset($cr->developer_id)){
+            $developer = User::where('id', $cr->developer_id)->value('email');
+            $recipients[] = $developer;
+
+        }
+        $recipients[] = $mail;
+        //dd($recipients);
+        $templateContent = [
+            'subject' => "CR #$cr_no status has been changed",
+            'body' => "Dear $group_name, <br><br>"
+            ."CR #$cr_no status has been changed from <strong> $old_status </strong> to <strong> $new_status </strong>."
+            ."<br><br>"
+            ."CR Title: $cr_title"
+            ."<br><br>"
+            ."You can review it here: <a href='$cr_link'>CR: #$cr_no</a>"
+            ."<br><br>"
+            . "<strong>Note:</strong> This is an automated message sent by the <strong>IT TMS System</strong>.<br>"
+            . "<strong>Best regards,</strong><br>"
+            . "<strong>TMS</strong>"
+        ];
+
+        try {
+            // Send the email
+            Mail::to($recipients)->send(new TestMail($templateContent));
     
-
+            return response()->json(['success' => 'Email sent successfully.']);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to send email.', 'details' => $e->getMessage()], 500);
+        }
+    }
 
     public function send_mail_to_cap_users($users_mail,$cr_id, $cr_no)
     {
