@@ -34,13 +34,17 @@ class SlaCalculationController extends Controller
         return view('sla.calculations.create', compact('statuses', 'groups'));
     }
 
-    public function store(Request $request)
-{
+public function store(Request $request)
+{ 
     $validated = $request->validate([
-        'sla_time'  => 'required|integer',
-        'type'      => 'required|in:day,hour',
-        'status_id' => 'required|exists:statuses,id',
-        'group_id'  => 'required|exists:groups,id',
+        'unit_sla_time'     => 'required|integer|min:1',
+        'division_sla_time' => 'required|integer|min:1', 
+        'director_sla_time' => 'required|integer|min:1',
+        'sla_type_unit'          => 'required|in:day,hour',
+        'sla_type_division'          => 'required|in:day,hour',
+        'sla_type_director'          => 'required|in:day,hour',
+        'status_id'     => 'required|exists:statuses,id',
+        'group_id'      => 'required|exists:groups,id',
     ]);
 
     SlaCalculation::create($validated);
@@ -66,19 +70,23 @@ class SlaCalculationController extends Controller
     }
 
     public function update(Request $request, SlaCalculation $slaCalculation)
-    {
-        $validated = $request->validate([
-            'sla_time'  => 'required|integer',
-            'type'      => 'required|in:day,hour',
-            'status_id' => 'required|exists:statuses,id',
-            'group_id'  => 'required|exists:groups,id',
-        ]);
+{
+    $validated = $request->validate([
+        'unit_sla_time'     => 'required|integer|min:1',
+        'division_sla_time' => 'required|integer|min:1', 
+        'director_sla_time' => 'required|integer|min:1',
+        'sla_type_unit'          => 'required|in:day,hour',
+        'sla_type_division'          => 'required|in:day,hour',
+        'sla_type_director'          => 'required|in:day,hour',
+        'status_id'     => 'required|exists:statuses,id',
+        'group_id'      => 'required|exists:groups,id',
+    ]);
 
-        $slaCalculation->update($validated);
+    $slaCalculation->update($validated);
 
-        return redirect()->route('sla-calculations.index')
-                        ->with('success', 'SLA Calculation updated successfully.');
-    }
+    return redirect()->route('sla-calculations.index')
+                    ->with('success', 'SLA Calculation updated successfully.');
+}
 
     public function destroy(SlaCalculation $slaCalculation)
     {

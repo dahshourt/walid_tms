@@ -61,10 +61,15 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>SLA Time</th>
-                                    <th>Type</th>
+                                    <th>SLA For Unit</th>
+                                    <th>SLA Type Unit</th>
+                                    <th>SLA For Division</th>
+                                    <th>SLA Type Division</th>
+                                    <th>SLA For Director</th>
+                                    <th>SLA Type Director</th>
                                     <th>Status</th>
                                     <th>Group</th>
+                                    <th>Actions</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -72,8 +77,12 @@
                                 @foreach($calculations as $index => $slaCalculation)
                                     <tr>
                                         <td>{{ $index + 1 }}</td>
-                                        <td>{{ $slaCalculation->sla_time }}</td>
-                                        <td>{{ ucfirst($slaCalculation->type) }}</td>
+                                        <td>{{ $slaCalculation->unit_sla_time }}</td>
+                                        <td>{{ $slaCalculation->sla_type_unit }}</td>
+                                        <td>{{ $slaCalculation->division_sla_time }}</td>
+                                        <td>{{ $slaCalculation->sla_type_division }}</td>
+                                        <td>{{ $slaCalculation->director_sla_time }}</td>
+                                        <td>{{ ucfirst($slaCalculation->sla_type_director) }}</td>
                                         <td>{{ $slaCalculation->status->name ?? '-' }}</td>
                                         <td>{{ $slaCalculation->group->name ?? '-' }}</td>
                                         <td>
