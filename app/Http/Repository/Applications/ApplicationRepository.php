@@ -17,9 +17,9 @@ class ApplicationRepository implements ApplicationRepositoryInterface
     {
         return Application::all();
     }
-    public function getAllActive()
+	public function getAllActive()
     {
-        return Application::where('active', '1')->get();
+        return Application::where('active','1')->get();
     }
     public function paginateAll()
     {
@@ -35,6 +35,7 @@ class ApplicationRepository implements ApplicationRepositoryInterface
 		unset($request['app_file']);
 		}
 		//dd($request);
+		if(!isset($request['active'])) $request['active'] = '0';
 		$application = Application::create($request);
         return $application->id;
     }
@@ -53,7 +54,7 @@ class ApplicationRepository implements ApplicationRepositoryInterface
 			$request['file'] = $file;
 		}
 		unset($request['app_file']);
-        return Application::where('id', $id)->update($request);
+		return Application::where('id', $id)->update($request);
     }
 
     public function find($id)

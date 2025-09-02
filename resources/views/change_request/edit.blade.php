@@ -455,13 +455,33 @@ $(window).on("load", function () {
 			$('select[name="cap_users[]"]').prop('required', false);
         }
     }
+	
+	// Function to handle the technical estimation require
+    function handleTechnicalEstimationRequire() {
+		const TechnicalEstimationtext = statusField.options[statusField.selectedIndex].text.trim();
+		const isPending = TechnicalEstimationtext === "Pending implementation";
+		const $dev = $('input[name="dev_estimation"]');
+
+		if (isPending) {
+			$dev.prop('required', true);
+			// Regex = positive integers only (>=1)
+			$dev.attr('pattern', '^[1-9]\\d*$');
+			$dev.attr('title', 'Please enter a number greater than 0');
+		} else {
+			$dev.prop('required', false);
+			$dev.removeAttr('pattern');
+			$dev.removeAttr('title');
+		}
+	}
 
     // Check the status on page load
     handlecapusersVisibility();
+    handleTechnicalEstimationRequire();
 
     // Add an event listener to the status field to handle change events
     if (statusField) {
         statusField.addEventListener("change", handlecapusersVisibility);
+        statusField.addEventListener("change", handleTechnicalEstimationRequire);
     }
 }); 
 
@@ -565,6 +585,40 @@ $(window).on("load", function () {
 $("#show_error_message").click(function(){
     let message = " There are group(s) ({{$reminder_promo_tech_teams_text}}) still not transfer CR to Smoke test yet!"
     Swal.fire ('Warning...', message, 'error')
+});
+document.addEventListener("DOMContentLoaded", function () {
+    const selectStatus = document.querySelector('select[name="new_status_id"]');
+    const technicalTeams = document.querySelector('select[name="technical_teams[]"]');
+    const techLabel = document.querySelector('.field_technical_teams label'); 
+
+    if (selectStatus && technicalTeams && techLabel) {
+        selectStatus.addEventListener("change", function () {
+            const selectedText = selectStatus.options[selectStatus.selectedIndex].text;
+
+            if (selectedText === "Pending CD FB") {
+                // Make technical teams required
+                technicalTeams.setAttribute("required", "required");
+
+                // Add red asterisk if not already there
+                if (!techLabel.querySelector(".required-mark")) {
+                    const span = document.createElement("span");
+                    span.textContent = " *";
+                    span.style.color = "red";
+                    span.classList.add("required-mark");
+                    techLabel.appendChild(span);
+                }
+            } else {
+                // Remove required if status is changed away
+                technicalTeams.removeAttribute("required");
+
+                // Remove the asterisk if it exists
+                const mark = techLabel.querySelector(".required-mark");
+                if (mark) {
+                    mark.remove();
+                }
+            }
+        });
+    }
 });
 
 </script>

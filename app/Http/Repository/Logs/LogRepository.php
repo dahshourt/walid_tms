@@ -5,6 +5,17 @@ use App\Contracts\Logs\LogRepositoryInterface;
 
 // declare Entities
 use App\Models\Log;
+use App\Models\User;
+use App\Models\NewWorkFlow;
+use App\Models\Priority;
+use App\Models\Unit;
+use App\Models\Application;
+use App\Models\Category;
+use App\Models\DivisionManagers;
+use App\Models\CustomField;
+use App\Models\NeedDownTime;
+use App\Models\DeploymentImpact;
+use App\Models\Rejection_reason;
 
 
 
@@ -74,31 +85,70 @@ class LogRepository implements LogRepositoryInterface
         }
 
         $fields = [
-            'analysis_feedback' => 'Analysis FeedBack',
+            //'analysis_feedback' => 'Analysis FeedBack',
+            //'comment' => 'Comment',
             'priority_id' => ['model' => Priority::class, 'field' => 'name', 'message' => 'Priority Changed To'],
-            'technical_feedback' => 'Technical Feedback Is',
+            //'technical_feedback' => 'Technical Feedback Is',
             'unit_id' => ['model' => Unit::class, 'field' => 'name', 'message' => 'CR Assigned To Unit'],
-            'creator_mobile_number' => 'Creator Mobile Changed To',
-            'title' => 'Subject Changed To',
+            //'creator_mobile_number' => 'Creator Mobile Changed To',
+            //'title' => 'Subject Changed To',
             'application_id' => ['model' => Application::class, 'field' => 'name', 'message' => 'Title Changed To'],
-            'description' => 'CR Description To',
+            //'description' => 'CR Description To',
             'category_id' => ['model' => Category::class, 'field' => 'name', 'message' => 'CR Category Changed To'],
             'division_manager_id' => ['model' => DivisionManagers::class, 'field' => 'name', 'message' => 'Division Managers To'],
+			'need_down_time' => ['model' => NeedDownTime::class, 'field' => 'name', 'message' => 'Need down time Changed To'],
+			'rejection_reason_id' => ['model' => Rejection_reason::class, 'field' => 'name', 'message' => 'rejection Reason Changed To'],
+			'deployment_impact' => ['model' => DeploymentImpact::class, 'field' => 'name', 'message' => 'Deployment Impact Changed To'],
         ];
+		$excludeNames = ['develop_duration', 'design_duration', 'test_duration'];
 
+// fetch custom fields you want to append
+		$customFields = CustomField::query()
+			->whereIn('type', ['input', 'textArea'])
+			->whereNotIn('name', $excludeNames)
+			->get();
+		
+		$customFieldMap = $customFields->mapWithKeys(function ($cf) {
+			// Fallback message if label is null
+			$label = $cf->label ?: Str::of($cf->name)->replace('_', ' ')->title();
+			$base = [
+				'message' => "{$label} Changed To",
+			];
+
+			// If the custom field is linked to another table, include that hint
+			// (adjust 'field' if your related table uses another display column)
+			if (!empty($cf->related_table)) {
+				$base['table'] = $cf->related_table;
+				$base['field'] = 'name';
+			}
+
+			return [$cf->name => $base];
+		})->toArray();
+
+		// append without overriding existing keys in $fields
+		$fields += $customFieldMap;
         foreach ($fields as $field => $info) {
             if (isset($request->$field)) {
                 $oldValue = $change_request->$field ?? null;
                 $newValue = $request->$field;
-
                 if ($oldValue != $newValue) {
                     if (is_array($info)) {
-                        $modelName = $info['model'];
-                        $fieldName = $info['field'];
-                        $valueName = $modelName::find($newValue)?->$fieldName;
-                        $message = $info['message'] . " \"$valueName\"";
+						if(isset($info['model']))
+						{
+							$modelName = $info['model'];
+							$fieldName = $info['field'];
+							$valueName = $modelName::find($newValue)?->$fieldName;	
+							$message = $info['message'] . " \"$valueName\"";
+						}
+						else
+						{
+							$message = $info['message'] . " \"$newValue\"";
+						}
+						
                     } else {
-                        $message = "$info \"$newValue\"";
+						
+                        if($info['message']) $message = $info['message'] . " \"$newValue\"";
+						else $message = "$info \"$newValue\"";
                     }
 
                     $this->createLog($log, $id, $user->id, "$message By {$user->user_name}");
@@ -113,6 +163,9 @@ class LogRepository implements LogRepositoryInterface
         // User Assignments
         $assignments = [
             'assign_to' => 'Issue assigned  manually to',
+            'cr_member' => 'Issue assigned  manually to',
+            'rtm_member' => 'Issue assigned  manually to',
+            'assignment_user_id' => 'Issue assigned  manually to',
             'developer_id' => 'Issue Assigned  Manually to',
             'tester_id' => 'Issue Assigned  Manually to',
             'designer_id' => 'Issue Assigned  Manually to',
@@ -129,7 +182,7 @@ class LogRepository implements LogRepositoryInterface
 
         // Estimations without assignments
         $this->logEstimateWithoutAssignee($log, $id, $user, $request, 'develop_duration', 'developer_id', 'Dev');
-        $this->logEstimateWithoutAssignee($log, $id, $user, $request, 'design_duration', 'developer_id', 'Design');
+        $this->logEstimateWithoutAssignee($log, $id, $user, $request, 'design_duration', 'design_duration', 'Design');
         $this->logEstimateWithoutAssignee($log, $id, $user, $request, 'test_duration', 'tester_id', 'Testing');
 
         // Durations with times
