@@ -575,7 +575,7 @@ document.addEventListener("DOMContentLoaded", function () {
         selectStatus.addEventListener("change", function () {
             const selectedText = selectStatus.options[selectStatus.selectedIndex].text;
 
-            if (selectedText === "Pending CD FB") {
+            if (selectedText === "Pending CD FB" || selectedText === "Request MD's") {
                 // Make technical teams required
                 technicalTeams.setAttribute("required", "required");
 
