@@ -89,7 +89,7 @@ class ChangeRequestUpdateService
         }
 
         // Log the update
-        $this->logRepository->logCreate($id, $request, $this->changeRequest_old, 'create');
+        $this->logRepository->logCreate($id, $request, $this->changeRequest_old, 'update');
        
         return true;
     }
@@ -217,7 +217,7 @@ class ChangeRequestUpdateService
     public function updateCRData($id, $request)
     {
         $arr = Arr::only($request->all(), $this->getRequiredFields());
-        $fileFields = ['technical_attachments', 'business_attachments', 'cap_users'];
+        $fileFields = ['technical_attachments', 'business_attachments', 'cap_users','technical_teams'];
         $data = Arr::except($request->all(), array_merge(['_method'], $fileFields));
       
         $this->handleCustomFieldUpdates($id, $data);

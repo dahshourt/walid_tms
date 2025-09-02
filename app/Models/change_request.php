@@ -409,7 +409,7 @@ class Change_request extends Model
     public function get_releases(): Collection
     {
         return Release::whereDate('go_live_planned_date', '>', now())
-                     ->where('active', true)
+                     //->where('active', true)
                      ->orderBy('go_live_planned_date')
                      ->get();
     }

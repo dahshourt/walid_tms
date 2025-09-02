@@ -455,13 +455,33 @@ $(window).on("load", function () {
 			$('select[name="cap_users[]"]').prop('required', false);
         }
     }
+	
+	// Function to handle the technical estimation require
+    function handleTechnicalEstimationRequire() {
+		const TechnicalEstimationtext = statusField.options[statusField.selectedIndex].text.trim();
+		const isPending = TechnicalEstimationtext === "Pending implementation";
+		const $dev = $('input[name="dev_estimation"]');
+
+		if (isPending) {
+			$dev.prop('required', true);
+			// Regex = positive integers only (>=1)
+			$dev.attr('pattern', '^[1-9]\\d*$');
+			$dev.attr('title', 'Please enter a number greater than 0');
+		} else {
+			$dev.prop('required', false);
+			$dev.removeAttr('pattern');
+			$dev.removeAttr('title');
+		}
+	}
 
     // Check the status on page load
     handlecapusersVisibility();
+    handleTechnicalEstimationRequire();
 
     // Add an event listener to the status field to handle change events
     if (statusField) {
         statusField.addEventListener("change", handlecapusersVisibility);
+        statusField.addEventListener("change", handleTechnicalEstimationRequire);
     }
 }); 
 
@@ -574,6 +594,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (selectStatus && technicalTeams && techLabel) {
         selectStatus.addEventListener("change", function () {
             const selectedText = selectStatus.options[selectStatus.selectedIndex].text;
+
 
             if (selectedText === "Pending CD FB" || selectedText === "Request MD's") {
                 // Make technical teams required
