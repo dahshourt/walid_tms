@@ -111,7 +111,7 @@ Route::middleware(['auth'])->group(
         Route::get('/search/advanced_search', 'CustomFields\CustomFieldGroupTypeController@AllCustomFieldsWithSelectedByformType')->name('advanced.search');
 
 		Route::resource('applications', Applications\ApplicationController::class);
-		Route::post('applications/updateactive', 'Applications\ApplicationController@updateactive');
+		Route::post('application/updateactive', 'Applications\ApplicationController@updateactive');
 		Route::get('app/file/download/{id}','Applications\ApplicationController@download')->name('app.download');
       
 		Route::post('advanced-search-requests/export', 'Search\SearchController@AdvancedSearchResultExport')->name('advanced.search.export');;
@@ -139,7 +139,7 @@ Route::middleware(['auth'])->group(
 
         Route::get('change_request/workflow/type', 'ChangeRequest\ChangeRequestController@Allsubtype');
         Route::get('files/download/{id}','ChangeRequest\ChangeRequestController@download')->name('files.download');
-        Route::get('files/delete/{id}','ChangeRequest\ChangeRequestController@deleteFile')->name('files.delete');
+		Route::get('files/delete/{id}','ChangeRequest\ChangeRequestController@deleteFile')->name('files.delete');
 
         // send mail routes
         //Route::get('manual_email', 'Mail\MailController@index');
@@ -177,7 +177,8 @@ Route::middleware(['auth'])->group(
         Route::patch('defect_update/{id}','Defect\DefectController@update');
         Route::get('defects', 'Defect\DefectController@index');
         Route::get('show_defect/{id}', 'Defect\DefectController@show');
-        Route::resource('sla-calculations', sla\SlaCalculationController::class);
+		Route::resource('sla-calculations', Sla\SlaCalculationController::class);
+
 
         //test ews
 
