@@ -53,7 +53,7 @@ class UserRepository implements UserRepositoryInterface
 
     public function paginateAll()
     {
-        return User::orderBy('id',"DESC")->get();
+        return User::orderBy('id',"DESC")->paginate(50);
     }
 
     public function create($request)
@@ -156,10 +156,8 @@ class UserRepository implements UserRepositoryInterface
     
 
     if(isset($request['roles'])){
-        $user->syncRoles($request['roles']);
-        if(in_array($user->user_name, $this->dev_users)){
-            $user->assignRole(['Super Admin']);
-        }
+		$user->syncRoles([]);
+        $user->assignRole($request['roles']);
     }else{
         if (in_array($user->user_name, $this->dev_users)){
             $user->syncRoles(['Super Admin']);
@@ -244,9 +242,19 @@ class UserRepository implements UserRepositoryInterface
     public function get_user_by_group($app_id)
     {
         $app_groups = Application::find($app_id)->group_applications()->pluck('group_id')->toArray();
-        //dd($app_groups);
+        
+		$users = User::where(function($query) use ($app_groups){
+                 $query->whereIn('default_group', $app_groups);
+                 $query->where('active', '1');
+             })
+             ->orwhereHas('user_groups', function($query) use ($app_groups){
+                 $query->whereIn('group_id', $app_groups);
+             })->get();
+		return $users;	 
+		
+		//dd($app_groups);
         //return User::where('department_id', $id)->get();
-        return User::whereIn('default_group', $app_groups)->where('active', '1')->get();
+        //return User::whereIn('default_group', $app_groups)->where('active', '1')->get();
     }
 	public function get_parent_cr_user($parent_CR)
     {
