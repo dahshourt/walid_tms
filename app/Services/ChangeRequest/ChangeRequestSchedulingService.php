@@ -281,23 +281,22 @@ class ChangeRequestSchedulingService
 //         }
 //     }
 // }
-protected function processTestPhase($cr): void 
+protected function processTestPhase($cr): void
 {
     if (!$cr || $cr->test_duration <= 0) {
         throw new \Exception("Invalid CR or no test duration.");
     }
 
-    // Initialize logRepository if not exists
-    if (!isset($this->logRepository)) {
-        $this->logRepository = new \App\Http\Repository\LogRepository();
-    }
-
-    // Find the last booked CR for this tester
+    // Find if there is already an active CR (status 74) for this tester
     $activeCr = Change_request::where('tester_id', $cr->tester_id)
         ->where('id', '!=', $cr->id)
+        ->whereHas('RequestStatuses', function ($query) {
+            $query->where('new_status_id', 74);
+        })
         ->orderBy('end_test_time', 'desc')
         ->first();
 
+    // Check if this CR is already in progress
     $Cr_test_in_progress = Change_request::where('tester_id', $cr->tester_id)
         ->where('id', '=', $cr->id)
         ->whereHas('RequestStatuses', function ($query) {
@@ -311,34 +310,67 @@ protected function processTestPhase($cr): void
 
     $hasPriority = request()->has('priority');
 
-    if ($activeCr && !$hasPriority && $activeCr->end_test_time) {
-        // Tester is busy → start after their last test finishes
+    if ($activeCr && !$hasPriority) {
+        // Normal CR → start after current active CR finishes
         $startTestTime = Carbon::parse($activeCr->end_test_time);
     } else {
-        // Tester is free OR priority CR → start now at working hours
+        // Has priority OR no active CR → start now
         $startTestTime = Carbon::createFromTimestamp(
             $this->setToWorkingDate(Carbon::now()->timestamp)
         );
 
-        if ($hasPriority) {
-            $repo = new \App\Http\Repository\ChangeRequest\ChangeRequestRepository();
-            $req = new \Illuminate\Http\Request([
-                'old_status_id' => 11,
-                'new_status_id' => 139,
-                'assign_to' => null,
-            ]);
-            
-            $this->logRepository->logCreate($cr->id, $req, $cr, 'shifting');
-            $repo->UpateChangeRequestStatus($cr->id, $req);
+        $repo = new \App\Http\Repository\ChangeRequest\ChangeRequestRepository();
 
-            // Demote other CRs in testing from active to queued
+        $req = new \Illuminate\Http\Request([
+            'old_status_id' => 11,  // queued test
+            'new_status_id' => 139, // shifting
+            'assign_to'     => null,
+        ]);
+
+        $this->logRepository->logCreate($cr->id, $req, $cr, 'shifting');
+        $repo->UpateChangeRequestStatus($cr->id, $req);
+
+        if ($hasPriority) {
+            // Demote other CRs from active test (74) → queued test (11)
             Change_request::where('tester_id', $cr->tester_id)
                 ->where('id', '!=', $cr->id)
                 ->whereHas('RequestStatuses', function ($query) {
                     $query->where('new_status_id', 74);
                 })
                 ->each(function ($otherCr) {
-                    $this->demoteCrFromTesting($otherCr);
+                    $lastTwoStatuses = $otherCr->AllRequestStatuses()
+                        ->orderBy('id', 'desc')
+                        ->take(2)
+                        ->get();
+
+                    if ($lastTwoStatuses->count() == 2) {
+                        $latest   = $lastTwoStatuses[0];
+                        $previous = $lastTwoStatuses[1];
+
+                        // Make latest inactive
+                        $latest->timestamps = false;
+                        $latest->update(['active' => '0']);
+
+                        // Insert a copy of previous with active=1
+                        $otherCr->RequestStatuses()->create([
+                            'old_status_id' => $previous->old_status_id,
+                            'new_status_id' => $previous->new_status_id, // queued test
+                            'assign_to'     => $previous->assign_to,
+                            'active'        => '1',
+                            'user_id'       => $previous->user_id,
+                            'created_at'    => now(),
+                            'updated_at'    => now(),
+                        ]);
+
+                        // Log the status change
+                        $logRequest = new \Illuminate\Http\Request([
+                            'old_status_id' => $previous->old_status_id,
+                            'new_status_id' => 139, // shifting
+                            'assign_to'     => $previous->assign_to,
+                        ]);
+
+                        $this->logRepository->logCreate($otherCr->id, $logRequest, $otherCr, 'shifting');
+                    }
                 });
         }
     }
@@ -356,11 +388,38 @@ protected function processTestPhase($cr): void
 
     $cr->update([
         'start_test_time' => $startTestTime->format('Y-m-d H:i:s'),
-        'end_test_time' => $endTestTime->format('Y-m-d H:i:s'),
+        'end_test_time'   => $endTestTime->format('Y-m-d H:i:s'),
     ]);
 
     // Reorder queued CRs (status 11 only)
-    $this->reorderQueuedCrs($cr, $endTestTime);
+    $queue = Change_request::where('tester_id', $cr->tester_id)
+        ->where('id', '!=', $cr->id)
+        ->whereHas('RequestStatuses', function ($query) {
+            $query->where('new_status_id', 11); // queued test
+        })
+        ->orderBy('start_test_time')
+        ->get();
+
+    foreach ($queue as $queuedCr) {
+        if (!empty($queuedCr->test_duration) && $queuedCr->test_duration > 0) {
+            $startTestTime = Carbon::parse($endTestTime);
+
+            $endTestTime = Carbon::parse(
+                $this->generateEndDate(
+                    $startTestTime->timestamp,
+                    $queuedCr->test_duration,
+                    false,
+                    $queuedCr->tester_id,
+                    'test'
+                )
+            );
+
+            $queuedCr->update([
+                'start_test_time' => $startTestTime->format('Y-m-d H:i:s'),
+                'end_test_time'   => $endTestTime->format('Y-m-d H:i:s'),
+            ]);
+        }
+    }
 }
 
 /**
