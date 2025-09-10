@@ -48,6 +48,7 @@ return [
         'man_power_ongoing' => 4,
         'first_cr_no' => [
             5 => 2000,  // Release workflow starts from 2000
+            9 => 40000,  // Promo workflow starts from 2000
             'default' => 6000,  // Other workflows start from 6000
         ],
         'estimation_multiplier' => [
@@ -80,6 +81,10 @@ return [
         'development_in_progress' => 41,
         'testing_phase' => 42,
         'uat_phase' => 43,
+        'business_test_case_approval' => 41,
+        'business_uat_sign_off' => 44,
+        'pending_business' => 64,
+        'pending_business_feedback' => 79,
     ],
 
     /*

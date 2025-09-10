@@ -21,6 +21,7 @@ class ChangeRequestSearchService
         $groupData = Group::find($group);
         $groupApplications = $groupData->group_applications->pluck('application_id')->toArray();
         $viewStatuses = $this->getViewStatuses($group);
+		//dd($group,$groupData,$groupApplications,$viewStatuses);
 
         $changeRequests = Change_request::with('RequestStatuses.status');
         
@@ -79,7 +80,8 @@ class ChangeRequestSearchService
 
         // Use full PHP-based filtering with getCurrentStatus()
         $filtered = $allRequests->filter(function ($item) {
-            $status = $item->getCurrentStatus();
+            //$status = $item->getCurrentStatus();
+            $status = $item->getCurrentStatusForDivision();
             return $status && $status->status && $status->status->id == config('change_request.status_ids.business_approval');
         });
 
@@ -158,6 +160,14 @@ class ChangeRequestSearchService
         $viewStatuses = $this->getViewStatuses($groups, $id);
         $viewStatuses = $statusPromoView->merge($viewStatuses)->unique();
         $viewStatuses->push(config('change_request.status_ids.cr_manager_review'));
+		if(request()->has('check_business'))
+		{
+			$viewStatuses->push(config('change_request.status_ids.business_test_case_approval'));
+			$viewStatuses->push(config('change_request.status_ids.business_uat_sign_off'));
+			$viewStatuses->push(config('change_request.status_ids.pending_business'));
+			$viewStatuses->push(config('change_request.status_ids.pending_business_feedback'));
+			//dd($viewStatuses);
+		}
 
         $changeRequest = Change_request::with('category')
             ->with('attachments', function ($q) use ($groups) {
@@ -173,13 +183,15 @@ class ChangeRequestSearchService
             })
             ->whereHas('RequestStatuses', function ($query) use ($groups, $viewStatuses) {
                 $query->where('active', '1')
-                      ->whereIn('new_status_id', $viewStatuses)
-                      ->whereHas('status.group_statuses', function ($query) use ($groups) {
-                          if (!in_array(19, $groups) && !in_array(8, $groups)) {
-                              $query->whereIn('group_id', $groups);
-                          }
-                          $query->where('type', 2);
-                      });
+                      ->whereIn('new_status_id', $viewStatuses);
+						if(!request()->has('check_business')){
+							$query->whereHas('status.group_statuses', function ($query) use ($groups) {
+								if (!in_array(19, $groups) && !in_array(8, $groups)) {
+									$query->whereIn('group_id', $groups);
+								}
+								$query->where('type', 2);
+							});
+						}
             })
             ->where('id', $id)
             ->first();
@@ -369,6 +381,13 @@ class ChangeRequestSearchService
             ->whereIn('new_status_id', $viewStatuses)
             ->where('active', '1')
             ->first();
+    }
+	
+	public function getCurrentStatusForDivision($changeRequest)
+    {
+        $status = Change_request_statuse::where('cr_id', $changeRequest->id)->where('active', '1')->first();
+        return $status;
+        
     }
 
     protected function getCurrentStatusCab($changeRequest, $viewStatuses)

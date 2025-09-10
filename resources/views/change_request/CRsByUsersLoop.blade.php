@@ -16,7 +16,7 @@
                                         @endif
 									@else	
                                         @if($item->getCurrentStatus() && isset($item->getCurrentStatus()->status) && in_array($item->getCurrentStatus()->status->id, [64, 79,41,44]))
-                                            <a href='{{ url("$route") }}/{{ $item->id }}/edit'>{{ $item['cr_no'] }} </a>
+                                            <a href='{{ url("$route") }}/{{ $item->id }}/edit?check_business=1'>{{ $item['cr_no'] }} </a>
                                         @else
                                             <a href='{{ url("$route") }}/{{ $item["id"] }}'>{{ $item['cr_no'] }} </a>
                                         @endif
@@ -89,7 +89,7 @@
                                         @endif
                                        @else
                                         @if($item->getCurrentStatus() && isset($item->getCurrentStatus()->status) && in_array($item->getCurrentStatus()->status->id, [64, 79,41,44]))
-                                        <a href='{{url("$route")}}/{{ $item["id"] }}/edit' class="btn btn-sm btn-clean btn-icon mr-2" title="Edit details">
+                                        <a href='{{url("$route")}}/{{ $item["id"] }}/edit?check_business=1' class="btn btn-sm btn-clean btn-icon mr-2" title="Edit details">
                                             <span class="svg-icon svg-icon-md">
                                                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
                                                     <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
