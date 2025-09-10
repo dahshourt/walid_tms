@@ -47,8 +47,8 @@ class ChangeRequestController extends Controller
     private const MAX_FILE_SIZE = 5120; // 5MB in KB
     
     private const ALLOWED_MIMES = [
-        'docx', 'doc', 'xls', 'xlsx', 'pdf', 'zip', 'rar', 
-        'jpeg', 'jpg', 'png', 'gif', 'msg'
+        'doc', 'docx', 'xls', 'xlsx', 'pdf', 'zip', 'rar', 
+        'jpeg', 'jpg', 'png', 'gif', 'msg','htm','html'
     ];
     
     private const ALLOWED_MIME_TYPES = [
@@ -59,10 +59,13 @@ class ChangeRequestController extends Controller
         'application/pdf',
         'application/zip',
         'application/x-rar-compressed',
+		'application/x-rar',
+		'application/vnd.rar',
         'image/jpeg',
         'image/png',
         'image/gif',
-        'application/vnd.ms-outlook'
+        'application/vnd.ms-outlook',
+		'text/html' // ← to allow “web page saved as .doc”
     ];
 
     private $changerequest;
@@ -396,6 +399,8 @@ class ChangeRequestController extends Controller
     {
         $this->authorize('Edit ChangeRequest');
         
+		
+		
         // Validate division manager access if requested
         if (request()->has('check_dm')) {
             $validation = $this->validateDivisionManagerAccess($id);
@@ -403,14 +408,23 @@ class ChangeRequestController extends Controller
                 return $validation;
             }
         }
+		else
+		{
+			$cr = $this->changerequest->find($id);
+			
+			if (!$cr) {
+				return redirect()->to('/change_request')->with('status', 'You have no access to edit this CR');
+			}
+		}
 
         $cr = $this->getCRForEdit($id, $cab_cr_flag);
+		
         if (is_a($cr, 'Illuminate\Http\RedirectResponse')) {
             return $cr;
         }
 
         $editData = $this->prepareEditData($cr, $id);
-        //dd($editData);
+        //dd($cr);
         return view("{$this->view}.edit", $editData);
     }
 
@@ -459,7 +473,7 @@ class ChangeRequestController extends Controller
      */
     public function update(changeRequest_Requests $request, int $id)
     {
-      
+		//dd($request->all());
         $this->authorize('Edit ChangeRequest');
         
         DB::beginTransaction();
@@ -655,7 +669,13 @@ class ChangeRequestController extends Controller
         $attachmentTypes = ['technical_attachments', 'business_attachments'];
         
         foreach ($attachmentTypes as $type) {
+			
             if ($request->hasFile($type)) {
+				//dd($request->all());
+				$file = $request->file($type);
+
+        // Get extension
+        //dd($file[0]->getClientOriginalExtension(),implode(',', self::ALLOWED_MIMES),implode(',', self::ALLOWED_MIME_TYPES));
                 $validator = Validator::make($request->all(), [
                     "{$type}.*" => [
                         'required',

@@ -409,7 +409,7 @@ class Change_request extends Model
     public function get_releases(): Collection
     {
         return Release::whereDate('go_live_planned_date', '>', now())
-                     //->where('active', true)
+                     ->where('active', true)
                      ->orderBy('go_live_planned_date')
                      ->get();
     }
@@ -665,5 +665,32 @@ class Change_request extends Model
         }
 
         return now()->addDays($remainingDays);
+    }
+	
+	
+	 /**
+     * Get current status for division page with better error handling.
+     */
+    public function getCurrentStatusForDivision()
+    {
+        try {
+            $status = Change_request_statuse::where('cr_id', $this->id)
+                                          ->where('active', '1')
+                                          ->first();
+            
+            if ($status) {
+                $workflow = NewWorkFlow::where('from_status_id', $status->old_status_id)
+                                     ->where('type_id', $this->workflow_type_id)
+                                     ->first();
+                
+                $status->same_time = $workflow->same_time ?? 0;
+                $status->to_status_label = $workflow->to_status_label ?? "";
+            }
+            
+            return $status;
+        } catch (\Exception $e) {
+            \Log::error("Error getting current status for CR {$this->id}: " . $e->getMessage());
+            return null;
+        }
     }
 }

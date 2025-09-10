@@ -39,23 +39,18 @@ $check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_
 
 <td>
     <div class="d-inline-flex gap-2">
-        <button type="button"
-                class="btn btn-outline-success btn-sm _approved_active"
+        <button type="button" class="btn btn-outline-success btn-sm _approved_active"
                 data-id="{{ $item->id }}"
-                data-token="{{ $token }}"
-                data-action="approve">
-            ✅ Approve
+                data-token="{{ $token }}">
+            ✅ Approved
         </button>
-        <button type="button"
-                class="btn btn-outline-danger btn-sm _approved_active"
+        <button type="button" class="btn btn-outline-danger btn-sm _rejected_active"
                 data-id="{{ $item->id }}"
-                data-token="{{ $token }}"
-                data-action="reject">
-            ❌ Reject
+                data-token="{{ $token }}">
+            ❌ Rejected
         </button>
     </div>
 </td>
-
 
 
                                         <td>
@@ -85,7 +80,7 @@ $check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_
                                        ?>
                                         
 
-                                        <a href='{{url("$route")}}/{{ $item->id }}/edit' class="btn btn-sm btn-clean btn-icon mr-2" title="Edit details">
+                                        <a href='{{url("$route")}}/{{ $item->id }}/edit?check_dm=1' class="btn btn-sm btn-clean btn-icon mr-2" title="Edit details">
                                             <span class="svg-icon svg-icon-md">
                                                 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
                                                     <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
