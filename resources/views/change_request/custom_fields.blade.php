@@ -18,6 +18,7 @@
 @include("$view.custom_fields_types.textarea")	
 @include("$view.custom_fields_types.multiselect")                                               
 @include("$view.custom_fields_types.button")     
+@include("$view.custom_fields_types.radio")   
 @include("$view.custom_fields_types.date")                                                 
 @endforeach
 <!-- <script>

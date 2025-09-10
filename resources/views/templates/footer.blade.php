@@ -289,6 +289,19 @@ let fullUrl = `${baseUrl}?crId=${id}&action=reject&token=${token}`;
 
 @auth
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Clear the comment textarea field on page load
+    const commentField = document.querySelector('textarea[name="comment"]');
+    
+    if (commentField) {
+        commentField.value = '';
+        console.log('Comment field cleared on page load');
+    } else {
+        console.log('Comment field not found');
+    }
+});
+</script>
+<script>
   
   const CHECK_INTERVAL = {{ config('app.check_interval') }};
 

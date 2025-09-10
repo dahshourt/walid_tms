@@ -486,7 +486,7 @@ class ChangeRequestController extends Controller
             
             // Validate attachments
             $this->validateAttachments($request);
-            
+             
             // Update change request
             $cr_id = $this->changerequest->update($id, $request);
             
