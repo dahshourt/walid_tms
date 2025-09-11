@@ -58,7 +58,7 @@ class ChangeRequestUpdateService
         if ($this->handleCabCrValidation($id, $request)) {
             return true;
         }
-
+ 
         // Handle technical team validation
         if ($this->handleTechnicalTeamValidation($id, $request)) {
             return true;
@@ -99,8 +99,8 @@ class ChangeRequestUpdateService
         if ($request->cab_cr_flag != '1') {
             return false;
         }
-
-        $user_id = Auth::user()->id;
+        
+        @$user_id = Auth::user()->id;
         $cabCr = CabCr::where("cr_id", $id)->where('status', '0')->first();
         $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
 

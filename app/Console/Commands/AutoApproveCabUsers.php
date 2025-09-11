@@ -52,8 +52,8 @@ class AutoApproveCabUsers extends Command
              dd((object)$requestData);
 			  */
 			$requestData = new \Illuminate\Http\Request([
-				'old_status_id' => '38',
-                'new_status_id' => '160',
+				'old_status_id' => '103',
+                'new_status_id' => '104',
                 'cab_cr_flag' => '1',
                 'user_id' => $user_id,
 			]); 
