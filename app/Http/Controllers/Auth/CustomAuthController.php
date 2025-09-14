@@ -241,7 +241,7 @@ class CustomAuthController extends Controller
     }
 	
 	public function check_active(){
-		dd(auth()->user(),Auth::check());
+		//dd(auth()->user(),Auth::check());
         return response()->json([
             'active' => Auth::check() ? Auth::user()->active : false
         ]);
