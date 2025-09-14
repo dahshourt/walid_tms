@@ -53,7 +53,7 @@
                 $customOptions = $item->CustomField->getCustomFieldValue();
             @endphp
 
-            <select name="{{ $fieldName }}[]" class="form-control form-control-lg" multiple {{ $required }} {{ $disabled }}
+            <select name="{{ $fieldName }}[]" class="form-control form-control-lg kt-select2" multiple="multiple" {{ $required }} {{ $disabled }}
                 @cannot('Set Time For Another User')
                     @if(in_array($fieldName, ['tester_id', 'designer_id', 'developer_id'])) disabled @endif
                 @endcannot>

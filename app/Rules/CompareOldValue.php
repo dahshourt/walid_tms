@@ -38,6 +38,6 @@ class CompareOldValue implements Rule
      */
     public function message()
     {
-        return 'This field cannot be changed.';
+        return 'The :attribute field cannot be changed.';
     }
 }

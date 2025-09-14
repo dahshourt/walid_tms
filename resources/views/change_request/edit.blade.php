@@ -486,7 +486,7 @@ $(window).on("load", function () {
 }); 
 
 // handle worlkload validation.. mandatory when transfer status from Analysis to Release plan and optional when transfer status from Analysis to Pending business Feedback
-
+// handle promo instatus "Review CD" and "SA FB"
 $(document).ready(function () {
     const statusField = $('select[name="new_status_id"]'); 
     const workLoadField = $(".field_cr_workload input");
@@ -517,11 +517,104 @@ $(document).ready(function () {
             technicalAttachmentField.prop("required", false); // optional
         }
     }
+    //$(document).on('change', 'input[name="need_design"]', handlePromoStatusValidation);
+
+    // function to handle promo, technical teams will be mandatory when selected status is "SA FB" and "Need Design" checkbox is checked
+    function handlePromoStatusValidation(){
+        
+        const selectedStatus = statusField.find("option:selected").text().trim(); 
+        const needDesignCheckbox = $('input[name="need_design"]');
+        const technicalTeamsField = $('select[name="technical_teams[]"]');
+        const techLabel = $('.field_technical_teams label');
+
+        console.log("Selected Status:", selectedStatus); 
+        console.log("Need Design Checkbox:", needDesignCheckbox.length ? "Found" : "Not found");
+        console.log("Technical Teams Field:", technicalTeamsField.length ? "Found" : "Not found");
+
+        // Check if status is "SA FB" and need_design is checked
+        if (selectedStatus === "SA FB" && needDesignCheckbox.is(':checked')) {
+            // Make technical teams required
+            technicalTeamsField.prop("required", true);
+            
+            // Add red asterisk if not already there
+            if (techLabel.length && !techLabel.find(".required-mark").length) {
+                techLabel.append('<span class="required-mark" style="color: red;"> *</span>');
+            }
+            
+            // Add visual styling to indicate required field
+            //technicalTeamsField.addClass('required-field');
+            
+            console.log("Technical Teams is now mandatory - Status: SA FB, Need Design: checked");
+        } else {
+            // Remove required if conditions are not met
+            technicalTeamsField.prop("required", false);
+            
+            // Remove the asterisk if it exists
+            if (techLabel.length) {
+                techLabel.find(".required-mark").remove();
+            }
+            
+            // Remove visual styling
+            technicalTeamsField.removeClass('required-field');
+            
+            console.log("Technical Teams is now optional");
+        }
+    }
+
+    // handle promo, technical teams will be disabled when need_design is checked and enabled when need_design is unchecked
+    function handlePromoTechnicalTeams(){
+        const currentStatus = "{{ $cr->current_status->new_status_id}}";
+        const selectedStatus = statusField.find("option:selected").text().trim(); 
+        const needDesignCheckbox = $('input[name="need_design"]');
+        const technicalTeamsField = $('select[name="technical_teams[]"]');
+        const techLabel = $('.field_technical_teams label');
+        const needDesign = "{{ optional($cr->change_request_custom_fields->where('custom_field_name', 'need_design')->first())->custom_field_value ?? 'null' }}";
+
+        console.log("Current Status:", currentStatus); 
+        console.log("Selected Status:", selectedStatus); 
+        console.log("Need Design Checkbox:", needDesignCheckbox.length ? "Found" : "Not found");
+        console.log("Technical Teams Field:", technicalTeamsField.length ? "Found" : "Not found");
+        console.log("Need Design:", needDesign);
+        // 141 = SA FB
+        if (currentStatus == "141"){
+            if (needDesign != 'null'){
+                technicalTeamsField.prop("disabled", true);
+                console.log("Technical Teams is now disabled");
+            }else{
+                technicalTeamsField.prop("disabled", false);
+                technicalTeamsField.prop("required", true);
+                if (techLabel.length && !techLabel.find(".required-mark").length) {
+                    techLabel.append('<span class="required-mark" style="color: red;"> *</span>');
+                }
+                console.log("Technical Teams is now enabled and required");
+            }
+        }
+       
+    }
+    const currentStatus = "{{ $cr->current_status->new_status_id}}";
+    // 141 = SA FB
+    // 100 = Review CD
+    if (currentStatus == "141"){
+        handlePromoTechnicalTeams();
+        statusField.on("change", handlePromoTechnicalTeams);
+    }else if(currentStatus == "100"){
+        handlePromoStatusValidation();
+        statusField.on("change", handlePromoStatusValidation);
+        $(document).on('change', 'input[name="need_design"]', handlePromoStatusValidation);
+
+    }else{
+        handleWorkLoadValidation();
+        statusField.on("change", handleWorkLoadValidation);
+
+    }
+    
+    /* Also check on page load for initial state
+    $(document).ready(function() {
+        handlePromoStatusValidation();
+    }); */
 
     
-    handleWorkLoadValidation();
-
-    statusField.on("change", handleWorkLoadValidation);
+    
 });
 
 
@@ -620,6 +713,25 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     }
+});
+
+
+// Initialize Select2 for all kt-select2 elements
+jQuery(document).ready(function() {
+    $('.kt-select2').select2({
+        placeholder: "Select options",
+        allowClear: true,
+        width: '100%'
+    });
+    
+    // Reinitialize Select2 after AJAX loads
+    $(document).ajaxComplete(function() {
+        $('.kt-select2').select2({
+            placeholder: "Select options",
+            allowClear: true,
+            width: '100%'
+        });
+    });
 });
 
 </script>
