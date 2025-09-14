@@ -327,13 +327,13 @@ class ChangeRequestStatusService
     ): string {
 		
 		$active = self::INACTIVE_STATUS;
-		$cr_status = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('new_status_id',  $oldStatusId)->first();
+		$cr_status = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('new_status_id',  $oldStatusId)->where('active','!=', '0')->first();
 		
 		$all_depend_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $cr_status->old_status_id)->get();
 		$depend_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $cr_status->old_status_id)->where('active','2')->get();
 		
 		$depend_active_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $cr_status->old_status_id)->where('active', '1')->get();
-        //dd($cr_status,$all_depend_statuses,$depend_statuses,$depend_active_statuses);
+        //dd($cr_status,$all_depend_statuses->toArray(),$depend_active_statuses->toArray());
 		if($depend_statuses->count() == $all_depend_statuses->count())
 		{
 			foreach($depend_statuses as $status)

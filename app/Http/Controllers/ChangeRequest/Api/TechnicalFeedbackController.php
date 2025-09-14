@@ -42,7 +42,8 @@ class TechnicalFeedbackController extends Controller
         ]);
         
         
-        $cr = Change_request::find($request->cr_id);
+        //$cr = Change_request::find($request->cr_id);
+        $cr = Change_request::where('cr_no',$request->cr_id)->first();
         
         if (!$cr) {
             return response()->json([

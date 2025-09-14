@@ -70,7 +70,8 @@ class ChangeRequestEstimationService
         ];
 
         // If design phase exists, calculate development after design
-        if (isset($changeRequest['end_design_time'])) {
+        //if (isset($changeRequest['end_design_time'])) {
+        if (isset($changeRequest['end_design_time']) && isset($changeRequest['test_duration']) ) {
             $dates = $this->getLastEndDate(
                 $id,
                 $data['developer_id'],
