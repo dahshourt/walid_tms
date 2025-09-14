@@ -411,7 +411,6 @@ class ChangeRequestController extends Controller
 		else
 		{
 			$cr = $this->changerequest->find($id);
-			
 			if (!$cr) {
 				return redirect()->to('/change_request')->with('status', 'You have no access to edit this CR');
 			}
@@ -506,7 +505,8 @@ class ChangeRequestController extends Controller
                 'user_id' => auth()->id()
             ]);
             
-            return redirect()->to('/change_request')->with('status', 'Updated Successfully');
+            //return redirect()->to('/change_request')->with('status', 'Updated Successfully');
+			return redirect()->back()->with('status', 'Updated Successfully');
             
         } catch (\Exception $e) {
             DB::rollBack();
