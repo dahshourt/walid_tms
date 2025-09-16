@@ -167,10 +167,12 @@ class MailController extends Controller
         $cr_link = route('edit.cr', ['id' => $cr, 'check_dm' => 1]);
 
         $reply_to_email = config('mail.from.address');
+        $qc_email = config('constants.mails.qc_mail');
+        $ticketing_dev = config('constants.mails.ticketing_dev_mail');
         $subject = "Re: CR #$cr_no - Awaiting Your Approval";
 
-        $approve_link = "mailto:$reply_to_email?subject=" . rawurlencode($subject) . "&body=approved";
-        $reject_link = "mailto:$reply_to_email?subject=" . rawurlencode($subject) . "&body=rejected";
+        $approve_link = "mailto:$qc_email?subject=" . rawurlencode($subject) . "&cc=$reply_to_email;$ticketing_dev&body=approved";
+        $reject_link = "mailto:$qc_email?subject=" . rawurlencode($subject) . "&cc=$reply_to_email;$ticketing_dev&body=rejected";
 
 
         /*
@@ -235,8 +237,6 @@ class MailController extends Controller
                     . "<a href='$approve_link' style='background-color: #4CAF50; color: white; padding: 10px 20px; margin-right: 10px; text-decoration: none; border-radius: 4px;'>Approve </a>"
                     . " <a href='$reject_link' style='background-color: #f44336; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;'>Reject</a>"
                     . "</div><br>"
-            
-                    . "Alternatively, you can respond <strong>All</strong> to this mail with <strong>approved</strong> or <strong>rejected</strong>.<br><br>"
             
                     . "Thank you in advance for your prompt action.<br><br>"
             
