@@ -104,8 +104,11 @@ class changeRequest_Requests extends FormRequest
                 }   
             }
             elseif($field->enable == 0){
-                $oldValue = $this->cr->{$field->CustomField->name};
-                $rules[$field->CustomField->name] = [new CompareOldValue($oldValue)];
+                if($field->CustomField->name != "need_design" && $field->CustomField->name != "technical_teams")
+                {
+                    $oldValue = $this->cr->{$field->CustomField->name};
+                    $rules[$field->CustomField->name] = [new CompareOldValue($oldValue)];
+                }
             }
         }
         return $rules;
