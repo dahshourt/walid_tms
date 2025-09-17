@@ -120,9 +120,12 @@
 												
 											</div>
 											<!--begin::Form-->
+                                              
 											<form class="form" action='{{url("$route")}}/{{ $cr->id }}' method="post" enctype="multipart/form-data">
+
                                                 {{ csrf_field() }}
                                                 {{ method_field('PATCH') }}
+                                                <input type="hidden" name="testable_flag" value="@if(!empty($cr->testable)){{$cr->testable}}@else{{0}}@endif" />
 												<input type="hidden" name="workflow_type_id" value="{{$workflow_type_id}}">
 												<input type="hidden" name="old_status_id" value="{{$cr->current_status->new_status_id}}">
                                                 <input type="hidden" name="cab_cr_flag" value="{{isset($cab_cr_flag)?$cab_cr_flag:0}}">
@@ -734,25 +737,32 @@ jQuery(document).ready(function() {
     });
 });
 
-
-// Testable checkbox and testing estimation handler - Simple version
+// Testable flag and testing estimation handler - Hidden field version
 document.addEventListener('DOMContentLoaded', function() {
     
-    // Get the elements
-    const testableCheckbox = document.querySelector('input[name="testable"]');
+    // Get the elements (no checkbox needed)
     const testingEstimationInput = document.querySelector('input[name="testing_estimation"]');
+    const testableFlagInput = document.querySelector('input[name="testable_flag"]');
     
     // Check if elements exist
-    if (!testableCheckbox || !testingEstimationInput) {
-        console.warn('Testable checkbox or testing estimation input not found');
+    if (!testingEstimationInput || !testableFlagInput) {
+        console.warn('Testing estimation input or testable_flag hidden field not found');
         return;
     }
 
-    // Function to handle checkbox change
-    function handleTestableChange() {
-        const isChecked = testableCheckbox.checked;
+    // Function to update UI based on hidden field value
+    function updateEstimationFieldState() {
+        let flagValue = testableFlagInput.value;
         
-        if (isChecked) {
+        // Handle empty or undefined values - treat them as '0'
+        if (!flagValue || flagValue === '' || flagValue.trim() === '') {
+            flagValue = '0';
+            testableFlagInput.value = '0';
+        }
+        
+        const isTestable = flagValue === '1';
+        
+        if (isTestable) {
             // Enable the input field
             testingEstimationInput.disabled = false;
             testingEstimationInput.classList.remove('disabled', 'bg-gray-100');
@@ -817,26 +827,44 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Function to validate on form submit only
+    // Function to validate on form submit
     function validateForSubmit() {
-        const isChecked = testableCheckbox.checked;
+        const testableFlagValue = testableFlagInput.value;
         const value = parseFloat(testingEstimationInput.value);
         
         // Clear previous validation
         clearValidationError(testingEstimationInput);
         
-        if (isChecked && (!testingEstimationInput.value || isNaN(value) || value <= 0)) {
-            showValidationError(testingEstimationInput, 'Testing estimation must be greater than 0 when testable is checked');
+        const isTestable = testableFlagValue === '1';
+        
+        if (isTestable && (!testingEstimationInput.value || isNaN(value) || value <= 0)) {
+            showValidationError(testingEstimationInput, 'Testing estimation must be greater than 0 when testable is enabled');
             return false;
         }
         
         return true;
     }
 
-    // Only add the checkbox change event listener
-    testableCheckbox.addEventListener('change', handleTestableChange);
+    // Listen for changes to the hidden field (if changed programmatically)
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
+                updateEstimationFieldState();
+            }
+        });
+    });
     
-    // Only validate on form submission
+    // Observe the hidden field for value changes
+    observer.observe(testableFlagInput, {
+        attributes: true,
+        attributeFilter: ['value']
+    });
+    
+    // Also listen for input events on hidden field
+    testableFlagInput.addEventListener('input', updateEstimationFieldState);
+    testableFlagInput.addEventListener('change', updateEstimationFieldState);
+    
+    // Form submission validation
     const form = testingEstimationInput.closest('form');
     if (form) {
         form.addEventListener('submit', function(e) {
@@ -849,53 +877,39 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Initialize ONLY the UI state, don't touch the value
-    const isChecked = testableCheckbox.checked;
-    if (isChecked) {
-        testingEstimationInput.disabled = false;
-        testingEstimationInput.classList.remove('disabled', 'bg-gray-100');
-        testingEstimationInput.classList.add('bg-white');
-        testingEstimationInput.placeholder = 'Enter testing estimation (must be > 0)';
-        
-        const label = document.querySelector('label[for="testing_estimation"]');
-        if (label) {
-            label.classList.remove('text-gray-400');
-            label.classList.add('text-gray-700');
-        }
-    } else {
-        testingEstimationInput.disabled = true;
-        testingEstimationInput.classList.add('disabled', 'bg-gray-100');
-        testingEstimationInput.classList.remove('bg-white');
-        testingEstimationInput.placeholder = 'Testing not required';
-        
-        // Only set to 0 if it's currently empty or already 0
-        if (!testingEstimationInput.value || testingEstimationInput.value === '0') {
-            testingEstimationInput.value = '0';
-        }
-        
-        const label = document.querySelector('label[for="testing_estimation"]');
-        if (label) {
-            label.classList.add('text-gray-400');
-            label.classList.remove('text-gray-700');
-        }
-    }
+    // Initialize the state based on hidden field value
+    updateEstimationFieldState();
+    
+    // Function to manually update testable flag (for external use)
+    window.updateTestableFlag = function(value) {
+        testableFlagInput.value = value ? '1' : '0';
+        updateEstimationFieldState();
+    };
 });
 
-// jQuery version - also simplified
+// jQuery version - simplified for hidden field only
 if (typeof jQuery !== 'undefined') {
     $(document).ready(function() {
         
-        const $testableCheckbox = $('input[name="testable"]');
         const $testingEstimationInput = $('input[name="testing_estimation"]');
+        const $testableFlagInput = $('input[name="testable_flag"]');
         
-        if ($testableCheckbox.length === 0 || $testingEstimationInput.length === 0) {
+        if ($testingEstimationInput.length === 0 || $testableFlagInput.length === 0) {
             return;
         }
         
-        function handleTestableChangeJQuery() {
-            const isChecked = $testableCheckbox.is(':checked');
+        function updateEstimationFieldStateJQuery() {
+            let flagValue = $testableFlagInput.val();
             
-            if (isChecked) {
+            // Handle empty values
+            if (!flagValue || flagValue === '' || flagValue.trim() === '') {
+                flagValue = '0';
+                $testableFlagInput.val('0');
+            }
+            
+            const isTestable = flagValue === '1';
+            
+            if (isTestable) {
                 $testingEstimationInput.prop('disabled', false)
                     .removeClass('disabled bg-gray-100')
                     .addClass('bg-white')
@@ -914,17 +928,17 @@ if (typeof jQuery !== 'undefined') {
             }
         }
         
-        $testableCheckbox.on('change', handleTestableChangeJQuery);
+        // Listen for changes to hidden field
+        $testableFlagInput.on('change input', updateEstimationFieldStateJQuery);
         
-        // Initialize without touching the value if checkbox is checked
-        if ($testableCheckbox.is(':checked')) {
-            $testingEstimationInput.prop('disabled', false)
-                .removeClass('disabled bg-gray-100')
-                .addClass('bg-white')
-                .attr('placeholder', 'Enter testing estimation (must be > 0)');
-                
-            $('label[for="testing_estimation"]').removeClass('text-gray-400').addClass('text-gray-700');
-        }
+        // Initialize
+        updateEstimationFieldStateJQuery();
+        
+        // Global function for external use
+        window.updateTestableFlag = function(value) {
+            $testableFlagInput.val(value ? '1' : '0');
+            updateEstimationFieldStateJQuery();
+        };
     });
 }
 </script>
