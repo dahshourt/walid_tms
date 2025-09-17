@@ -120,12 +120,12 @@
 												
 											</div>
 											<!--begin::Form-->
-                                              
+                                             
 											<form class="form" action='{{url("$route")}}/{{ $cr->id }}' method="post" enctype="multipart/form-data">
 
                                                 {{ csrf_field() }}
                                                 {{ method_field('PATCH') }}
-                                                <input type="hidden" name="testable_flag" value="@if(!empty($cr->testable)){{$cr->testable}}@else{{0}}@endif" />
+                                                <input type="hidden" name="testable_flag" value="@if(!empty($cr->change_request_custom_fields[0]->custom_field_value)){{$cr->change_request_custom_fields[0]->custom_field_value}}@else{{0}}@endif" />
 												<input type="hidden" name="workflow_type_id" value="{{$workflow_type_id}}">
 												<input type="hidden" name="old_status_id" value="{{$cr->current_status->new_status_id}}">
                                                 <input type="hidden" name="cab_cr_flag" value="{{isset($cab_cr_flag)?$cab_cr_flag:0}}">
