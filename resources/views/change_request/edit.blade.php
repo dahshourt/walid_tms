@@ -734,5 +734,198 @@ jQuery(document).ready(function() {
     });
 });
 
+
+// Testable checkbox and testing estimation handler - Simple version
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Get the elements
+    const testableCheckbox = document.querySelector('input[name="testable"]');
+    const testingEstimationInput = document.querySelector('input[name="testing_estimation"]');
+    
+    // Check if elements exist
+    if (!testableCheckbox || !testingEstimationInput) {
+        console.warn('Testable checkbox or testing estimation input not found');
+        return;
+    }
+
+    // Function to handle checkbox change
+    function handleTestableChange() {
+        const isChecked = testableCheckbox.checked;
+        
+        if (isChecked) {
+            // Enable the input field
+            testingEstimationInput.disabled = false;
+            testingEstimationInput.classList.remove('disabled', 'bg-gray-100');
+            testingEstimationInput.classList.add('bg-white');
+            testingEstimationInput.placeholder = 'Enter testing estimation (must be > 0)';
+            
+            // Add visual feedback to label
+            const label = document.querySelector('label[for="testing_estimation"]');
+            if (label) {
+                label.classList.remove('text-gray-400');
+                label.classList.add('text-gray-700');
+            }
+            
+        } else {
+            // Disable the input field and set to 0
+            testingEstimationInput.disabled = true;
+            testingEstimationInput.classList.add('disabled', 'bg-gray-100');
+            testingEstimationInput.classList.remove('bg-white');
+            testingEstimationInput.value = '0';
+            testingEstimationInput.placeholder = 'Testing not required';
+            
+            // Clear any validation errors
+            clearValidationError(testingEstimationInput);
+            
+            // Add visual feedback to label
+            const label = document.querySelector('label[for="testing_estimation"]');
+            if (label) {
+                label.classList.add('text-gray-400');
+                label.classList.remove('text-gray-700');
+            }
+        }
+    }
+
+    // Function to show validation error
+    function showValidationError(input, message) {
+        // Remove existing error
+        clearValidationError(input);
+        
+        // Add error class to input
+        input.classList.add('border-red-500', 'focus:border-red-500');
+        input.classList.remove('border-gray-300');
+        
+        // Create error message element
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'text-red-500 text-sm mt-1 validation-error';
+        errorDiv.textContent = message;
+        
+        // Insert error message after the input
+        input.parentNode.insertBefore(errorDiv, input.nextSibling);
+    }
+
+    // Function to clear validation error
+    function clearValidationError(input) {
+        // Remove error classes
+        input.classList.remove('border-red-500', 'focus:border-red-500');
+        input.classList.add('border-gray-300');
+        
+        // Remove error message
+        const errorElement = input.parentNode.querySelector('.validation-error');
+        if (errorElement) {
+            errorElement.remove();
+        }
+    }
+
+    // Function to validate on form submit only
+    function validateForSubmit() {
+        const isChecked = testableCheckbox.checked;
+        const value = parseFloat(testingEstimationInput.value);
+        
+        // Clear previous validation
+        clearValidationError(testingEstimationInput);
+        
+        if (isChecked && (!testingEstimationInput.value || isNaN(value) || value <= 0)) {
+            showValidationError(testingEstimationInput, 'Testing estimation must be greater than 0 when testable is checked');
+            return false;
+        }
+        
+        return true;
+    }
+
+    // Only add the checkbox change event listener
+    testableCheckbox.addEventListener('change', handleTestableChange);
+    
+    // Only validate on form submission
+    const form = testingEstimationInput.closest('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!validateForSubmit()) {
+                e.preventDefault();
+                e.stopPropagation();
+                testingEstimationInput.focus();
+                return false;
+            }
+        });
+    }
+
+    // Initialize ONLY the UI state, don't touch the value
+    const isChecked = testableCheckbox.checked;
+    if (isChecked) {
+        testingEstimationInput.disabled = false;
+        testingEstimationInput.classList.remove('disabled', 'bg-gray-100');
+        testingEstimationInput.classList.add('bg-white');
+        testingEstimationInput.placeholder = 'Enter testing estimation (must be > 0)';
+        
+        const label = document.querySelector('label[for="testing_estimation"]');
+        if (label) {
+            label.classList.remove('text-gray-400');
+            label.classList.add('text-gray-700');
+        }
+    } else {
+        testingEstimationInput.disabled = true;
+        testingEstimationInput.classList.add('disabled', 'bg-gray-100');
+        testingEstimationInput.classList.remove('bg-white');
+        testingEstimationInput.placeholder = 'Testing not required';
+        
+        // Only set to 0 if it's currently empty or already 0
+        if (!testingEstimationInput.value || testingEstimationInput.value === '0') {
+            testingEstimationInput.value = '0';
+        }
+        
+        const label = document.querySelector('label[for="testing_estimation"]');
+        if (label) {
+            label.classList.add('text-gray-400');
+            label.classList.remove('text-gray-700');
+        }
+    }
+});
+
+// jQuery version - also simplified
+if (typeof jQuery !== 'undefined') {
+    $(document).ready(function() {
+        
+        const $testableCheckbox = $('input[name="testable"]');
+        const $testingEstimationInput = $('input[name="testing_estimation"]');
+        
+        if ($testableCheckbox.length === 0 || $testingEstimationInput.length === 0) {
+            return;
+        }
+        
+        function handleTestableChangeJQuery() {
+            const isChecked = $testableCheckbox.is(':checked');
+            
+            if (isChecked) {
+                $testingEstimationInput.prop('disabled', false)
+                    .removeClass('disabled bg-gray-100')
+                    .addClass('bg-white')
+                    .attr('placeholder', 'Enter testing estimation (must be > 0)');
+                    
+                $('label[for="testing_estimation"]').removeClass('text-gray-400').addClass('text-gray-700');
+                
+            } else {
+                $testingEstimationInput.prop('disabled', true)
+                    .addClass('disabled bg-gray-100')
+                    .removeClass('bg-white')
+                    .val('0')
+                    .attr('placeholder', 'Testing not required');
+                    
+                $('label[for="testing_estimation"]').addClass('text-gray-400').removeClass('text-gray-700');
+            }
+        }
+        
+        $testableCheckbox.on('change', handleTestableChangeJQuery);
+        
+        // Initialize without touching the value if checkbox is checked
+        if ($testableCheckbox.is(':checked')) {
+            $testingEstimationInput.prop('disabled', false)
+                .removeClass('disabled bg-gray-100')
+                .addClass('bg-white')
+                .attr('placeholder', 'Enter testing estimation (must be > 0)');
+                
+            $('label[for="testing_estimation"]').removeClass('text-gray-400').addClass('text-gray-700');
+        }
+    });
+}
 </script>
 @endpush
