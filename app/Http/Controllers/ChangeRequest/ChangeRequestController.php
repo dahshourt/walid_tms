@@ -48,7 +48,7 @@ class ChangeRequestController extends Controller
     
     private const ALLOWED_MIMES = [
         'doc', 'docx', 'xls', 'xlsx', 'pdf', 'zip', 'rar', 
-        'jpeg', 'jpg', 'png', 'gif', 'msg','htm','html'
+        'jpeg', 'jpg', 'png', 'gif', 'msg'
     ];
     
     private const ALLOWED_MIME_TYPES = [
@@ -255,7 +255,8 @@ class ChangeRequestController extends Controller
     {
         $this->authorize('Create ChangeRequest');
         
-        $target_systems = $this->applications->getAll();
+        //$target_systems = $this->applications->getAll();
+        $target_systems = $this->applications->getAllWithFilter();
         return view("{$this->view}.list_work_flow", compact('target_systems'));
     }
 
@@ -400,7 +401,7 @@ class ChangeRequestController extends Controller
         $this->authorize('Edit ChangeRequest');
         
 		
-		
+		if($cab_cr_flag) request()->request->add(['cab_cr_flag' => true]);
         // Validate division manager access if requested
         if (request()->has('check_dm')) {
             $validation = $this->validateDivisionManagerAccess($id);
@@ -410,9 +411,12 @@ class ChangeRequestController extends Controller
         }
 		else
 		{
-			$cr = $this->changerequest->find($id);
-			if (!$cr) {
-				return redirect()->to('/change_request')->with('status', 'You have no access to edit this CR');
+			if(!$cab_cr_flag)
+			{
+				$cr = $this->changerequest->find($id);
+				if (!$cr) {
+					return redirect()->to('/change_request')->with('status', 'You have no access to edit this CR');
+				}
 			}
 		}
 
@@ -760,6 +764,7 @@ class ChangeRequestController extends Controller
         }
 
         $cr = $this->changerequest->find($id);
+		
         if (!$cr) {
             return redirect()->to('/change_request')->with('status', 'You have no access to edit this CR');
         }
@@ -835,6 +840,7 @@ class ChangeRequestController extends Controller
         
         // Get technical team data
         $selected_technical_teams = $this->getSelectedTechnicalTeams($cr);
+		
         $reminder_promo_tech_teams = $this->getReminderPromoTechTeams($cr);
         $reminder_promo_tech_teams_text = implode(',',$reminder_promo_tech_teams);
         // Get assignment users

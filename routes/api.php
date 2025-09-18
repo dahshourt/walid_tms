@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChangeRequest\Api\TechnicalFeedbackController;
+use App\Http\Controllers\ChangeRequest\Api\EmailApprovalController;
 
 /*
 |--------------------------------------------------------------------------
@@ -17,3 +18,4 @@ use App\Http\Controllers\ChangeRequest\Api\TechnicalFeedbackController;
 
 // Technical Feedback API Route - Using manual header-based authentication
 Route::post('/technical-feedback', [TechnicalFeedbackController::class, 'addTechnicalFeedback']);
+Route::post('/email-approval', [EmailApprovalController::class, 'UpdateEmailApprovel']);
