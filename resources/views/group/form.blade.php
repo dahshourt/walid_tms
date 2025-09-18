@@ -30,7 +30,7 @@
 				<option value="">Select...</option>
 				@foreach($unit_manager as $item)
 					<option value="{{ $item->id }}" 
-						@if($row->unit_id == $item->id)
+						@if(isset($row) && $row->unit_id == $item->id)
 							selected 
 						@elseif(old('unit_id') && in_array($item->id, old('unit_id')))
 							selected 
@@ -49,7 +49,7 @@
 				@foreach($devision_manager as $item)
 				 
 					<option value="{{ $item->id }}" 
-						@if($row->division_manager_id == $item->id)
+						@if(isset($row) && $row->division_manager_id == $item->id)
 							selected 
 						@elseif(old('division_manager_id') && in_array($item->id, old('division_manager_id')))
 							selected 
@@ -67,7 +67,7 @@
 				<option value="">Select...</option>
 				@foreach($directors as $item)
 					<option value="{{ $item->id }}" 
-						@if($row->director_id == $item->id)
+						@if(isset($row) && $row->director_id == $item->id)
 							selected 
 						@elseif(old('director_id') && in_array($item->id, old('director_id')))
 							selected 

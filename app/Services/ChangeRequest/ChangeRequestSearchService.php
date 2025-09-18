@@ -144,13 +144,28 @@ class ChangeRequestSearchService
 
     public function find($id)
     {
-        $userEmail = strtolower(auth()->user()->email);
+		$groupApplications  = null;
+		$userEmail = strtolower(auth()->user()->email);
         $divisionManager = strtolower(Change_request::where('id', $id)->value('division_manager'));
 
-        $groups = ($userEmail === $divisionManager) 
+        $groups = ($userEmail === $divisionManager && request()->has('check_dm')) 
             ? Group::pluck('id')->toArray()
             : array($this->resolveGroup());
             //: auth()->user()->user_groups->pluck('group_id')->toArray();
+		if($userEmail == $divisionManager && request()->has('check_dm'))
+		{
+			$groupApplications  = null;
+		}
+		else
+		{
+			$groupData = Group::find($groups);
+			$groupApplications = $groupData[0]->group_applications->pluck('application_id');
+			if($groupApplications)
+			{
+				$groupApplications = $groupApplications->toArray();
+			}
+		}			
+		
         $promoGroups = [50];
         $groups = array_merge($groups, $promoGroups);
 
@@ -192,9 +207,13 @@ class ChangeRequestSearchService
 								$query->where('type', 2);
 							});
 						}
-            })
-            ->where('id', $id)
-            ->first();
+            });
+            $changeRequest = $changeRequest->where('id', $id);
+			if($groupApplications && !request()->has('check_business'))
+			{
+				$changeRequest = $changeRequest->whereIn('application_id', $groupApplications);
+			}
+            $changeRequest = $changeRequest->first();
 
         if ($changeRequest) {
             $currentStatus = $this->getCurrentStatus($changeRequest, $viewStatuses);

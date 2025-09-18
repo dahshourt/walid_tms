@@ -120,9 +120,19 @@
 												
 											</div>
 											<!--begin::Form-->
+											 @php
+                                             foreach ($cr->change_request_custom_fields as $key => $value) {
+                                                 if($value->custom_field_name == "testable")
+                                                 {
+                                                    $testable = $value->custom_field_value;
+                                                 }
+                                             }
+                                                
+                                             @endphp
 											<form class="form" action='{{url("$route")}}/{{ $cr->id }}' method="post" enctype="multipart/form-data">
                                                 {{ csrf_field() }}
                                                 {{ method_field('PATCH') }}
+												<input type="hidden" name="testable_flag" value="@if(!empty($testable)){{$testable}}@else{{0}}@endif" />
 												<input type="hidden" name="workflow_type_id" value="{{$workflow_type_id}}">
 												<input type="hidden" name="old_status_id" value="{{$cr->current_status->new_status_id}}">
                                                 <input type="hidden" name="cab_cr_flag" value="{{isset($cab_cr_flag)?$cab_cr_flag:0}}">
@@ -734,5 +744,212 @@ jQuery(document).ready(function() {
     });
 });
 
+
+
+
+// Testable flag and testing estimation handler - Hidden field version
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Get the elements (no checkbox needed)
+    const testingEstimationInput = document.querySelector('input[name="testing_estimation"]');
+    const testableFlagInput = document.querySelector('input[name="testable_flag"]');
+    
+    // Check if elements exist
+    if (!testingEstimationInput || !testableFlagInput) {
+        console.warn('Testing estimation input or testable_flag hidden field not found');
+        return;
+    }
+
+    // Function to update UI based on hidden field value
+    function updateEstimationFieldState() {
+        let flagValue = testableFlagInput.value;
+        
+        // Handle empty or undefined values - treat them as '0'
+        if (!flagValue || flagValue === '' || flagValue.trim() === '') {
+            flagValue = '0';
+            testableFlagInput.value = '0';
+        }
+        
+        const isTestable = flagValue === '1';
+        
+        if (isTestable) {
+            // Enable the input field
+            testingEstimationInput.disabled = false;
+            testingEstimationInput.classList.remove('disabled', 'bg-gray-100');
+            testingEstimationInput.classList.add('bg-white');
+            testingEstimationInput.placeholder = 'Enter testing estimation (must be > 0)';
+            
+            // Add visual feedback to label
+            const label = document.querySelector('label[for="testing_estimation"]');
+            if (label) {
+                label.classList.remove('text-gray-400');
+                label.classList.add('text-gray-700');
+            }
+            
+        } else {
+            // Disable the input field and set to 0
+            testingEstimationInput.disabled = true;
+            testingEstimationInput.classList.add('disabled', 'bg-gray-100');
+            testingEstimationInput.classList.remove('bg-white');
+            testingEstimationInput.value = '0';
+            testingEstimationInput.placeholder = 'Testing not required';
+            
+            // Clear any validation errors
+            clearValidationError(testingEstimationInput);
+            
+            // Add visual feedback to label
+            const label = document.querySelector('label[for="testing_estimation"]');
+            if (label) {
+                label.classList.add('text-gray-400');
+                label.classList.remove('text-gray-700');
+            }
+        }
+    }
+
+    // Function to show validation error
+    function showValidationError(input, message) {
+        // Remove existing error
+        clearValidationError(input);
+        
+        // Add error class to input
+        input.classList.add('border-red-500', 'focus:border-red-500');
+        input.classList.remove('border-gray-300');
+        
+        // Create error message element
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'text-red-500 text-sm mt-1 validation-error';
+        errorDiv.textContent = message;
+        
+        // Insert error message after the input
+        input.parentNode.insertBefore(errorDiv, input.nextSibling);
+    }
+
+    // Function to clear validation error
+    function clearValidationError(input) {
+        // Remove error classes
+        input.classList.remove('border-red-500', 'focus:border-red-500');
+        input.classList.add('border-gray-300');
+        
+        // Remove error message
+        const errorElement = input.parentNode.querySelector('.validation-error');
+        if (errorElement) {
+            errorElement.remove();
+        }
+    }
+
+    // Function to validate on form submit
+    function validateForSubmit() {
+        const testableFlagValue = testableFlagInput.value;
+        const value = parseFloat(testingEstimationInput.value);
+        
+        // Clear previous validation
+        clearValidationError(testingEstimationInput);
+        
+        const isTestable = testableFlagValue === '1';
+        
+        if (isTestable && (!testingEstimationInput.value || isNaN(value) || value <= 0)) {
+            showValidationError(testingEstimationInput, 'Testing estimation must be greater than 0 when testable is enabled');
+            return false;
+        }
+        
+        return true;
+    }
+
+    // Listen for changes to the hidden field (if changed programmatically)
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
+                updateEstimationFieldState();
+            }
+        });
+    });
+    
+    // Observe the hidden field for value changes
+    observer.observe(testableFlagInput, {
+        attributes: true,
+        attributeFilter: ['value']
+    });
+    
+    // Also listen for input events on hidden field
+    testableFlagInput.addEventListener('input', updateEstimationFieldState);
+    testableFlagInput.addEventListener('change', updateEstimationFieldState);
+    
+    // Form submission validation
+    const form = testingEstimationInput.closest('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!validateForSubmit()) {
+                e.preventDefault();
+                e.stopPropagation();
+                testingEstimationInput.focus();
+                return false;
+            }
+        });
+    }
+
+    // Initialize the state based on hidden field value
+    updateEstimationFieldState();
+    
+    // Function to manually update testable flag (for external use)
+    window.updateTestableFlag = function(value) {
+        testableFlagInput.value = value ? '1' : '0';
+        updateEstimationFieldState();
+    };
+});
+
+// jQuery version - simplified for hidden field only
+if (typeof jQuery !== 'undefined') {
+    $(document).ready(function() {
+        
+        const $testingEstimationInput = $('input[name="testing_estimation"]');
+        const $testableFlagInput = $('input[name="testable_flag"]');
+        
+        if ($testingEstimationInput.length === 0 || $testableFlagInput.length === 0) {
+            return;
+        }
+        
+        function updateEstimationFieldStateJQuery() {
+            let flagValue = $testableFlagInput.val();
+            
+            // Handle empty values
+            if (!flagValue || flagValue === '' || flagValue.trim() === '') {
+                flagValue = '0';
+                $testableFlagInput.val('0');
+            }
+            
+            const isTestable = flagValue === '1';
+            
+            if (isTestable) {
+                $testingEstimationInput.prop('disabled', false)
+                    .removeClass('disabled bg-gray-100')
+                    .addClass('bg-white')
+                    .attr('placeholder', 'Enter testing estimation (must be > 0)');
+                    
+                $('label[for="testing_estimation"]').removeClass('text-gray-400').addClass('text-gray-700');
+                
+            } else {
+                $testingEstimationInput.prop('disabled', true)
+                    .addClass('disabled bg-gray-100')
+                    .removeClass('bg-white')
+                    .val('0')
+                    .attr('placeholder', 'Testing not required');
+                    
+                $('label[for="testing_estimation"]').addClass('text-gray-400').removeClass('text-gray-700');
+            }
+        }
+        
+        // Listen for changes to hidden field
+        $testableFlagInput.on('change input', updateEstimationFieldStateJQuery);
+        
+        // Initialize
+        updateEstimationFieldStateJQuery();
+        
+        // Global function for external use
+        window.updateTestableFlag = function(value) {
+            $testableFlagInput.val(value ? '1' : '0');
+            updateEstimationFieldStateJQuery();
+        };
+    });
+}
 </script>
 @endpush
