@@ -1254,4 +1254,54 @@ class ChangeRequestController extends Controller
             ], 500);
         }
     }
+
+    public function showTestableForm()
+    {
+        $this->authorize('Edit Testable Form');
+
+        return view($this->view.'.testable_form');
+        
+    }
+
+    public function updateTestableFlag(Request $request)
+    {
+        //dd($request->all());
+        $this->authorize('Edit Testable Form');
+
+        $request->validate([
+            'cr_number' => 'required|exists:change_request,cr_no',
+            'testable' => 'required|in:0,1'
+        ]);
+        DB::beginTransaction();
+        try {
+            //$id = $request->cr_number;
+            $id = Change_request::where('cr_no', $request->cr_number)->firstOrFail()->id;
+            //dd($id);
+            // Update change request
+            $cr_id = $this->changerequest->updateTestableFlag($id, $request);
+            
+            if ($cr_id === false) {
+                throw new \Exception('Failed to update change request');
+            }
+            
+            DB::commit();
+            
+            Log::info('Change request updated successfully', [
+                'cr_id' => $id,
+                'user_id' => auth()->id()
+            ]);
+            
+            //return redirect()->to('/change_request')->with('status', 'Updated Successfully');
+			return redirect()->back()->with('status', 'Updated Successfully');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update change request', [
+                'cr_id' => $id,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+            return redirect()->back()->with('error', 'Failed to update change request.');
+        }
+    }
 }

@@ -93,6 +93,14 @@ class ChangeRequestUpdateService
        
         return true;
     }
+    
+    public function updateTestableFlag($id, $request)
+    {
+        $this->changeRequest_old = Change_request::find($id);
+        $this->updateCRData($id, $request);
+        $this->logRepository->logCreate($id, $request, $this->changeRequest_old, 'update');
+        return true;
+    }
 
     protected function handleCabCrValidation($id, $request): bool
     {
@@ -233,7 +241,7 @@ class ChangeRequestUpdateService
 			if($key === 'testable')
 			{
 					$customFieldId = CustomField::findId($key);
-					if ($customFieldId && $value) {
+					if ($customFieldId && $value !== null) {
 						$changeRequestCustomField = [
 							"cr_id" => $id,
 							"custom_field_id" => $customFieldId->id,
@@ -241,6 +249,7 @@ class ChangeRequestUpdateService
 							"custom_field_value" => $testable,
 							"user_id" => auth()->id(),
 						];
+                        //dd($changeRequestCustomField);
 						$this->insertOrUpdateChangeRequestCustomField($changeRequestCustomField);
 					}
 			}
@@ -248,7 +257,7 @@ class ChangeRequestUpdateService
 			{
 				if ($key != "_token" || $key === 'cr' ) {
 					$customFieldId = CustomField::findId($key);
-					if ($customFieldId && $value) {
+					if ($customFieldId && $value !== null) {
 						$changeRequestCustomField = [
 							"cr_id" => $id,
 							"custom_field_id" => $customFieldId->id,
