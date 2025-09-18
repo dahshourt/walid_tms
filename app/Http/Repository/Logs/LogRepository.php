@@ -87,6 +87,7 @@ class LogRepository implements LogRepositoryInterface
         $fields = [
             //'analysis_feedback' => 'Analysis FeedBack',
             //'comment' => 'Comment',
+            'testable' => ['message' => 'Testable flag changed to'],
             'priority_id' => ['model' => Priority::class, 'field' => 'name', 'message' => 'Priority Changed To'],
             //'technical_feedback' => 'Technical Feedback Is',
             'unit_id' => ['model' => Unit::class, 'field' => 'name', 'message' => 'CR Assigned To Unit'],

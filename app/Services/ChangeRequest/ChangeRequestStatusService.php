@@ -282,7 +282,7 @@ class ChangeRequestStatusService
             if ($this->shouldSkipWorkflowStatus($changeRequest, $workflowStatus, $statusData)) {
                 continue;
             }
-
+            //dd($statusData);
             $active = $this->determineActiveStatus(
                 $changeRequest->id, 
                 $workflowStatus, 
@@ -327,8 +327,8 @@ class ChangeRequestStatusService
     ): string {
 		
 		$active = self::INACTIVE_STATUS;
-		$cr_status = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('new_status_id',  $oldStatusId)->where('active','!=', '0')->first();
-		
+		$cr_status = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('new_status_id',  $oldStatusId)->where('active','!=', 0)->first();
+		//dd($cr_status);
 		$all_depend_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $cr_status->old_status_id)->get();
 		$depend_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $cr_status->old_status_id)->where('active','2')->get();
 		
