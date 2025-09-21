@@ -7,6 +7,7 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 use App\Http\Requests\Applcations\ApplicationsRequest;
 use App\Factories\Applications\ApplicationFactory;
 use App\Http\Repository\Workflow\Workflow_type_repository;
+use Illuminate\Http\Request;
 
 class ApplicationController extends Controller
 {
@@ -44,7 +45,9 @@ class ApplicationController extends Controller
 		$this->authorize('Create Application');
 		$workflow=new Workflow_type_repository();
 		$workflow_subtype =   $workflow->get_workflow_all_subtype();
-        return view("$this->view.create",compact('workflow_subtype'));
+		$parent_id = null ;
+        $parent_apps = $this->Application->getAllWithFilter($parent_id);
+        return view("$this->view.create",compact('workflow_subtype','parent_apps'));
     }
 
     /**
@@ -67,7 +70,9 @@ class ApplicationController extends Controller
         $row = $this->Application->find($id);
 		$workflow=new Workflow_type_repository();
 		$workflow_subtype =   $workflow->get_workflow_all_subtype();
-        return view("$this->view.edit",compact('row','workflow_subtype'));
+		$parent_id = null ;
+        $parent_apps = $this->Application->getAllWithFilter($parent_id);
+        return view("$this->view.edit",compact('row','workflow_subtype','parent_apps'));
     }
 
     /**
@@ -90,7 +95,6 @@ class ApplicationController extends Controller
     }
 	public function updateactive(Request $request)
     {
-        
         $data = $this->Application->find($request->id);
 		$this->Application->updateactive($data->active,$request->id);
 		   

@@ -175,6 +175,34 @@ class EscalationCron extends Command
     }
 
     /**
+     * Simple function to send escalation email
+     */
+    private function sendEscalationEmail($recipient, $crId, $level, $deadlines)
+    {
+        try {
+            $message = "SLA Exceeded Alert for CR ID: {$crId}\n";
+            $message .= "Level: {$level}\n\n";
+            $message .= "Deadline Information:\n";
+            $message .= "Status Set Time: " . $deadlines['status_set_time']->format('Y-m-d H:i:s') . "\n";
+            $message .= "Unit Deadline: " . $deadlines['unit_deadline']->format('Y-m-d H:i:s') . "\n";
+            $message .= "Division Deadline: " . $deadlines['division_deadline']->format('Y-m-d H:i:s') . "\n";
+            $message .= "Director Deadline: " . $deadlines['director_deadline']->format('Y-m-d H:i:s') . "\n\n";
+            $message .= "Please take immediate action to resolve this matter.\n\n";
+            $message .= "This is an automated system notification.";
+
+            Mail::raw($message, function ($mail) use ($recipient, $level, $crId) {
+                $mail->to($recipient)
+                     ->subject("SLA Exceeded Alert - {$level} - CR ID: {$crId}");
+            });
+
+            return true;
+        } catch (\Exception $e) {
+            $this->error("Failed to send email to {$recipient}: " . $e->getMessage());
+            return false;
+        }
+    }
+
+    /**
      * Send escalation emails based on violation levels with progressive escalation
      */
     private function sendEscalationMails($changeRequest, $group, $director, $divisionManager, $unit, 
@@ -189,73 +217,72 @@ class EscalationCron extends Command
 
         // Step 1: Check Unit Escalation
         if ($unitViolated && (!$existingLogs || !$existingLogs->unit_sent)) {
+              
             if ($unit && $unit->manager_name) {
-                // Send to unit manager
-                Mail::to($unit->manager_name)
-                    ->send(new EscalationMail($changeRequest, $group, 'Unit Level', $deadlines));
-
-                // Log or update escalation
-                if ($existingLogs) {
-                    DB::table('escalation_logs')
-                        ->where('id', $existingLogs->id)
-                        ->update([
+                // Send to unit manager using simple email function
+                if ($this->sendEscalationEmail($unit->manager_name, $changeRequest->cr_id, 'Unit Level', $deadlines)) {
+                    // Log or update escalation
+                    if ($existingLogs) {
+                        DB::table('escalation_logs')
+                            ->where('id', $existingLogs->id)
+                            ->update([
+                                'unit_sent' => 1,
+                                'sent_at' => $now,
+                                'updated_at' => $now
+                            ]);
+                    } else {
+                        DB::table('escalation_logs')->insert([
+                            'cr_id' => $changeRequest->cr_id,
                             'unit_sent' => 1,
+                            'division_sent' => 0,
+                            'director_sent' => 0,
                             'sent_at' => $now,
-                            'updated_at' => $now
+                            'created_at' => $now,
+                            'updated_at' => $now,
                         ]);
-                } else {
-                    DB::table('escalation_logs')->insert([
-                        'cr_id' => $changeRequest->cr_id,
-                        'unit_sent' => 1,
-                        'division_sent' => 0,
-                        'director_sent' => 0,
-                        'sent_at' => $now,
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ]);
-                }
+                    }
 
-                $this->info("Unit escalation sent for CR ID {$changeRequest->cr_id}");
+                    $this->info("Unit escalation sent for CR ID {$changeRequest->cr_id}");
+                }
             }
         }
 
         // Step 2: Check Division Escalation (only if unit was already sent)
         if ($divisionViolated && $existingLogs && $existingLogs->unit_sent && !$existingLogs->division_sent) {
             if ($divisionManager && $divisionManager->division_manager_email) {
-                // Send to division manager
-                Mail::to($divisionManager->division_manager_email)
-                    ->send(new EscalationMail($changeRequest, $group, 'Division Level', $deadlines));
+                // Send to division manager using simple email function
+                if ($this->sendEscalationEmail($divisionManager->division_manager_email, $changeRequest->cr_id, 'Division Level', $deadlines)) {
+                    // Update escalation log
+                    DB::table('escalation_logs')
+                        ->where('id', $existingLogs->id)
+                        ->update([
+                            'division_sent' => 1,
+                            'sent_at' => $now,
+                            'updated_at' => $now
+                        ]);
 
-                // Update escalation log
-                DB::table('escalation_logs')
-                    ->where('id', $existingLogs->id)
-                    ->update([
-                        'division_sent' => 1,
-                        'sent_at' => $now,
-                        'updated_at' => $now
-                    ]);
-
-                $this->info("Division escalation sent for CR ID {$changeRequest->cr_id}");
+                    $this->info("Division escalation sent for CR ID {$changeRequest->cr_id}");
+                }
             }
         }
 
         // Step 3: Check Director Escalation (only if both unit and division were sent)
         if ($directorViolated && $existingLogs && $existingLogs->unit_sent && $existingLogs->division_sent && !$existingLogs->director_sent) {
+           
             if ($director && $director->email) {
-                // Send to director
-                Mail::to($director->email)
-                    ->send(new EscalationMail($changeRequest, $group, 'Director Level', $deadlines));
+                // Send to director using simple email function
+                if ($this->sendEscalationEmail($director->email, $changeRequest->cr_id, 'Director Level', $deadlines)) {
+                    // Update escalation log
+                    DB::table('escalation_logs')
+                        ->where('id', $existingLogs->id)
+                        ->update([
+                            'director_sent' => 1,
+                            'sent_at' => $now,
+                            'updated_at' => $now
+                        ]);
 
-                // Update escalation log
-                DB::table('escalation_logs')
-                    ->where('id', $existingLogs->id)
-                    ->update([
-                        'director_sent' => 1,
-                        'sent_at' => $now,
-                        'updated_at' => $now
-                    ]);
-
-                $this->info("Director escalation sent for CR ID {$changeRequest->cr_id}");
+                    $this->info("Director escalation sent for CR ID {$changeRequest->cr_id}");
+                }
             }
         }
     }

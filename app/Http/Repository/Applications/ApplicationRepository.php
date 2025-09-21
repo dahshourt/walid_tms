@@ -12,6 +12,19 @@ use Illuminate\Support\Facades\DB;
 class ApplicationRepository implements ApplicationRepositoryInterface
 {
 
+
+	public function getAllWithFilter($parent_id = null)
+    {
+        if($parent_id)
+        {
+            return Application::with('parent')->whereNotNull('parent_id')->get();
+        }
+        else
+        {
+            return Application::with('children')->whereNull('parent_id')->get();
+        }
+        
+    }
     
     public function getAll()
     {
@@ -54,6 +67,7 @@ class ApplicationRepository implements ApplicationRepositoryInterface
 			$request['file'] = $file;
 		}
 		unset($request['app_file']);
+		if(!isset($request['active'])) $request['active'] = '0';
 		return Application::where('id', $id)->update($request);
     }
 
@@ -69,11 +83,9 @@ class ApplicationRepository implements ApplicationRepositoryInterface
     }
 	public function updateactive($active,$id){
 		if($active){
-		return 	$this->update(['active'=>'0'],$id);
+			return 	$this->update(['active'=>'0'],$id);
 		} else{
-			
-					return 	$this->update(['active'=>'1'],$id);
-
+			return 	$this->update(['active'=>'1'],$id);
 		}
 		
 	}

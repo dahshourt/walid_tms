@@ -120,7 +120,7 @@
 												
 											</div>
 											<!--begin::Form-->
-                                             @php
+											 @php
                                              foreach ($cr->change_request_custom_fields as $key => $value) {
                                                  if($value->custom_field_name == "testable")
                                                  {
@@ -133,7 +133,7 @@
 
                                                 {{ csrf_field() }}
                                                 {{ method_field('PATCH') }}
-                                                <input type="hidden" name="testable_flag" value="@if(!empty($testable)){{$testable}}@else{{0}}@endif" />
+												<input type="hidden" name="testable_flag" value="@if(!empty($testable)){{$testable}}@else{{0}}@endif" />
 												<input type="hidden" name="workflow_type_id" value="{{$workflow_type_id}}">
 												<input type="hidden" name="old_status_id" value="{{$cr->current_status->new_status_id}}">
                                                 <input type="hidden" name="cab_cr_flag" value="{{isset($cab_cr_flag)?$cab_cr_flag:0}}">
@@ -229,7 +229,7 @@
                                                         </tbody>
                                                     </table>
                                             @endif
-                                            @endcan
+                                            @endcan 
                                             <!-- end feedback table -->
 											@if(count($cr['attachments'])  > 0  )
 													<div class="form-group col-md-12" style="float:left">
@@ -744,6 +744,9 @@ jQuery(document).ready(function() {
         });
     });
 });
+
+
+
 
 // Testable flag and testing estimation handler - Hidden field version
 document.addEventListener('DOMContentLoaded', function() {

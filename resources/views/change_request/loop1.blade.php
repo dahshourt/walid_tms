@@ -19,7 +19,7 @@ $check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_
 @if(!$view_technical_team_flag || ($view_technical_team_flag && in_array($default_group, $assigned_technical_teams) && $check_if_status_active))
                                 <tr>
                                     @can('Edit ChangeRequest')
-                                    <td><a href='{{ url("$route") }}/{{ $item->id }}/edit'>{{ $item['cr_no'] }} </a></td>
+                                    <td><a href='{{ url("$route") }}/{{ $item->id }}/edit?check_dm=1'>{{ $item['cr_no'] }} </a></td>
                                     @else
                                         @can('Show ChangeRequest')
                                             <td><a href='{{ url("$route") }}/{{ $item->id }}'>{{ $item['cr_no'] }} </a></td>

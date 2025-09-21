@@ -58,7 +58,7 @@ class ChangeRequestUpdateService
         if ($this->handleCabCrValidation($id, $request)) {
             return true;
         }
- 
+
         // Handle technical team validation
         if ($this->handleTechnicalTeamValidation($id, $request)) {
             return true;
@@ -93,14 +93,22 @@ class ChangeRequestUpdateService
        
         return true;
     }
+    
+    public function updateTestableFlag($id, $request)
+    {
+        $this->changeRequest_old = Change_request::find($id);
+        $this->updateCRData($id, $request);
+        $this->logRepository->logCreate($id, $request, $this->changeRequest_old, 'update');
+        return true;
+    }
 
     protected function handleCabCrValidation($id, $request): bool
     {
         if ($request->cab_cr_flag != '1') {
             return false;
         }
-        
-        @$user_id = Auth::user()->id;
+
+        $user_id = Auth::user()->id;
         $cabCr = CabCr::where("cr_id", $id)->where('status', '0')->first();
         $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
 
@@ -227,22 +235,41 @@ class ChangeRequestUpdateService
 
     protected function handleCustomFieldUpdates($id, $data): void
     {
-
-
-        foreach ($data as $key => $value) {
-            if ($key != "_token" || $key === 'cr') {
-                $customFieldId = CustomField::findId($key);
-                if ($customFieldId && $value) {
-                    $changeRequestCustomField = [
-                        "cr_id" => $id,
-                        "custom_field_id" => $customFieldId->id,
-                        "custom_field_name" => $key,
-                        "custom_field_value" => $value,
-                        "user_id" => auth()->id(),
-                    ];
-                    $this->insertOrUpdateChangeRequestCustomField($changeRequestCustomField);
-                }
-            }
+		$testable = 0;
+		if(request()->input('testable')){ $testable = (string)request()->input('testable') === '1' ? 1 : 0; }
+		foreach ($data as $key => $value) {
+			if($key === 'testable')
+			{
+					$customFieldId = CustomField::findId($key);
+					if ($customFieldId && $value !== null) {
+						$changeRequestCustomField = [
+							"cr_id" => $id,
+							"custom_field_id" => $customFieldId->id,
+							"custom_field_name" => $key,
+							"custom_field_value" => $testable,
+							"user_id" => auth()->id(),
+						];
+                        //dd($changeRequestCustomField);
+						$this->insertOrUpdateChangeRequestCustomField($changeRequestCustomField);
+					}
+			}
+			else
+			{
+				if ($key != "_token" || $key === 'cr' ) {
+					$customFieldId = CustomField::findId($key);
+					if ($customFieldId && $value !== null) {
+						$changeRequestCustomField = [
+							"cr_id" => $id,
+							"custom_field_id" => $customFieldId->id,
+							"custom_field_name" => $key,
+							"custom_field_value" => $value,
+							"user_id" => auth()->id(),
+						];
+						$this->insertOrUpdateChangeRequestCustomField($changeRequestCustomField);
+					}
+				}	
+			}
+            
         }
     }
 

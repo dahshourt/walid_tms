@@ -48,7 +48,7 @@ class ChangeRequestController extends Controller
     
     private const ALLOWED_MIMES = [
         'doc', 'docx', 'xls', 'xlsx', 'pdf', 'zip', 'rar', 
-        'jpeg', 'jpg', 'png', 'gif', 'msg','htm','html'
+        'jpeg', 'jpg', 'png', 'gif', 'msg'
     ];
     
     private const ALLOWED_MIME_TYPES = [
@@ -255,7 +255,8 @@ class ChangeRequestController extends Controller
     {
         $this->authorize('Create ChangeRequest');
         
-        $target_systems = $this->applications->getAll();
+        //$target_systems = $this->applications->getAll();
+        $target_systems = $this->applications->getAllWithFilter();
         return view("{$this->view}.list_work_flow", compact('target_systems'));
     }
 
@@ -400,7 +401,7 @@ class ChangeRequestController extends Controller
         $this->authorize('Edit ChangeRequest');
         
 		
-		
+		if($cab_cr_flag) request()->request->add(['cab_cr_flag' => true]);
         // Validate division manager access if requested
         if (request()->has('check_dm')) {
             $validation = $this->validateDivisionManagerAccess($id);
@@ -410,9 +411,12 @@ class ChangeRequestController extends Controller
         }
 		else
 		{
-			$cr = $this->changerequest->find($id);
-			if (!$cr) {
-				return redirect()->to('/change_request')->with('status', 'You have no access to edit this CR');
+			if(!$cab_cr_flag)
+			{
+				$cr = $this->changerequest->find($id);
+				if (!$cr) {
+					return redirect()->to('/change_request')->with('status', 'You have no access to edit this CR');
+				}
 			}
 		}
 
@@ -760,6 +764,7 @@ class ChangeRequestController extends Controller
         }
 
         $cr = $this->changerequest->find($id);
+		
         if (!$cr) {
             return redirect()->to('/change_request')->with('status', 'You have no access to edit this CR');
         }
@@ -835,6 +840,7 @@ class ChangeRequestController extends Controller
         
         // Get technical team data
         $selected_technical_teams = $this->getSelectedTechnicalTeams($cr);
+		
         $reminder_promo_tech_teams = $this->getReminderPromoTechTeams($cr);
         $reminder_promo_tech_teams_text = implode(',',$reminder_promo_tech_teams);
         // Get assignment users
@@ -1246,6 +1252,56 @@ class ChangeRequestController extends Controller
                 'success' => false,
                 'message' => 'Failed to delete change request'
             ], 500);
+        }
+    }
+
+    public function showTestableForm()
+    {
+        $this->authorize('Edit Testable Form');
+
+        return view($this->view.'.testable_form');
+        
+    }
+
+    public function updateTestableFlag(Request $request)
+    {
+        //dd($request->all());
+        $this->authorize('Edit Testable Form');
+
+        $request->validate([
+            'cr_number' => 'required|exists:change_request,cr_no',
+            'testable' => 'required|in:0,1'
+        ]);
+        DB::beginTransaction();
+        try {
+            //$id = $request->cr_number;
+            $id = Change_request::where('cr_no', $request->cr_number)->firstOrFail()->id;
+            //dd($id);
+            // Update change request
+            $cr_id = $this->changerequest->updateTestableFlag($id, $request);
+            
+            if ($cr_id === false) {
+                throw new \Exception('Failed to update change request');
+            }
+            
+            DB::commit();
+            
+            Log::info('Change request updated successfully', [
+                'cr_id' => $id,
+                'user_id' => auth()->id()
+            ]);
+            
+            //return redirect()->to('/change_request')->with('status', 'Updated Successfully');
+			return redirect()->back()->with('status', 'Updated Successfully');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update change request', [
+                'cr_id' => $id,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+            return redirect()->back()->with('error', 'Failed to update change request.');
         }
     }
 }

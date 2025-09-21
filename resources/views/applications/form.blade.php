@@ -27,6 +27,19 @@
 														<input type="text" class="form-control form-control-lg" placeholder="Name" name="name" value="{{ isset($row) ? $row->name : old('name') }}" />
 														{!! $errors->first('name', '<span class="form-control-feedback">:message</span>') !!}
 													</div>
+													
+													<div class="form-group">
+														<label for="parent_id">Parent</label>
+														<select name="parent_id" class="form-control form-control-lg">
+															<option value="">....</option>
+															@foreach($parent_apps as $item)
+																<option value="{{$item->id}}"
+																{{ isset($row) && $row->parent_id == $item->id ? "selected" : "" }}
+																>{{$item->name}}</option>
+															@endforeach
+														</select>
+													</div>
+													
 													<div class="form-group">
 														<label for="wf_type_id">Work Flow Type:</label>
 														<select class="form-control" id="wf_type_id" name="workflow_type_id" >

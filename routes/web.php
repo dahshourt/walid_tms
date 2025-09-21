@@ -178,6 +178,8 @@ Route::middleware(['auth'])->group(
         Route::get('defects', 'Defect\DefectController@index');
         Route::get('show_defect/{id}', 'Defect\DefectController@show');
 		Route::resource('sla-calculations', Sla\SlaCalculationController::class);
+        Route::get('testable_form', 'ChangeRequest\ChangeRequestController@showTestableForm')->name('testable_form');
+        Route::post('update_testable', 'ChangeRequest\ChangeRequestController@updateTestableFlag')->name('update_testable');
 
 
         //test ews

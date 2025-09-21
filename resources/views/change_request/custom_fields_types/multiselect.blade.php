@@ -118,6 +118,9 @@
 
                     @case('cap_users')
                         <option value="">Select</option>
+							@if(!in_array($cr->requester->id , $cap_users->pluck('user_id')->toArray()))
+								<option value="{{ $cr->requester->id }}">{{ $cr->requester->name }}</option>
+							@endif
                         @foreach($cap_users as $cap)
                             <option value="{{ $cap->user_id }}">{{ $cap->user->name }}</option>
                         @endforeach
@@ -125,22 +128,25 @@
 
                         @case('technical_teams')
                             @if(count($selected_technical_teams) > 0)
+								@php
+									$selected_teams_ids = array_column($selected_technical_teams,'id');
+								@endphp
                                 @if($isEnabled)
                                     @if($status_name == "Rollback" OR $status_name == "Pending Rollback" OR $status_name == "Pending fixation on production")
                                         <option value="">Select...</option>
-                                        @foreach($selected_technical_teams as $team)
-                                            <option value="{{ $team['id'] }}" selected>{{ $team['title'] }}</option>
+                                        @foreach($technical_teams as $team)
+                                            <option value="{{ $team['id'] }}" {{ in_array($team['id'],$selected_teams_ids) ? "selected" : "" }}>{{ $team['title'] }}</option>
                                         @endforeach
                                     @else
-                                        <option disabled value="">Select...</option>
-                                        @foreach($selected_technical_teams as $team)
-                                            <option disabled value="{{ $team['id'] }}" selected>{{ $team['title'] }}</option>
+                                        <option  value="">Select...</option>
+                                        @foreach($technical_teams as $team)
+                                            <option  value="{{ $team['id'] }}" {{ in_array($team['id'],$selected_teams_ids) ? "selected" : "" }}>{{ $team['title'] }}</option>
                                         @endforeach
                                     @endif
                                 @else
-                                    <option disabled value="">Select...</option>
-                                    @foreach($selected_technical_teams as $team)
-                                        <option disabled value="{{ $team['id'] }}" selected>{{ $team['title'] }}</option>
+                                    <option  value="">Select...</option>
+                                    @foreach($technical_teams as $team)
+                                        <option  value="{{ $team['id'] }}" {{ in_array($team['id'],$selected_teams_ids) ? "selected" : "" }}>{{ $team['title'] }}</option>
                                     @endforeach
                                 @endif
                             @else
@@ -165,7 +171,7 @@
             {{-- Hidden inputs to preserve POST data when disabled --}}
             @if(!$isEnabled && count($selected_technical_teams) > 0)
                 @foreach($selected_technical_teams as $team)
-                    <input type="hidden" name="technical_teams[]" value="{{ $team['id'] }}">
+				{{-- <input type="hidden" name="technical_teams[]" value="{{ $team['id'] }}">--}}
                 @endforeach
             @endif
         @endif
