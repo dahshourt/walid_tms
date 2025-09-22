@@ -21,12 +21,15 @@ class ChangeRequestSearchService
         $groupData = Group::find($group);
         $groupApplications = $groupData->group_applications->pluck('application_id')->toArray();
         $viewStatuses = $this->getViewStatuses($group);
-		//dd($group,$groupData,$groupApplications,$viewStatuses);
+		
 
         $changeRequests = Change_request::with('RequestStatuses.status');
         
         if ($groupApplications) {
-            $changeRequests = $changeRequests->whereIn('application_id', $groupApplications);
+            //$changeRequests = $changeRequests->whereIn('application_id', $groupApplications);
+			$changeRequests = $changeRequests->whereHas('change_request_custom_fields', function($q) use($groupApplications) {
+				$q->whereIn('change_request_custom_fields.custom_field_name', ['application_id', 'sub_application_id'])->whereIn('change_request_custom_fields.custom_field_value', $groupApplications);
+			});
         }
         
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
@@ -51,7 +54,9 @@ class ChangeRequestSearchService
         $changeRequests = Change_request::with('RequestStatuses.status');
         
         if ($groupApplications) {
-            $changeRequests = $changeRequests->whereIn('application_id', $groupApplications);
+            $changeRequests = $changeRequests->whereHas('change_request_custom_fields', function($q) use($groupApplications) {
+				$q->whereIn('change_request_custom_fields.custom_field_name', ['application_id', 'sub_application_id'])->whereIn('change_request_custom_fields.custom_field_value', $groupApplications);
+			});
         }
         
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
@@ -152,7 +157,7 @@ class ChangeRequestSearchService
             ? Group::pluck('id')->toArray()
             : array($this->resolveGroup());
             //: auth()->user()->user_groups->pluck('group_id')->toArray();
-		if($userEmail == $divisionManager && request()->has('check_dm'))
+		if($userEmail == $divisionManager &&  (request()->has('check_dm') || request()->has('cab_cr_flag')))
 		{
 			$groupApplications  = null;
 		}
@@ -162,6 +167,7 @@ class ChangeRequestSearchService
 			$groupApplications = $groupData[0]->group_applications->pluck('application_id');
 			if($groupApplications)
 			{
+				
 				$groupApplications = $groupApplications->toArray();
 			}
 		}			
@@ -211,7 +217,10 @@ class ChangeRequestSearchService
             $changeRequest = $changeRequest->where('id', $id);
 			if($groupApplications && !request()->has('check_business'))
 			{
-				$changeRequest = $changeRequest->whereIn('application_id', $groupApplications);
+				//$changeRequest = $changeRequest->whereIn('application_id', $groupApplications);
+				$changeRequest = $changeRequest->whereHas('change_request_custom_fields', function($q) use($groupApplications) {
+					$q->whereIn('change_request_custom_fields.custom_field_name', ['application_id', 'sub_application_id'])->whereIn('change_request_custom_fields.custom_field_value', $groupApplications);
+				});
 			}
             $changeRequest = $changeRequest->first();
 
