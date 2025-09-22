@@ -421,7 +421,7 @@ class ChangeRequestController extends Controller
 		}
 
         $cr = $this->getCRForEdit($id, $cab_cr_flag);
-		
+		 
         if (is_a($cr, 'Illuminate\Http\RedirectResponse')) {
             return $cr;
         }

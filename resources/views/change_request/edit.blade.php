@@ -130,6 +130,7 @@
                                                 
                                              @endphp
 											<form class="form" action='{{url("$route")}}/{{ $cr->id }}' method="post" enctype="multipart/form-data">
+
                                                 {{ csrf_field() }}
                                                 {{ method_field('PATCH') }}
 												<input type="hidden" name="testable_flag" value="@if(!empty($testable)){{$testable}}@else{{0}}@endif" />
@@ -228,7 +229,7 @@
                                                         </tbody>
                                                     </table>
                                             @endif
-                                            @endcan
+                                            @endcan 
                                             <!-- end feedback table -->
 											@if(count($cr['attachments'])  > 0  )
 													<div class="form-group col-md-12" style="float:left">
