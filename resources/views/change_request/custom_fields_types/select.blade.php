@@ -10,6 +10,15 @@
             <select name="{{ $item->CustomField->name }}" class="form-control form-control-lg">
                 <option value="{{$target_system->id}}">{{$target_system->name}}</option>
             </select>
+		@elseif($item->CustomField->name == "sub_application_id")
+			@if(!empty($sub_applications))
+				<select name="{{ $item->CustomField->name }}" class="form-control form-control-lg" {{ (isset($item->enable)&&($item->enable!=1)) ? "disabled" : "" }}>
+						<option value="">Select</option>
+						@foreach($sub_applications as $sub_application)
+							<option value="{{$sub_application?->id}}" {{ $custom_field_value == $sub_application->id ? 'selected' : '' }}>{{$sub_application?->name}}</option>
+							@endforeach					   
+				</select>
+			@endif
         @elseif($item->CustomField->name == "cr_member")
             <select name="{{ $item->CustomField->name }}" class="form-control form-control-lg"
 			@cannot('Set Time For Another User') disabled @endcannot >

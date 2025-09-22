@@ -235,10 +235,11 @@ class ChangeRequestUpdateService
 
     protected function handleCustomFieldUpdates($id, $data): void
     {
+		//dd($data,(string)request()->input('testable'));
 		$testable = 0;
 		if(request()->input('testable')){ $testable = (string)request()->input('testable') === '1' ? 1 : 0; }
 		foreach ($data as $key => $value) {
-			if($key === 'testable')
+			if($key === 'testable' && request()->input('testable'))
 			{
 					$customFieldId = CustomField::findId($key);
 					if ($customFieldId && $value !== null) {
@@ -255,7 +256,7 @@ class ChangeRequestUpdateService
 			}
 			else
 			{
-				if ($key != "_token" || $key === 'cr' ) {
+				if (($key != "_token" && $key != 'testable') || $key === 'cr' ) {
 					$customFieldId = CustomField::findId($key);
 					if ($customFieldId && $value !== null) {
 						$changeRequestCustomField = [

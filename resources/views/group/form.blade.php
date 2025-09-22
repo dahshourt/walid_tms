@@ -32,7 +32,7 @@
 					<option value="{{ $item->id }}" 
 						@if(isset($row) && $row->unit_id == $item->id)
 							selected 
-						@elseif(old('unit_id') && in_array($item->id, old('unit_id')))
+						@elseif(old('unit_id') == $item->id)
 							selected 
 						@endif>
 						{{ $item->manager_name }}
@@ -51,7 +51,7 @@
 					<option value="{{ $item->id }}" 
 						@if(isset($row) && $row->division_manager_id == $item->id)
 							selected 
-						@elseif(old('division_manager_id') && in_array($item->id, old('division_manager_id')))
+							@elseif(old('division_manager_id') == $item->id)
 							selected 
 						@endif>
 						{{ $item->name }}
@@ -69,7 +69,7 @@
 					<option value="{{ $item->id }}" 
 						@if(isset($row) && $row->director_id == $item->id)
 							selected 
-						@elseif(old('director_id') && in_array($item->id, old('director_id')))
+						@elseif(old('director_id') == $item->id)
 							selected 
 						@endif>
 						{{ $item->user_name }}

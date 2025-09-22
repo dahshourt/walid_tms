@@ -20,6 +20,7 @@ use App\Factories\CustomField\CustomFieldGroupTypeFactory;
 use App\Factories\Applications\ApplicationFactory;
 use App\Factories\Users\UserFactory;
 use App\Factories\Defect\DefectFactory;
+use App\Models\Application;
 use App\Models\Group;
 use App\Models\Change_request;
 use App\Http\Repository\RejectionReasons\RejectionReasonsRepository;
@@ -837,6 +838,8 @@ class ChangeRequestController extends Controller
         $ApplicationImpact = ApplicationImpact::where('application_id', $cr->application_id)
             ->select('impacts_id')
             ->get();
+			
+		$sub_applications = Application::where('parent_id', $cr->application_id)->get();	
         
         // Get technical team data
         $selected_technical_teams = $this->getSelectedTechnicalTeams($cr);
@@ -872,7 +875,7 @@ class ChangeRequestController extends Controller
             'selected_technical_teams', 'man_day', 'technical_team_disabled', 'status_name',
             'ApplicationImpact', 'cap_users', 'CustomFields', 'cr', 'workflow_type_id',
             'logs_ers', 'developer_users', 'sa_users', 'testing_users', 'technical_teams',
-            'all_defects', 'reminder_promo_tech_teams', 'rtm_members', 'assignment_users','reminder_promo_tech_teams_text'
+            'all_defects', 'reminder_promo_tech_teams', 'rtm_members', 'assignment_users','reminder_promo_tech_teams_text','sub_applications'
         );
     }
 
