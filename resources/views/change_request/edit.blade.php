@@ -746,15 +746,15 @@ jQuery(document).ready(function() {
 });
 
 
-
-
 // Testable flag and testing estimation handler - Hidden field version
 document.addEventListener('DOMContentLoaded', function() {
     
     // Get the elements (no checkbox needed)
     const testingEstimationInput = document.querySelector('input[name="testing_estimation"]');
     const testableFlagInput = document.querySelector('input[name="testable_flag"]');
-    
+    const statusSelectInput = document.querySelector('select[name="new_status_id"]');
+    const statusText  = statusSelectInput.options[statusSelectInput.selectedIndex].text.trim(); // visible text
+
     // Check if elements exist
     if (!testingEstimationInput || !testableFlagInput) {
         console.warn('Testing estimation input or testable_flag hidden field not found');
@@ -842,14 +842,20 @@ document.addEventListener('DOMContentLoaded', function() {
     function validateForSubmit() {
         const testableFlagValue = testableFlagInput.value;
         const value = parseFloat(testingEstimationInput.value);
-        
+       // const status = statusInput.value;
         // Clear previous validation
         clearValidationError(testingEstimationInput);
         
         const isTestable = testableFlagValue === '1';
-        
-        if (isTestable && (!testingEstimationInput.value || isNaN(value) || value <= 0)) {
+
+       // console.log(statusText);
+       /* if(isTestable && statusSelectInput.value == 41){
             showValidationError(testingEstimationInput, 'Testing estimation must be greater than 0 when testable is enabled');
+            return false;
+        }*/
+        console.log((!testingEstimationInput.value || isNaN(value)  ) && statusSelectInput.value == 41 );
+        if (isTestable && (!testingEstimationInput.value || isNaN(value) || value <= 0  ) && statusSelectInput.value == 41 ) {
+            showValidationError(testingEstimationInput, 'Testing estimation must be greater than 0 when testable is enabled 2   ');
             return false;
         }
         
