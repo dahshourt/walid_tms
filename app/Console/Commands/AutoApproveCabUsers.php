@@ -31,16 +31,17 @@ class AutoApproveCabUsers extends Command
        $users = DB::table('cab_cr_users')
             ->join('cab_crs', 'cab_crs.id', '=', 'cab_cr_users.cab_cr_id')
             ->where('cab_cr_users.status', '0')
-             ->where('cab_crs.status', '0')
+            ->where('cab_crs.status', '0')
             ->where('cab_cr_users.created_at', '<=', $thresholdDate)
             ->get();
 
         $repo = new ChangeRequestRepository();
+        //Log::info("Auto-approved users: " . $users);
         $approvedCount = 0;
 
         foreach ($users as $user) {
             $crId = $user->cr_id;
-            
+
             $user_id = $user->user_id;
              
            /*  $requestData = [
@@ -52,13 +53,13 @@ class AutoApproveCabUsers extends Command
              dd((object)$requestData);
 			  */
 			$requestData = new \Illuminate\Http\Request([
-				'old_status_id' => '103',
-                'new_status_id' => '104',
+				'old_status_id' => '38',
+                'new_status_id' => '160',
                 'cab_cr_flag' => '1',
                 'user_id' => $user_id,
 			]); 
             try {
-                
+                Log::info("Auto-approved user: " . $crId);
                 $repo->update($crId, $requestData);
                 $approvedCount++;
             } catch (\Exception $e) {

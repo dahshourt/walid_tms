@@ -71,7 +71,8 @@ class LogRepository implements LogRepositoryInterface
     {
       
         $log = new LogRepository();
-        $user = \Auth::user();
+        $user_id = $request->user_id ? $request->user_id : \Auth::user()->id;
+        $user = User::find($user_id);
 
         $change_request = $changeRequest_old;
 

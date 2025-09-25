@@ -3,6 +3,7 @@
 namespace App\Services\ChangeRequest;
 
 use App\Models\Change_request as ChangeRequest;
+use App\Models\Group;
 use App\Models\Change_request_statuse as ChangeRequestStatus;
 use App\Models\NewWorkFlow;
 use App\Models\TechnicalCr;
@@ -469,7 +470,7 @@ class ChangeRequestStatusService
                 ]);
             }
         }
-       
+       /*
        // Notify Dev Team When status changes to Technical Estimation or Pending Implementation or Technical Implementation
        $assigned_user_id = null;
        if(isset($request->assignment_user_id)){
@@ -488,7 +489,26 @@ class ChangeRequestStatusService
                 ]);
             }
        }
+       */
 
+       // Notify group when status changes.
+       
+       $newStatusId = NewWorkFlowStatuses::where('new_workflow_id', $statusData['new_status_id'])->get()->pluck('to_status_id')->toArray();
+       $cr = ChangeRequest::find($changeRequestId);
+       $group_id = $cr->application->group_applications->first()->group_id;
+       $recieve_notification = Group::where('id', $group_id)->value('recieve_notification');
+       
+       if($this->active_flag == '1' && $recieve_notification == '1'){       
+           try {
+                $this->mailController->notifyGroup($changeRequestId , $statusData['old_status_id'] , $newStatusId);
+            } catch (\Exception $e) {
+                Log::error('Failed to send Group notification', [
+                    'change_request_id' => $changeRequestId,
+                    'error' => $e->getMessage()
+                ]);
+            }
+       }
+       
     }
 
     /**

@@ -136,27 +136,35 @@
 		</div>
 
 		<div class="form-group">
-														<label>Technical Team?</label>
-														<div class="checkbox-inline">
-															<label class="checkbox">						
-																<input type="hidden" name="technical_team" value="0">
-																<input type="checkbox" name="technical_team" value="1" 
-																	{{ isset($row) && $row->technical_team == 1 ? "checked" : "" }}>
-																<span></span>Yes
-															</label>
-														</div>
-													</div>
+			<label>Technical Team?</label>
+			<div class="checkbox-inline">
+				<label class="checkbox">						
+					<input type="hidden" name="technical_team" value="0">
+					<input type="checkbox" name="technical_team" value="1" 
+						{{ isset($row) && $row->technical_team == 1 ? "checked" : "" }}>
+					<span></span>Yes
+				</label>
+			</div>
+		</div>
 
 		<div class="form-group">
-														<label>Active</label>
-														<div class="checkbox-inline">
-															<label class="checkbox">
-															<input type="checkbox" name="active" value="1" {{ isset($row) && $row->active == 1 ? "checked" : "" }}>
-															<span></span>Yes</label>
-															
-														</div>
-														
-													</div>
+			<label>Recive Notification?</label>
+			<div class="checkbox-inline">
+				<label class="checkbox">
+				<input type="hidden" name="recieve_notification" value="0">
+				<input type="checkbox" name="recieve_notification" value="1" {{ isset($row) && $row->recieve_notification == '1' ? "checked" : "" }}>
+				<span></span>Yes</label>
+			</div>
+		</div>
+
+		<div class="form-group">
+			<label>Active</label>
+			<div class="checkbox-inline">
+				<label class="checkbox">
+				<input type="checkbox" name="active" value="1" {{ isset($row) && $row->active == 1 ? "checked" : "" }}>
+				<span></span>Yes</label>
+			</div>
+		</div>
 
 	</div>
 </div>
