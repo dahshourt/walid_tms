@@ -26,6 +26,7 @@ use App\Services\ChangeRequest\{
 use App\Traits\ChangeRequest\ChangeRequestConstants;
 use Auth;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 
 class ChangeRequestUpdateService
 {
@@ -48,17 +49,18 @@ class ChangeRequestUpdateService
 
     public function update($id, $request)
     {
+        
        // Change_request::find($id)
         //echo $id; die;
-     
+        //dd($id,$request->all());
+		$checkCabApproval = true;
         $this->changeRequest_old = Change_request::find($id);
-       
-        
+        //Log::error('test 101',[]);die;
         // Handle CAB CR validation
         if ($this->handleCabCrValidation($id, $request)) {
             return true;
         }
-
+        
         // Handle technical team validation
         if ($this->handleTechnicalTeamValidation($id, $request)) {
             return true;
@@ -75,18 +77,21 @@ class ChangeRequestUpdateService
        
         // Calculate estimations if needed
         $this->handleEstimations($id, $request);
-      
-        // Update the change request data
-        $this->updateCRData($id, $request);
-        //die("wwrrwalid");
-        // Update assignments in status table
-        $this->updateStatusAssignments($id, $request);
-      
-        // Update status if needed
-        if (isset($request->new_status_id)) {
-            //$this->statusRepository->updateChangeRequestStatus($id, $request);
-            $this->statusService->updateChangeRequestStatus($id, $request);
-        }
+		
+		/* if ($this->shouldHandleCabApproval($request)) {
+		     $checkCabApproval = $this->processCabApproval($id, $request);
+        } */
+		
+			// Update the change request data
+			$this->updateCRData($id, $request);
+			// Update assignments in status table
+			$this->updateStatusAssignments($id, $request);
+            
+			// Update status if needed
+			if (isset($request->new_status_id)) {
+				//$this->statusRepository->updateChangeRequestStatus($id, $request);
+				$this->statusService->updateChangeRequestStatus($id, $request);
+			}
 
         // Log the update
         $this->logRepository->logCreate($id, $request, $this->changeRequest_old, 'update');
@@ -96,6 +101,7 @@ class ChangeRequestUpdateService
     
     public function updateTestableFlag($id, $request)
     {
+		//dd(request()->input('testable'));
         $this->changeRequest_old = Change_request::find($id);
         $this->updateCRData($id, $request);
         $this->logRepository->logCreate($id, $request, $this->changeRequest_old, 'update');
@@ -108,7 +114,7 @@ class ChangeRequestUpdateService
             return false;
         }
 
-        $user_id = Auth::user()->id;
+        $user_id = $request->user_id ? $request->user_id : Auth::user()->id;
         $cabCr = CabCr::where("cr_id", $id)->where('status', '0')->first();
         $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
 
@@ -235,11 +241,12 @@ class ChangeRequestUpdateService
 
     protected function handleCustomFieldUpdates($id, $data): void
     {
-		//dd($data,(string)request()->input('testable'));
+		
 		$testable = 0;
 		if(request()->input('testable')){ $testable = (string)request()->input('testable') === '1' ? 1 : 0; }
 		foreach ($data as $key => $value) {
-			if($key === 'testable' && request()->input('testable'))
+			
+			if($key === 'testable' && request()->input('testable') !== null)
 			{
 					$customFieldId = CustomField::findId($key);
 					if ($customFieldId && $value !== null) {
@@ -321,4 +328,44 @@ class ChangeRequestUpdateService
             }
         }
     }
+	
+	
+	private function shouldHandleCabApproval($request): bool
+    {
+        return isset($request->cab_cr_flag) && $request->cab_cr_flag == '1';
+    }
+
+    private function processCabApproval($id, $request): bool
+    {
+        $userId = Auth::user()->id ?? $request->user_id;
+        $cabCr = CabCr::where("cr_id", $id)->where('status', '0')->first();
+        
+        if (!$cabCr) {
+            return false;
+        }
+        
+        $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
+        
+        if ($checkWorkflowType) { // reject
+            $cabCr->status = '2';
+            $cabCr->save();
+            $cabCr->cab_cr_user()->where('user_id', $userId)->update(['status' => '2']);
+        } else { // approve
+            $cabCr->cab_cr_user()->where('user_id', $userId)->update(['status' => '1']);
+            
+            $countAllUsers = $cabCr->cab_cr_user->count();
+            $countApprovedUsers = $cabCr->cab_cr_user->where('status', '1')->count();
+            
+            if ($countAllUsers > $countApprovedUsers) {
+                //$this->UpdateCRData($id, $request);
+                return true;
+            } else {
+                $cabCr->status = '1';
+                $cabCr->save();
+            }
+        }
+        
+        return false;
+    }
+	
 }

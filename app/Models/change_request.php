@@ -202,7 +202,7 @@ class Change_request extends Model
      */
     public function technical_Cr_first(): HasOne
     {
-        return $this->hasOne(TechnicalCr::class, 'cr_id', 'id');
+        return $this->hasOne(TechnicalCr::class, 'cr_id', 'id')->where('status', '0')->orderBy('id', 'DESC');
     }
 
     /**
