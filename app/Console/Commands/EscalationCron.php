@@ -35,11 +35,22 @@ class EscalationCron extends Command
 
         foreach ($slaRecords as $sla) {
             // Step 2: Find change_request_statuses that match this SLA rule
-            $changeRequests = DB::table('change_request_statuses')
+            /*$changeRequests = DB::table('change_request_statuses')
                 ->where('new_status_id', $sla->status_id)
                 ->where('active', '1')
-                ->get();
-
+                ->get();*/
+               $changeRequests = DB::table('change_request_statuses')
+                    ->join('statuses', 'change_request_statuses.new_status_id', '=', 'statuses.id')
+                    ->join('change_request', 'change_request_statuses.cr_id', '=', 'change_request.id')
+                    ->where('change_request_statuses.new_status_id', $sla->status_id)
+                    ->where('change_request_statuses.active', '1')
+                    ->select(
+                        'change_request_statuses.*',
+                        'statuses.status_name as status_name',
+                        'change_request.title as title'
+                    )
+                    ->get();
+                 
             foreach ($changeRequests as $changeRequest) {
                 // Calculate SLA deadlines from when the status was set
                 $statusSetTime = Carbon::parse($changeRequest->created_at);
@@ -83,6 +94,7 @@ class EscalationCron extends Command
                             $unitViolated,
                             $divisionViolated,
                             $directorViolated,
+                            $changeRequests,
                             [
                                 'unit_deadline' => $unitDeadline,
                                 'division_deadline' => $divisionDeadline,
@@ -177,7 +189,33 @@ class EscalationCron extends Command
     /**
      * Simple function to send escalation email
      */
-    private function sendEscalationEmail($recipient, $crId, $level, $deadlines)
+   private function sendEscalationEmail($changeRequest, $recipient, $cr, $level, $deadlines)
+        {   
+ 
+            try {
+                $message = "Dear {$recipient},\n\n";
+                $message .= "This is to inform you that the following Change Request (CR) has exceeded its SLA:\n\n";
+                $message .= "CR Number: {$cr}\n";
+                $message .= "CR Subject: {$changeRequest->title}\n";
+                $message .= "Current Status: {$changeRequest->status_name}\n";
+                $message .= "SLA Breach Date: " . $deadlines[$level]->format('Y-m-d H:i:s')  . "\n\n";
+                $message .= "Kindly take the necessary action to address this delay.\n\n";
+                $message .= "This is an automated system notification.";
+
+                Mail::raw($message, function ($mail) use ($recipient, $level, $cr) {
+                    $mail->to($recipient['email'])
+                        ->subject("SLA Exceeded Alert - {$level} - CR #{$cr->cr_id}");
+                });
+
+                return true;
+            } catch (\Exception $e) {
+                $this->error("Failed to send email to {$recipient['email']}: " . $e->getMessage());
+                return false;
+            }
+        }
+
+   
+    /* private function sendEscalationEmail($recipient, $crId, $level, $deadlines)
     {
         try {
             $message = "SLA Exceeded Alert for CR ID: {$crId}\n";
@@ -200,13 +238,13 @@ class EscalationCron extends Command
             $this->error("Failed to send email to {$recipient}: " . $e->getMessage());
             return false;
         }
-    }
+    }*/
 
     /**
      * Send escalation emails based on violation levels with progressive escalation
      */
     private function sendEscalationMails($changeRequest, $group, $director, $divisionManager, $unit, 
-                                       $unitViolated, $divisionViolated, $directorViolated, $deadlines)
+                                       $unitViolated, $divisionViolated, $directorViolated, $changeRequests, $deadlines )
     {
         // Get existing escalation logs for this CR and status
         $existingLogs = DB::table('escalation_logs')
@@ -214,13 +252,13 @@ class EscalationCron extends Command
             ->first();
 
         $now = Carbon::now();
-
+        
         // Step 1: Check Unit Escalation
         if ($unitViolated && (!$existingLogs || !$existingLogs->unit_sent)) {
               
             if ($unit && $unit->manager_name) {
                 // Send to unit manager using simple email function
-                if ($this->sendEscalationEmail($unit->manager_name, $changeRequest->cr_id, 'Unit Level', $deadlines)) {
+                if ($this->sendEscalationEmail($changeRequest,$unit->manager_name, $changeRequest->cr_id, 'unit_deadline', $deadlines)) {
                     // Log or update escalation
                     if ($existingLogs) {
                         DB::table('escalation_logs')
@@ -251,7 +289,7 @@ class EscalationCron extends Command
         if ($divisionViolated && $existingLogs && $existingLogs->unit_sent && !$existingLogs->division_sent) {
             if ($divisionManager && $divisionManager->division_manager_email) {
                 // Send to division manager using simple email function
-                if ($this->sendEscalationEmail($divisionManager->division_manager_email, $changeRequest->cr_id, 'Division Level', $deadlines)) {
+                if ($this->sendEscalationEmail($changeRequest, $divisionManager->division_manager_email, $changeRequest->cr_id, 'division_deadline', $deadlines)) {
                     // Update escalation log
                     DB::table('escalation_logs')
                         ->where('id', $existingLogs->id)
@@ -271,7 +309,7 @@ class EscalationCron extends Command
            
             if ($director && $director->email) {
                 // Send to director using simple email function
-                if ($this->sendEscalationEmail($director->email, $changeRequest->cr_id, 'Director Level', $deadlines)) {
+                if ($this->sendEscalationEmail($changeRequest, $director->email, $changeRequest->cr_id, 'director_deadline', $deadlines)) {
                     // Update escalation log
                     DB::table('escalation_logs')
                         ->where('id', $existingLogs->id)
