@@ -31,13 +31,13 @@ class Kernel extends ConsoleKernel
     {
          $schedule->command('update_releae_and_crs')->daily();
          $schedule->command('CalendarUpdateStatus:run')->daily();
-         $schedule->command('email:process-approvals')->everyMinute();
+        // $schedule->command('email:process-approvals')->everyMinute();
          $schedule->command('cab:approve-users')->daily();
          $schedule->command('cr:update-kickoff-status')
                  ->dailyAt('09:00')
                  ->withoutOverlapping()
                  ->runInBackground();
-         //$schedule->command('cron:escalation')->everyFiveMinutes();
+         $schedule->command('cron:escalation')->everyFiveMinutes();
 
     }
 

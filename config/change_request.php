@@ -85,6 +85,17 @@ return [
         'business_uat_sign_off' => 44,
         'pending_business' => 64,
         'pending_business_feedback' => 79,
+        'approved_implementation_plan' => 116,
+    ],
+	
+	'parked_status_ids' => [
+        //'pending_uat' => 78,
+        'provide_technical_fb' => 146,
+        'promo_closure' => 129,
+        'technical_fb' => 108,
+        'confirmed_sdd' => 149,
+        'set_md_prerequisites' => 112,
+        'final_uat_results_fb' => 167,
     ],
 
     /*

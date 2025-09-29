@@ -9,7 +9,5 @@ class Workflow_type extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'id','name'
-    ];
+     
 }

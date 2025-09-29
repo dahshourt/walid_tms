@@ -49,6 +49,7 @@ class UserController extends Controller
     {
         $this->authorize('List Users'); // permission check
         $collection = $this->user->paginateAll();
+		
         return view("$this->view.index",compact('collection'));
     }
 

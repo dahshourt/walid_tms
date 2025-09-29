@@ -709,14 +709,14 @@
     <span class="navi-text" id="group-name">
       <img src="{{ asset('public/new_theme/assets/media/group.png') }}" />
 
-	 @if(session()->has('default_group'))
-    {{ session('default_group_name') }}
-@else
-@if(auth()->user()->default_group)
-    {{ auth()->user()->defualt_group->name }}
-	@endif
+	@if(session()->has('current_group_name'))
+		{{ session('current_group_name') }}
+	@else
+		@if(auth()->user()->default_group)
+			{{ auth()->user()->defualt_group->name }}
+		@endif
 
-@endif
+	@endif
 
     </span>
   </button>
@@ -724,32 +724,31 @@
   <div class="dropdown-menu">
     <!-- Loop through user's groups and list them -->
 	@if(isset($userGroups))
-	@foreach ($userGroups as $group)
-	
-	@if(Session::has('current_group') && Session::get('current_group') == $group->group->id)
-		<a class="dropdown-item {{ Session::has('current_group') && Session::get('current_group') == $group->group->id ? 'active' : '' }}" href="{{route('change_request.asd',['group'=>$group->group->id])}}">
-		@else
-			<a class="dropdown-item {{ auth()->user()->defualt_group->id == $group->group->id ? 'active' : '' }} " href="{{route('change_request.asd',['group'=>$group->group->id])}}">
-		@endif	
-     
-        {{ $group->group->name }}
-      </a>
-                @endforeach
+		
+		@foreach ($userGroups as $group)
+			@if(Session::has('current_group') && Session::get('current_group') == $group->group->id)
+				<a class="dropdown-item {{ Session::has('current_group') && Session::get('current_group') == $group->group->id ? 'active' : '' }}" href="{{route('change_request.asd',['group'=>$group->group->id])}}">
+			@else
+				<a class="dropdown-item {{ auth()->user()->defualt_group->id == $group->group->id ? 'active' : '' }} " href="{{route('change_request.asd',['group'=>$group->group->id])}}">
+			@endif	
+		 
+			{{ $group->group->name }}
+		  </a>
+		@endforeach
 
-@else
+	@else
 
-    @foreach (auth()->user()->user_groups()->with('group')->get() as $group)
-	@if(Session::has('current_group') && Session::get('current_group') == $group->group->id)
-		<a class="dropdown-item {{ Session::has('current_group') && Session::get('current_group') == $group->group->id ? 'active' : '' }}" href="{{route('change_request.asd',['group'=>$group->group->id])}}">
-		{{ Session::get('current_group_name') }}
-		</a>
-		@else
-		<a class="dropdown-item " href="{{route('change_request.asd',['group'=>$group->group->id])}}">
-     
-        {{ $group->group->name }}
-      	</a>
-		@endif
-    @endforeach
+		@foreach (auth()->user()->user_groups()->with('group')->get() as $group)
+			@if(Session::has('current_group') && Session::get('current_group') == $group->group->id)
+				<a class="dropdown-item {{ Session::has('current_group') && Session::get('current_group') == $group->group->id ? 'active' : '' }}" href="{{route('change_request.asd',['group'=>$group->group->id])}}">
+					{{ Session::get('current_group_name') }}
+				</a>
+			@else
+				<a class="dropdown-item " href="{{route('change_request.asd',['group'=>$group->group->id])}}">
+					{{ $group->group->name }}
+				</a>
+			@endif
+		@endforeach
 	@endif
   </div>
 </div>

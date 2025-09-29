@@ -9,9 +9,9 @@ class ValidateHostHeader
 {
     public function handle(Request $request, Closure $next)
     {
-        $allowedHosts = [
-          //  '10.19.44.26', // your server IP
-        ];
+        // $allowedHosts = [
+        //     '10.19.44.26', // your server IP
+        // ];
 
         // if (!in_array($request->getHost(), $allowedHosts)) {
         //     abort(400, 'Invalid Host Header');

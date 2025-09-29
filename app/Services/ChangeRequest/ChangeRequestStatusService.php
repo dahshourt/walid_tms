@@ -213,7 +213,6 @@ class ChangeRequestStatusService
             : self::COMPLETED_STATUS;
 
         $slaDifference = $this->calculateSlaDifference($currentStatus->created_at);
-
         // Only update if conditions are met
         if ($this->shouldUpdateCurrentStatus($statusData['old_status_id'], $technicalTeamCounts)) {
             $currentStatus->update([
@@ -272,33 +271,54 @@ class ChangeRequestStatusService
      * Create new status records based on workflow
      */
     private function createNewStatuses(
-        ChangeRequest $changeRequest, 
-        array $statusData, 
-        NewWorkFlow $workflow, 
-        int $userId, 
+        ChangeRequest $changeRequest,
+        array $statusData,
+        NewWorkFlow $workflow,
+        int $userId,
         $request
     ): void {
         foreach ($workflow->workflowstatus as $workflowStatus) {
             if ($this->shouldSkipWorkflowStatus($changeRequest, $workflowStatus, $statusData)) {
                 continue;
             }
-            //dd($statusData);
-            $active = $this->determineActiveStatus(
-                $changeRequest->id, 
-                $workflowStatus, 
-                $workflow, 
+
+            $active  = $this->determineActiveStatus(
+                $changeRequest->id,
+                $workflowStatus,
+                $workflow,
                 $statusData['old_status_id']
             );
 
-            $statusData = $this->buildStatusData(
-                $changeRequest->id,
-                $statusData['old_status_id'],
-                $workflowStatus->to_status_id,
-                $userId,
-                $active
-            );
+           
+            $newStatusRow = Status::find($workflowStatus->to_status_id);
+            $viewTechFlag = $newStatusRow?->view_technical_team_flag ?? false;
 
-            $this->statusRepository->create($statusData);
+            if ($viewTechFlag) {
+                $teams = $request->technical_teams ?? $request['technical_teams'] ?? [];
+                if (!empty($teams) && is_iterable($teams)) {
+                    foreach ($teams as $teamGroupId) {
+                        $payload = $this->buildStatusData(
+                            $changeRequest->id,
+                            $statusData['old_status_id'],
+                            (int) $workflowStatus->to_status_id,
+                            (int) $teamGroupId,
+                            $userId,
+                            $active
+                        );
+                        $this->statusRepository->create($payload);
+                    }
+                }
+            } else {
+                $payload = $this->buildStatusData(
+                    $changeRequest->id,
+                    $statusData['old_status_id'],
+                    (int) $workflowStatus->to_status_id,
+                    null,
+                    $userId,
+                    $active
+                );
+                $this->statusRepository->create($payload);
+            }
         }
     }
 
@@ -434,19 +454,21 @@ class ChangeRequestStatusService
         int $changeRequestId,
         int $oldStatusId,
         int $newStatusId,
+        ?int $group_id,
         int $userId,
         string $active
     ): array {
         $status = Status::find($newStatusId);
-        $sla = $status ? $status->sla : 0;
+        $sla    = $status ? (int) $status->sla : 0;
 
         return [
-            'cr_id' => $changeRequestId,
+            'cr_id'         => $changeRequestId,
             'old_status_id' => $oldStatusId,
             'new_status_id' => $newStatusId,
-            'user_id' => $userId,
-            'sla' => $sla,
-            'active' => $active,
+            'group_id'      => $group_id,
+            'user_id'       => $userId,
+            'sla'           => $sla,
+            'active'        => $active, // '0' | '1' | '2'
         ];
     }
 

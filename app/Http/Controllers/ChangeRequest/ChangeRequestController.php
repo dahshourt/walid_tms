@@ -37,6 +37,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Str;
+
 
 class ChangeRequestController extends Controller
 {
@@ -422,13 +424,14 @@ class ChangeRequestController extends Controller
 		}
 
         $cr = $this->getCRForEdit($id, $cab_cr_flag);
-		 
+		
         if (is_a($cr, 'Illuminate\Http\RedirectResponse')) {
             return $cr;
         }
 
         $editData = $this->prepareEditData($cr, $id);
-        //dd($cr);
+        $editData['cab_cr_flag'] = $cab_cr_flag;
+		
         return view("{$this->view}.edit", $editData);
     }
 
@@ -510,8 +513,16 @@ class ChangeRequestController extends Controller
                 'user_id' => auth()->id()
             ]);
             
-            //return redirect()->to('/change_request')->with('status', 'Updated Successfully');
-			return redirect()->back()->with('status', 'Updated Successfully');
+			$previousUrl = url()->previous();
+
+			if (Str::contains($previousUrl, 'edit_cab')) {
+				// Do something if previous URL contains "edit_cab"
+				return redirect()->to('/change_request')->with('status', 'Updated Successfully');
+			} else {
+				return redirect()->back()->with('status', 'Updated Successfully');
+			}
+            //
+			
             
         } catch (\Exception $e) {
             DB::rollBack();

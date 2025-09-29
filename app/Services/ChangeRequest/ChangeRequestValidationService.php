@@ -9,13 +9,21 @@ use App\Models\{
     NewWorkFlow, 
     Status
 };
+use App\Models\Change_request_statuse as ChangeRequestStatus;
+use Carbon\Carbon;
 use App\Traits\ChangeRequest\ChangeRequestConstants;
+use App\Services\ChangeRequest\{
+    ChangeRequestUpdateService
+};
 use Auth;
+use App\Http\Repository\ChangeRequest\ChangeRequestStatusRepository;
+
 
 class ChangeRequestValidationService
 {
     use ChangeRequestConstants;
 
+    
     /**
      * Handle technical team validation workflow
      *
@@ -46,7 +54,8 @@ class ChangeRequestValidationService
         if (!$technicalCr) {
             return false;
         }
-
+        $updateService = new ChangeRequestUpdateService();
+        $updateService->mirrorCrStatusToTechStreams($id, (int) $workflow->workflowstatus[0]->to_status_id, null, 'actor');
         return $this->processTechnicalTeamStatus($technicalCr, $oldStatusData, $workflow, $technicalDefaultGroup, $request);
     }
 
@@ -63,7 +72,90 @@ class ChangeRequestValidationService
     protected function processTechnicalTeamStatus($technicalCr, $oldStatusData, $workflow, $group, $request): bool
     {
         $statusIds = $this->getStatusIds();
+        $toStatusData = NewWorkFlow::find($request->new_status_id);
+        $parkedIds = array_values(config('change_request.parked_status_ids', []));
+        
+        $this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$group);
 
+        if (in_array($toStatusData->workflowstatus[0]->to_status->id, $parkedIds, true)) {
+            $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
+            
+            if ($checkWorkflowType) { // reject
+                $technicalCr->status = '2';
+                $technicalCr->save();
+                $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '2']);
+                foreach($technicalCr->technical_cr_team->pluck('group_id')->toArray() as $key=>$groupId)
+                {
+                    $this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
+                }
+            } else { // approve
+                $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
+    
+                $countAllTeams = $technicalCr->technical_cr_team->count();
+                $countApprovedTeams = $technicalCr->technical_cr_team->where('status', '1')->count();
+    
+                if ($countAllTeams > $countApprovedTeams) {
+                    return true; // Still waiting for other teams
+                } else {
+                    $technicalCr->status = '1';
+                    $technicalCr->save();
+                }
+            }
+    
+            return false;
+        }
+        else
+        {
+            // handle if next status is also technical flag
+            if($toStatusData->workflowstatus[0]->to_status->view_technical_team_flag)
+            {
+                $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
+            
+                TechnicalCrTeam::create([
+                    'group_id' => $group,
+                    'technical_cr_id' => $technicalCr->id,
+                    'current_status_id' => $workflow->workflowstatus[0]->to_status_id,
+                    'status' => "0",
+                ]); 
+                $payload = $this->buildStatusData(
+                    $technicalCr->cr_id,
+                    $request->old_status_id,
+                    (int) $workflow->workflowstatus[0]->to_status_id,
+                    $group,
+                    Auth::id(),
+                    '1'
+                );
+                $statusRepository = new ChangeRequestStatusRepository();
+                $statusRepository->create($payload);
+                return true;
+            }
+            else // no need to wait other teams
+            {
+                $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
+
+                if ($checkWorkflowType) { // reject
+                    $technicalCr->status = '2';
+                    $technicalCr->save();
+                    $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '2']);
+                    foreach($technicalCr->technical_cr_team->pluck('group_id')->toArray() as $key=>$groupId)
+                    {
+                            $this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
+                    }
+                }
+                else
+                {
+                    $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
+                    $countAllTeams = $technicalCr->technical_cr_team->count();
+                    $countApprovedTeams = $technicalCr->technical_cr_team->where('status', '1')->count();
+                    if ($countAllTeams == $countApprovedTeams) {
+                        $technicalCr->status = '1';
+                        $technicalCr->save();
+                    }
+                }
+                
+                return false;
+            }
+        }
         // Handle pending production deployment case
         if ($oldStatusData->id == $statusIds['pending_production_deployment']) {
             $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
@@ -74,6 +166,9 @@ class ChangeRequestValidationService
                 'current_status_id' => $workflow->workflowstatus[0]->to_status_id,
                 'status' => "0",
             ]);
+
+           
+
             
             return true;
         }
@@ -100,6 +195,10 @@ class ChangeRequestValidationService
             $technicalCr->status = '2';
             $technicalCr->save();
             $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '2']);
+            foreach($technicalCr->technical_cr_team->pluck('group_id')->toArray() as $key=>$groupId)
+            {
+                    $this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
+            }
         } else { // approve
             $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
 
@@ -116,6 +215,73 @@ class ChangeRequestValidationService
 
         return false;
     }
+
+
+    /**
+     * Update the current status record
+     */
+    private function updateCurrentStatusByGroup(int $changeRequestId, array $statusData , int $groupId ): void {
+        $currentStatus = ChangeRequestStatus::where('cr_id', $changeRequestId)
+            ->where('new_status_id', $statusData['id'])
+            ->where('group_id', $groupId)
+            ->where('active','1')
+            ->first();
+
+        if (!$currentStatus) {
+            Log::warning('Current status not found for update', [
+                'cr_id' => $changeRequestId,
+                'old_status_id' => $statusData['old_status_id']
+            ]);
+            return;
+        }
+
+        $workflowActive = '2';
+
+        $slaDifference = $this->calculateSlaDifference($currentStatus->created_at);
+        // Only update if conditions are met
+            $currentStatus->update([
+                'sla_dif' => $slaDifference,
+                'active' => $workflowActive
+            ]);
+
+    }
+
+
+    /**
+     * Calculate SLA difference in days
+     */
+    private function calculateSlaDifference(string $createdAt): int
+    {
+        return Carbon::parse($createdAt)->diffInDays(Carbon::now());
+    }
+
+
+    /**
+     * Build status data array
+     */
+    private function buildStatusData(
+        int $changeRequestId,
+        int $oldStatusId,
+        int $newStatusId,
+        ?int $group_id,
+        int $userId,
+        string $active
+    ): array {
+        $status = Status::find($newStatusId);
+        $sla    = $status ? (int) $status->sla : 0;
+
+        return [
+            'cr_id'         => $changeRequestId,
+            'old_status_id' => $oldStatusId,
+            'new_status_id' => $newStatusId,
+            'group_id'      => $group_id,
+            'user_id'       => $userId,
+            'sla'           => $sla,
+            'active'        => $active, // '0' | '1' | '2'
+        ];
+    }
+
+
 
     /**
      * Validate user permissions for change request operations
@@ -643,12 +809,128 @@ class ChangeRequestValidationService
     }
 
     /**
+     * Get status IDs for workflow validation
+     *
+     * @return array
+     */
+    protected function getStatusIds(): array
+    {
+        return [
+            'pending_production_deployment' => config('change_request.status_ids.pending_production_deployment', 6),
+            'production_deployment' => config('change_request.status_ids.production_deployment', 7),
+            'approved' => config('change_request.status_ids.approved', 8),
+            'rejected' => config('change_request.status_ids.rejected', 9),
+            'in_progress' => config('change_request.status_ids.in_progress', 3),
+            'completed' => config('change_request.status_ids.completed', 10),
+            'cancelled' => config('change_request.status_ids.cancelled', 11),
+            'approved_implementation_plan' => config('change_request.status_ids.approved_implementation_plan', 116),
+            'pending_uat' => config('change_request.parked_status_ids.pending_uat', 78),
+            'promo_closure' => config('change_request.parked_status_ids.cancelled', 129),
+        ];
+    }
+
+    /**
+     * Get validation rules configuration
+     *
+     * @return array
+     */
+    protected function getValidationRules(): array
+    {
+        return [
+            'title' => [
+                'min_length' => 10,
+                'max_length' => 255,
+                'required' => true,
+            ],
+            'description' => [
+                'min_length' => 20,
+                'max_length' => 5000,
+                'required' => true,
+            ],
+            'estimation_fields' => [
+                'max_hours' => 2000,
+                'min_hours' => 0,
+            ],
+        ];
+    }
+
+    /**
+     * Check if workflow type is valid
+     *
+     * @param int $workflowTypeId
+     * @return bool
+     */
+    protected function isValidWorkflowType($workflowTypeId): bool
+    {
+        $validWorkflowTypes = array_values($this->getWorkflowTypes());
+        return in_array($workflowTypeId, $validWorkflowTypes);
+    }
+
+    /**
+     * Get workflow type constants
+     *
+     * @return array
+     */
+    protected function getWorkflowTypes(): array
+    {
+        return [
+            'normal' => config('change_request.workflow_types.normal', 1),
+            'emergency' => config('change_request.workflow_types.emergency', 2),
+            'release' => config('change_request.workflow_types.release', 3),
+            'maintenance' => config('change_request.workflow_types.maintenance', 4),
+            'hotfix' => config('change_request.workflow_types.hotfix', 5),
+        ];
+    }
+
+    /**
+     * Get file upload configuration
+     *
+     * @return array
+     */
+    protected function getUploadConfiguration(): array
+    {
+        return [
+            'max_file_size' => config('change_request.file_upload.max_file_size', 10240), // KB
+            'max_files_per_request' => config('change_request.file_upload.max_files_per_request', 10),
+            'allowed_extensions' => config('change_request.file_upload.allowed_extensions', [
+                'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'rar'
+            ]),
+            'upload_path' => config('change_request.file_upload.upload_path', 'uploads/change_requests/'),
+        ];
+    }
+
+    /**
+     * Get custom field configuration
+     *
+     * @return array
+     */
+    protected function getCustomFieldConfiguration(): array
+    {
+        return [
+            'enabled' => config('change_request.custom_fields.enabled', true),
+            'max_per_request' => config('change_request.custom_fields.max_per_request', 20),
+            'max_field_length' => config('change_request.custom_fields.max_field_length', 1000),
+            'allowed_field_types' => config('change_request.custom_fields.allowed_types', [
+                'text', 'number', 'email', 'url', 'phone', 'date', 'textarea'
+            ]),
+        ];
+    }
+
+    /**
      * Get group IDs from configuration
      *
      * @return array
      */
     protected function getGroupIds(): array
     {
-        return config('change_request.group_ids', []);
+        return [
+            'admin' => config('change_request.group_ids.admin', 1),
+            'management' => config('change_request.group_ids.management', 2),
+            'technical_team' => config('change_request.group_ids.technical_team', 3),
+            'business_analyst' => config('change_request.group_ids.business_analyst', 4),
+            'developer' => config('change_request.group_ids.developer', 5),
+            'tester' => config('change_request.group_ids.tester', 6),
+            'designer' => config('change_request.group_ids.designer', 7),
+        ];
     }
 }

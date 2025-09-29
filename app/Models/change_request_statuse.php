@@ -14,6 +14,7 @@ class change_request_statuse extends Model
         'old_status_id',
         'new_status_id',
         'user_id',
+        'group_id',
         'active',
         'sla',
         'sla_dif',

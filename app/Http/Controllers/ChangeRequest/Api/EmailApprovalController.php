@@ -26,8 +26,8 @@ class EmailApprovalController extends Controller
         $authPassword = $request->header('password');
         
         
-        $configUsername = Config::get('api.auth.username');
-        $configPassword = Config::get('api.auth.password');
+        $configUsername = Config::get('api.rpa.username');
+        $configPassword = Config::get('api.rpa.password');
         
         
         if ($authUsername !== $configUsername || $authPassword !== $configPassword) {
@@ -41,7 +41,7 @@ class EmailApprovalController extends Controller
         $validator = Validator::make($request->all(), [
 			'cr_id'      => 'required|integer',
 			'division_email' => 'required|email',
-			'action'     => 'required|string|in:approved,reject',
+			'action'     => 'required|string|in:approved,reject,rejected',
 		]);
 
 		if ($validator->fails()) {
@@ -55,6 +55,7 @@ class EmailApprovalController extends Controller
         
         //$cr = Change_request::find($request->cr_id);
         $cr = Change_request::where('cr_no',$request->cr_id)->first();
+		
         $crId = $request->cr_id;
         $action = $request->action;
         $fromEmail = $request->division_email;
@@ -74,6 +75,7 @@ class EmailApprovalController extends Controller
         }
 		
 		$currentStatus = Change_request_statuse::where('cr_id', $cr->id)->where('active', '1')->value('new_status_id');
+		
         if($currentStatus != '22'){
 			return response()->json([
                 'status' => 'error',
@@ -103,7 +105,8 @@ class EmailApprovalController extends Controller
         ]);
 
         try {
-            $repo->UpateChangeRequestStatus($crId, $req);
+			
+            $repo->UpateChangeRequestStatus($cr->id, $req);
 			return response()->json([
 				'status' => 'success',
 				'message' => "CR #{$crId} {$action} successfully by {$fromEmail}"
@@ -111,7 +114,7 @@ class EmailApprovalController extends Controller
         } catch (\Throwable $e) {
 			return response()->json([
 				'status' => 'failed',
-				'message' => "Failed to {$action} CR #{$crId}"
+				'message' => "Failed to {$action} CR #{$crId}". $e->getMessage()
 			], 200);
         }
        
