@@ -24,6 +24,7 @@ class Group extends Model
         'man_power',
 		'active',
 		'technical_team',
+        'recieve_notification',
     ];
     protected $appends = array('name');
 

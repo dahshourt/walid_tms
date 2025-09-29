@@ -239,7 +239,7 @@ class ChangeRequestSearchService
                 $changeRequest->assign_to = $assignedUser;
             }
         }
-
+        //dd($changeRequest);
         return $changeRequest;
     }
 
@@ -386,8 +386,10 @@ class ChangeRequestSearchService
         // Handle technical team status
         if ($id) {
             $technicalCrTeamStatus = $this->getTechnicalTeamCurrentStatus($id);
+            //dd($technicalCrTeamStatus, $viewStatuses);
             if ($technicalCrTeamStatus && in_array($technicalCrTeamStatus->current_status_id, $viewStatuses)) {
                 $viewStatuses = [$technicalCrTeamStatus->current_status_id];
+                //dd($viewStatuses);
             }
         }
 
@@ -398,6 +400,7 @@ class ChangeRequestSearchService
     {
         $group = $this->resolveGroup();
         $technicalCr = TechnicalCr::where("cr_id", $id)->where('status', '0')->first();
+        //dd($technicalCr);
         
         if ($technicalCr) {
             return $technicalCr->technical_cr_team()

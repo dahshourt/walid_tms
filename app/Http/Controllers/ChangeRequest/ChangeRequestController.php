@@ -431,7 +431,6 @@ class ChangeRequestController extends Controller
 
         $editData = $this->prepareEditData($cr, $id);
         $editData['cab_cr_flag'] = $cab_cr_flag;
-		
         return view("{$this->view}.edit", $editData);
     }
 
