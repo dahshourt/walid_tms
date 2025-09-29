@@ -15,6 +15,7 @@ use Auth;
 
 class ChangeRequestSearchService
 {
+    
     public function getAll($group = null)
     {
         $group = $this->resolveGroup($group);
@@ -33,8 +34,10 @@ class ChangeRequestSearchService
         }
         
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
-            $query->where('active', '1')
-                  ->whereIn('new_status_id', $viewStatuses)
+            $query->where('active', '1')->where(function ($qq) use ($group) {
+                $qq->where('group_id', $group)->orWhereNull('group_id');
+            })
+				->whereIn('new_status_id', $viewStatuses)
                   ->whereHas('status.group_statuses', function ($query) use ($group) {
                       $query->where('group_id', $group)
                             ->where('type', 2);
@@ -60,7 +63,9 @@ class ChangeRequestSearchService
         }
         
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
-            $query->where('active', '1')
+            $query->where('active', '1')->where(function ($qq) use ($group) {
+                    $qq->where('group_id', $group)->orWhereNull('group_id');
+                })
                   ->whereIn('new_status_id', $viewStatuses)
                   ->whereHas('status.group_statuses', function ($query) use ($group) {
                       $query->where('group_id', $group)
@@ -203,7 +208,9 @@ class ChangeRequestSearchService
                 }
             })
             ->whereHas('RequestStatuses', function ($query) use ($groups, $viewStatuses) {
-                $query->where('active', '1')
+                $query->where('active', '1')->where(function ($qq) use ($groups) {
+                    $qq->whereIn('group_id', $groups)->orWhereNull('group_id');
+                })
                       ->whereIn('new_status_id', $viewStatuses);
 						if(!request()->has('check_business')){
 							$query->whereHas('status.group_statuses', function ($query) use ($groups) {

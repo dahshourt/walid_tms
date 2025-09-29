@@ -44,4 +44,5 @@ class TechnicalCr extends Model
     {
         return $this->hasMany(TechnicalCrTeam::class, 'technical_cr_id', 'id');
     }
+    
 }

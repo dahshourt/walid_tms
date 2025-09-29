@@ -47,12 +47,13 @@ class ParentRepository implements ParentRepositoryInterface
       
       $data['name']=$request['name'];
       $data['active']="1";
-	  
-		$file = $this->UploadParentFile($request['approval_file']);
-		$data['file'] = $file;
-		unset($request['approval_file']);
-	  
-        
+		if(isset($request['approval_file']))
+		{
+			$file = $this->UploadParentFile($request['approval_file']);
+			$data['file'] = $file;
+			unset($request['approval_file']);	
+		}
+	
         return Parents_crs::create($data);
     }
 

@@ -32,10 +32,6 @@ class HomeController extends Controller
      */
     public function index(Request $request)
     {
-        //$client = \Webklex\IMAP\Facades\Client::account('default');
-        //$client->connect();
-        //dd($client);
-
 
         $statuses = (new StatusRepository)->getAll();
         $applications = (new ApplicationRepository)->getAll();

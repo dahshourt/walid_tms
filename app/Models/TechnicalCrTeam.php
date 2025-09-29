@@ -44,4 +44,20 @@ class TechnicalCrTeam extends Model
     {
         return $this->belongsTo(TechnicalCr::class);
     }
+
+    public function technicalCr()
+    {
+        return $this->belongsTo(TechnicalCr::class);
+    }
+	
+	public function statuses() {
+		return $this->hasMany(TechnicalCrTeamStatus::class, 'technical_cr_team_id');
+	}
+	
+	public function latestStatus() {
+		return $this->hasOne(TechnicalCrTeamStatus::class, 'technical_cr_team_id')
+                ->latestOfMany('id'); // or 'created_at'
+	}
+    
+	
 }

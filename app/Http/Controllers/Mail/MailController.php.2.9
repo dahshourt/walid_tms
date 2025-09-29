@@ -75,8 +75,7 @@ class MailController extends Controller
 
 
     } // end method
-    
-    // Notify dev team when status changes.
+     
     public function notifyDevTeam($cr_id , $old_status_id , $new_status_id, $assigned_user_id){
         $recipients = [];
         $cr_link = route('show.cr', $cr_id);
@@ -123,56 +122,7 @@ class MailController extends Controller
         } catch (\Exception $e) {
             return response()->json(['error' => 'Failed to send email.', 'details' => $e->getMessage()], 500);
         }
-    } // end method
-
-    // Notify group when status changes.
-    public function notifyGroup($cr_id , $old_status_id , $new_status_id){
-        $recipients = [];
-        $cr_link = route('show.cr', $cr_id);
-
-        $cr = Change_request::find($cr_id);
-        $cr_no = $cr->cr_no;
-        $cr_title = $cr->title;
-        // $app_id = $cr->application_id;
-        $group_id = $cr->application->group_applications->first()->group_id;
-        $group_name = Group::where('id', $group_id)->value('title');
-        $mail = Group::where('id', $group_id)->value('head_group_email');
-        $old_status = Status::where('id', $old_status_id)->value('status_name');
-        $new_status = Status::where('id', $new_status_id)->value('status_name');
-        /*if($assigned_user_id){
-            $assigned_user = User::where('id', $assigned_user_id)->value('email');
-            $recipients[] = $assigned_user;
-        }
-        if(isset($cr->developer_id)){
-            $developer = User::where('id', $cr->developer_id)->value('email');
-            $recipients[] = $developer;
-
-        } */
-        $recipients[] = $mail;
-        //dd($recipients);
-        $templateContent = [
-            'subject' => "CR #$cr_no status has been changed",
-            'body' => "Dear $group_name, <br><br>"
-            ."CR #$cr_no status has been changed from <strong> $old_status </strong> to <strong> $new_status </strong>."
-            ."<br><br>"
-            ."CR Title: $cr_title"
-            ."<br><br>"
-            ."You can review it here: <a href='$cr_link'>CR: #$cr_no</a>"
-            ."<br><br>"
-            . "<strong>Note:</strong> This is an automated message sent by the <strong>IT TMS System</strong>.<br>"
-            . "<strong>Best regards,</strong><br>"
-            . "<strong>TMS</strong>"
-        ];
-
-        try {
-            // Send the email
-            Mail::to($recipients)->send(new TestMail($templateContent));
-    
-            return response()->json(['success' => 'Email sent successfully.']);
-        } catch (\Exception $e) {
-            return response()->json(['error' => 'Failed to send email.', 'details' => $e->getMessage()], 500);
-        }   
-    } // end method
+    }
 
     public function send_mail_to_cap_users($users_mail,$cr_id, $cr_no)
     {
@@ -217,12 +167,10 @@ class MailController extends Controller
         $cr_link = route('edit.cr', ['id' => $cr, 'check_dm' => 1]);
 
         $reply_to_email = config('mail.from.address');
-        $qc_email = config('constants.mails.qc_mail');
-        $ticketing_dev = config('constants.mails.ticketing_dev_mail');
         $subject = "Re: CR #$cr_no - Awaiting Your Approval";
 
-        $approve_link = "mailto:$qc_email?subject=" . rawurlencode($subject) . "&cc=$reply_to_email;$ticketing_dev&body=approved";
-        $reject_link = "mailto:$qc_email?subject=" . rawurlencode($subject) . "&cc=$reply_to_email;$ticketing_dev&body=rejected";
+        $approve_link = "mailto:$reply_to_email?subject=" . rawurlencode($subject) . "&body=approved";
+        $reject_link = "mailto:$reply_to_email?subject=" . rawurlencode($subject) . "&body=rejected";
 
 
         /*
@@ -243,61 +191,33 @@ class MailController extends Controller
         . " <a href='$rejectLink' style='background-color: #f44336; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;'>Reject</a>"
         . "</div>"
         */
-        $cr = Change_request::find($cr);
-        if($cr->workflow_type_id=='9')
-        {
 
-            $templateContent = [
-                'subject' => "Promo #$cr_no",
-                'body' => "Dear $first_name,<br><br>"
-            
-                    . "Promo with ID <strong>#<a href='$cr_link'>$cr_no</a></strong> has been created and is currently "
-                  
-            
-                    . "<ul>"
-                    . "<li><strong>Promo Subject:</strong> $title</li>"
-                    . "<li><strong>Promo Description:</strong> $description</li>"
-                    . "<li><strong>Requester:</strong> $requester_name</li>"
-                    . "<li><strong>Reference:</strong> Promo ID #$cr_no</li>"
-                    . "</ul><br>"
-                    
-            
-            
-                    . "<strong>Note:</strong> This is an automated message sent by the <strong>IT TMS System</strong>.<br>"
-                    . "<strong>Best regards,</strong><br>"
-                    . "<strong>TMS</strong>"
-            ];
-        }else{
-
-
-            $templateContent = [
-                'subject' => "CR #$cr_no - Awaiting Your Approval",
-                'body' => "Dear $first_name,<br><br>"
-            
-                    . "A Change Request (CR) with ID <strong>#<a href='$cr_link'>$cr_no</a></strong> has been created and is currently "
-                    . "<strong>awaiting your approval or rejection</strong> as the requester's Division Manager.<br><br>"
-            
-                    . "<ul>"
-                    . "<li><strong>CR Subject:</strong> $title</li>"
-                    . "<li><strong>CR Description:</strong> $description</li>"
-                    . "<li><strong>Requester:</strong> $requester_name</li>"
-                    . "<li><strong>Reference:</strong> CR ID #$cr_no</li>"
-                    . "</ul><br>"
-                    . "<div style='margin: 25px 0;'>"
-                    . "<a href='$approve_link' style='background-color: #4CAF50; color: white; padding: 10px 20px; margin-right: 10px; text-decoration: none; border-radius: 4px;'>Approve </a>"
-                    . " <a href='$reject_link' style='background-color: #f44336; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;'>Reject</a>"
-                    . "</div><br>"
-            
-                    . "Alternatively, you can respond <strong>All</strong> to this mail with <strong>approved</strong> or <strong>rejected</strong>.<br><br>"
-            
-                    . "Thank you in advance for your prompt action.<br><br>"
-            
-                    . "<strong>Note:</strong> This is an automated message sent by the <strong>IT TMS System</strong>.<br>"
-                    . "<strong>Best regards,</strong><br>"
-                    . "<strong>TMS</strong>"
-            ];
-        }
-   
+        $templateContent = [
+            'subject' => "CR #$cr_no - Awaiting Your Approval",
+            'body' => "Dear $first_name,<br><br>"
+        
+                . "A Change Request (CR) with ID <strong>#<a href='$cr_link'>$cr_no</a></strong> has been created and is currently "
+                . "<strong>awaiting your approval or rejection</strong> as the requester's Division Manager.<br><br>"
+        
+                . "<ul>"
+                . "<li><strong>CR Subject:</strong> $title</li>"
+                . "<li><strong>CR Description:</strong> $description</li>"
+                . "<li><strong>Requester:</strong> $requester_name</li>"
+                . "<li><strong>Reference:</strong> CR ID #$cr_no</li>"
+                . "</ul><br>"
+                . "<div style='margin: 25px 0;'>"
+                . "<a href='$approve_link' style='background-color: #4CAF50; color: white; padding: 10px 20px; margin-right: 10px; text-decoration: none; border-radius: 4px;'>Approve </a>"
+                . " <a href='$reject_link' style='background-color: #f44336; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;'>Reject</a>"
+                . "</div><br>"
+        
+                . "Alternatively, you can respond <strong>All</strong> to this mail with <strong>approved</strong> or <strong>rejected</strong>.<br><br>"
+        
+                . "Thank you in advance for your prompt action.<br><br>"
+        
+                . "<strong>Note:</strong> This is an automated message sent by the <strong>IT TMS System</strong>.<br>"
+                . "<strong>Best regards,</strong><br>"
+                . "<strong>TMS</strong>"
+        ];
         
 
         try {
@@ -345,7 +265,6 @@ class MailController extends Controller
 
     } // end method
 
-    
     // to send the mail
     //sendMailByTemplate('Template Name', 'recipient@example.com', ['cc@example.com']);
 }

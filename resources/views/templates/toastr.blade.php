@@ -7,9 +7,9 @@
         "positionClass": "toast-top-right",
         "preventDuplicates": true,
         "onclick": null,
-        "showDuration": "300",
+        "showDuration": "8000",
         "hideDuration": "1000",
-        "timeOut": "3000",
+        "timeOut": "8000",
         "extendedTimeOut": "1000",
         "showEasing": "swing",
         "hideEasing": "linear",
@@ -33,3 +33,4 @@
         toastr.error("{{ $errors->first() }}");
     @endif
 </script>
+

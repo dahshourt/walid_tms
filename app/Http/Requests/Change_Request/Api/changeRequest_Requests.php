@@ -82,15 +82,14 @@ class changeRequest_Requests extends FormRequest
         $cr = $this->cr;
         $allowedStatusIds = $cr->set_status->pluck('id')->toArray();
         //dd($allowedStatusIds);
-        $rules = []; 
+        $rules = [];
         foreach ($formFields as $field) {
 
             if ($field->CustomField->name == 'new_status_id') {
                 $rules[$field->CustomField->name] = [new ValidateStatus($allowedStatusIds)];
-                 
                 continue;
             }
-            if($field->validation_type_id == 1 && $field->enable ==1){ 
+            if($field->validation_type_id == 1 && $field->enable ==1){
                 if($field->CustomField->name == "division_manager")
                 {
                     $rules[$field->CustomField->name] = ['required', 'email', new DivisionManagerExists()];
@@ -104,7 +103,7 @@ class changeRequest_Requests extends FormRequest
                     $rules[$field->CustomField->name] = "required";
                 }   
             }
-            elseif($field->enable == 0){ 
+            elseif($field->enable == 0){
                 if($field->CustomField->name != "need_design" && $field->CustomField->name != "technical_teams")
                 {
                     $oldValue = $this->cr->{$field->CustomField->name};

@@ -30,12 +30,11 @@ return [
 	'mails' =>
 	    [
 			'cr_manager' => 'sara.mostafa@te.eg',
-			'qc_mail' => 'QCautomation5@te.eg',
+			'qc_mail' => 'mahmoud.bastawisy@te.eg',
 			'ticketing_dev_mail' => 'Ticketing.DEV@te.eg'
 		],
 	'division_managers_mails' =>
 		[
-			
 			//'anan.latif@te.eg', 
 			//'reem.mahrous@te.eg', 
 			//'adel.atef@te.eg', 

@@ -78,10 +78,8 @@ class SearchController extends Controller
         $cr = $this->changerequest->searhchangerequest(request()->search);
 		if(!$cr)
 		{
-            //return redirect()->back()->with('status' , 'CR not exists' );
-			return redirect('/searchs')->with('status', 'CR not exists.');
+			return redirect('/searchs')->with('error', 'CR NO not exists.');
 		}
-        //$change_request_custom_fields = $cr->change_request_custom_fields;
         //dd($change_request_custom_fields->where('custom_field_name','title')->first()->custom_field_value);
         $r=new ChangeRequestRepository();
         $crs_in_queues=  $r->getAllWithoutPagination()->pluck("id");
