@@ -125,7 +125,6 @@ class ChangeRequestStatusService
         if (Auth::check()) {
             return Auth::id();
         }
-
         // Try to get user from division manager email
         if ($changeRequest->division_manager) {
             $user = User::where('email', $changeRequest->division_manager)->first();

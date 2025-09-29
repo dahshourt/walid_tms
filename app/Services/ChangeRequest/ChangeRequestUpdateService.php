@@ -61,7 +61,6 @@ class ChangeRequestUpdateService
         if ($this->handleCabCrValidation($id, $request)) {
             return true;
         }
-
         // Handle technical team validation
         if ($this->handleTechnicalTeamValidation($id, $request)) {
             return true;

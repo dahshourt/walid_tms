@@ -15,6 +15,7 @@ use Auth;
 
 class ChangeRequestSearchService
 {
+    
     public function getAll($group = null)
     {
         $group = $this->resolveGroup($group);

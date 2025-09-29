@@ -434,7 +434,6 @@ class ChangeRequestController extends Controller
         return view("{$this->view}.edit", $editData);
     }
 
-    
 
     /**
      * Download attachment file

@@ -53,9 +53,7 @@ class ParentRepository implements ParentRepositoryInterface
 			$data['file'] = $file;
 			unset($request['approval_file']);	
 		}
-		
-	  
-        
+	
         return Parents_crs::create($data);
     }
 

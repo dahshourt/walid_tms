@@ -33,3 +33,4 @@
         toastr.error("{{ $errors->first() }}");
     @endif
 </script>
+

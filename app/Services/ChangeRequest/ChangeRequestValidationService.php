@@ -18,7 +18,6 @@ use App\Services\ChangeRequest\{
 use Auth;
 use App\Http\Repository\ChangeRequest\ChangeRequestStatusRepository;
 
-
 class ChangeRequestValidationService
 {
     use ChangeRequestConstants;

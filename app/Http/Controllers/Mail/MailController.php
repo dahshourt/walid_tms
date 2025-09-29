@@ -345,6 +345,7 @@ class MailController extends Controller
 
     } // end method
 
+    
     // to send the mail
     //sendMailByTemplate('Template Name', 'recipient@example.com', ['cc@example.com']);
 }

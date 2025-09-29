@@ -58,5 +58,6 @@ class TechnicalCrTeam extends Model
 		return $this->hasOne(TechnicalCrTeamStatus::class, 'technical_cr_team_id')
                 ->latestOfMany('id'); // or 'created_at'
 	}
+    
 	
 }

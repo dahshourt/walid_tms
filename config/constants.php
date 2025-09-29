@@ -35,7 +35,6 @@ return [
 		],
 	'division_managers_mails' =>
 		[
-			
 			//'anan.latif@te.eg', 
 			//'reem.mahrous@te.eg', 
 			//'adel.atef@te.eg', 

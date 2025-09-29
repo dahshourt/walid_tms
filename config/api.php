@@ -19,4 +19,5 @@ return [
         'username' => env('API_RPA_USERNAME', 'RPA_user'),
         'password' => env('API_RPA_PASSWORD', 'RPA_password'),
     ],
+    
 ];
