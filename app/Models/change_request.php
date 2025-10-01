@@ -511,12 +511,17 @@ class Change_request extends Model
                     }
                 }
             }
-            
             return $status;
         } catch (\Exception $e) {
             \Log::error("Error getting current status for CR {$this->id}: " . $e->getMessage());
             return null;
         }
+    }
+
+    public function getallCurrentStatus()
+    {
+        $statuses = Change_request_statuse::where('cr_id', $this->id)->where('active', '1')->get();                                     
+        return $statuses;
     }
 
     // ===================================

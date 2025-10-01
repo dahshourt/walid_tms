@@ -154,17 +154,43 @@
 											</tbody>
 										</table>
 										 
-										<!--end: Datatable-->
-									</div>
-								</div>
-								
 								<!--end::Card-->
 							</div>
-							<!--end::Container-->
-						</div>
-						<!--end::Entry-->
+							                            <!--end::Container-->
+                        <!--end::Entry-->
 					</div>
 					<!--end::Content-->
 					
 
 @endsection
+@push('script')
+<script>
+$(document).on('click', '.js-toggle-cr-details', function(e) {
+  e.preventDefault();
+  var $btn = $(this);
+  var id = $btn.data('cr-id');
+  var $row = $btn.closest('tr');
+  var $details = $('tr.cr-details-row[data-cr-id="' + id + '"]');
+  var expanded = $btn.attr('aria-expanded') === 'true';
+
+  if (expanded) {
+    $btn.attr('aria-expanded', 'false');
+    $btn.find('i.la').removeClass('la-angle-up').addClass('la-angle-down');
+    $details.hide();
+  } else {
+    $btn.attr('aria-expanded', 'true');
+    $btn.find('i.la').removeClass('la-angle-down').addClass('la-angle-up');
+    if ($details.prev()[0] !== $row[0]) {
+      $details.insertAfter($row);
+    }
+    $details.show();
+}});
+
+$(document).on('click', 'tr.cr-row', function(e) {
+  if ($(e.target).closest('a, button, .js-toggle-cr-details, .dropdown-menu, .select2-container').length) {
+    return;
+  }
+  $(this).find('.js-toggle-cr-details').trigger('click');
+});
+</script>
+@endpush
