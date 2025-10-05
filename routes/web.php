@@ -180,6 +180,8 @@ Route::middleware(['auth'])->group(
 		Route::resource('sla-calculations', Sla\SlaCalculationController::class);
         Route::get('testable_form', 'ChangeRequest\ChangeRequestController@showTestableForm')->name('testable_form');
         Route::post('update_testable', 'ChangeRequest\ChangeRequestController@updateTestableFlag')->name('update_testable');
+        Route::resource('prerequisites', Prerequisites\PrerequisitesController::class);
+        Route::get('prerequisites/download/{id}', 'Prerequisites\PrerequisitesController@download')->name('prerequisites.download');
 
 
         //test ews
