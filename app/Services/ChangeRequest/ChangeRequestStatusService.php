@@ -516,7 +516,13 @@ class ChangeRequestStatusService
        
        $newStatusId = NewWorkFlowStatuses::where('new_workflow_id', $statusData['new_status_id'])->get()->pluck('to_status_id')->toArray();
        $cr = ChangeRequest::find($changeRequestId);
-       $group_id = $cr->application->group_applications->first()->group_id;
+       $targetStatus = Status::with('group_statuses')
+    ->whereIn('id', $newStatusId)
+    ->first();
+    $group_id = $targetStatus->group_statuses->first()->group_id ?? null;
+
+       //$group_id = $cr->application->group_applications->first()->group_id;
+       //dd($group_id);
        $recieve_notification = Group::where('id', $group_id)->value('recieve_notification');
        
        if($this->active_flag == '1' && $recieve_notification == '1'){       
