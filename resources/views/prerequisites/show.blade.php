@@ -30,7 +30,9 @@
                         
                         <div class="card-footer">
                             <a href="{{ route("$route.index") }}" class="btn btn-light-primary font-weight-bold">Back</a>
+                            <button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
                         </div>
+                        @include("prerequisites.logs")
                     </div>
                 </div>
             </div>
@@ -39,3 +41,25 @@
     <!--end::Entry-->
 </div>
 @endsection
+
+@push('script')
+    <script>
+        var modal = document.getElementById("modal");
+        var btn = document.getElementById("openModal");
+        var closeBtn = document.getElementById("close_logs");
+
+        btn.onclick = function () {
+            modal.style.display = "block";
+        };
+
+        closeBtn.onclick = function () {
+            modal.style.display = "none";
+        };
+
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
+    </script>
+@endpush

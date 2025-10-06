@@ -39,7 +39,9 @@
                             <div class="card-footer">
                                 <button type="submit" class="btn btn-success mr-2">Update</button>
                                 <a href="{{ route("$route.index") }}" class="btn btn-primary">Cancel</a>
+                                <button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
                             </div>
+                            @include("prerequisites.logs")
                         </form>
                         <!--end::Form-->
                     </div>
@@ -54,3 +56,25 @@
 <!--end::Content-->
 
 @endsection
+
+@push('script')
+    <script>
+        var modal = document.getElementById("modal");
+        var btn = document.getElementById("openModal");
+        var closeBtn = document.getElementById("close_logs");
+
+        btn.onclick = function () {
+            modal.style.display = "block";
+        };
+
+        closeBtn.onclick = function () {
+            modal.style.display = "none";
+        };
+
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        };
+    </script>
+@endpush

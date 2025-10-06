@@ -81,7 +81,7 @@ class PrerequisitesController extends Controller
         $this->authorize('Show Prerequisite');
         
         
-        $prerequisite->load(['promo', 'group', 'status', 'comments.user', 'attachments', 'logs.user']);
+        $prerequisite->load(['promo', 'group', 'status', 'comments', 'attachments', 'logs']);
         
         return view("$this->view.show", [
             'row' => $prerequisite,
@@ -92,6 +92,7 @@ class PrerequisitesController extends Controller
             'currentStatus' => $prerequisite->status,
             'title' => 'View Prerequisite',
             'comments' => $prerequisite->comments,
+            'logs' => $prerequisite->logs,
         ]);
     }
 
@@ -105,7 +106,7 @@ class PrerequisitesController extends Controller
     {
         $this->authorize('Edit Prerequisite');
 
-        $prerequisite->load(['comments.user', 'attachments.user']);
+        $prerequisite->load(['comments', 'attachments', 'logs']);
         
         $changeRequests = change_request::where('workflow_type_id', 9)
             ->select('id', 'cr_no', 'title')
@@ -136,6 +137,7 @@ class PrerequisitesController extends Controller
             'currentStatus' => $currentStatus,
             'comments' => $prerequisite->comments,
             'attachments' => $prerequisite->attachments,
+            'logs' => $prerequisite->logs,
         ]);
     }
 
