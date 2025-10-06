@@ -11,6 +11,7 @@ use App\Models\TechnicalCr;
 use App\Models\Status;
 use App\Models\NewWorkFlowStatuses;
 use App\Models\User;
+use App\Models\GroupStatuses;
 use App\Http\Controllers\Mail\MailController;
 use App\Http\Repository\ChangeRequest\ChangeRequestStatusRepository;
 use Carbon\Carbon;
@@ -582,32 +583,12 @@ class ChangeRequestStatusService
        
        $newStatusId = NewWorkFlowStatuses::where('new_workflow_id', $statusData['new_status_id'])->get()->pluck('to_status_id')->toArray();
        $cr = ChangeRequest::find($changeRequestId);
-       $targetStatus = Status::with('group_statuses')->whereIn('id', $newStatusId)->first();
-       //$group_id = $targetStatus->group_statuses->first()->group_id ?? null;
-       $viewGroup = GroupStatuses::where('status_id', $targetStatus->id)->where('type', '2')->pluck('group_id')->toArray();
        $group_id = $cr->application->group_applications->first()->group_id;
-       // will check if group_id is in viewGroup then we will send the notification to this group is only
-       //dd($group_id,$viewGroup);
-       if (in_array($group_id, $viewGroup)) {
-        $recieveNotification = Group::where('id', $group_id)->where('recieve_notification', '1')->first();
-        if($recieveNotification){
-           $groupToNotify = [$group_id];
-        }else{
-            $groupToNotify = [];
-        }
-       }   
-       else{
-            $groupToNotify = Group::whereIn('id', $viewGroup)
-                    ->where('recieve_notification', '1')
-                    ->pluck('id')
-                    ->toArray();
-       }
-       //dd($groupToNotify);
-
-       if($this->active_flag == '1' && !empty($groupToNotify)){
-        foreach ($groupToNotify as $groupId) {
-            try {
-                $this->mailController->notifyGroup($changeRequestId, $statusData['old_status_id'], $newStatusId, $groupId);
+       $recieve_notification = Group::where('id', $group_id)->value('recieve_notification');
+       
+       if($this->active_flag == '1' && $recieve_notification == '1'){       
+           try {
+                $this->mailController->notifyGroup($changeRequestId , $statusData['old_status_id'] , $newStatusId);
             } catch (\Exception $e) {
                 Log::error('Failed to send Group notification', [
                     'change_request_id' => $changeRequestId,
@@ -617,9 +598,8 @@ class ChangeRequestStatusService
                 continue;
             }
         }
-       }
     }
-
+    
     /**
      * Check if status transition exists
      */

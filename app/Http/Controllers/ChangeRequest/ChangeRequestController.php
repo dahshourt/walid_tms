@@ -334,7 +334,7 @@ class ChangeRequestController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to create change request', [
-                'error' => $e,
+                'error' => $e->getMessage(),
                 'user_id' => auth()->id()
             ]);
             return redirect()->back()->with('error', 'Failed to create change request. Please try again.');
