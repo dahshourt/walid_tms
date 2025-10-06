@@ -17,6 +17,7 @@ use App\Services\ChangeRequest\{
 };
 use Auth;
 use App\Http\Repository\ChangeRequest\ChangeRequestStatusRepository;
+use Illuminate\Support\Facades\Log;
 
 class ChangeRequestValidationService
 {
@@ -32,6 +33,7 @@ class ChangeRequestValidationService
      */
     public function handleTechnicalTeamValidation($id, $request): bool
     {
+		
         $newStatusId = $request->new_status_id ?? null;
         $oldStatusId = $request->old_status_id ?? null;
 
@@ -54,7 +56,7 @@ class ChangeRequestValidationService
             return false;
         }
         $updateService = new ChangeRequestUpdateService();
-        $updateService->mirrorCrStatusToTechStreams($id, (int) $workflow->workflowstatus[0]->to_status_id, null, 'actor');
+		$updateService->mirrorCrStatusToTechStreams($id, (int) $workflow->workflowstatus[0]->to_status_id, null, 'actor');
         return $this->processTechnicalTeamStatus($technicalCr, $oldStatusData, $workflow, $technicalDefaultGroup, $request);
     }
 
@@ -73,9 +75,11 @@ class ChangeRequestValidationService
         $statusIds = $this->getStatusIds();
         $toStatusData = NewWorkFlow::find($request->new_status_id);
         $parkedIds = array_values(config('change_request.parked_status_ids', []));
+        $promo_unparked_ids = array_values(config('change_request.promo_unparked_ids', []));
         
         $this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$group);
-
+        
+        
         if (in_array($toStatusData->workflowstatus[0]->to_status->id, $parkedIds, true)) {
             $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
             
@@ -85,7 +89,8 @@ class ChangeRequestValidationService
                 $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '2']);
                 foreach($technicalCr->technical_cr_team->pluck('group_id')->toArray() as $key=>$groupId)
                 {
-                    $this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
+                    //$this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
+					if($groupId != $group) $this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
                 }
             } else { // approve
                 $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
@@ -105,22 +110,30 @@ class ChangeRequestValidationService
         }
         else
         {
+			
             // handle if next status is also technical flag
             if($toStatusData->workflowstatus[0]->to_status->view_technical_team_flag)
             {
-                $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
+				$technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
             
                 TechnicalCrTeam::create([
                     'group_id' => $group,
                     'technical_cr_id' => $technicalCr->id,
                     'current_status_id' => $workflow->workflowstatus[0]->to_status_id,
                     'status' => "0",
-                ]); 
+                ]);
+                $newStatusRow = Status::find($workflow->workflowstatus[0]->to_status_id);
+                $previous_group_id = session('current_group') ?: auth()->user()->default_group;
+				
                 $payload = $this->buildStatusData(
                     $technicalCr->cr_id,
                     $request->old_status_id,
                     (int) $workflow->workflowstatus[0]->to_status_id,
                     $group,
+                    (int) $group,
+                    (int) $previous_group_id,
+                    //(int) $newStatusRow->group_statuses->where('type','2')->pluck('group_id')->toArray()[0],
+                    (int) $group,
                     Auth::id(),
                     '1'
                 );
@@ -130,26 +143,51 @@ class ChangeRequestValidationService
             }
             else // no need to wait other teams
             {
+				
                 $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
-
-                if ($checkWorkflowType) { // reject
-                    $technicalCr->status = '2';
+				if ($checkWorkflowType) { // reject
+					$technicalCr->status = '2';
                     $technicalCr->save();
                     $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '2']);
                     foreach($technicalCr->technical_cr_team->pluck('group_id')->toArray() as $key=>$groupId)
                     {
-                            $this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
+						if($groupId != $group) $this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
                     }
                 }
                 else
                 {
-                    $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
-                    $countAllTeams = $technicalCr->technical_cr_team->count();
-                    $countApprovedTeams = $technicalCr->technical_cr_team->where('status', '1')->count();
-                    if ($countAllTeams == $countApprovedTeams) {
-                        $technicalCr->status = '1';
-                        $technicalCr->save();
-                    }
+					
+					if (in_array($toStatusData->workflowstatus[0]->to_status->id, $promo_unparked_ids, true)) 
+					{
+						$technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
+						$newStatusRow = Status::find($workflow->workflowstatus[0]->to_status_id);
+						$previous_group_id = session('current_group') ?: auth()->user()->default_group;
+						$payload = $this->buildStatusData(
+							$technicalCr->cr_id,
+							$request->old_status_id,
+							(int) $workflow->workflowstatus[0]->to_status_id,
+							NULL,
+							(int) $group,
+							(int) $previous_group_id,
+							(int) $newStatusRow->group_statuses->where('type','2')->pluck('group_id')->toArray()[0],
+							Auth::id(),
+							'1'
+						);
+						$statusRepository = new ChangeRequestStatusRepository();
+						$statusRepository->create($payload);
+						return true;
+					}
+					else
+					{
+						$technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
+						$countAllTeams = $technicalCr->technical_cr_team->count();
+						$countApprovedTeams = $technicalCr->technical_cr_team->where('status', '1')->count();
+						if ($countAllTeams == $countApprovedTeams) {
+							$technicalCr->status = '1';
+							$technicalCr->save();
+						}	
+					}
+                    
                 }
                 
                 return false;
@@ -196,7 +234,8 @@ class ChangeRequestValidationService
             $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '2']);
             foreach($technicalCr->technical_cr_team->pluck('group_id')->toArray() as $key=>$groupId)
             {
-                    $this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
+				if($groupId != $group) $this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
+				//$this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
             }
         } else { // approve
             $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
@@ -244,8 +283,8 @@ class ChangeRequestValidationService
             ]);
 
     }
-
-
+	
+	
     /**
      * Calculate SLA difference in days
      */
@@ -263,6 +302,9 @@ class ChangeRequestValidationService
         int $oldStatusId,
         int $newStatusId,
         ?int $group_id,
+        ?int $reference_group_id,
+        ?int $previous_group_id,
+        ?int $current_group_id,
         int $userId,
         string $active
     ): array {
@@ -270,13 +312,16 @@ class ChangeRequestValidationService
         $sla    = $status ? (int) $status->sla : 0;
 
         return [
-            'cr_id'         => $changeRequestId,
-            'old_status_id' => $oldStatusId,
-            'new_status_id' => $newStatusId,
-            'group_id'      => $group_id,
-            'user_id'       => $userId,
-            'sla'           => $sla,
-            'active'        => $active, // '0' | '1' | '2'
+            'cr_id'                     => $changeRequestId,
+            'old_status_id'             => $oldStatusId,
+            'new_status_id'             => $newStatusId,
+            'group_id'                  => $group_id,
+            'reference_group_id'        => $reference_group_id,
+            'previous_group_id'         => $previous_group_id,
+            'current_group_id'          => $current_group_id,
+            'user_id'                   => $userId,
+            'sla'                       => $sla,
+            'active'                    => $active, // '0' | '1' | '2'
         ];
     }
 

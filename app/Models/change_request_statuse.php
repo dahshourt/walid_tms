@@ -19,6 +19,9 @@ class change_request_statuse extends Model
         'sla',
         'sla_dif',
         'assignment_user_id',
+        'reference_group_id',
+        'previous_group_id',
+        'current_group_id',
 
     ];
 
@@ -66,6 +69,29 @@ class change_request_statuse extends Model
         return $this->belongsTo(NewWorkFlow::class,'new_status_id','from_status_id');
     }
 
+    
+    public function technical_group()
+    {
+        return $this->belongsTo(Group::class, 'group_id');
+    }
+
+    
+    public function referenceGroup()
+    {
+        return $this->belongsTo(Group::class, 'reference_group_id');
+    }
+
+    
+    public function previousGroup()
+    {
+        return $this->belongsTo(Group::class, 'previous_group_id');
+    }
+
+    
+    public function currentGroup()
+    {
+        return $this->belongsTo(Group::class, 'current_group_id');
+    }
 
 
 

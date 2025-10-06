@@ -1,7 +1,10 @@
 @extends('layouts.app')
 
 @section('content')
-
+@php
+	$user_group = session()->has('current_group') ? session('current_group') : auth()->user()->defualt_group->id;
+	$user_group =\App\Models\Group::find($user_group);
+@endphp
 
 					<!--begin::Content-->
 					<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
@@ -60,12 +63,13 @@
 									@endphp
 									<div class="card-body">
 										<!--begin: Datatable-->
-										<table class="table table-separate table-head-custom table-checkable" id="example2">
+										<div class="table-responsive">
+										<table class="table table-bordered" >
 											<thead>
 												<tr>
 												<th>ID#</th>
  													<th>Title</th>
-													<th>Status</th>
+													{{--<th>Status</th>--}}
 													@if(!empty($roles_name) && isset($roles_name[0]) && $roles_name[0] != "Viewer")
 													<th>Design Duration</th>
 													<th>Start Design Time</th>
@@ -81,7 +85,7 @@
 													<th>End CR Time</th>
 													@endif
 													@canany(['Edit ChangeRequest' , 'Show ChangeRequest'])
-													<th>Actions</th>
+													{{--<th>Actions</th>--}}
 													@endcanany
 												</tr>
 											</thead>
@@ -132,4 +136,39 @@
         });
 
     </script>
+
+<script>
+$(document).on('click', '.js-toggle-cr-details', function(e) {
+  e.preventDefault();
+  var $btn = $(this);
+  var id = $btn.data('cr-id');
+  var $row = $btn.closest('tr');
+  console.log("clicked",id,$row);
+  var $details = $('tr.cr-details-row[data-cr-id="' + id + '"]');
+  var expanded = $btn.attr('aria-expanded') === 'true';
+
+  if (expanded) {
+    $btn.attr('aria-expanded', 'false');
+    $btn.find('i.la').removeClass('la-angle-up').addClass('la-angle-down');
+    $details.hide();
+  } else {
+    $btn.attr('aria-expanded', 'true');
+    $btn.find('i.la').removeClass('la-angle-down').addClass('la-angle-up');
+    if ($details.prev()[0] !== $row[0]) {
+      $details.insertAfter($row);
+    }
+    $details.show();
+}});
+
+$(document).on('click', 'tr.cr-row', function(e) {
+  if ($(e.target).closest('a, button, .js-toggle-cr-details, .dropdown-menu, .select2-container').length) {
+    return;
+  }
+  $(this).find('.js-toggle-cr-details').trigger('click');
+});
+$(function() {
+  $('tr.cr-row:first').find('.js-toggle-cr-details').trigger('click');
+});
+</script>	
 @endpush
+
