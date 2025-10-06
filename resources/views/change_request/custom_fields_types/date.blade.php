@@ -1,4 +1,11 @@
 @if($item->CustomField->type == "date")
+    @php
+        $disabled = "";
+        $required = "";
+        if((isset($item->enable)&&($item->enable!=1))) $disabled = "disabled";
+        if(isset($item->validation_type_id) && $item->validation_type_id == 1) $required = "required";
+    @endphp
+
 <div class="col-md-6 change-request-form-field field_{{$item->CustomField->name}}">
  
     @if(isset($cr))
@@ -10,14 +17,14 @@
         <span style="color: red;">*</span>
     @endif
         @if((isset($item->enable)&&($item->enable==1)))
-                <input  type="date" name="{{ $item->CustomField->name }}"  class="form-control form-control-lg "  value="{{ old($item->CustomField->name, $cr->calendar) }}"  style="color:black; font-weight: bold;font-size:15px;text-align:center"  />         
+        <input type="date" name="{{ $item->CustomField->name }}" value="{{ $custom_field_value }}" class="form-control form-control-lg" {{ $required }} {{ $disabled }} />
         @else
             @if(isset($cr))
                 <label class="form-control form-control-lg">{{ ($cr->{$item->CustomField->name}) }} </label>
             @endif
         @endif
 </div>                                                      
-<div class="col-md-6 change-request-form-field field_{{$item->CustomField->name}}">
+{{-- <div class="col-md-6 change-request-form-field field_{{$item->CustomField->name}}">
     <label>{{ $item->CustomField->label }}</label>
     @if( isset($item->validation_type_id)&&($item->validation_type_id==1))
         <span style="color: red;">*</span>
@@ -34,5 +41,5 @@
         <input type="date" name="{{ $item->CustomField->name }}" value="{{ old($item->CustomField->name) }}" class="form-control form-control-lg" {{ $required }} {{ $disabled }} />
     @endif
     {!! $errors->first('planned_start_iot_date', '<span class="form-control-feedback">:message</span>') !!}
-</div>
+</div> --}}
 @endif
