@@ -126,7 +126,7 @@ class MailController extends Controller
     } // end method
 
     // Notify group when status changes.
-    public function notifyGroup($cr_id , $old_status_id , $new_status_id){
+    public function notifyGroup($cr_id , $old_status_id , $new_status_id, $group_id){
         $recipients = [];
         $cr_link = route('show.cr', $cr_id);
 
@@ -134,7 +134,7 @@ class MailController extends Controller
         $cr_no = $cr->cr_no;
         $cr_title = $cr->title;
         // $app_id = $cr->application_id;
-        $group_id = $cr->application->group_applications->first()->group_id;
+        //$group_id = $cr->application->group_applications->first()->group_id;
         $group_name = Group::where('id', $group_id)->value('title');
         $mail = Group::where('id', $group_id)->value('head_group_email');
         $old_status = Status::where('id', $old_status_id)->value('status_name');
@@ -287,9 +287,7 @@ class MailController extends Controller
                     . "<a href='$approve_link' style='background-color: #4CAF50; color: white; padding: 10px 20px; margin-right: 10px; text-decoration: none; border-radius: 4px;'>Approve </a>"
                     . " <a href='$reject_link' style='background-color: #f44336; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;'>Reject</a>"
                     . "</div><br>"
-            
-                    . "Alternatively, you can respond <strong>All</strong> to this mail with <strong>approved</strong> or <strong>rejected</strong>.<br><br>"
-            
+                        
                     . "Thank you in advance for your prompt action.<br><br>"
             
                     . "<strong>Note:</strong> This is an automated message sent by the <strong>IT TMS System</strong>.<br>"
