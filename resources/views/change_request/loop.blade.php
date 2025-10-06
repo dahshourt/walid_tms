@@ -17,18 +17,26 @@ $check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_
 @endphp
 
 @if(!$view_technical_team_flag || ($view_technical_team_flag && in_array($default_group, $assigned_technical_teams) && $check_if_status_active))
-                                <tr>
-                                    @can('Edit ChangeRequest')
-                                    <td><a href='{{ url("$route") }}/{{ $item->id }}/edit'>{{ $item['cr_no'] }} </a></td>
-                                    @else
-                                        @can('Show ChangeRequest')
-                                            <td><a href='{{ url("$route") }}/{{ $item->id }}'>{{ $item['cr_no'] }} </a></td>
-                                        @else
-                                            <td>{{ $item['cr_no'] }} </td>
-                                        @endcan
-                                    @endcan
+	
+                            <tr class="cr-row" data-toggle-details="1" data-cr-id="{{ $item->id }}">
+                            <th scope="row" class="align-middle">
+                                        <button type="button" class="btn btn-clean btn-icon btn-sm mr-2 js-toggle-cr-details" data-cr-id="{{ $item->id }}" aria-expanded="false" title="Toggle row details">
+                                            <i class="la la-angle-down"></i>
+                                        </button>
+                               
+                                            @can('Edit ChangeRequest')
+                                                <a href='{{ url("$route") }}/{{ $item->id }}/edit'>{{ $item->cr_no }} </a>
+                                            @else
+                                                @can('Show ChangeRequest')
+                                                <a href='{{ url("$route") }}/{{ $item->id }}'>{{ $item->cr_no }} </a>
+                                                @else 
+                                                    {{ $item['cr_no'] }}  
+                                                @endcan
+                                            @endcan
+                                     </th>
+                                  
                                     <th scope="row">{{ $item->title}}</th>
-                                    <td>{{ $item->getCurrentStatus() && $item->getCurrentStatus()->status ? $item->getCurrentStatus()->status->status_name : "" }}</td>
+                                    {{--<td>{{ $item->getCurrentStatus() && $item->getCurrentStatus()->status ? $item->getCurrentStatus()->status->status_name : "" }}</td>--}}
                                     @if(!empty($roles_name) && isset($roles_name[0]) && $roles_name[0] != "Viewer")
                                     <td>{{ $item['design_duration'] }}</td>
                                     <td>{{ $item['start_design_time'] }}</td>
@@ -43,7 +51,7 @@ $check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_
                                     <td>{{ $item['start_CR_time'] }}</td>
                                     <td>{{ $item['end_CR_time'] }}</td>
                                     @endif
-                                    <td>
+                                    {{--<td>
                                         <div class="d-inline-flex">
                                         @can('Show ChangeRequest')
                                         <a href='{{ url("$route") }}/{{ $item->id }}' class="btn btn-sm btn-clean btn-icon mr-2" title="Show details">
@@ -82,9 +90,94 @@ $check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_
                                         @endcan
                                     </div>
                                         
-                                    </td>
+                                    </td>--}}
                             </tr>
                             @endif
+
+                            
+@php 
+    $detailsColspan = 12; 
+    $statuses = $item->getallCurrentStatus(); 
+@endphp
+<tr class="cr-details-row" data-cr-id="{{ $item->id }}" style="display:none;">
+    <td colspan="{{ $detailsColspan }}" class="p-0">
+        <div style="background: #f8f9fb; padding: 1.25rem 1rem; border-top: 2px solid #e4e6ef;">
+            
+            <table class="table table-hover mb-0" style="background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                <thead style="background: linear-gradient(to right, #f5f8fa, #e9ecef);">
+                    <tr>
+                        <th class="font-weight-bold text-uppercase" style="font-size: 0.75rem; color: #5e6278; letter-spacing: 0.5px; padding: 1rem 1.25rem; border: none;">
+                            <i class="la la-users mr-1"></i> Group
+                        </th>
+                        <th class="font-weight-bold text-uppercase" style="font-size: 0.75rem; color: #5e6278; letter-spacing: 0.5px; padding: 1rem 1.25rem; border: none;">
+                            <i class="la la-check-circle mr-1"></i> Status
+                        </th>
+                        <th class="font-weight-bold text-uppercase text-center" style="font-size: 0.75rem; color: #5e6278; letter-spacing: 0.5px; padding: 1rem 1.25rem; border: none;">
+                            <i class="la la-cog mr-1"></i> Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($statuses as $status)
+                        <tr style="border-bottom: 1px solid #f3f4f6; transition: all 0.2s;">
+                            <td class="align-middle" style="padding: 1rem 1.25rem;">
+                                <span class="font-weight-bold text-dark" style="font-size: 0.9rem;">
+                                    {{ $status->currentGroup->name ?? 'N/A' }}
+                                </span>
+                            </td>
+                            <td class="align-middle" style="padding: 1rem 1.25rem;">
+                                <span class="badge badge-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 500; border-radius: 4px;">
+                                    ( {{ $status->status->status_name ?? 'N/A' }} )
+                                    @if($status->reference_group_id)
+                                    tech team ({{ $status->referenceGroup->name ?? 'N/A' }})
+                                    @elseif($status->reference_group_id)
+                                    by ({{ $status->previousGroup->name ?? 'N/A' }})
+                                    @endif
+                                </span>
+                            </td>
+                            <td class="align-middle text-center" style="padding: 1rem 1.25rem;">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    @can('Show ChangeRequest')
+                                        <a href='{{ url("$route") }}/{{ $item->id }}' 
+                                           class="btn btn-light-primary btn-sm" 
+                                           title="View"
+                                           style="padding: 0.4rem 0.9rem; border-radius: 4px 0 0 4px;">
+                                            <i class="la la-eye"></i> View 
+                                        </a>
+                                    @endcan
+                                    
+                                   
+                                            @can('Edit ChangeRequest')
+                                            @if(in_array($status->new_status_id,$user_group->group_statuses->where('type', 2)->pluck('status_id')->toArray()))
+                                                    @if(!$status->group_id OR $status->current_group_id == $user_group->id )
+                                                        <a href='{{ url("$route") }}/{{ $item->id }}/edit?reference_status={{ $status->id }}' 
+                                                        class="btn btn-light-success btn-sm" 
+                                                        title="Edit"
+                                                        style="padding: 0.4rem 0.9rem; border-radius: 0 4px 4px 0;">
+                                                            <i class="la la-edit"></i> Edit
+                                                        </a>
+                                                    @endif
+                                                @endif
+                                            @endcan
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="3" class="text-center py-4" style="background: #fafbfc;">
+                                <i class="la la-info-circle text-muted" style="font-size: 2rem;"></i>
+                                <p class="text-muted mb-0 mt-2">No status records found</p>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </td>
+</tr>
+
+
+
                             @endforeach
 @else
 
@@ -93,3 +186,42 @@ $check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_
 </tr>
 
 @endif
+
+<style>
+    /* Row hover effect */
+    .cr-details-row tbody tr:hover {
+        background-color: #f9fafb !important;
+    }
+    
+    /* Button styles */
+    .btn-light-primary {
+        background-color: rgba(54, 153, 255, 0.1);
+        color: #3699ff;
+        border: 1px solid rgba(54, 153, 255, 0.2);
+        transition: all 0.2s;
+    }
+    
+    .btn-light-primary:hover {
+        background-color: #3699ff;
+        color: white;
+        border-color: #3699ff;
+    }
+    
+    .btn-light-success {
+        background-color: rgba(30, 201, 111, 0.1);
+        color: #1ec96f;
+        border: 1px solid rgba(30, 201, 111, 0.2);
+        transition: all 0.2s;
+    }
+    
+    .btn-light-success:hover {
+        background-color: #1ec96f;
+        color: white;
+        border-color: #1ec96f;
+    }
+</style>
+
+
+</style>
+</table>
+</div>

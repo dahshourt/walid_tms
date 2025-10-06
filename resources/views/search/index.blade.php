@@ -2,6 +2,11 @@
 
 @section('content')
 
+@php
+	$user_group = session()->has('current_group') ? session('current_group') : auth()->user()->defualt_group->id;
+	$user_group =\App\Models\Group::find($user_group);
+@endphp
+
 
 					<!--begin::Content-->
 					<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
@@ -127,7 +132,7 @@
 														<th> planned_end_uat_date</th>
 														<th> planned_start_smoke_test_date</th> 
 														<th> planned_end_smoke_test_date</th>
-														<th>#</th>
+														{{--<th>#</th>--}}
 													@else
 														<th>#</th>
 														<th>Sbject</th>
@@ -145,7 +150,7 @@
 														<th>End Test Time</th>
 														<th>Creation Date</th>
 														<th>Delivery/Updated Date</th>
-														<th>#</th>
+														{{--<th>#</th>--}}
 													@endif
 												</tr>
 											</thead>
@@ -191,6 +196,9 @@ $(document).on('click', 'tr.cr-row', function(e) {
     return;
   }
   $(this).find('.js-toggle-cr-details').trigger('click');
+});
+$(function() {
+  $('tr.cr-row:first').find('.js-toggle-cr-details').trigger('click');
 });
 </script>
 @endpush

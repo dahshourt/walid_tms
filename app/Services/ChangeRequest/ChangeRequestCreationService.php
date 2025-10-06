@@ -39,6 +39,7 @@ class ChangeRequestCreationService
         
         $this->handleCustomFields($changeRequest->id, $statusData);
         $this->changeRequestStatusRepository->createInitialStatus($changeRequest->id, $statusData);
+        
         $this->logRepository->logCreate($changeRequest->id, $statusData, null, 'create');
         
         $this->sendCreationEmails($changeRequest, $statusData);

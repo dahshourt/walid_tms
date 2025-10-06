@@ -136,6 +136,10 @@
 												<input type="hidden" name="workflow_type_id" value="{{$workflow_type_id}}">
 												<input type="hidden" name="old_status_id" value="{{$cr->current_status->new_status_id}}">
                                                 <input type="hidden" name="cab_cr_flag" value="{{isset($cab_cr_flag)?$cab_cr_flag:0}}">
+												@if(request()->reference_status)
+													<input type="hidden" name="reference_status" value="{{ request()->reference_status }}">
+												@endif	
+                                               
 												<div class="card-body">
 													
 													<div class="form-group row">
@@ -160,7 +164,10 @@
 												<div class="card-footer" style="width: 100%;float: right;">
                                                     @if(count($cr->set_status) > 0)
                                                         @if($cr->getCurrentStatus()?->status?->id == 68 && $workflow_type_id == 9 && count($reminder_promo_tech_teams) > 0)
-                                                            <button type="button" id="submit_button" class="btn btn-success mr-2" id="show_error_message">
+														{{--<button type="button" id="submit_button" class="btn btn-success mr-2" id="show_error_message">
+                                                                Submit
+														</button>--}}
+														<button type="submit" id="submit_button" class="btn btn-success mr-2">
                                                                 Submit
                                                             </button>
                                                         @else

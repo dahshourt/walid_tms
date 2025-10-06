@@ -86,16 +86,37 @@ return [
         'pending_business' => 64,
         'pending_business_feedback' => 79,
         'approved_implementation_plan' => 116,
+        
     ],
 	
 	'parked_status_ids' => [
         //'pending_uat' => 78,
         'provide_technical_fb' => 146,
-        'promo_closure' => 129,
         'technical_fb' => 108,
         'confirmed_sdd' => 149,
         'set_md_prerequisites' => 112,
         'final_uat_results_fb' => 167,
+		'promo_closure' => 129,
+		
+    ],
+	'promo_parked_status_ids' => [
+        'promo_closure' => 129,
+        'review_uat_results_fb' => 168,
+    ],
+	'promo_depend_statuses' => [
+        //'pending_uat' => 78,
+        'uat_in_progress' => 173,
+        'smoke_test' => 68,
+    ],
+	'promo_unparked_ids' => [
+       'support_technical_issue' => 155,
+       'pending_uat' => 78,
+    ],
+	'promo_special_flow_ids' => [
+       'resume_implementation' => 156,
+       'resume_implementation' => 156,
+       'fix_defect_on_production' => 171,
+       'rollback' => 134,
     ],
 
     

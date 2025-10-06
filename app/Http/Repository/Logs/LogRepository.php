@@ -69,9 +69,21 @@ class LogRepository implements LogRepositoryInterface
 
     public function logCreate($id, $request, $changeRequest_old, $type = 'create')
     {
-      
+        
+               
         $log = new LogRepository();
-        $user_id = $request->user_id ? $request->user_id : \Auth::user()->id;
+        //$user_id = $request->user_id ? $request->user_id : \Auth::user()->id;
+
+        if ($request instanceof \Illuminate\Support\Collection) {
+            $user_id = $request->get('user_id', \Auth::id());
+        } elseif (is_array($request)) {
+            $user_id = $request['user_id'] ?? \Auth::id();
+        } elseif ($request instanceof \Illuminate\Http\Request) {
+            $user_id = $request->input('user_id', \Auth::id());
+        } else {
+            $user_id = \Auth::id();
+        }
+
         $user = User::find($user_id);
 
         $change_request = $changeRequest_old;

@@ -313,6 +313,7 @@ class ChangeRequestController extends Controller
             $this->validateAttachments($request);
             
             // Create the change request
+            
             $cr_data = $this->changerequest->create($request->all());
             $cr_id = $cr_data['id'];
             $cr_no = $cr_data['cr_no'];
@@ -332,8 +333,10 @@ class ChangeRequestController extends Controller
             
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('CR Creation Error: ' . $e->getMessage() . 
-                       ' in ' . $e->getFile() . ' on line ' . $e->getLine());
+            Log::error('Failed to create change request', [
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
             return redirect()->back()->with('error', 'Failed to create change request. Please try again.');
         }
     }
@@ -517,7 +520,8 @@ class ChangeRequestController extends Controller
 				// Do something if previous URL contains "edit_cab"
 				return redirect()->to('/change_request')->with('status', 'Updated Successfully');
 			} else {
-				return redirect()->back()->with('status', 'Updated Successfully');
+				//return redirect()->back()->with('status', 'Updated Successfully');
+                return redirect()->to('/change_request')->with('status', 'Updated Successfully');
 			}
             //
 			
@@ -821,6 +825,7 @@ class ChangeRequestController extends Controller
      */
     private function prepareEditData($cr, int $id): array
     {
+        
         // Get users by workflow type
         $developer_users = $this->getDeveloperUsers($cr);
         $sa_users = UserFactory::index()->get_user_by_department_id(6);

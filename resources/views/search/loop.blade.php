@@ -110,18 +110,23 @@
                         <tr style="border-bottom: 1px solid #f3f4f6; transition: all 0.2s;">
                             <td class="align-middle" style="padding: 1rem 1.25rem;">
                                 <span class="font-weight-bold text-dark" style="font-size: 0.9rem;">
-                                    {{ $status->group->name ?? 'N/A' }}
+                                    {{ $status->currentGroup->name ?? 'N/A' }}
                                 </span>
                             </td>
                             <td class="align-middle" style="padding: 1rem 1.25rem;">
                                 <span class="badge badge-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem; font-weight: 500; border-radius: 4px;">
-                                    {{ $status->status->status_name ?? 'N/A' }}
+                                    ( {{ $status->status->status_name ?? 'N/A' }} )
+                                    @if($status->reference_group_id)
+                                    tech team ({{ $status->referenceGroup->name ?? 'N/A' }})
+                                    @elseif($status->reference_group_id)
+                                    by ({{ $status->previousGroup->name ?? 'N/A' }})
+                                    @endif
                                 </span>
                             </td>
                             <td class="align-middle text-center" style="padding: 1rem 1.25rem;">
                                 <div class="btn-group btn-group-sm" role="group">
                                     @can('Show ChangeRequest')
-                                        <a href='{{ url("$route") }}/{{ $cr->id }}/edit' 
+                                        <a href='{{ url("$route") }}/{{ $cr->id }}' 
                                            class="btn btn-light-primary btn-sm" 
                                            title="View"
                                            style="padding: 0.4rem 0.9rem; border-radius: 4px 0 0 4px;">
@@ -132,12 +137,17 @@
                                     @if(in_array($cr->id, $crs_in_queues->toArray()))
                                         @if(!(($cr->workflow_type_id == 5) && (in_array($cr->Req_status()->latest('id')->first()?->new_status_id, [66, 67, 68, 69]))))
                                             @can('Edit ChangeRequest')
-                                                <a href='{{ url("$route") }}/{{ $cr->id }}/edit' 
-                                                   class="btn btn-light-success btn-sm" 
-                                                   title="Edit"
-                                                   style="padding: 0.4rem 0.9rem; border-radius: 0 4px 4px 0;">
-                                                    <i class="la la-edit"></i> Edit
-                                                </a>
+                                            @if(in_array($status->new_status_id,$user_group->group_statuses->where('type', 2)->pluck('status_id')->toArray()))
+                                                 @if(!$status->group_id OR $status->current_group_id == $user_group->id )
+                                                        <a href='{{ url("$route") }}/{{ $cr->id }}/edit?reference_status={{ $status->id }}' 
+                                                        class="btn btn-light-success btn-sm" 
+                                                        title="Edit"
+                                                        style="padding: 0.4rem 0.9rem; border-radius: 0 4px 4px 0;">
+                                                            <i class="la la-edit"></i> Edit
+                                                        </a>
+                                                    @endif
+                                               
+                                                @endif
                                             @endcan
                                         @endif
                                     @endif
