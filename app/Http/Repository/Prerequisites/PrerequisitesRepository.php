@@ -77,6 +77,17 @@ class PrerequisitesRepository implements PrerequisitesRepositoryInterface
         return DB::transaction(function () use ($request, $model) {
             $data = collect($request);
 
+            
+
+            if (isset($request['status_id']) && !empty($request['status_id']) && $model->status_id != $request['status_id']) {
+                
+                $status = Status::find($request['status_id']);
+                $model->logs()->create([
+                    'user_id' => auth()->id(),
+                    'log_text' => "Prerequisite status changed to < {$status->status_name} >",
+                ]);
+            }
+            
             // update main record
             $model->update($data->except(['comments', 'attachments'])->all());
 
@@ -86,18 +97,20 @@ class PrerequisitesRepository implements PrerequisitesRepositoryInterface
                     'user_id' => auth()->id(),
                     'comment' => $request['comments']
                 ]);
+                $model->logs()->create([
+                    'user_id' => auth()->id(),
+                    'log_text' => "Comment < {$request['comments']} > was added",
+                ]);
             }
 
             // add new attachments if provided
             if (isset($request['attachments'])) {
                 $this->handleAttachments($request['attachments'], $model->id);
+                $model->logs()->create([
+                    'user_id' => auth()->id(),
+                    'log_text' => "Attachment < {$request['attachments']->getClientOriginalName()} > was added",
+                ]);
             }
-
-            // add a log
-            $model->logs()->create([
-                'user_id' => auth()->id(),
-                'log_text' => 'Prerequisite was updated',
-            ]);
 
             return $model;
         });

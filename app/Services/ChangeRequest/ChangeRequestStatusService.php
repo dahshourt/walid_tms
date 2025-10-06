@@ -520,9 +520,10 @@ class ChangeRequestStatusService
        $targetStatus = Status::with('group_statuses')->whereIn('id', $newStatusId)->first();
        //$group_id = $targetStatus->group_statuses->first()->group_id ?? null;
        $viewGroup = GroupStatuses::where('status_id', $targetStatus->id)->where('type', '2')->pluck('group_id')->toArray();
-       $group_id = $cr->application->group_applications->first()->group_id;
+       $group_id = $cr->application->group_applications->first()->group_id ?? null;
        // will check if group_id is in viewGroup then we will send the notification to this group is only
        //dd($group_id,$viewGroup);
+       $groupToNotify = [];
        if (in_array($group_id, $viewGroup)) {
         $recieveNotification = Group::where('id', $group_id)->where('recieve_notification', '1')->first();
         if($recieveNotification){

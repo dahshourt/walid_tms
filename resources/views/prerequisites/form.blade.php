@@ -30,7 +30,7 @@
 		<div class="col-md-4">
 			<div class="form-group">
 				<label>Requester:</label>
-				<input type="text" class="{{ $inputClass }}" value="{{ Auth::user()->name }}" {{ $isDisabled }} />
+				<input type="text" class="{{ $inputClass }}" value="{{ Auth::user()->name }}" disabled />
 				<input type="hidden" name="created_by" value="{{ Auth::id() }}" />
 			</div>
 		</div>
@@ -39,7 +39,7 @@
 			<div class="form-group">
 				<label>Requester Department:</label>
 				@if(isset($row))
-					<input type="text" class="{{ $inputClass }}" value="{{ $row->requester_department }}" {{ $isDisabled }} />
+					<input type="text" class="{{ $inputClass }}" value="{{ $row->requester_department }}" disabled />
 					<input type="hidden" name="requester_department" value="{{ $row->requester_department }}" />
 				@else
 					<input type="text" class="{{ $inputClass }}" name="requester_department" value="{{ old('requester_department') }}" required />
@@ -51,7 +51,7 @@
 			<div class="form-group">
 				<label>Requester Mobile:</label>
 				@if(isset($row))
-					<input type="text" class="{{ $inputClass }}" value="{{ $row->requester_mobile }}" {{ $isDisabled }} />
+					<input type="text" class="{{ $inputClass }}" value="{{ $row->requester_mobile }}" disabled />
 					<input type="hidden" name="requester_mobile" value="{{ $row->requester_mobile }}" />
 				@else
 					<input type="text" class="{{ $inputClass }}" name="requester_mobile" value="{{ old('requester_mobile') }}" required />
@@ -66,7 +66,7 @@
 			<div class="form-group">
 				<label>Subject:</label>
 				@if(isset($row))
-					<input type="text" class="{{ $inputClass }}" value="{{ $row->subject }}" {{ $isDisabled }} />
+					<input type="text" class="{{ $inputClass }}" value="{{ $row->subject }}" disabled />
 					<input type="hidden" name="subject" value="{{ $row->subject }}" />
 				@else
 					<input type="text" class="{{ $inputClass }}" name="subject" value="{{ old('subject') }}" required />
@@ -78,7 +78,7 @@
 			<div class="form-group">
 				<label>Promo:</label>
 				@if(isset($row))
-					<input type="text" class="{{ $inputClass }}" value="{{ $row->promo->cr_no ?? 'N/A' }}" {{ $isDisabled }} />
+					<input type="text" class="{{ $inputClass }}" value="{{ $row->promo->cr_no ?? 'N/A' }}" disabled />
 					<input type="hidden" name="promo_id" value="{{ $row->promo_id }}" />
 				@else
 					<select class="form-control kt-select2" id="promo_id" name="promo_id" required>
@@ -97,7 +97,7 @@
 			<div class="form-group">
 				<label>Group:</label>
 				@if(isset($row))
-					<input type="text" class="{{ $inputClass }}" value="{{ $row->group->name ?? 'N/A' }}" {{ $isDisabled }} />
+					<input type="text" class="{{ $inputClass }}" value="{{ $row->group->name ?? 'N/A' }}" disabled />
 					<input type="hidden" name="group_id" value="{{ $row->group_id }}" />
 				@else
 					<select class="form-control kt-select2" name="group_id" required>
