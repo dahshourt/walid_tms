@@ -8,7 +8,7 @@ use App\Http\Requests\Prerequisites\PrerequisitesRequest;
 use App\Factories\Prerequisites\PrerequisitesFactory;
 use Illuminate\Http\Request;
 use App\Models\change_request;
-use App\Models\group;
+use App\Models\Group;
 use App\Models\Status;
 use App\Models\Prerequisite;
 use App\Models\PrerequisiteAttachment;
@@ -50,7 +50,7 @@ class PrerequisitesController extends Controller
     {
         $this->authorize('Create Prerequisite'); // permission check
         $changeRequests = change_request::where('workflow_type_id', 9)->get();
-        $groups = group::all();
+        $groups = Group::all();
         $defaultStatusId = Status::where('status_name', 'Open')->value('id');
         
         return view("$this->view.create", compact('changeRequests','groups','defaultStatusId'));
@@ -112,7 +112,7 @@ class PrerequisitesController extends Controller
             ->select('id', 'cr_no', 'title')
             ->get();
             
-        $groups = group::select('id', 'title')->get();
+        $groups = Group::select('id', 'title')->get();
 
         $currentStatus = $prerequisite->status;
 
@@ -170,6 +170,7 @@ class PrerequisitesController extends Controller
 
     public function download($id)
     {
+        $this->authorize('Download Prerequisite Attach');
         $attachment = PrerequisiteAttachment::findOrFail($id);
         $filePath = public_path('uploads/prerequisites/' . $attachment->file);
 

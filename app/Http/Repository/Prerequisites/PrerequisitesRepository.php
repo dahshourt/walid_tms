@@ -82,14 +82,16 @@ class PrerequisitesRepository implements PrerequisitesRepositoryInterface
             if (isset($request['status_id']) && !empty($request['status_id']) && $model->status_id != $request['status_id']) {
                 
                 $status = Status::find($request['status_id']);
+
+                $model->update(['status_id' => $request['status_id']]);
+
                 $model->logs()->create([
                     'user_id' => auth()->id(),
                     'log_text' => "Prerequisite status changed to < {$status->status_name} >",
                 ]);
             }
-            
             // update main record
-            $model->update($data->except(['comments', 'attachments'])->all());
+            //$model->update($data->except(['comments', 'attachments'])->all());
 
             // add comment if provided
             if (isset($request['comments']) && !empty($request['comments'])) {

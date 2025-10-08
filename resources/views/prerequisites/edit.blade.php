@@ -37,9 +37,11 @@
                             @method('PATCH')
                             @include("$view.form")
                             <div class="card-footer">
-                                <button type="submit" class="btn btn-success mr-2">Update</button>
-                                <a href="{{ route("$route.index") }}" class="btn btn-primary">Cancel</a>
-                                <button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
+                            @if($currentStatus->status_name !== 'Closed')
+                            <button type="submit" class="btn btn-success mr-2">Update</button>
+                            @endif                                
+                            <a href="{{ route("$route.index") }}" class="btn btn-primary">Cancel</a>
+                            <button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
                             </div>
                             @include("prerequisites.logs")
                         </form>

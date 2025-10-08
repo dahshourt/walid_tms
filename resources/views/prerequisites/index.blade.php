@@ -100,7 +100,7 @@
 												<!--end::Dropdown Menu-->
 											</div>
 											<!--end::Dropdown-->
-											@can('Create Role')
+											@can('Create Prerequisite')
 											<!--begin::Button-->
 											<a href='{{ url("$route/create") }}' class="btn btn-primary font-weight-bolder">
 											<span class="svg-icon svg-icon-md">

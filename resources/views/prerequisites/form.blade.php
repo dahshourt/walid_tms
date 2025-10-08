@@ -30,8 +30,13 @@
 		<div class="col-md-4">
 			<div class="form-group">
 				<label>Requester:</label>
+				@if(isset($row))
+				<input type="text" class="{{ $inputClass }}" value="{{ $row->creator->name }}" disabled />
+				<input type="hidden" name="created_by" value="{{ $row->created_by}}" />
+				@else
 				<input type="text" class="{{ $inputClass }}" value="{{ Auth::user()->name }}" disabled />
 				<input type="hidden" name="created_by" value="{{ Auth::id() }}" />
+				@endif
 			</div>
 		</div>
 
