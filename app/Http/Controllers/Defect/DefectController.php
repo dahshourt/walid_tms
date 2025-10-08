@@ -73,7 +73,7 @@ class DefectController extends Controller
         {
             return redirect()->back()->with('status' , 'You have no access to edit this CR' );
         } // to check if the user has access to edit this cr or not 
-          $technical_team =  Group::where('technical_team', 1)->get();
+          $technical_team =  Group::where('technical_team', '1')->get();
          $defect_status = $this->status->get_defect_status();
          $CustomFields = $this->custom_field_group_type->getAllCustomFieldsWithSelectedByformType("form_type", 7);
 
