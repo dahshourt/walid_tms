@@ -27,6 +27,7 @@ class NewWorkFlowStatuses extends Model
 
     public function to_status()
     {
+        //echo "walid";
         return $this->belongsTo(Status::class,'to_status_id');
     }
 

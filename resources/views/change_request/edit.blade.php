@@ -354,7 +354,7 @@
                                                         <tr>
                                                             <td>{{ $value->User_created->user_name }}</td>
                                                             <td>{{ $value->subject }}</td>
-                                                            <td>{{ $value->assigned_team->title }}</td>
+                                                            <td>{{ $value?->assigned_team?->title }}</td>
                                                             <td>{{ $value->current_status->status_name }}</td>
                                                             <td>{{ $value->created_at->format('Y-m-d H:i:s') }}</td>
                                                             <td> <a href="{{url('edit_defect')}}/{{$value->id}}">Edit </a> </td>

@@ -76,6 +76,62 @@ License: You must have a valid license purchased only from themeforest(the above
 				margin-bottom: 1.75rem;
 			}
 			
+			
+/* === Notification Wrapper (position control) === */
+.notification-wrapper {
+    position: absolute;
+    top: -5px;
+    right: -12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* === Red bubble === */
+.notification-badge {
+    background-color: #ff3b30;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 7px;
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(255, 59, 48, 0.4);
+    z-index: 2;
+    transition: transform 0.2s ease, box-shadow 0.3s ease;
+}
+
+/* === Subtle hover bounce === */
+.menu-link:hover .notification-badge {
+    transform: scale(1.15);
+    box-shadow: 0 0 12px rgba(255, 59, 48, 0.6);
+}
+
+/* === Soft animated pulse ring (like Facebook) === */
+.notification-pulse {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255, 59, 48, 0.5);
+    animation: pulseRing 1.5s infinite;
+    z-index: 1;
+}
+
+@keyframes pulseRing {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.8;
+    }
+    70% {
+        transform: scale(1.6);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+}
+
 		</style>
 		  
 	</head>

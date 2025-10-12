@@ -113,7 +113,7 @@
                         {{ $toStatus->status_name }}
                     @endif
                 </option>
- <!-- @else
+ @else
                             <option value="{{ $status->id }}" 
                                 {{ $custom_field_value == $status->id ? 'selected' : '' }}
                                 data-status-name="{{ $status->workflowstatus[0]->to_status->status_name }}"
@@ -125,7 +125,7 @@
                                 @else
                                     {{$status->workflowstatus[0]->to_status->status_name }}
                                 @endif
-                            </option> -->
+                            </option>
                         @endif
 
            
@@ -209,7 +209,7 @@
                             <option value="{{ $status->id }}" 
                                 {{ $custom_field_value == $status->id ? 'selected' : '' }}
                                 data-status-name="{{ $status->workflowstatus[0]->to_status->status_name }}"
-                                data-defect="{{ $status->workflowstatus[0]->to_status->defect }}">
+                                data-defect31="{{ $status->workflowstatus[0]->to_status->defect }}">
                                 @if($status->workflowstatus[0]->to_status->high_level)
                                     {{$status->workflowstatus[0]->to_status->high_level->name}}
                                 @elseif($status->to_status_label)
@@ -285,6 +285,7 @@
 
 {{-- PHP to get defects --}}
 @php
+
     $def1 = isset($cr) ? $cr->defects()->count() : 0;
     $def2 = isset($cr) ? $cr->defects()->whereIn('status_id', [86, 87])->count() : 0;
 	if(isset($cr))
@@ -397,15 +398,18 @@ document.addEventListener("DOMContentLoaded", function () {
 
 
 @if($def1 != $def2)
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+
     async function checkStatusBeforeSubmit(event) {
-        const selectElement = document.querySelector('select[name="new_status_id"]');
+        const form = event.target;
+        const selectElement = form.querySelector('select[name="new_status_id"]');
         const selectedOption = selectElement?.options[selectElement.selectedIndex];
         const defectValue = selectedOption?.getAttribute('data-defect') || "0";
 
         if (defectValue === "1") {
-            event.preventDefault();
+            event.preventDefault(); // stop normal submit
 
             const result = await Swal.fire({
                 title: 'Are you sure?',
@@ -419,14 +423,22 @@ document.addEventListener("DOMContentLoaded", function () {
             });
 
             if (result.isConfirmed) {
-                document.querySelector("form")?.submit();
+                // Temporarily remove the listener to prevent duplicate alerts
+                form.removeEventListener("submit", checkStatusBeforeSubmit);
+                form.submit();
+                // Re-attach the listener so future submits also show the alert
+                form.addEventListener("submit", checkStatusBeforeSubmit);
             }
         }
     }
 
-    document.querySelector("form")?.addEventListener("submit", checkStatusBeforeSubmit, { once: true });
+    const form = document.querySelector("form");
+    if (form) {
+        form.addEventListener("submit", checkStatusBeforeSubmit);
+    }
 });
 </script>
+
 @endif
 
 
