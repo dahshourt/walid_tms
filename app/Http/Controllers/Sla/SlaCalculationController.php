@@ -17,6 +17,7 @@ class SlaCalculationController extends Controller
 
     public function index()
     {
+        $this->authorize('List Cab Users');
         view()->share('title', 'List');
         //view()->share('form_title', 'SLA');
         view()->share('route', 'sla-calculations');
@@ -26,6 +27,7 @@ class SlaCalculationController extends Controller
 
     public function create()
     {
+        $this->authorize('Create SLA');
         view()->share('title', 'Create');
         view()->share('form_title', 'SLA');
         view()->share('route', 'sla-calculations');
@@ -60,6 +62,7 @@ public function store(Request $request)
 
     public function edit(SlaCalculation $slaCalculation)
     { 
+        $this->authorize('Edit SLA');
         view()->share('title', 'Edit');
         view()->share('form_title', 'Edit SLA');
         view()->share('route', 'sla-calculations');
@@ -90,8 +93,8 @@ public function store(Request $request)
 
     public function destroy(SlaCalculation $slaCalculation)
     {
-        $slaCalculation->delete();
 
+        $slaCalculation->delete();
         return redirect()->route('sla-calculations.index')
                          ->with('success', 'SLA Calculation deleted successfully.');
     }
