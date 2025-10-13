@@ -130,6 +130,7 @@ Route::middleware(['auth'])->group(
         
         Route::resource('change_request', 'ChangeRequest\ChangeRequestController');
         Route::get('change_request2/dvision_manager_cr', 'ChangeRequest\ChangeRequestController@dvision_manager_cr')->name('dvision_manager_cr');
+        Route::get('dvision_manager_cr/unreadNotifications', 'ChangeRequest\ChangeRequestController@unreadNotifications');
         Route::get('change_request1/asd/{group?}', 'ChangeRequest\ChangeRequestController@asd')->name('change_request.asd');
         Route::post('/select-group/{group}', 'ChangeRequest\ChangeRequestController@selectGroup')->name('select_group');
 

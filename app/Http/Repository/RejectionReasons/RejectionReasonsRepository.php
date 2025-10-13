@@ -43,7 +43,7 @@ class RejectionReasonsRepository implements RejectionReasonsRepositoryInterface
     public function workflows($id)
     {
       
-        return RejectionReasons::where('workflow_type_id', $id)->where('active',1)->get();
+        return RejectionReasons::where('workflow_type_id', $id)->where('active','1')->get();
     }
 public function updateactive($active,$id){
 		if($active){

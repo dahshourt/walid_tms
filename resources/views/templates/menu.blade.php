@@ -706,6 +706,19 @@
 												</a>
 											</li>
 											@endcan
+
+											<li class="menu-item menu-item-submenu menu-item-rel position-relative" data-menu-toggle="click" aria-haspopup="true">
+   
+	<div id="app" >
+
+	<sample-component     :interval="{{ env('DIGITAL_SOLUTIONS_INTERVAL') }}"  base-url="{{ env('VUE_APP_BASE_URL') }}" ref="sampleComponent"></sample-component>
+
+	<!-- <sample-component></sample-component> -->
+</div>
+<script src="{{ asset('public/js/app.js')}}"></script>
+</li>
+
+
 										</ul>
 										<!--end::Header Nav-->
 									</div>
@@ -809,5 +822,4 @@
 						<!--end::Container-->
 					</div>
 					<!--end::Header-->
-
 					
