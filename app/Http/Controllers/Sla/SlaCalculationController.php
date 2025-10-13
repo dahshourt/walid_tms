@@ -17,7 +17,7 @@ class SlaCalculationController extends Controller
 
     public function index()
     {
-        $this->authorize('List Cab Users');
+        $this->authorize('SLA Calculations');
         view()->share('title', 'List');
         //view()->share('form_title', 'SLA');
         view()->share('route', 'sla-calculations');
