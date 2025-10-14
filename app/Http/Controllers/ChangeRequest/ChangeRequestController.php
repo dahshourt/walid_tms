@@ -334,7 +334,7 @@ class ChangeRequestController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Failed to create change request', [
-                'error' => $e->getMessage(),
+                'error' => $e,
                 'user_id' => auth()->id()
             ]);
             return redirect()->back()->with('error', 'Failed to create change request. Please try again.');
@@ -1321,4 +1321,34 @@ class ChangeRequestController extends Controller
             return redirect()->back()->with('error', 'Failed to update change request.');
         }
     }
+	
+	public function unreadNotifications()
+    {
+        $user = Auth::user();
+    
+        // Get all unread notifications for the user
+        $unreadNotifications = $user->unreadNotifications;
+    
+        // Filter notifications based on group ID
+        $filteredNotifications = $unreadNotifications->filter(function ($notification) use ($user) {
+            // Assuming 'user_action_id' is the key in the JSON structure within the 'data' column
+            $groupIdInNotification = $notification->data['user_action_id'] ?? null; 
+            if(isset($groupIdInNotification)){
+                if($groupIdInNotification == $user->id){
+                    return true;
+                }
+            }
+            return false;
+        });
+    
+        // Check if filtered notifications are empty
+        if ($filteredNotifications->isEmpty()) {
+            // If empty, return all unread notifications
+            return;
+        } else {
+            // If not empty, return filtered notifications
+            return response()->json($filteredNotifications);
+        }
+    }
+	
 }

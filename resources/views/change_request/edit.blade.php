@@ -595,7 +595,7 @@ $(document).ready(function () {
         // 141 = SA FB
         if (currentStatus == "141"){
             if (needDesign != 'null'){
-                technicalTeamsField.prop("disabled", true);
+                //technicalTeamsField.prop("disabled", true);
                 console.log("Technical Teams is now disabled");
             }else{
                 technicalTeamsField.prop("disabled", false);
@@ -612,7 +612,7 @@ $(document).ready(function () {
     // 141 = SA FB
     // 100 = Review CD
     if (currentStatus == "141"){
-        handlePromoTechnicalTeams();
+        //handlePromoTechnicalTeams();
         statusField.on("change", handlePromoTechnicalTeams);
     }else if(currentStatus == "100"){
         handlePromoStatusValidation();
