@@ -12,13 +12,24 @@
         <div class="col-md-3">
             <div class="form-group">
                 <label for="validation_type_id_{{ $i }}">Validation:</label>
-                <select id="validation_type_id_{{ $i }}" name="validation_type_id[]" class="form-control">
+                <!-- <select id="validation_type_id_{{ $i }}" name="validation_type_id[]" class="form-control">
                     <option value="">Choose</option>
                     <option value="1" 
                         @if(isset($field['custom_field_group'][0]['validation_type_id']) && $field['custom_field_group'][0]['validation_type_id'] == '1') selected @endif>
                         Required
                     </option>
-                </select>
+                </select> -->
+                <select id="validation_type_id_{{ $i }}" name="validation_type_id[]" class="form-control">
+    <option value="">Choose</option>
+    @foreach($validation_type_name as $validation)
+        <option value="{{ $validation->id }}"
+            @if(isset($field['custom_field_group'][0]['validation_type_id']) && 
+                $field['custom_field_group'][0]['validation_type_id'] == $validation->id) selected @endif>
+            {{ $validation->name }}
+        </option>
+    @endforeach
+</select>
+
             </div>
         </div>
         
