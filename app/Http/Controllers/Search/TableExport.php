@@ -44,7 +44,7 @@ class TableExport implements FromCollection, WithHeadings, WithMapping
     public function map($item): array
     {
         return [
-            $item['id'],
+            $item['cr_no'],
             $item['title'],
             $item['category']['name']??"",
             $item['application']['name']??"",
