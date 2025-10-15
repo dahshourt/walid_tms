@@ -429,9 +429,17 @@ $(window).on("load", function () {
         return false;
     }
 
+    function isStatusPromo() {
+        if (statusField) {
+            const selectedStatusPromo = statusField.options[statusField.selectedIndex].text;
+            return selectedStatusPromo === "Promo Validation";
+        }
+        return false;
+    }
+
     // Function to handle the visibility of rejection reasons field and label
     function handleRejectionReasonsVisibility() {
-        if (isStatusReject()) {
+        if (isStatusReject()  || isStatusPromo() ) {
             $(".field_rejection_reason_id").show();
         } else {
             $(".field_rejection_reason_id").hide();
