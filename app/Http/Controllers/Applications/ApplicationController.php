@@ -15,17 +15,17 @@ class ApplicationController extends Controller
     private $Application;
 
     function __construct(ApplicationFactory $Application){
-        
+
         $this->Application = $Application::index();
         $this->view = 'applications';
         $view = 'applications';
         $route = 'applications';
         $OtherRoute = 'application';
-        
+
         $title = 'Applications';
         $form_title = 'Application';
         view()->share(compact('view','route','title','form_title','OtherRoute'));
-        
+
     }
 
     public function index()
@@ -34,14 +34,14 @@ class ApplicationController extends Controller
         $collection = $this->Application->getAll();
         return view("$this->view.index",compact('collection'));
     }
-    
+
     /**
      * Show the form for creating a new resource.
      *
      * @return \Illuminate\Http\Response
      */
     public function create()
-    { 
+    {
 		$this->authorize('Create Application');
 		$workflow=new Workflow_type_repository();
 		$workflow_subtype =   $workflow->get_workflow_all_subtype();
@@ -87,24 +87,24 @@ class ApplicationController extends Controller
         $this->Application->update($request->except(['_token', '_method']),$id);
         return redirect()->back()->with('status' , 'Updated Successfully' );
     }
-    
+
     public function destroy()
     {
         $this->authorize('Delete Cab User'); // permission check
-        
+
     }
 	public function updateactive(Request $request)
     {
         $data = $this->Application->find($request->id);
 		$this->Application->updateactive($data->active,$request->id);
-		   
+
 		    return response()->json([
             'message' => 'Updated Successfully',
             'status' => 'success'
-        ]);	
+        ]);
 	} //end method
 
-   
+
 	public function download($id)
 	{
 		$file = $this->Application->find($id);
@@ -116,6 +116,6 @@ class ApplicationController extends Controller
 
         return redirect()->back()->withErrors('File not found.');
 	}
-   
-   
+
+
 }
