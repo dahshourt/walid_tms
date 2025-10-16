@@ -229,6 +229,12 @@ class Change_request extends Model
                     ->where('active', '1')
                     ->orderBy('id', 'DESC');
     }
+    public function RequestStatusesDone()
+{
+    return $this->hasMany(Change_request_statuse::class, 'cr_id','id')
+                ->where('active', '2')
+                ->orderBy('id', 'desc');
+}
     public function AllRequestStatuses()
     {
         return $this->hasMany(Change_request_statuse::class, 'cr_id','id') ->orderBy('id', 'DESC');
