@@ -1,6 +1,6 @@
 <!--begin::Footer-->
 <div class="footer bg-white py-4 d-flex flex-lg-column" id="kt_footer">
-						
+
 					</div>
 					<!--end::Footer-->
 				</div>
@@ -28,7 +28,7 @@
 						<i class="symbol-badge bg-success"></i>
 					</div>
 					<div class="d-flex flex-column">
-						@php 
+						@php
 							$user = auth()->user();
 						@endphp
 						<a class="font-weight-bold font-size-h5 text-dark-75 text-hover-primary">{{ $user->name }}</a>
@@ -60,13 +60,13 @@
 				<!--begin::Separator-->
 				<div class="separator separator-dashed mt-8 mb-5"></div>
 				<!--end::Separator-->
-				
-				
+
+
 			</div>
 			<!--end::Content-->
 		</div>
 		<!-- end::User Panel-->
-		
+
 		<!--begin::Scrolltop-->
 		<div id="kt_scrolltop" class="scrolltop">
 			<span class="svg-icon">
@@ -82,8 +82,8 @@
 			</span>
 		</div>
 		<!--end::Scrolltop-->
-		
-		
+
+
 		<script>var HOST_URL = "{{ url('/') }}";</script>
 		<!--begin::Global Config(global config for global JS scripts)-->
 		<script>var KTAppSettings = { "breakpoints": { "sm": 576, "md": 768, "lg": 992, "xl": 1200, "xxl": 1200 }, "colors": { "theme": { "base": { "white": "#ffffff", "primary": "#6993FF", "secondary": "#E5EAEE", "success": "#1BC5BD", "info": "#8950FC", "warning": "#FFA800", "danger": "#F64E60", "light": "#F3F6F9", "dark": "#212121" }, "light": { "white": "#ffffff", "primary": "#E1E9FF", "secondary": "#ECF0F3", "success": "#C9F7F5", "info": "#EEE5FF", "warning": "#FFF4DE", "danger": "#FFE2E5", "light": "#F3F6F9", "dark": "#D6D6E0" }, "inverse": { "white": "#ffffff", "primary": "#ffffff", "secondary": "#212121", "success": "#ffffff", "info": "#ffffff", "warning": "#ffffff", "danger": "#ffffff", "light": "#464E5F", "dark": "#ffffff" } }, "gray": { "gray-100": "#F3F6F9", "gray-200": "#ECF0F3", "gray-300": "#E5EAEE", "gray-400": "#D6D6E0", "gray-500": "#B5B5C3", "gray-600": "#80808F", "gray-700": "#464E5F", "gray-800": "#1B283F", "gray-900": "#212121" } }, "font-family": "Poppins" };</script>
@@ -112,7 +112,7 @@
 		@include('templates.toastr')
 		<script>
 
-			
+
 
 		$('#group_id').select2({
         	placeholder: "Select group/groups",
@@ -136,8 +136,8 @@
 		$('#from_status_id').select2({
         	placeholder: "Select status/statuses",
         });
-		
-		
+
+
 		$('#previous_status_id').select2({
         	placeholder: "Select status/statuses",
         });
@@ -195,7 +195,7 @@ let fullUrl = `${baseUrl}?crId=${id}&action=approve&token=${token}`;
                 success: function(msg) {
                     if (msg.status === 200 && msg.isSuccess) {
                         toastr.success(msg.message);
-                        
+
                     } else {
                         toastr.error(msg.message || "Action failed.");
                     }
@@ -231,7 +231,7 @@ let fullUrl = `${baseUrl}?crId=${id}&action=reject&token=${token}`;
                 success: function(msg) {
                     if (msg.status === 200 && !msg.isSuccess) {
                         toastr.success(msg.message);
-                       
+
                     } else {
                         toastr.error(msg.message || "Action failed.");
                     }
@@ -292,7 +292,7 @@ let fullUrl = `${baseUrl}?crId=${id}&action=reject&token=${token}`;
 document.addEventListener('DOMContentLoaded', function() {
     // Clear the comment textarea field on page load
     const commentField = document.querySelector('textarea[name="comment"]');
-    
+
     if (commentField) {
         commentField.value = '';
         console.log('Comment field cleared on page load');
@@ -302,21 +302,21 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 <script>
-  
+
   const CHECK_INTERVAL = {{ config('app.check_interval') }};
 
-    setInterval(() => {
-      
-		$.get( "{{ route('check-active') }}", function( data ) {
-			console.log("check-active",data.active);
-			if (data.active == false || data.active === "0" || data.active === 0){
-                    //window.location.href = "{{ route('inactive-logout') }}";
-			}
-				
-		});
-	  
-        
-    }, CHECK_INTERVAL);
+    {{--setInterval(() => {--}}
+    {{--  --}}
+	{{--	$.get( "{{ route('check-active') }}", function( data ) {--}}
+	{{--		console.log("check-active",data.active);--}}
+	{{--		if (data.active == false || data.active === "0" || data.active === 0){--}}
+    {{--                //window.location.href = "{{ route('inactive-logout') }}";--}}
+	{{--		}--}}
+	{{--			--}}
+	{{--	});--}}
+	{{--  --}}
+    {{--    --}}
+    {{--}, CHECK_INTERVAL);--}}
 </script>
 @endauth
 

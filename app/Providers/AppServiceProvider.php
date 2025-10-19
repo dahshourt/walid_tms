@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Pagination\Paginator;
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use App\Contracts\ChangeRequest\ChangeRequestRepositoryInterface;
+use App\Http\Repository\Director\DirectorRepository;
+use App\Contracts\Director\DirectorRepositoryInterface;
 use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,7 +21,7 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->bind(ChangeRequestRepositoryInterface::class, ChangeRequestRepository::class);
-
+        $this->app->bind(DirectorRepositoryInterface::class, DirectorRepository::class);
     }
 
     /**

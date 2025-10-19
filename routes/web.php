@@ -1,6 +1,5 @@
 <?php
 
-
 use Illuminate\Support\Facades\Route;
 use App\Services\EwsMailReader;
 
@@ -47,7 +46,7 @@ Route::middleware(['auth'])->group(
         Route::get('customs/field/group/type/selected/{form_type?}', 'CustomFields\CustomFieldGroupTypeController@AllCustomFieldsWithSelectedWithFormType');
         Route::get('/', 'HomeController@index')->name('home');
         Route::post('/charts_dashboard', 'HomeController@dashboard');
-        
+
         Route::get('/application_based_on_workflow', 'HomeController@application_based_on_workflow');
         //Route::get('/dashboard', 'HomeController@dashboard');
         Route::post('custom/field/group/type', 'CustomFields\CustomFieldGroupTypeController@store')->name('custom.fields.store');
@@ -57,16 +56,16 @@ Route::middleware(['auth'])->group(
         Route::get('/custom_fields/search', 'CustomFields\CustomFieldController@search')->name('custom.fields.search');
         // Route::get('/custom_fields/search/special', 'CustomFields\CustomFieldController@special')
         // ->name('custom.fields.special')
-        // ->defaults('parent', true); 
+        // ->defaults('parent', true);
         Route::get('/custom_fields/view', 'CustomFields\CustomFieldController@view')->name('custom.fields.view');//viewupdate
         Route::get('/custom_fields/viewCF', 'CustomFields\CustomFieldController@viewCF')->name('custom.fields.viewCF');//viewupdate
         Route::get('/custom_fields/viewupdate', 'CustomFields\CustomFieldController@viewupdate')->name('custom.fields.viewupdate');//viewupdate
-        Route::get('groups/list/child', ['uses' => 'CustomFields\CustomFieldController@special', 'parent' => true]) ->name('custom.fields.special');   
-        Route::get('groups/list/specialview', ['uses' => 'CustomFields\CustomFieldController@specialview', 'parent' => true]) ->name('custom.fields.special.view');     
-        Route::get('groups/list/specialviewresult', ['uses' => 'CustomFields\CustomFieldController@specialviewresult', 'parent' => true]) ->name('custom.fields.special.viewresult'); 
-        Route::get('groups/list/specialviewupdate', ['uses' => 'CustomFields\CustomFieldController@specialviewupdate', 'parent' => true]) ->name('custom.fields.special.viewupdate');     
-        Route::get('groups/list/specialviewsearch', ['uses' => 'CustomFields\CustomFieldController@specialviewsearch', 'parent' => true]) ->name('custom.fields.special.viewsearch'); 
-        Route::get('groups/list/specialviewadvanced', ['uses' => 'CustomFields\CustomFieldController@specialviewadvanced', 'parent' => true]) ->name('custom.fields.special.viewadvanced'); 
+        Route::get('groups/list/child', ['uses' => 'CustomFields\CustomFieldController@special', 'parent' => true]) ->name('custom.fields.special');
+        Route::get('groups/list/specialview', ['uses' => 'CustomFields\CustomFieldController@specialview', 'parent' => true]) ->name('custom.fields.special.view');
+        Route::get('groups/list/specialviewresult', ['uses' => 'CustomFields\CustomFieldController@specialviewresult', 'parent' => true]) ->name('custom.fields.special.viewresult');
+        Route::get('groups/list/specialviewupdate', ['uses' => 'CustomFields\CustomFieldController@specialviewupdate', 'parent' => true]) ->name('custom.fields.special.viewupdate');
+        Route::get('groups/list/specialviewsearch', ['uses' => 'CustomFields\CustomFieldController@specialviewsearch', 'parent' => true]) ->name('custom.fields.special.viewsearch');
+        Route::get('groups/list/specialviewadvanced', ['uses' => 'CustomFields\CustomFieldController@specialviewadvanced', 'parent' => true]) ->name('custom.fields.special.viewadvanced');
 
         Route::get('custom-fields/load', 'CustomFields\CustomFieldController@loadCustomFields');
         Route::get('customs/field/special', 'CustomFields\CustomFieldGroupTypeController@AllCustomFieldsSelected');
@@ -80,19 +79,23 @@ Route::middleware(['auth'])->group(
         Route::resource('statuses', Statuses\StatusController::class);
         Route::post('status/updateactive', 'Statuses\StatusController@updateactive');
         Route::resource('division_manager', Division_manager\Division_managerController::class);
+
+        Route::resource('directors', 'Director\DirectorController')->except(['show', 'destroy']);
+        Route::post('directors/updateactive', 'Director\DirectorController@updateStatus')->name('directors.updateStatus');
+
 		 Route::resource('stages', Stages\StageController::class);
        Route::post('stage/updateactive', 'Stages\StageController@updateactive');
        Route::resource('parents', Parents\ParentController::class);
         Route::post('parent/updateactive', 'Parents\ParentController@updateactive');
         Route::get('list/CRs/by/workflowtype', 'Parents\ParentController@ListCRsbyWorkflowtype');
 		Route::get('parent/file/download/{id}','Parents\ParentController@download')->name('parent.download');
-		
-		
-		
+
+
+
        Route::resource('high_level_status', highLevelStatuses\highLevelStatusesControlller::class);
        Route::post('high_level_status/updateactive', 'highLevelStatuses\highLevelStatusesControlller@updateactive');
        //Route::resource('workflows', Workflow\WorkflowController::class);
-       
+
        Route::resource('searchs', Search\SearchController::class);
       // Route::get('/search/result', 'Search\SearchController@search_result');
 
@@ -113,7 +116,7 @@ Route::middleware(['auth'])->group(
 		Route::resource('applications', Applications\ApplicationController::class);
 		Route::post('application/updateactive', 'Applications\ApplicationController@updateactive');
 		Route::get('app/file/download/{id}','Applications\ApplicationController@download')->name('app.download');
-      
+
 		Route::post('advanced-search-requests/export', 'Search\SearchController@AdvancedSearchResultExport')->name('advanced.search.export');;
 
        Route::resource('rejection_reasons', RejectionReasons\RejectionReasonsController::class);
@@ -123,18 +126,18 @@ Route::middleware(['auth'])->group(
         //Route::resource('mail_templates', MailTemplates\MailTemplatesController::class);//
 
         //Route::middleware('group')->group( function () {
-        
+
         //});
         Route::post('change_request/listCRsUsers', 'ChangeRequest\ChangeRequestController@Crsbyusers');
         Route::get('change_request/listcrsbyuser', 'ChangeRequest\ChangeRequestController@list_crs_by_user');
-        
+
         Route::resource('change_request', 'ChangeRequest\ChangeRequestController');
         Route::get('change_request2/dvision_manager_cr', 'ChangeRequest\ChangeRequestController@dvision_manager_cr')->name('dvision_manager_cr');
         Route::get('dvision_manager_cr/unreadNotifications', 'ChangeRequest\ChangeRequestController@unreadNotifications');
         Route::get('change_request1/asd/{group?}', 'ChangeRequest\ChangeRequestController@asd')->name('change_request.asd');
         Route::post('/select-group/{group}', 'ChangeRequest\ChangeRequestController@selectGroup')->name('select_group');
 
-       
+
         Route::post('/change-requests/reorder', 'ChangeRequest\ChangeRequestController@reorderChangeRequest')->name("change-requests.reorder");
         Route::get('/change-requests/reorder/home', 'ChangeRequest\ChangeRequestController@reorderhome')->name("change-requests.reorder.home");
 
@@ -152,7 +155,7 @@ Route::middleware(['auth'])->group(
         // release routes
 
         Route::resource('releases', Releases\ReleaseController::class);
-   
+
 		Route::get('releases/show_release/{id}', 'Releases\ReleaseController@show_release');
 
         Route::get('release/logs/{id}', 'Releases\ReleaseController@ReleaseLogs');
@@ -189,7 +192,7 @@ Route::middleware(['auth'])->group(
 
         /*Route::get('/test-ews', function () {
             $emails = app(EwsMailReader::class)->handleApprovals();
-        
+
             //foreach ($emails as $email) {
             //    echo "<h2>{$email['subject']}</h2>";
             //    echo "<p><strong>From:</strong> {$email['from']}<br><strong>Date:</strong> {$email['date']}</p>";

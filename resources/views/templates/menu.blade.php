@@ -27,12 +27,12 @@
 											<li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
 												<a href="{{ url('/dashboard') }}" class="menu-link">
 													<span class="menu-text">Dashboard</span>
-													
+
 												</a>
-												
+
 											</li>
 											@endcan
-											
+
 											<!--check if the user have any of the below permissions -->
 											@canany(['List Users' , 'Access CustomFields' , 'List Statuses' , 'List Workflows' , 'List Division' , 'List Groups' , 'List Roles' , 'List Permissions' , 'List Stages' , 'List Parents' , 'List HighLevelStatuses' , 'List RejectionReasons','List Applications'])
 											<li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
@@ -43,7 +43,7 @@
 												</a>
 												<div class="menu-submenu menu-submenu-classic menu-submenu-left">
 													<ul class="menu-subnav">
-                                                        
+
 												        @can('List Users')
 														<li class="menu-item" aria-haspopup="true">
 															<a href="{{ url('users') }}" class="menu-link">
@@ -141,7 +141,7 @@
 															</a>
 															<div class="menu-submenu menu-submenu-classic menu-submenu-right">
 																<ul class="menu-subnav">
-																
+
 																	<li class="menu-item" aria-haspopup="true">
 																		<a href="{{ route('custom.fields.create') }}" class="menu-link">
 																			<i class="menu-bullet menu-bullet-dot">
@@ -242,12 +242,12 @@
 																		</a>
 																	</li>
 
-											
+
 																</ul>
 															</div>
 														</li>
 														@endcan
-															
+
 														@can('List Statuses')
 														<li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
 															<a href="{{ url('statuses') }}" class="menu-link">
@@ -263,7 +263,7 @@
 																	<!--end::Svg Icon-->
 																</span>
 																<span class="menu-text">Status</span>
-																
+
 															</a>
 														</li>
 														@endcan
@@ -282,22 +282,22 @@
 																				<!--end::Svg Icon-->
 																			</span>
 																<span class="menu-text">Workflows</span>
-																
+
 															</a>
 														</li>
 														@endcan
 
-											
 
-										
-											
-											
 
-										
 
-											
-											
-											
+
+
+
+
+
+
+
+
                                             @can('List Division')
 											<li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
 												<a href="{{ url('division_manager') }}" class="menu-link">
@@ -313,10 +313,30 @@
 																	<!--end::Svg Icon-->
 																</span>
 													<span class="menu-text">Division Manager</span>
-												
+
 												</a>
 											</li>
 											@endcan
+
+                                            @can('List Director')
+                                                <li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
+                                                    <a href="{{ route('directors.index') }}" class="menu-link">
+                                                    <span class="svg-icon menu-icon">
+                                                                        <!--begin::Svg Icon | path:assets/media/svg/icons/General/Shield-check.svg-->
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                                                                            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                                                                <rect x="0" y="0" width="24" height="24" />
+                                                                                <path d="M4,4 L11.6314229,2.5691082 C11.8750185,2.52343403 12.1249815,2.52343403 12.3685771,2.5691082 L20,4 L20,13.2830094 C20,16.2173861 18.4883464,18.9447835 16,20.5 L12.5299989,22.6687507 C12.2057287,22.8714196 11.7942713,22.8714196 11.4700011,22.6687507 L8,20.5 C5.51165358,18.9447835 4,16.2173861 4,13.2830094 L4,4 Z" fill="#000000" opacity="0.3" />
+                                                                                <path d="M11.1750002,14.75 C10.9354169,14.75 10.6958335,14.6541667 10.5041669,14.4625 L8.58750019,12.5458333 C8.20416686,12.1625 8.20416686,11.5875 8.58750019,11.2041667 C8.97083352,10.8208333 9.59375019,10.8208333 9.92916686,11.2041667 L11.1750002,12.45 L14.3375002,9.2875 C14.7208335,8.90416667 15.2958335,8.90416667 15.6791669,9.2875 C16.0625002,9.67083333 16.0625002,10.2458333 15.6791669,10.6291667 L11.8458335,14.4625 C11.6541669,14.6541667 11.4145835,14.75 11.1750002,14.75 Z" fill="#000000" />
+                                                                            </g>
+                                                                        </svg>
+                                                        <!--end::Svg Icon-->
+                                                    </span>
+                                                    <span class="menu-text">Directors</span>
+
+                                                    </a>
+                                                </li>
+                                            @endcan
 
                                            <li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
 
@@ -335,12 +355,12 @@
 																	<!--end::Svg Icon-->
 																</span>
 													<span class="menu-text">Groups</span>
-													
+
 												</a>
 											</li>
 											@endcan
-											
-											
+
+
 											@can('List Applications')
 											<li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
 												<a href="{{ url('applications') }}" class="menu-link">
@@ -356,17 +376,17 @@
 																	<!--end::Svg Icon-->
 																</span>
 													<span class="menu-text">Applications</span>
-													
+
 												</a>
 											</li>
 											@endcan
-                                            
-											
-                                            
-											
+
+
+
+
 											@can('List Roles')
 											<li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
-											
+
 												<a href="{{ url('roles') }}" class="menu-link">
 												<span class="svg-icon menu-icon">
 																	<!--begin::Svg Icon | path:assets/media/svg/icons/General/Shield-check.svg-->
@@ -380,7 +400,7 @@
 																	<!--end::Svg Icon-->
 																</span>
 													<span class="menu-text">Roles</span>
-													
+
 												</a>
 											</li>
 											@endcan
@@ -400,7 +420,7 @@
 																	<!--end::Svg Icon-->
 																</span>
 													<span class="menu-text">Permissions</span>
-													
+
 												</a>
 											</li>
 											@endcan
@@ -421,7 +441,7 @@
 																	<!--end::Svg Icon-->
 																</span>
 													<span class="menu-text">stages</span>
-													
+
 												</a>
 											</li>
 											@endcan
@@ -440,7 +460,7 @@
 																	<!--end::Svg Icon-->
 																</span>
 													<span class="menu-text">Parent CR</span>
-													
+
 												</a>
 											</li>
 											@endcan
@@ -459,7 +479,7 @@
 																	<!--end::Svg Icon-->
 																</span>
 													<span class="menu-text">high level statuses</span>
-													
+
 												</a>
 											</li>
 
@@ -479,7 +499,7 @@
 																	<!--end::Svg Icon-->
 																</span>
 													<span class="menu-text">Rejection Reasons</span>
-													
+
 												</a>
 											</li>
 
@@ -500,20 +520,20 @@
 																	<!--end::Svg Icon-->
 																</span>
 													<span class="menu-text">SLA Calculations</span>
-													
+
 												</a>
 											</li>
 
 											@endcan
 
-											
 
-											
+
+
 
 											</ul>
 												</div>
 											</li>
-											@endcan		
+											@endcan
                                             @canany(['List change requests' , 'Create ChangeRequest' , 'My Assignments','Show My CRs'])
 											<li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
 												<a href="javascript:;" class="menu-link menu-toggle">
@@ -538,7 +558,7 @@
 																				<!--end::Svg Icon-->
 																			</span>
 																			<span class="menu-text">My Created CRs</span>
-																			
+
 																		</a>
 																	</li>
 																	@endcan
@@ -558,7 +578,7 @@
 																				<!--end::Svg Icon-->
 																			</span>
 																			<span class="menu-text">CR Waiting Approval </span>
-																			
+
 																		</a>
 																	</li>
 																	@endcan
@@ -577,7 +597,7 @@
 																				<!--end::Svg Icon-->
 																			</span>
 																			<span class="menu-text">Create Change Request</span>
-																			
+
 																		</a>
 																	</li>
 																	@endcan
@@ -596,7 +616,7 @@
 																				<!--end::Svg Icon-->
 																			</span>
 																			<span class="menu-text">List Change Request</span>
-																			
+
 																		</a>
 																	</li>
 																	@endcan
@@ -615,7 +635,7 @@
 																										<!--end::Svg Icon-->
 																									</span>
 																			<span class="menu-text">My Assignments</span>
-																			
+
 																		</a>
 																	</li>
 																	@endcan
@@ -634,7 +654,7 @@
 																							<!--end::Svg Icon-->
 																						</span>
 																			<span class="menu-text">Defects</span>
-																			
+
 																		</a>
 																	</li>
 																	@endcan
@@ -653,7 +673,7 @@
 																							<!--end::Svg Icon-->
 																						</span>
 																		<span class="menu-text">Testable Form</span>
-																			
+
 																		</a>
 																	</li>
 																	@endcan
@@ -673,20 +693,20 @@
 																							<!--end::Svg Icon-->
 																						</span>
 																		<span class="menu-text">Prerequisites</span>
-																			
+
 																		</a>
 																	</li>
 																	@endcan
 													</ul>
-											</li>	
+											</li>
 											@endcanany
 
 											@can('Access Search')
-											
+
 											<li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
 												<a href="{{ url('searchs') }}" class="menu-link">
 													<span class="menu-text">Search</span>
-												
+
 												</a>
 											</li>
 											@endcan
@@ -694,7 +714,7 @@
 											<li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
 												<a href="{{ route('advanced.search') }}" class="menu-link">
 													<span class="menu-text">advanced search</span>
-													
+
 												</a>
 											</li>
 											@endcan
@@ -702,13 +722,13 @@
 											<li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
 												<a href="{{ url('releases') }}" class="menu-link">
 													<span class="menu-text">releases</span>
-													
+
 												</a>
 											</li>
 											@endcan
 
 											<li class="menu-item menu-item-submenu menu-item-rel position-relative" data-menu-toggle="click" aria-haspopup="true">
-   
+
 	<div id="app" >
 
 	<sample-component     :interval="{{ env('DIGITAL_SOLUTIONS_INTERVAL') }}"  base-url="{{ env('VUE_APP_BASE_URL') }}" ref="sampleComponent"></sample-component>
@@ -757,14 +777,14 @@
   <div class="dropdown-menu">
     <!-- Loop through user's groups and list them -->
 	@if(isset($userGroups))
-		
+
 		@foreach ($userGroups as $group)
 			@if(Session::has('current_group') && Session::get('current_group') == $group->group->id)
 				<a class="dropdown-item {{ Session::has('current_group') && Session::get('current_group') == $group->group->id ? 'active' : '' }}" href="{{route('change_request.asd',['group'=>$group->group->id])}}">
 			@else
 				<a class="dropdown-item {{ auth()->user()->defualt_group->id == $group->group->id ? 'active' : '' }} " href="{{route('change_request.asd',['group'=>$group->group->id])}}">
-			@endif	
-		 
+			@endif
+
 			{{ $group->group->name }}
 		  </a>
 		@endforeach
@@ -815,11 +835,10 @@
 
 <!--end: Group bar -->
 							</div>
-							
-								
+
+
 							<!--end::Topbar-->
 						</div>
 						<!--end::Container-->
 					</div>
 					<!--end::Header-->
-					
