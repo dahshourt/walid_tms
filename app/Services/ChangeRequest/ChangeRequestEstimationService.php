@@ -68,32 +68,30 @@ class ChangeRequestEstimationService
             'develop_duration' => $request['dev_estimation'],
             'developer_id' => $request['developer_id'] ?? $user->id
         ];
+ if ( isset($changeRequest['test_duration']) ) {
+    $dates = $this->getLastCRDate(
+        $id,
+        $data['developer_id'],
+        'developer_id',
+        'end_develop_time',
+        $request['dev_estimation'],
+        'dev'
+    );
 
-        // If design phase exists, calculate development after design
-        //if (isset($changeRequest['end_design_time'])) {
-        if (isset($changeRequest['end_design_time']) && isset($changeRequest['test_duration']) ) {
-            $dates = $this->getLastEndDate(
-                $id,
-                $data['developer_id'],
-                'developer_id',
-                $changeRequest['end_design_time'],
-                $request['dev_estimation'],
-                'dev'
-            );
+    $data['start_develop_time'] = $dates[0] ?? '';
+    $data['end_develop_time']   = $dates[1] ?? '';
 
-            $data['start_develop_time'] = $dates[0] ?? '';
-            $data['end_develop_time'] = $dates[1] ?? '';
-
-            // Calculate testing time if test duration exists
-            if (!empty($changeRequest['test_duration'])) {
-                $testDates = $this->getLastEndDate(
-                    $id,
-                    $changeRequest['tester_id'],
-                    'tester_id',
-                    $data['end_develop_time'],
-                    $changeRequest['test_duration'],
-                    'test'
-                );
+    // Calculate subsequent phase (testing) if it exists
+    if (!empty($changeRequest['test_duration'])) {
+        $testEndTime = $data['end_develop_time'];
+        $testDates = $this->getLastEndDate(
+            $id,
+            $changeRequest['tester_id'],
+            'tester_id',
+            $testEndTime,
+            $changeRequest['test_duration'],
+            'test'
+        );
 
                 $data['start_test_time'] = $testDates[0] ?? '';
                 $data['end_test_time'] = $testDates[1] ?? '';
@@ -118,22 +116,33 @@ class ChangeRequestEstimationService
             'test_duration' => $request['testing_estimation'],
             'tester_id' => $request['tester_id'] ?? $user->id
         ];
-
+    if (!empty($changeRequest['develop_duration'])) {
         // If design phase exists, calculate testing after development
-        if (isset($changeRequest['end_design_time'])) {
-            if (!empty($changeRequest['develop_duration'])) {
-                $developDates = $this->getLastEndDate(
+       
+
+                // $developDates = $this->getLastEndDate(
+                //     $id,
+                //     $changeRequest['developer_id'],
+                //     'developer_id',
+                //     $changeRequest['end_design_time'],
+                //     $changeRequest['develop_duration'],
+                //     'dev'
+                // );
+
+                // $data['start_develop_time'] = $developDates[0] ?? '';
+                // $data['end_develop_time'] = $developDates[1] ?? '';
+//die("dddtt");
+                $dates = $this->getLastCRDate(
                     $id,
                     $changeRequest['developer_id'],
                     'developer_id',
-                    $changeRequest['end_design_time'],
+                    'end_develop_time',
                     $changeRequest['develop_duration'],
                     'dev'
                 );
-
-                $data['start_develop_time'] = $developDates[0] ?? '';
-                $data['end_develop_time'] = $developDates[1] ?? '';
-
+        
+             $data['start_develop_time'] = $dates[0] ?? '';
+             $data['end_develop_time'] = $dates[1] ?? '';
                 $testDates = $this->getLastEndDate(
                     $id,
                     $data['tester_id'],
@@ -146,7 +155,7 @@ class ChangeRequestEstimationService
                  $data['start_test_time'] = $testDates[0] ?? ''; 
                 $data['end_test_time'] = $testDates[1] ?? '';
             }
-        }
+        
 
         return $data;
     }
