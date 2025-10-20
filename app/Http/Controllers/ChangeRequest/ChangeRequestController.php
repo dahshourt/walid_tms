@@ -1321,6 +1321,97 @@ class ChangeRequestController extends Controller
             return redirect()->back()->with('error', 'Failed to update change request.');
         }
     }
+
+    public function showAddAttachmentsForm()
+    {
+        $this->authorize('Admin Add Attachments and Feedback');
+
+        return view($this->view.'.add_attachments');
+    }
+
+    public function storeAttachments(Request $request){
+
+        $this->authorize('Admin Add Attachments and Feedback');
+
+        $validator = Validator::make($request->all(), [
+            'cr_number' => 'required|exists:change_request,cr_no',
+            'business_feedback' => 'nullable|string|max:5000',
+            'technical_feedback' => 'nullable|string|max:5000',
+        ], [
+            'cr_number.required' => 'CR number is required',
+            'cr_number.exists' => 'The specified CR number does not exist',
+        ]);
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+        try {
+            $this->validateAttachments($request);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput();
+        }
+
+        if ($request->hasFile('business_attachments') || $request->hasFile('technical_attachments')) {
+            $changeRequest = Change_request::where('cr_no', $request->cr_number)
+                ->select('id', 'workflow_type_id')
+                ->firstOrFail();
+            $status = DB::table('change_request_statuses')
+                ->where('cr_id', $changeRequest->id)
+                ->where('active', '1')
+                ->orderBy('id', 'desc')
+                ->first();
+            
+            $status_id = $status->new_status_id ?? null;
+            if ($changeRequest->workflow_type_id == 3) {
+                if (!in_array($status_id, [
+                    config('change_request.status_ids.pending_production_deployment_in_house'),
+                    config('change_request.status_ids.pending_stage_deployment_in_house')
+                ])) {
+                    return redirect()->back()
+                        ->with('error', 'Change request is not in pending production deployment or pending stage deployment status.')
+                        ->withInput();
+                }
+            }
+        }
+
+        DB::beginTransaction();
+        try {
+            //$id = $request->cr_number;
+            $id = Change_request::where('cr_no', $request->cr_number)->firstOrFail()->id;
+            //dd($id);
+            // Update change request
+            $cr_id = $this->changerequest->addFeedback($id, $request);
+            
+            if ($cr_id === false) {
+                throw new \Exception('Failed to update change request');
+            }
+
+            $this->handleFileUploads($request, $id);
+            
+            DB::commit();
+            
+            Log::info('Change request updated successfully', [
+                'cr_id' => $id,
+                'user_id' => auth()->id()
+            ]);
+            
+            //return redirect()->to('/change_request')->with('status', 'Updated Successfully');
+			return redirect()->back()->with('status', 'Updated Successfully');
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update change request', [
+                'cr_id' => $id,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id()
+            ]);
+            return redirect()->back()->with('error', 'Failed to update change request.');
+        }
+        
+    }
 	
 	public function unreadNotifications()
     {

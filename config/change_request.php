@@ -86,6 +86,9 @@ return [
         'pending_business' => 64,
         'pending_business_feedback' => 79,
         'approved_implementation_plan' => 116,
+        'pending_cd_analysis' => 138,
+        'pending_stage_deployment_in_house' => 76,
+        'pending_production_deployment_in_house' => 20,
         
     ],
 	
