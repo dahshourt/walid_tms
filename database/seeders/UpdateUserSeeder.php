@@ -7,18 +7,13 @@ use Illuminate\Support\Facades\DB;
 
 class UpdateUserSeeder extends Seeder
 {
-    public function run()
+	public function run()
     {
-        DB::table('cab_crs')
-            ->where('cr_id', 31111)
+        DB::table('change_request_statuses')
+            ->where('cr_id', 31136)
+            ->where('new_status_id', 109)
             ->update([
-                'status' => '0'
-            ]);
-			
-			DB::table('cab_cr_users')
-            ->where('id', 13)
-            ->update([
-                'status' => '0'
+                'active' => '1'
             ]);
     }
 }
