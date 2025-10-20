@@ -47,7 +47,8 @@ class EscalationCron extends Command
                     ->select(
                         'change_request_statuses.*',
                         'statuses.status_name as status_name',
-                        'change_request.title as title'
+                        'change_request.title as title',
+						'change_request.cr_no as cr_no'
                     )
                     ->get();
                  
@@ -193,9 +194,10 @@ class EscalationCron extends Command
         {   
  
             try {
+				//$cr_data = DB::table('change_request')->where('id', $cr)->first();
                 $message = "Dear {$recipient},\n\n";
                 $message .= "This is to inform you that the following Change Request (CR) has exceeded its SLA:\n\n";
-                $message .= "CR Number: {$cr}\n";
+                $message .= "CR Number: {$changeRequest->cr_no}\n";
                 $message .= "CR Subject: {$changeRequest->title}\n";
                 $message .= "Current Status: {$changeRequest->status_name}\n";
                 $message .= "SLA Breach Date: " . $deadlines[$level]->format('Y-m-d H:i:s')  . "\n\n";
@@ -203,13 +205,13 @@ class EscalationCron extends Command
                 $message .= "This is an automated system notification.";
 
                 Mail::raw($message, function ($mail) use ($recipient, $level, $cr) {
-                    $mail->to($recipient['email'])
-                        ->subject("SLA Exceeded Alert - {$level} - CR #{$cr->cr_id}");
+                    $mail->to($recipient)
+                        ->subject("SLA Exceeded Alert - {$level} - CR #{$cr}");
                 });
 
                 return true;
             } catch (\Exception $e) {
-                $this->error("Failed to send email to {$recipient['email']}: " . $e->getMessage());
+                $this->error("Failed to send email to {$recipient}: " . $e->getMessage());
                 return false;
             }
         }
