@@ -581,6 +581,13 @@ class ChangeRequestStatusService
        // Notify group when status changes.
        
        $newStatusId = NewWorkFlowStatuses::where('new_workflow_id', $statusData['new_status_id'])->get()->pluck('to_status_id')->toArray();
+       $userToNotify = [];
+       if (in_array(config('change_request.status_ids.pending_cd_analysis'), $newStatusId)) {
+           if (!empty($request->cr_member)) {
+               $userToNotify = [$request->cr_member];
+           }
+       }
+       
        $cr = ChangeRequest::find($changeRequestId);
        $targetStatus = Status::with('group_statuses')->whereIn('id', $newStatusId)->first();
        //$group_id = $targetStatus->group_statuses->first()->group_id ?? null;
@@ -608,7 +615,7 @@ class ChangeRequestStatusService
        if($this->active_flag == '1' && !empty($groupToNotify)){
         foreach ($groupToNotify as $groupId) {
             try {
-                $this->mailController->notifyGroup($changeRequestId, $statusData['old_status_id'], $newStatusId, $groupId);
+                $this->mailController->notifyGroup($changeRequestId, $statusData['old_status_id'], $newStatusId, $groupId, $userToNotify);
             } catch (\Exception $e) {
                 Log::error('Failed to send Group notification', [
                     'change_request_id' => $changeRequestId,
