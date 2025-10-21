@@ -56,46 +56,61 @@ class SlaCalculationController extends Controller
 }*/
 
    public function store(Request $request)
-        {
-            $validated = $request->validate([
-                'unit_sla_time'        => 'nullable|integer|min:1',
-                'division_sla_time'    => 'nullable|integer|min:1',
-                'director_sla_time'    => 'nullable|integer|min:1',
-                'sla_type_unit'        => 'nullable|in:day,hour',
-                'sla_type_division'    => 'nullable|in:day,hour',
-                'sla_type_director'    => 'nullable|in:day,hour',
-                'status_id'            => 'required|exists:statuses,id',
-                'group_id'             => 'required|exists:groups,id',
-            ]);
+    {
+        $validated = $request->validate([
+            'unit_sla_time'        => 'nullable|integer|min:1',
+            'division_sla_time'    => 'nullable|integer|min:1',
+            'director_sla_time'    => 'nullable|integer|min:1',
+            'sla_type_unit'        => 'nullable|in:day,hour',
+            'sla_type_division'    => 'nullable|in:day,hour',
+            'sla_type_director'    => 'nullable|in:day,hour',
+            'status_id'            => 'required|exists:statuses,id',
+            'group_id'             => 'required|exists:groups,id',
+        ]);
 
-            // ✅ Check that at least one SLA level (unit, division, or director) is provided
-            if (
-                empty($validated['unit_sla_time']) &&
-                empty($validated['division_sla_time']) &&
-                empty($validated['director_sla_time'])
-            ) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors(['at_least_one' => 'You must provide at least one SLA level (unit, division, or director).']);
-            }
-
-            // ✅ Check if record with same group_id and status_id already exists
-            $exists = SlaCalculation::where('group_id', $validated['group_id'])
-                                    ->where('status_id', $validated['status_id'])
-                                    ->exists();
-
-            if ($exists) {
-                return redirect()->back()
-                    ->withInput()
-                    ->withErrors(['duplicate' => 'This SLA Calculation already exists for the selected group and status.']);
-            }
-
-            // ✅ Create new record
-            SlaCalculation::create($validated);
-
-            return redirect()->route('sla-calculations.index')
-                            ->with('success', 'SLA Calculation created successfully.');
+        // ✅ Ensure at least one SLA level is provided
+        if (
+            empty($validated['unit_sla_time']) &&
+            empty($validated['division_sla_time']) &&
+            empty($validated['director_sla_time'])
+        ) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['at_least_one' => 'You must provide at least one SLA level (unit, division, or director).']);
         }
+
+        // ✅ Hierarchy Validation: must follow Unit → Division → Director
+        if (!empty($validated['division_sla_time']) && empty($validated['unit_sla_time'])) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['hierarchy' => 'Division SLA cannot be set without Unit SLA.']);
+        }
+
+        if (!empty($validated['director_sla_time']) &&
+            (empty($validated['unit_sla_time']) || empty($validated['division_sla_time']))) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['hierarchy' => 'Director SLA cannot be set without Unit and Division SLAs.']);
+        }
+
+        // ✅ Check for duplicate (same group_id + status_id)
+        $exists = SlaCalculation::where('group_id', $validated['group_id'])
+                                ->where('status_id', $validated['status_id'])
+                                ->exists();
+
+        if ($exists) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['duplicate' => 'This SLA Calculation already exists for the selected group and status.']);
+        }
+
+        // ✅ Create new record
+        SlaCalculation::create($validated);
+
+        return redirect()->route('sla-calculations.index')
+                        ->with('success', 'SLA Calculation created successfully.');
+    }
+
 
 
 
