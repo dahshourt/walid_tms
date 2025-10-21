@@ -699,7 +699,7 @@ class ChangeRequestStatusService
      */
     private function updateCurrentStatusForFinalConfirmation(int $changeRequestId): ?ChangeRequestStatus
     {
-        $latest_cr = ChangeRequestStatus::where('cr_id', $changeRequestId)
+        $latest_cr_status = ChangeRequestStatus::where('cr_id', $changeRequestId)
             ->latest()
             ->first();
 
@@ -707,7 +707,7 @@ class ChangeRequestStatusService
             ->where('active', self::ACTIVE_STATUS)
             ->update(['active' => self::COMPLETED_STATUS]);
 
-        return $latest_cr;
+        return $latest_cr_status;
     }
 
     /**
