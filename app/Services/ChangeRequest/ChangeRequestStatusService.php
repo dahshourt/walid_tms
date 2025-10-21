@@ -214,7 +214,7 @@ class ChangeRequestStatusService
 
         $action_name = $statusData['new_status_id'] === 19 ? 'Reject': 'Cancel';
 
-        $log_text = "Issue manually set to status ' ". $action_name ." ' by ". \auth()->user()->user_name;
+        $log_text = "Issue manually set to status ' ". $action_name . " ' by '". \auth()->user()->user_name . "' from Administration";
 
         $log_repo->create([
             'cr_id' => $changeRequest->id,
