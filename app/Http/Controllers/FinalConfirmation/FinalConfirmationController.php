@@ -112,7 +112,7 @@ class FinalConfirmationController extends Controller
 
             DB::beginTransaction();
 
-            // Process the final confirmation (action is already a status ID from config)
+            // Process the final confirmation
             $result = $this->finalConfirmationService->processFinalConfirmation(
                 $request->cr_number,
                 (int) $request->action,

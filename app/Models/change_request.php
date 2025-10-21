@@ -756,7 +756,7 @@ class Change_request extends Model
     {
         $current_status = $this->CurrentRequestStatuses->new_status_id;
 
-        return in_array($current_status, [config('change_request.status_ids.Reject'), config('change_request.status_ids.Cancel'), config('change_request.parked_status_ids.promo_closure')]);
+        return in_array($current_status, [config('change_request.parked_status_ids.promo_closure')]);
     }
 
     public function isAlreadyCancelledOrRejected(): bool

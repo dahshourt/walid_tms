@@ -94,20 +94,6 @@ class ChangeRequestStatusService
 
             $this->processStatusUpdateForFinalConfirmation($changeRequest, $statusData, $userId);
 
-            $log_repo = app(LogRepository::class);
-
-            $action_name = $statusData['new_status_id'] === 19 ? 'Reject': 'Cancel';
-
-            $log_text = "Issue manually set to status ' ". $action_name ." ' by ". \auth()->user()->user_name;
-
-            $log_repo->create([
-                'cr_id' => $changeRequestId,
-                'user_id' => $userId,
-                'log_text' => $log_text
-            ]);
-
-            // TODO: Send notification
-
             DB::commit();
             return true;
 
@@ -218,14 +204,23 @@ class ChangeRequestStatusService
         array $statusData,
         int $userId
     ): void {
-        // Update current status to inactive for final confirmation
+        // Update the current status to inactive for final confirmation
         $first_cr_status = $this->updateCurrentStatusForFinalConfirmation($changeRequest->id);
 
-        // Create new final status record
+        // Create a new final status record
         $this->createFinalConfirmationStatus($changeRequest, $statusData, $userId, $first_cr_status);
 
-        // Handle final confirmation notifications
-        $this->handleFinalConfirmationNotifications($statusData, $changeRequest->id);
+        $log_repo = app(LogRepository::class);
+
+        $action_name = $statusData['new_status_id'] === 19 ? 'Reject': 'Cancel';
+
+        $log_text = "Issue manually set to status ' ". $action_name ." ' by ". \auth()->user()->user_name;
+
+        $log_repo->create([
+            'cr_id' => $changeRequest->id,
+            'user_id' => $userId,
+            'log_text' => $log_text
+        ]);
     }
 
     /**
@@ -700,18 +695,19 @@ class ChangeRequestStatusService
 
     /**
      * Update current status specifically for final confirmation
-     * Sets current active status to completed without workflow validation
+     * Sets current active status to completed
      */
     private function updateCurrentStatusForFinalConfirmation(int $changeRequestId): ?ChangeRequestStatus
     {
-        $first_cr_status = ChangeRequestStatus::where('cr_id', $changeRequestId)
+        $latest_cr = ChangeRequestStatus::where('cr_id', $changeRequestId)
+            ->latest()
             ->first();
 
         ChangeRequestStatus::where('cr_id', $changeRequestId)
             ->where('active', self::ACTIVE_STATUS)
             ->update(['active' => self::COMPLETED_STATUS]);
 
-        return $first_cr_status;
+        return $latest_cr;
     }
 
     /**
@@ -733,80 +729,15 @@ class ChangeRequestStatusService
             'cr_id' => $changeRequest->id,
             'old_status_id' => $first_cr_status->new_status_id ?? $statusData['old_status_id'],
             'new_status_id' => $statusData['new_status_id'],
-            'group_id' => null, // Final confirmation doesn't belong to specific group
+            'group_id' => null,
             'reference_group_id' => $currentGroupId,
             'previous_group_id' => $currentGroupId,
             'current_group_id' => $currentGroupId,
             'user_id' => $userId,
-            'active' => self::ACTIVE_STATUS, // Final status is immediately active
+            'active' => self::ACTIVE_STATUS,
         ];
 
         $this->statusRepository->create($payload);
-    }
-
-    /**
-     * Handle notifications specifically for final confirmation
-     * Simplified notification logic for final actions
-     */
-    private function handleFinalConfirmationNotifications(array $statusData, int $changeRequestId): void
-    {
-        try {
-            // Get the change request
-            $changeRequest = ChangeRequest::find($changeRequestId);
-            if (!$changeRequest) {
-                return;
-            }
-
-            // Get the final status
-            $finalStatus = Status::find($statusData['new_status_id']);
-            if (!$finalStatus) {
-                return;
-            }
-
-            // Determine action type for notification
-            $rejectStatusId = config('change_request.status_ids.Reject');
-            $cancelStatusId = config('change_request.status_ids.Cancel');
-
-            $actionType = '';
-            if ($statusData['new_status_id'] == $rejectStatusId) {
-                $actionType = 'rejected';
-            } elseif ($statusData['new_status_id'] == $cancelStatusId) {
-                $actionType = 'cancelled';
-            }
-
-            // Send notification to requester
-            if ($changeRequest->requester && $actionType) {
-                $this->mailController->notifyRequesterFinalConfirmation(
-                    $changeRequestId,
-                    $actionType,
-                    $changeRequest->requester->email
-                );
-            }
-
-            // Send notification to application group if exists
-            $applicationGroupId = $changeRequest->application->group_applications->first()->group_id;
-            if ($applicationGroupId) {
-                $group = Group::where('id', $applicationGroupId)
-                    ->where('recieve_notification', '1')
-                    ->first();
-
-                if ($group) {
-                    $this->mailController->notifyGroupFinalConfirmation(
-                        $changeRequestId,
-                        $actionType,
-                        $applicationGroupId
-                    );
-                }
-            }
-
-        } catch (\Exception $e) {
-            Log::error('Failed to send final confirmation notifications', [
-                'change_request_id' => $changeRequestId,
-                'status_id' => $statusData['new_status_id'],
-                'error' => $e->getMessage()
-            ]);
-            // Don't throw exception - notification failure shouldn't break status update
-        }
     }
 
 }

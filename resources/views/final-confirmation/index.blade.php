@@ -198,7 +198,7 @@ $(document).ready(function() {
         const config = {
             reject: {
                 title: 'Reject Change Request?',
-                text: `Are you sure you want to reject CR #${crNo}? This action cannot be undone.`,
+                text: `Are you sure you want to reject CR #${crNo}?`,
                 icon: 'error',
                 confirmButtonText: 'Yes, Reject',
                 confirmButtonColor: '#dc3545',
@@ -206,7 +206,7 @@ $(document).ready(function() {
             },
             cancel: {
                 title: 'Cancel Change Request?',
-                text: `Are you sure you want to cancel CR #${crNo}? This action cannot be undone.`,
+                text: `Are you sure you want to cancel CR #${crNo}?`,
                 icon: 'warning',
                 confirmButtonText: 'Yes, Cancel',
                 confirmButtonColor: '#ffc107',
