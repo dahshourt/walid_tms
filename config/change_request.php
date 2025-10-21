@@ -86,9 +86,11 @@ return [
         'pending_business' => 64,
         'pending_business_feedback' => 79,
         'approved_implementation_plan' => 116,
-        
+        'Reject' => 19,
+        'Cancel' => 82
+
     ],
-	
+
 	'parked_status_ids' => [
         //'pending_uat' => 78,
         'provide_technical_fb' => 146,
@@ -97,7 +99,7 @@ return [
         'set_md_prerequisites' => 112,
         'final_uat_results_fb' => 167,
 		'promo_closure' => 129,
-		
+
     ],
 	'promo_parked_status_ids' => [
         'promo_closure' => 129,
@@ -119,7 +121,7 @@ return [
        'rollback' => 134,
     ],
 
-    
+
     /*
     |--------------------------------------------------------------------------
     | Group IDs Configuration
@@ -274,7 +276,7 @@ return [
         ],
     ],
 
-   
+
     /*
     |--------------------------------------------------------------------------
     | Pagination Configuration
@@ -357,6 +359,6 @@ return [
         'chunk_size' => 1000,
     ],
 
-   
+
 
 ];

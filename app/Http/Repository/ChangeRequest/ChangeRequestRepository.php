@@ -61,10 +61,10 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
 
     public function update($id, $request)
     {
-        
+
         return $this->updateService->update($id, $request);
     }
-    
+
     public function updateTestableFlag($id, $request)
     {
         return $this->updateService->updateTestableFlag($id, $request);
@@ -152,13 +152,18 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
     // Status update methods
     public function UpateChangeRequestStatus($id, $request)
     {
-      
+
         return $this->statusService->updateChangeRequestStatus($id, $request);
     }
 
     public function UpateChangeRequestReleaseStatus($id, $request)
     {
         return $this->statusService->updateChangeRequestReleaseStatus($id, $request);
+    }
+
+    public function updateChangeRequestStatusForFinalConfirmation($id, $request)
+    {
+        return $this->statusService->updateChangeRequestStatusForFinalConfirmation($id, $request);
     }
 
     // Statistics methods
@@ -189,7 +194,7 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
         ->selectRaw('count(*) as total, new_status_id')
         ->where('active', '1')
         ->get();
-        
+
         return $collection;
     }
 

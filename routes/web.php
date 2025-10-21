@@ -187,6 +187,9 @@ Route::middleware(['auth'])->group(
         Route::resource('prerequisites', Prerequisites\PrerequisitesController::class);
         Route::get('prerequisites/download/{id}', 'Prerequisites\PrerequisitesController@download')->name('prerequisites.download');
 
+        // Final Confirmation Routes
+        Route::get('final-confirmation', 'FinalConfirmation\FinalConfirmationController@index')->name('final_confirmation.index');
+        Route::post('final-confirmation/submit', 'FinalConfirmation\FinalConfirmationController@submit')->name('final_confirmation.submit');
 
         //test ews
 

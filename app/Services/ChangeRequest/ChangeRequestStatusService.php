@@ -2,6 +2,7 @@
 
 namespace App\Services\ChangeRequest;
 
+use App\Http\Repository\Logs\LogRepository;
 use App\Models\Change_request as ChangeRequest;
 use App\Models\Group;
 use App\Models\GroupStatuses;
@@ -59,7 +60,54 @@ class ChangeRequestStatusService
             }
 
             $this->processStatusUpdate($changeRequest, $statusData, $workflow, $userId, $request);
-            
+
+            DB::commit();
+            return true;
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            Log::error('Error updating change request status', [
+                'change_request_id' => $changeRequestId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            throw $e;
+        }
+    }
+
+    /**
+     * Update change request final confirmation status with proper workflow validation
+     *
+     * @param int $changeRequestId
+     * @param array|object $request
+     * @return bool
+     * @throws \Throwable
+     */
+    public function updateChangeRequestStatusForFinalConfirmation(int $changeRequestId, $request): bool
+    {
+        try {
+            DB::beginTransaction();
+
+            $statusData = $this->extractStatusData($request);
+            $changeRequest = $this->getChangeRequest($changeRequestId);
+            $userId = $this->getUserId($changeRequest, $request);
+
+            $this->processStatusUpdateForFinalConfirmation($changeRequest, $statusData, $userId);
+
+            $log_repo = app(LogRepository::class);
+
+            $action_name = $statusData['new_status_id'] === 19 ? 'Reject': 'Cancel';
+
+            $log_text = "Issue manually set to status ' ". $action_name ." ' by ". \auth()->user()->user_name;
+
+            $log_repo->create([
+                'cr_id' => $changeRequestId,
+                'user_id' => $userId,
+                'log_text' => $log_text
+            ]);
+
+            // TODO: Send notification
+
             DB::commit();
             return true;
 
@@ -109,14 +157,14 @@ class ChangeRequestStatusService
     private function getChangeRequest(int $id): ChangeRequest
     {
         $changeRequest = ChangeRequest::find($id);
-        
+
         if (!$changeRequest) {
             throw new \Exception("Change request not found: {$id}");
         }
 
         return $changeRequest;
     }
-	
+
     /**
      * Determine user ID for the status update
      */
@@ -146,19 +194,38 @@ class ChangeRequestStatusService
      * Process the main status update logic
      */
     private function processStatusUpdate(
-        ChangeRequest $changeRequest, 
-        array $statusData, 
-        NewWorkFlow $workflow, 
-        int $userId, 
+        ChangeRequest $changeRequest,
+        array $statusData,
+        NewWorkFlow $workflow,
+        int $userId,
         $request
     ): void {
         $technicalTeamCounts = $this->getTechnicalTeamCounts($changeRequest->id, $statusData['old_status_id']);
-        
+
         $this->updateCurrentStatus($changeRequest->id, $statusData, $workflow, $technicalTeamCounts);
-        
+
         $this->createNewStatuses($changeRequest, $statusData, $workflow, $userId, $request);
-        
+
         $this->handleNotifications($statusData, $changeRequest->id, $request);
+    }
+
+    /**
+     * Process status update logic specifically for final confirmation
+     * Bypasses workflow validation and directly updates status
+     */
+    private function processStatusUpdateForFinalConfirmation(
+        ChangeRequest $changeRequest,
+        array $statusData,
+        int $userId
+    ): void {
+        // Update current status to inactive for final confirmation
+        $first_cr_status = $this->updateCurrentStatusForFinalConfirmation($changeRequest->id);
+
+        // Create new final status record
+        $this->createFinalConfirmationStatus($changeRequest, $statusData, $userId, $first_cr_status);
+
+        // Handle final confirmation notifications
+        $this->handleFinalConfirmationNotifications($statusData, $changeRequest->id);
     }
 
     /**
@@ -190,9 +257,9 @@ class ChangeRequestStatusService
      * Update the current status record
      */
     private function updateCurrentStatus(
-        int $changeRequestId, 
-        array $statusData, 
-        NewWorkFlow $workflow, 
+        int $changeRequestId,
+        array $statusData,
+        NewWorkFlow $workflow,
         array $technicalTeamCounts
     ): void {
 		if(request()->reference_status)
@@ -206,7 +273,7 @@ class ChangeRequestStatusService
             ->where('active', self::ACTIVE_STATUS)
             ->first();
 		}
-        
+
         if (!$currentStatus) {
             Log::warning('Current status not found for update', [
                 'cr_id' => $changeRequestId,
@@ -215,10 +282,10 @@ class ChangeRequestStatusService
             return;
         }
 
-        $workflowActive = $workflow->workflow_type == self::WORKFLOW_NORMAL 
-            ? self::INACTIVE_STATUS 
+        $workflowActive = $workflow->workflow_type == self::WORKFLOW_NORMAL
+            ? self::INACTIVE_STATUS
             : self::COMPLETED_STATUS;
-		
+
         $slaDifference = $this->calculateSlaDifference($currentStatus->created_at);
         // Only update if conditions are met
         if ($this->shouldUpdateCurrentStatus($statusData['old_status_id'], $technicalTeamCounts)) {
@@ -240,7 +307,7 @@ class ChangeRequestStatusService
             return true;
         }
 
-        return $technicalTeamCounts['total'] > 0 && 
+        return $technicalTeamCounts['total'] > 0 &&
                $technicalTeamCounts['total'] == $technicalTeamCounts['approved'];
     }
 
@@ -256,8 +323,8 @@ class ChangeRequestStatusService
      * Handle dependent statuses based on workflow type
      */
     private function handleDependentStatuses(
-        int $changeRequestId, 
-        ChangeRequestStatus $currentStatus, 
+        int $changeRequestId,
+        ChangeRequestStatus $currentStatus,
         string $workflowActive
     ): void {
         $dependentStatuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
@@ -284,16 +351,16 @@ class ChangeRequestStatusService
         int $userId,
         $request
     ): void {
-		
-			if(request()->reference_status)		
+
+			if(request()->reference_status)
 			{
-				$currentStatus = ChangeRequestStatus::find(request()->reference_status);	
+				$currentStatus = ChangeRequestStatus::find(request()->reference_status);
 			}
 			else
 			{
-				$currentStatus = ChangeRequestStatus::where('cr_id', $changeRequest->id)->where('new_status_id', $statusData['old_status_id'])->first();	
+				$currentStatus = ChangeRequestStatus::where('cr_id', $changeRequest->id)->where('new_status_id', $statusData['old_status_id'])->first();
 			}
-			
+
         foreach ($workflow->workflowstatus as $workflowStatus) {
             if ($this->shouldSkipWorkflowStatus($changeRequest, $workflowStatus, $statusData)) {
                 continue;
@@ -308,10 +375,10 @@ class ChangeRequestStatusService
 				$changeRequest
             );
 
-           
+
             $newStatusRow = Status::find($workflowStatus->to_status_id);
             $oldStatusRow = Status::find($statusData['old_status_id']);
-            
+
             $previous_group_id = session('current_group') ?: auth()->user()->default_group;
             $viewTechFlag = $newStatusRow?->view_technical_team_flag ?? false;
             if ($viewTechFlag) {
@@ -353,13 +420,13 @@ class ChangeRequestStatusService
      * Check if workflow status should be skipped
      */
     private function shouldSkipWorkflowStatus(
-        ChangeRequest $changeRequest, 
-        $workflowStatus, 
+        ChangeRequest $changeRequest,
+        $workflowStatus,
         array $statusData
     ): bool {
         // Skip design status if design duration is 0
-        return $changeRequest->design_duration == "0" 
-            && $workflowStatus->to_status_id == 40 
+        return $changeRequest->design_duration == "0"
+            && $workflowStatus->to_status_id == 40
             && $statusData['old_status_id'] == 74;
     }
 
@@ -367,31 +434,31 @@ class ChangeRequestStatusService
      * Determine if new status should be active
      */
     private function determineActiveStatus(
-        int $changeRequestId, 
-        $workflowStatus, 
-        NewWorkFlow $workflow, 
+        int $changeRequestId,
+        $workflowStatus,
+        NewWorkFlow $workflow,
         int $oldStatusId,
         int $newStatusId,
 		ChangeRequest $changeRequest
     ): string {
-		
+
 		$active = self::INACTIVE_STATUS;
 		$cr_status = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('new_status_id',  $oldStatusId)->where('active','!=', '0')->first();
 		$parkedIds = array_values(config('change_request.promo_parked_status_ids', []));
-		
+
 		$all_depend_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $cr_status->old_status_id)->where('active','!=', '0')->whereNULL('group_id')
 				->whereHas('change_request_data', function ($query) {
 						$query->where('workflow_type_id','!=',9);
 					})->get();
-		
+
         $depend_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $cr_status->old_status_id)->where('active','2')->whereNULL('group_id')->whereHas('change_request_data', function ($query) {
 						$query->where('workflow_type_id','!=',9);
 					})->get();
-		
+
 		$depend_active_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $cr_status->old_status_id)->where('active', '1')->whereNULL('group_id')->whereHas('change_request_data', function ($query) {
 						$query->where('workflow_type_id','!=',9);
 					})->get();
-		
+
 
 		//dd($cr_status,$all_depend_statuses,$depend_statuses,$depend_active_statuses);
 
@@ -399,7 +466,7 @@ class ChangeRequestStatusService
 		{
 			foreach($depend_statuses as $status)
 			{
-				
+
 				$get_next_workflow = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $status->new_status_id)->first();
 				if($get_next_workflow)
 				{
@@ -411,34 +478,34 @@ class ChangeRequestStatusService
 						$get_next_workflow->update(['active' => self::ACTIVE_STATUS]);
 						$active = 0;
 						return $active;
-					} 
+					}
 				}
-				
+
 			}
 		}
-		
+
 		if($changeRequest->workflow_type_id == 9)
 		{
 			$NextStatusWorkflow = NewWorkFlow::find($newStatusId);
 			if(in_array($NextStatusWorkflow->workflowstatus[0]->to_status_id, $parkedIds, true))
 			{
 				$depend_active_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('active', '1')->count();
-				$active = $depend_active_statuses > 0 ? self::INACTIVE_STATUS : self::ACTIVE_STATUS;		
+				$active = $depend_active_statuses > 0 ? self::INACTIVE_STATUS : self::ACTIVE_STATUS;
 			}
 			else
 			{
-				$active = self::ACTIVE_STATUS;	
+				$active = self::ACTIVE_STATUS;
 			}
-			
+
 		}
 		else
 		{
-			$active = $depend_active_statuses->count() > 0 ? self::INACTIVE_STATUS : self::ACTIVE_STATUS;	
+			$active = $depend_active_statuses->count() > 0 ? self::INACTIVE_STATUS : self::ACTIVE_STATUS;
 		}
-		
+
 		$this->active_flag = $active;
 		return $active;
-		
+
     }
 
     /**
@@ -451,7 +518,7 @@ class ChangeRequestStatusService
         }
 
         $dependencyIds = array_diff(
-            $workflowStatus->dependency_ids, 
+            $workflowStatus->dependency_ids,
             [$workflowStatus->new_workflow_id]
         );
 
@@ -470,7 +537,7 @@ class ChangeRequestStatusService
     private function isDependencyMet(int $changeRequestId, int $workflowId): bool
     {
         $dependentWorkflow = NewWorkFlow::find($workflowId);
-        
+
         if (!$dependentWorkflow) {
             return false;
         }
@@ -545,9 +612,9 @@ class ChangeRequestStatusService
     {
         //dd($request->all());
         // Notify CR Manager when status changes from 99 to 101
-        if ($statusData['old_status_id'] == 99 && 
+        if ($statusData['old_status_id'] == 99 &&
             $this->hasStatusTransition($changeRequestId, 101)) {
-            
+
             try {
                 $this->mailController->notifyCrManager($changeRequestId);
             } catch (\Exception $e) {
@@ -579,7 +646,7 @@ class ChangeRequestStatusService
        */
 
        // Notify group when status changes.
-       
+
        $newStatusId = NewWorkFlowStatuses::where('new_workflow_id', $statusData['new_status_id'])->get()->pluck('to_status_id')->toArray();
        $cr = ChangeRequest::find($changeRequestId);
        $targetStatus = Status::with('group_statuses')->whereIn('id', $newStatusId)->first();
@@ -596,7 +663,7 @@ class ChangeRequestStatusService
         }else{
             $groupToNotify = [];
         }
-       }   
+       }
        else{
             $groupToNotify = Group::whereIn('id', $viewGroup)
                     ->where('recieve_notification', '1')
@@ -612,7 +679,7 @@ class ChangeRequestStatusService
             } catch (\Exception $e) {
                 Log::error('Failed to send Group notification', [
                     'change_request_id' => $changeRequestId,
-                    'group_id' => $groupId,  
+                    'group_id' => $groupId,
                     'error' => $e->getMessage()
                 ]);
                 continue;
@@ -620,7 +687,7 @@ class ChangeRequestStatusService
         }
        }
     }
-    
+
     /**
      * Check if status transition exists
      */
@@ -631,5 +698,115 @@ class ChangeRequestStatusService
             ->exists();
     }
 
-    
+    /**
+     * Update current status specifically for final confirmation
+     * Sets current active status to completed without workflow validation
+     */
+    private function updateCurrentStatusForFinalConfirmation(int $changeRequestId): ?ChangeRequestStatus
+    {
+        $first_cr_status = ChangeRequestStatus::where('cr_id', $changeRequestId)
+            ->first();
+
+        ChangeRequestStatus::where('cr_id', $changeRequestId)
+            ->where('active', self::ACTIVE_STATUS)
+            ->update(['active' => self::COMPLETED_STATUS]);
+
+        return $first_cr_status;
+    }
+
+    /**
+     * Create new status record specifically for final confirmation
+     * Creates final status without workflow dependencies
+     */
+    private function createFinalConfirmationStatus(
+        ChangeRequest $changeRequest,
+        array $statusData,
+        int $userId,
+        ?ChangeRequestStatus $first_cr_status
+    ): void {
+
+        // Get current user's group or default group
+        $currentGroupId = session('current_group') ?: (auth()->user()->default_group ?? null);
+
+        // Create final confirmation status record
+        $payload = [
+            'cr_id' => $changeRequest->id,
+            'old_status_id' => $first_cr_status->new_status_id ?? $statusData['old_status_id'],
+            'new_status_id' => $statusData['new_status_id'],
+            'group_id' => null, // Final confirmation doesn't belong to specific group
+            'reference_group_id' => $currentGroupId,
+            'previous_group_id' => $currentGroupId,
+            'current_group_id' => $currentGroupId,
+            'user_id' => $userId,
+            'active' => self::ACTIVE_STATUS, // Final status is immediately active
+        ];
+
+        $this->statusRepository->create($payload);
+    }
+
+    /**
+     * Handle notifications specifically for final confirmation
+     * Simplified notification logic for final actions
+     */
+    private function handleFinalConfirmationNotifications(array $statusData, int $changeRequestId): void
+    {
+        try {
+            // Get the change request
+            $changeRequest = ChangeRequest::find($changeRequestId);
+            if (!$changeRequest) {
+                return;
+            }
+
+            // Get the final status
+            $finalStatus = Status::find($statusData['new_status_id']);
+            if (!$finalStatus) {
+                return;
+            }
+
+            // Determine action type for notification
+            $rejectStatusId = config('change_request.status_ids.Reject');
+            $cancelStatusId = config('change_request.status_ids.Cancel');
+
+            $actionType = '';
+            if ($statusData['new_status_id'] == $rejectStatusId) {
+                $actionType = 'rejected';
+            } elseif ($statusData['new_status_id'] == $cancelStatusId) {
+                $actionType = 'cancelled';
+            }
+
+            // Send notification to requester
+            if ($changeRequest->requester && $actionType) {
+                $this->mailController->notifyRequesterFinalConfirmation(
+                    $changeRequestId,
+                    $actionType,
+                    $changeRequest->requester->email
+                );
+            }
+
+            // Send notification to application group if exists
+            $applicationGroupId = $changeRequest->application->group_applications->first()->group_id;
+            if ($applicationGroupId) {
+                $group = Group::where('id', $applicationGroupId)
+                    ->where('recieve_notification', '1')
+                    ->first();
+
+                if ($group) {
+                    $this->mailController->notifyGroupFinalConfirmation(
+                        $changeRequestId,
+                        $actionType,
+                        $applicationGroupId
+                    );
+                }
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Failed to send final confirmation notifications', [
+                'change_request_id' => $changeRequestId,
+                'status_id' => $statusData['new_status_id'],
+                'error' => $e->getMessage()
+            ]);
+            // Don't throw exception - notification failure shouldn't break status update
+        }
+    }
+
 }
