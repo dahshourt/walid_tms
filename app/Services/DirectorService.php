@@ -3,15 +3,14 @@
 declare(strict_types=1);
 
 namespace App\Services;
-
-use App\Contracts\Director\DirectorRepositoryInterface;
+use App\Http\Repository\Director\DirectorRepository;
 use App\Models\Director;
 
 class DirectorService
 {
     protected $directorRepository;
 
-    public function __construct(DirectorRepositoryInterface $directorRepository)
+    public function __construct(DirectorRepository $directorRepository)
     {
         $this->directorRepository = $directorRepository;
     }
