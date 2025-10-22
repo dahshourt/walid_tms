@@ -211,6 +211,44 @@ let fullUrl = `${baseUrl}?crId=${id}&action=approve&token=${token}`;
     });
 });
 
+$('._approved_active_cab').on('click', function() {
+    var id = $(this).attr('data-id');
+    var token = $(this).attr('data-token');
+	let baseUrl = '{{ url("/change_request2/approved_active_cab") }}';
+let fullUrl = `${baseUrl}?crId=${id}&action=approve&token=${token}`;
+    Swal.fire({
+        title: "Are you sure?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: fullUrl,
+                type: 'GET',
+                success: function(msg) {
+                    if (msg.status == 200 && msg.isSuccess) {
+						
+                        toastr.success(msg.message);
+
+                    } else {
+						
+                        toastr.error(msg.message || "Action failed.");
+                    }
+					//window.location.reload();
+                },
+                error: function(xhr, status, error) {
+                    toastr.error("Something went wrong: " + error);
+                    alert("Error: " + error + "\nStatus: " + status + "\nResponse: " + xhr.responseText);
+                   // window.location.reload();
+                }
+            });
+        }
+    });
+});
+
 $('._rejected_active').on('click', function() {
     var id = $(this).attr('data-id');
     var token = $(this).attr('data-token');
@@ -246,7 +284,41 @@ let fullUrl = `${baseUrl}?crId=${id}&action=reject&token=${token}`;
         }
     });
 });
+$('._rejected_active_cab').on('click', function() {
+    var id = $(this).attr('data-id');
+    var token = $(this).attr('data-token');
+	let baseUrl = '{{ url("/change_request2/approved_active_cab") }}';
+let fullUrl = `${baseUrl}?crId=${id}&action=reject&token=${token}`;
+    Swal.fire({
+        title: "Are you sure?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                url: fullUrl,
+                type: 'GET',
+                success: function(msg) {
+                    if (msg.status == 200 && !msg.isSuccess) {
+                        toastr.success(msg.message);
 
+                    } else {
+                        toastr.error(msg.message || "Action failed.");
+                    }
+					//window.location.reload();
+                },
+                error: function(xhr, status, error) {
+                    toastr.error("Something went wrong: " + error);
+                    alert("Error: " + error + "\nStatus: " + status + "\nResponse: " + xhr.responseText);
+                  //  window.location.reload();
+                }
+            });
+        }
+    });
+});
 		$(document).ready(function() {
 			$('#dfUsageTable').DataTable({
 				"searching": true,
