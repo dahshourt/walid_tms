@@ -438,6 +438,7 @@ class ChangeRequestSearchService
 		}
         
     }
+    
 	
 	public function getCurrentStatusForDivision($changeRequest)
     {

@@ -1,0 +1,80 @@
+trigger:
+  branches:
+    include:
+      - DevMaster
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+# Checkout with full history
+- checkout: self
+  fetchDepth: 0  
+  displayName: 'Checkout repository'
+
+# Get list of changed files
+- script: |
+    echo "Getting changed files..."
+    
+    if [ "$(git rev-list --count HEAD)" -eq 1 ]; then
+      echo "First commit - getting all files"
+      git ls-files > changed_files.txt
+    else
+      # compare between last two commits
+      PREV_COMMIT=$(git rev-parse HEAD~1)
+      CURR_COMMIT=$(git rev-parse HEAD)
+      echo "Comparing: $PREV_COMMIT → $CURR_COMMIT"
+      
+      # git changed files
+      git diff --name-only --diff-filter=ACMR $PREV_COMMIT $CURR_COMMIT > changed_files.txt
+    fi
+    
+    echo "Changed files:"
+    cat changed_files.txt
+    
+    # check if no files changed 
+    if [ ! -s changed_files.txt ]; then
+      echo "No files changed!"
+      exit 0
+    fi
+  displayName: 'Get changed files list'
+
+# Copy changed files to deploy folder
+- script: |
+    if [ ! -f changed_files.txt ] || [ ! -s changed_files.txt ]; then
+      echo "No files to copy, skipping..."
+      exit 0
+    fi
+    
+    echo "Copying changed files to deploy directory..."
+    mkdir -p deploy
+    
+    while IFS= read -r file; do
+      if [ -f "$file" ]; then
+        target_dir="deploy/$(dirname "$file")"
+        mkdir -p "$target_dir"
+        cp -v "$file" "deploy/$file"
+        echo "Copied: $file"
+      else
+        echo "File not found: $file"
+      fi
+    done < changed_files.txt
+    
+    echo "Done copying changed files."
+  displayName: 'Prepare deploy folder'
+
+# Zip the deploy folder
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: 'deploy'
+    includeRootFolder: false
+    archiveFile: '$(Build.ArtifactStagingDirectory)/changed.zip'
+    replaceExistingArchive: true
+  displayName: 'Create ZIP with changed files only'
+  condition: succeeded()
+
+# Publish artifact
+- publish: $(Build.ArtifactStagingDirectory)/changed.zip
+  artifact: changed-files
+  displayName: 'Publish changed files artifact'
+  condition: succeeded()

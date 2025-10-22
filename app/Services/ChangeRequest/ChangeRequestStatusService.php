@@ -431,6 +431,7 @@ class ChangeRequestStatusService
             && $workflowStatus->to_status_id == 40
             && $statusData['old_status_id'] == 74;
     }
+    
 
     /**
      * Determine if new status should be active
@@ -451,7 +452,7 @@ class ChangeRequestStatusService
 		$parkedIds = array_values(config('change_request.promo_parked_status_ids', []));
 
 		$all_depend_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $cr_status->old_status_id)->whereNotIN('active',self::$INACTIVE_STATUS_ARRAY)->whereNULL('group_id')
-				->whereHas('change_request_data', function ($query) {
+        ->whereHas('change_request_data', function ($query) {
 						$query->where('workflow_type_id','!=',9);
 					})->get();
 
@@ -460,6 +461,7 @@ class ChangeRequestStatusService
 					})->get();
 
 		$depend_active_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $cr_status->old_status_id)->whereIN('active',self::$ACTIVE_STATUS_ARRAY)->whereNULL('group_id')->whereHas('change_request_data', function ($query) {
+
 						$query->where('workflow_type_id','!=',9);
 					})->get();
 
@@ -494,6 +496,7 @@ class ChangeRequestStatusService
 			if(in_array($NextStatusWorkflow->workflowstatus[0]->to_status_id, $parkedIds, true))
 			{
 				$depend_active_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->whereIN('active',self::$ACTIVE_STATUS_ARRAY)->count();
+
 				$active = $depend_active_statuses > 0 ? self::INACTIVE_STATUS : self::ACTIVE_STATUS;
 			}
 			else

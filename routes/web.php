@@ -185,10 +185,13 @@ Route::middleware(['auth'])->group(
         Route::get('testable_form', 'ChangeRequest\ChangeRequestController@showTestableForm')->name('testable_form');
         Route::post('update_testable', 'ChangeRequest\ChangeRequestController@updateTestableFlag')->name('update_testable');
         Route::get('add_attachments_form', 'ChangeRequest\ChangeRequestController@showAddAttachmentsForm')->name('add_attachments_form');
-        Route::post('store_attachments', 'ChangeRequest\ChangeRequestController@storeAttachments')->name('store_attachments');   
+        Route::post('store_attachments', 'ChangeRequest\ChangeRequestController@storeAttachments')->name('store_attachments');
         Route::resource('prerequisites', Prerequisites\PrerequisitesController::class);
         Route::get('prerequisites/download/{id}', 'Prerequisites\PrerequisitesController@download')->name('prerequisites.download');
 
+        // Final Confirmation Routes
+        Route::get('final-confirmation', 'FinalConfirmation\FinalConfirmationController@index')->name('final_confirmation.index');
+        Route::post('final-confirmation/submit', 'FinalConfirmation\FinalConfirmationController@submit')->name('final_confirmation.submit');
         // Notification Routes
         Route::resource('notification_templates', NotificationTemplates\NotificationTemplatesController::class);
 

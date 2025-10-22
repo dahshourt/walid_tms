@@ -21,7 +21,6 @@ class AppServiceProvider extends ServiceProvider
     public function register()
     {
         $this->app->bind(ChangeRequestRepositoryInterface::class, ChangeRequestRepository::class);
-        $this->app->bind(DirectorRepositoryInterface::class, DirectorRepository::class);
     }
 
     /**

@@ -65,6 +65,7 @@ class ChangeRequestValidationService
 		$updateService->mirrorCrStatusToTechStreams($id, (int) $workflow->workflowstatus[0]->to_status_id, null, 'actor');
         return $this->processTechnicalTeamStatus($technicalCr, $oldStatusData, $workflow, $technicalDefaultGroup, $request);
     }
+    
 
     /**
      * Process technical team status based on workflow
