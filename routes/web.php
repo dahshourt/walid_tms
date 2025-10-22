@@ -130,6 +130,7 @@ Route::middleware(['auth'])->group(
         //});
         Route::post('change_request/listCRsUsers', 'ChangeRequest\ChangeRequestController@Crsbyusers');
         Route::get('change_request/listcrsbyuser', 'ChangeRequest\ChangeRequestController@list_crs_by_user');
+        Route::get('change_request/export-user-created-crs', 'ChangeRequest\ChangeRequestController@exportUserCreatedCRs')->name('change_request.export_user_created_crs');
 
         Route::resource('change_request', 'ChangeRequest\ChangeRequestController');
         Route::get('change_request2/dvision_manager_cr', 'ChangeRequest\ChangeRequestController@dvision_manager_cr')->name('dvision_manager_cr');
