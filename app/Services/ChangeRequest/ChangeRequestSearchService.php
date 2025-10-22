@@ -82,7 +82,46 @@ class ChangeRequestSearchService
 
         return $changeRequests;
     }
+public function cr_pending_cap($group = null){
+ 
+        $userId = auth()->user()->id;
+        $userEmail = auth()->user()->email;
+        
+        // Get all requests with relationships
+        $allRequests = Change_request::with(['RequestStatuses.status'])
+            ->whereHas('activeCabCrs', function($query) use ($userId) {
+                $query->whereHas('activeCabCrUsers', function($subQuery) use ($userId) {
+                    $subQuery->where('user_id', $userId);
+                });
+            })
+            
+            ->orderBy('id', 'DESC')
+            ->limit(50)
+            ->get();
+           // die("dd");
+        // Filter by status using getCurrentStatusForDivision()
+        $filtered = $allRequests->filter(function ($item) {
+            $status = $item->getCurrentStatusForDivision();
+            return $status && $status->status && $status->status->id == config('change_request.status_ids.pending_cab');
+        });
+    
+        // Manual pagination
+        $perPage = request()->get('per_page', 10);
+        $page = request()->get('page', 1);
+        
+        $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
+            $filtered->forPage($page, $perPage),
+            $filtered->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+    
+        return $paginated;
+    
 
+   
+}
     public function divisionManagerCr($group = null)
     {
         $userEmail = auth()->user()->email;

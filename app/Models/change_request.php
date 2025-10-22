@@ -98,7 +98,19 @@ class Change_request extends Model
     {
         return $this->hasMany(Log::class, 'cr_id', 'id');
     }
-
+    public function cabCrs()
+    {
+        return $this->hasMany(CabCr::class, 'cr_id', 'id');
+    }
+    
+    /**
+     * Get only active (status = 0) cab_crs records
+     */
+    public function activeCabCrs()
+    {
+        return $this->hasMany(CabCr::class, 'cr_id', 'id')
+                    ->where('status', '0');
+    }
     /**
      * Get the custom fields for this change request.
      */

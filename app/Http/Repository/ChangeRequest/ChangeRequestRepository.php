@@ -61,10 +61,10 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
 
     public function update($id, $request)
     {
-
+        
         return $this->updateService->update($id, $request);
     }
-
+    
     public function updateTestableFlag($id, $request)
     {
         return $this->updateService->updateTestableFlag($id, $request);
@@ -94,6 +94,10 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
     public function dvision_manager_cr($group = null)
     {
         return $this->searchService->divisionManagerCr($group);
+    }
+    public function cr_pending_cap()
+    {
+        return $this->searchService->cr_pending_cap();
     }
 
     public function my_assignments_crs()
@@ -157,7 +161,7 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
     // Status update methods
     public function UpateChangeRequestStatus($id, $request)
     {
-
+      
         return $this->statusService->updateChangeRequestStatus($id, $request);
     }
 
@@ -199,7 +203,7 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
         ->selectRaw('count(*) as total, new_status_id')
         ->where('active', '1')
         ->get();
-
+        
         return $collection;
     }
 

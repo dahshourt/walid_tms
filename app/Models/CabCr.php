@@ -44,5 +44,18 @@ class CabCr extends Model
     {
         return $this->hasMany(CabCrUser::class, 'cab_cr_id', 'id');
     }
+    public function cabCrUsers()
+    {
+        return $this->hasMany(CabCrUser::class, 'cab_cr_id', 'id');
+    }
+    
+    /**
+     * Get only active (status = 0) cab_cr_users
+     */
+    public function activeCabCrUsers()
+    {
+        return $this->hasMany(CabCrUser::class, 'cab_cr_id', 'id')
+                    ->where('status', '0');
+    }
     
 }
