@@ -16,6 +16,13 @@ use Auth;
 class ChangeRequestSearchService
 {
     
+	private const ACTIVE_STATUS = '1';
+    private const INACTIVE_STATUS = '0';
+    private const COMPLETED_STATUS = '2';
+	
+	public static array $ACTIVE_STATUS_ARRAY = [self::ACTIVE_STATUS,1];
+	public static array $INACTIVE_STATUS_ARRAY = [self::INACTIVE_STATUS,0];
+    public static array $COMPLETED_STATUS_ARRAY = [self::COMPLETED_STATUS,2];
     public function getAll($group = null)
     {
         $group = $this->resolveGroup($group);
@@ -34,7 +41,7 @@ class ChangeRequestSearchService
         }
         
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
-            $query->where('active', '1')->where(function ($qq) use ($group) {
+            $query->whereIN('active',self::$ACTIVE_STATUS_ARRAY)->where(function ($qq) use ($group) {
                 $qq->where('group_id', $group)->orWhereNull('group_id');
             })
 				->whereIn('new_status_id', $viewStatuses)
@@ -63,7 +70,7 @@ class ChangeRequestSearchService
         }
         
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
-            $query->where('active', '1')->where(function ($qq) use ($group) {
+            $query->whereIN('active',self::$ACTIVE_STATUS_ARRAY)->where(function ($qq) use ($group) {
                     $qq->where('group_id', $group)->orWhereNull('group_id');
                 })
                   ->whereIn('new_status_id', $viewStatuses)
@@ -123,7 +130,7 @@ class ChangeRequestSearchService
             $crs = Change_request::with('Req_status.status')
             ->whereHas('Req_status', function ($query) use ($viewStatuses) {
                 $query->whereIn('new_status_id', $viewStatuses)
-                      ->where('active', '1');
+                      ->whereIN('active',self::$ACTIVE_STATUS_ARRAY);
             })->paginate(50);
             //dd($crs);
         }
@@ -137,7 +144,7 @@ class ChangeRequestSearchService
             ->orWhere(function ($query) use ($userId) {
                 $query->whereHas('CurrentRequestStatuses', function ($q) {
                     $q->where('new_status_id', config('change_request.status_ids.cr_manager_review'))
-                      ->where('active', 1);
+                      ->whereIN('active',self::$ACTIVE_STATUS_ARRAY);
                 })->orWhere('change_request.requester_id', $userId);
             })
             ->paginate(50);
@@ -208,7 +215,7 @@ class ChangeRequestSearchService
                 }
             })
             ->whereHas('RequestStatuses', function ($query) use ($groups, $viewStatuses) {
-                $query->where('active', '1')->where(function ($qq) use ($groups) {
+                $query->whereIN('active',self::$ACTIVE_STATUS_ARRAY)->where(function ($qq) use ($groups) {
                     $qq->whereIn('group_id', $groups)->orWhereNull('group_id');
                 })
                       ->whereIn('new_status_id', $viewStatuses);
@@ -233,6 +240,7 @@ class ChangeRequestSearchService
 
         if ($changeRequest) {
             $currentStatus = $this->getCurrentStatus($changeRequest, $viewStatuses);
+			//dd(,$currentStatus);
             $changeRequest->current_status = $currentStatus;
             $changeRequest->set_status = $this->getSetStatus($currentStatus, $changeRequest->workflow_type_id);
             
@@ -400,13 +408,14 @@ class ChangeRequestSearchService
     protected function getTechnicalTeamCurrentStatus($id)
     {
         $group = $this->resolveGroup();
-        $technicalCr = TechnicalCr::where("cr_id", $id)->where('status', '0')->first();
+        $technicalCr = TechnicalCr::where("cr_id", $id)->whereIN('status',self::$INACTIVE_STATUS_ARRAY)->first();
         //dd($technicalCr);
         
         if ($technicalCr) {
             return $technicalCr->technical_cr_team()
                 ->where('group_id', $group)
-                ->where('status', '0')
+                //->where('status', '0')
+				->whereIN('status',self::$INACTIVE_STATUS_ARRAY)
                 ->first();
         }
 
@@ -415,15 +424,24 @@ class ChangeRequestSearchService
 
     protected function getCurrentStatus($changeRequest, $viewStatuses)
     {
-        return Change_request_statuse::where('cr_id', $changeRequest->id)
+		if(request()->reference_status)		
+		{
+                return Change_request_statuse::find(request()->reference_status);
+		}
+		else
+		{
+			return Change_request_statuse::where('cr_id', $changeRequest->id)
             ->whereIn('new_status_id', $viewStatuses)
-            ->where('active', '1')
+            //->where('active', '1')
+			->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
             ->first();
+		}
+        
     }
 	
 	public function getCurrentStatusForDivision($changeRequest)
     {
-        $status = Change_request_statuse::where('cr_id', $changeRequest->id)->where('active', '1')->first();
+        $status = Change_request_statuse::where('cr_id', $changeRequest->id)->whereIN('active',self::$ACTIVE_STATUS_ARRAY)->first();
         return $status;
         
     }
@@ -431,7 +449,7 @@ class ChangeRequestSearchService
     protected function getCurrentStatusCab($changeRequest, $viewStatuses)
     {
         return Change_request_statuse::where('cr_id', $changeRequest->id)
-            ->where('active', '1')
+            ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
             ->first();
     }
 
@@ -454,7 +472,8 @@ class ChangeRequestSearchService
                 $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
             })
             ->where('type_id', $typeId)
-            ->where('active', '1')
+            //->where('active', '1')
+			->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
             ->orderBy('id', 'DESC')
             ->get();
     }
