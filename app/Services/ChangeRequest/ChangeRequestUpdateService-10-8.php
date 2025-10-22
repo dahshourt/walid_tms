@@ -34,6 +34,7 @@ class ChangeRequestUpdateService
 {
     use ChangeRequestConstants;
 
+    
     protected $logRepository;
     protected $statusRepository;
     protected $estimationService;

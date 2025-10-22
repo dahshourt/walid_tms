@@ -38,6 +38,15 @@ class ChangeRequestUpdateService
     protected $validationService;
     protected $statusService;
     private $changeRequest_old;
+	
+
+    private const ACTIVE_STATUS = '1';
+    private const INACTIVE_STATUS = '0';
+    private const COMPLETED_STATUS = '2';
+	
+	public static array $ACTIVE_STATUS_ARRAY = [self::ACTIVE_STATUS,1];
+	public static array $INACTIVE_STATUS_ARRAY = [self::INACTIVE_STATUS,0];
+    public static array $COMPLETED_STATUS_ARRAY = [self::COMPLETED_STATUS,2];
 
     public function __construct()
     {
@@ -128,7 +137,8 @@ class ChangeRequestUpdateService
         }
 
         $user_id = Auth::user()->id;
-        $cabCr = CabCr::where("cr_id", $id)->where('status', '0')->first();
+        //$cabCr = CabCr::where("cr_id", $id)->where('status', '0')->first();
+        $cabCr = CabCr::where("cr_id", $id)->whereIN('status',self::$INACTIVE_STATUS_ARRAY)->first();
         $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
 
         unset($request['cab_cr_flag']);
@@ -218,8 +228,8 @@ class ChangeRequestUpdateService
 				if (in_array($new_status_id, $promo_special_flow_ids, true)) 
 				{
 					$oldStatusId = $request->old_status_id ?? null;
-					$current_status_data = Change_request_statuse::where('cr_id', $id)->where('new_status_id', $oldStatusId)->where('active', '1')->first();
-					$technicalCr = TechnicalCr::where("cr_id", $id)->where('status', '0')->first();
+					$current_status_data = Change_request_statuse::where('cr_id', $id)->where('new_status_id', $oldStatusId)->whereIN('active',self::$ACTIVE_STATUS_ARRAY)->first();
+					$technicalCr = TechnicalCr::where("cr_id", $id)->whereIN('status',self::$INACTIVE_STATUS_ARRAY)->first();
 					TechnicalCrTeam::create([
 						'group_id'          => $current_status_data->reference_group_id,
 						'technical_cr_id'   => $technicalCr->id,
@@ -373,7 +383,8 @@ class ChangeRequestUpdateService
         if (isset($request->assignment_user_id) && $oldStatusId) {
             Change_request_statuse::where('cr_id', $id)
                 ->where('new_status_id', $oldStatusId)
-                ->where('active', '1')
+                //->where('active', '1')
+				->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
                 ->update(['assignment_user_id' => $request->assignment_user_id]);
         }
 
@@ -382,7 +393,8 @@ class ChangeRequestUpdateService
             if (isset($request->$field) && $oldStatusId) {
                 Change_request_statuse::where('cr_id', $id)
                     ->where('new_status_id', $oldStatusId)
-                    ->where('active', '1')
+                    //->where('active', '1')
+					->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
                     ->update(['assignment_user_id' => $request->$field]);
             }
         }
@@ -396,7 +408,7 @@ class ChangeRequestUpdateService
     private function processCabApproval($id, $request): bool
     {
         $userId = Auth::user()->id ?? $request->user_id;
-        $cabCr  = CabCr::where("cr_id", $id)->where('status', '0')->first();
+        $cabCr  = CabCr::where("cr_id", $id)->whereIN('status',self::$ACTIVE_STATUS_ARRAY)->first();
 
         if (!$cabCr) {
             return false;
@@ -412,7 +424,7 @@ class ChangeRequestUpdateService
             $cabCr->cab_cr_user()->where('user_id', $userId)->update(['status' => '1']);
 
             $countAllUsers      = $cabCr->cab_cr_user->count();
-            $countApprovedUsers = $cabCr->cab_cr_user->where('status', '1')->count();
+            $countApprovedUsers = $cabCr->cab_cr_user->whereIN('status',self::$ACTIVE_STATUS_ARRAY)->count();
 
             if ($countAllUsers > $countApprovedUsers) {
                 return true;
@@ -531,7 +543,8 @@ class ChangeRequestUpdateService
 
         return NewWorkFlow::query()
             ->where('from_status_id', $fromStatusId)
-            ->where('active', '1')
+            //->where('active', '1')
+			->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
             ->whereHas('workflowstatus', fn($q) => $q->where('to_status_id', $toStatusId))
             ->exists();
     }
