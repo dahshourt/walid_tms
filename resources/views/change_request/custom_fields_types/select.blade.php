@@ -41,13 +41,14 @@
             </select>	
 
             @elseif($item->CustomField->name == "rejection_reason_id")
-            
+            @php
+              //  dd($custom_field_value);
+            @endphp
             <select name="{{ $item->CustomField->name }}" class="form-control form-control-lg">
                 <option value="">Select</option>
                 @if(!empty($rejects))
-              
-                @foreach($rejects as $reject)
-                <option value="{{$reject?->id}}">{{$reject?->name}}</option>
+                    @foreach($rejects as $reject)
+                <option value="{{$reject?->id}}"  {{ $custom_field_value == $reject?->id ? 'selected' : '' }}     >{{$reject?->name}}</option>
                 @endforeach
                 @endif
                
@@ -201,25 +202,7 @@
     @endif
 @endforeach
 <div id="reason-wrapper"></div>
-<!-- <option value="{{$cr->getCurrentStatus()?->status?->status_name}}" disabled selected>{{ $cr->getCurrentStatus()?->status?->status_name }}</option>
-                    @foreach($cr->set_status as $status)
-                        @if($status->same_time == 1)
-                            <option value="{{ $status->id }}" {{ $custom_field_value == $status->id ? 'selected' : '' }}>{{ $status->to_status_label }}</option>
-                        @else
-                            <option value="{{ $status->id }}" 
-                                {{ $custom_field_value == $status->id ? 'selected' : '' }}
-                                data-status-name="{{ $status->workflowstatus[0]->to_status->status_name }}"
-                                data-defect31="{{ $status->workflowstatus[0]->to_status->defect }}">
-                                @if($status->workflowstatus[0]->to_status->high_level)
-                                    {{$status->workflowstatus[0]->to_status->high_level->name}}
-                                @elseif($status->to_status_label)
-                                    {{$status->to_status_label }}
-                                @else
-                                    {{$status->workflowstatus[0]->to_status->status_name }}
-                                @endif
-                            </option>
-                        @endif
-                    @endforeach -->
+ 
 
                 @elseif($item->CustomField->name == "release_name")
                     <option value=""> select </option>
