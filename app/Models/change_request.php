@@ -282,6 +282,14 @@ class Change_request extends Model
     }
 
     /**
+     * Get the workflow type this change request belongs to.
+     */
+    public function workflowType(): BelongsTo
+    {
+        return $this->belongsTo(WorkFlowType::class, 'workflow_type_id')->select('id', 'name');
+    }
+
+    /**
      * Get current status with relationship.
      */
     public function currentStatusRel(): HasOne
