@@ -37,7 +37,7 @@ class FinalConfirmationService
      * @param int $userId
      * @return array
      */
-    public function processFinalConfirmation(string $crNumber, int $statusId, int $userId): array
+    public function processFinalConfirmation(string $crNumber, int $statusId, int $userId, string $technical_feedback): array
     {
         try {
             // Find the change request by number
@@ -79,7 +79,8 @@ class FinalConfirmationService
                 $changeRequest->id,
                 $currentStatus->new_status_id,
                 $statusId,
-                $userId
+                $userId,
+                $technical_feedback
             );
 
             if ($updateResult) {
@@ -121,7 +122,7 @@ class FinalConfirmationService
      * @param int $userId
      * @return bool
      */
-    private function updateChangeRequestStatus(int $crId, int $oldStatusId, int $newStatusId, int $userId): bool
+    private function updateChangeRequestStatus(int $crId, int $oldStatusId, int $newStatusId, int $userId, string $technical_feedback): bool
     {
         try {
             // Create request object similar to handleDivisionManagerAction1
@@ -132,7 +133,7 @@ class FinalConfirmationService
             ]);
 
             // Use the new final confirmation method
-            $result = $this->changeRequestRepository->updateChangeRequestStatusForFinalConfirmation($crId, $updateRequest);
+            $result = $this->changeRequestRepository->updateChangeRequestStatusForFinalConfirmation($crId, $updateRequest, $technical_feedback);
 
 
             return $result !== false;

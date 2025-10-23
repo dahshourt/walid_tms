@@ -116,7 +116,8 @@ class FinalConfirmationController extends Controller
             $result = $this->finalConfirmationService->processFinalConfirmation(
                 $request->cr_number,
                 (int) $request->action,
-                auth()->id()
+                auth()->id(),
+                $request->technical_feedback
             );
 
             if ($result['success']) {
@@ -166,12 +167,15 @@ class FinalConfirmationController extends Controller
 
         return Validator::make($request->all(), [
             'cr_number' => 'required|string',
-            'action' => "required|integer|in:{$rejectStatusId},{$cancelStatusId}"
+            'action' => "required|integer|in:{$rejectStatusId},{$cancelStatusId}",
+            'technical_feedback' => 'required|string'
         ], [
             'cr_number.required' => 'CR number is required',
             'action.required' => 'Action is required',
             'action.integer' => 'Action must be a valid status ID',
-            'action.in' => 'Invalid status ID provided'
+            'action.in' => 'Invalid status ID provided',
+            'technical_feedback.required' => 'Technical feedback is required',
+            'technical_feedback.string' => 'Technical feedback must be a valid text'
         ]);
     }
 
