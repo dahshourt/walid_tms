@@ -38,12 +38,12 @@ class ChangeRequestUpdateService
     protected $validationService;
     protected $statusService;
     private $changeRequest_old;
-	
+
 
     private const ACTIVE_STATUS = '1';
     private const INACTIVE_STATUS = '0';
     private const COMPLETED_STATUS = '2';
-	
+
 	public static array $ACTIVE_STATUS_ARRAY = [self::ACTIVE_STATUS,1];
 	public static array $INACTIVE_STATUS_ARRAY = [self::INACTIVE_STATUS,0];
     public static array $COMPLETED_STATUS_ARRAY = [self::COMPLETED_STATUS,2];
@@ -65,16 +65,16 @@ class ChangeRequestUpdateService
         if ($this->handleCabCrValidation($id, $request)) {
             return true;
         }
-        
+
         // 2) Per-process validators
         if ($this->handleTechnicalTeamValidation($id, $request)) {
 		    return true;
         }
-		
+
 
         // 3) Assignments
         $this->handleUserAssignments($id, $request);
-	
+
         // 4) CAB users (if any)
         $this->handleCabUsers($id, $request);
 
@@ -87,7 +87,7 @@ class ChangeRequestUpdateService
         // 7) Estimations
         $this->handleEstimations($id, $request);
 
-        
+
 		// if ($this->shouldHandleCabApproval($request)) {
 		//     $this->processCabApproval($id, $request);
         // }
@@ -97,13 +97,13 @@ class ChangeRequestUpdateService
 
         // 9) Update assignment on current CR status row
         $this->updateStatusAssignments($id, $request);
-		
+
         // 10) CR-level status move (main workflow)
         if (isset($request->new_status_id)) {
             $this->statusService->updateChangeRequestStatus($id, $request);
         }
 
-        
+
 
         // 12) Audit
         $this->logRepository->logCreate($id, $request, $this->changeRequest_old, 'update');
@@ -219,13 +219,13 @@ class ChangeRequestUpdateService
 		$newStatusId = $request->new_status_id ?? null;
         $workflow    = $newStatusId ? NewWorkFlow::find($newStatusId) : null;
 		$promo_special_flow_ids = array_values(config('change_request.promo_special_flow_ids', []));
-		
+
         if (empty($request->technical_teams)) {
 			if($workflow)
 			{
 				$new_status_id = $workflow && isset($workflow->workflowstatus[0])
 				? $workflow->workflowstatus[0]->to_status_id: null;
-				if (in_array($new_status_id, $promo_special_flow_ids, true)) 
+				if (in_array($new_status_id, $promo_special_flow_ids, true))
 				{
 					$oldStatusId = $request->old_status_id ?? null;
 					$current_status_data = Change_request_statuse::where('cr_id', $id)->where('new_status_id', $oldStatusId)->whereRaw('CAST(active AS CHAR) = ?', ['1'])->first();
@@ -244,11 +244,11 @@ class ChangeRequestUpdateService
 				}
 				return;
 			}
-			
+
             return;
         }
-		
-        
+
+
 
         $record = TechnicalCr::create([
             'cr_id'  => $id,
@@ -265,7 +265,7 @@ class ChangeRequestUpdateService
                 'status'            => "0",
             ]);
         }
-		
+
 		// 11) Auto-mirror CR status to tech stream(s) if no explicit tech params were sent
         if (isset($request->new_status_id)) {
             $new_status_id = $workflow && isset($workflow->workflowstatus[0])
@@ -274,7 +274,7 @@ class ChangeRequestUpdateService
             // Change to 'all' to mirror to all streams.
             $this->mirrorCrStatusToTechStreams($id, (int) $new_status_id, $request->tech_note ?? null, 'all');
         }
-		
+
     }
 
     /* ======================================================================
@@ -487,12 +487,12 @@ class ChangeRequestUpdateService
      */
     protected function advanceTeamStream(int $technicalCrTeamId, int $toStatusId, ?string $note = null): void
     {
-        
+
         $team = TechnicalCrTeam::find($technicalCrTeamId);
         if (!$team) return;
 		$oldStatusId = request()->old_status_id ?? 0;
         $fromStatusId = (int) ($team->current_status_id ?? $oldStatusId);
-        
+
         // Validate (from -> to) via workflow graph
         // if (!$this->isAllowedTeamTransition($fromStatusId, $toStatusId)) {
         //     return; // or throw new \RuntimeException('Transition not allowed for this stream.');
@@ -513,7 +513,7 @@ class ChangeRequestUpdateService
      */
     public function mirrorCrStatusToTechStreams(int $crId, int $toStatusId, ?string $note = null, string $scope = 'actor'): void
     {
-        
+
         if ($scope === 'all') {
             $teams = TechnicalCrTeam::query()
                 ->whereHas('technicalCr', fn($q) => $q->where('cr_id', $crId))
@@ -551,6 +551,4 @@ class ChangeRequestUpdateService
             ->whereHas('workflowstatus', fn($q) => $q->where('to_status_id', $toStatusId))
             ->exists();
     }
-
-    
 }

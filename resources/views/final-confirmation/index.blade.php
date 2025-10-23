@@ -68,6 +68,16 @@
                         </div>
                     @endif
 
+                    @if($errors->has('technical_feedback'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <strong>Technical Feedback Error:</strong> {{ $errors->first('technical_feedback') }}
+                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                    @endif
+
                             <!-- Search Section -->
                             <form id="searchForm" class="form" method="GET" action="{{ route('final_confirmation.index') }}">
                                 <div class="form-group row">
@@ -140,6 +150,7 @@
                                                         @csrf
                                                         <input type="hidden" name="cr_number" value="{{ $crDetails->cr_no}}">
                                                         <input type="hidden" name="action" id="actionInput" value="">
+                                                        <input type="hidden" name="technical_feedback" id="technicalFeedbackInput" value="">
 
                                                         <button @if($is_disabled) disabled @endif type="button" class="btn btn-danger btn-sm mr-2 final-confirmation-btn"
                                                                 data-action="reject" data-status-id="{{ config('change_request.status_ids.Reject') }}" data-cr-no="{{ $crDetails->cr_no}}">
@@ -226,11 +237,34 @@ $(document).ready(function() {
             confirmButtonText: alertConfig.confirmButtonText,
             cancelButtonText: 'No, Keep it',
             reverseButtons: true,
-            focusCancel: true
+            focusCancel: true,
+            html: `
+                <div class="mb-3">
+                    <label for="technical_feedback" class="form-label">Technical Feedback: <span class="text-danger">*</span></label>
+                    <textarea 
+                        id="technical_feedback" 
+                        name="technical_feedback" 
+                        class="form-control" 
+                        rows="4" 
+                        placeholder="Please provide technical feedback for this ${action} action..."
+                        style="resize: vertical; min-height: 100px;"
+                        required
+                    ></textarea>
+                </div>
+            `,
+            preConfirm: () => {
+                const technicalFeedback = document.getElementById('technical_feedback').value;
+                if (!technicalFeedback.trim()) {
+                    Swal.showValidationMessage('Please provide technical feedback');
+                    return false;
+                }
+                return technicalFeedback;
+            }
         }).then((result) => {
             if (result.isConfirmed) {
-                // Set the action value and submit the form
+                // Set the action value and technical feedback, then submit the form
                 $('#actionInput').val(statusId);
+                $('#technicalFeedbackInput').val(result.value);
                 $('#finalConfirmationForm').submit();
 
                 // Show loading alert
