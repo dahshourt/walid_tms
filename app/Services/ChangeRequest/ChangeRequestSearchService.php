@@ -41,7 +41,7 @@ class ChangeRequestSearchService
         }
         
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
-            $query->whereIN('active',self::$ACTIVE_STATUS_ARRAY)->where(function ($qq) use ($group) {
+            $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($group) {
                 $qq->where('group_id', $group)->orWhereNull('group_id');
             })
 				->whereIn('new_status_id', $viewStatuses)
@@ -70,7 +70,7 @@ class ChangeRequestSearchService
         }
         
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
-            $query->whereIN('active',self::$ACTIVE_STATUS_ARRAY)->where(function ($qq) use ($group) {
+            $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($group) {
                     $qq->where('group_id', $group)->orWhereNull('group_id');
                 })
                   ->whereIn('new_status_id', $viewStatuses)
@@ -169,7 +169,7 @@ public function cr_pending_cap($group = null){
             $crs = Change_request::with('Req_status.status')
             ->whereHas('Req_status', function ($query) use ($viewStatuses) {
                 $query->whereIn('new_status_id', $viewStatuses)
-                      ->whereIN('active',self::$ACTIVE_STATUS_ARRAY);
+                      ->whereRaw('CAST(active AS CHAR) = ?', ['1']);
             })->paginate(50);
             //dd($crs);
         }
@@ -183,7 +183,7 @@ public function cr_pending_cap($group = null){
             ->orWhere(function ($query) use ($userId) {
                 $query->whereHas('CurrentRequestStatuses', function ($q) {
                     $q->where('new_status_id', config('change_request.status_ids.cr_manager_review'))
-                      ->whereIN('active',self::$ACTIVE_STATUS_ARRAY);
+                      ->whereRaw('CAST(active AS CHAR) = ?', ['1']);
                 })->orWhere('change_request.requester_id', $userId);
             })
             ->paginate(50);
@@ -254,7 +254,7 @@ public function cr_pending_cap($group = null){
                 }
             })
             ->whereHas('RequestStatuses', function ($query) use ($groups, $viewStatuses) {
-                $query->whereIN('active',self::$ACTIVE_STATUS_ARRAY)->where(function ($qq) use ($groups) {
+                $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($groups) {
                     $qq->whereIn('group_id', $groups)->orWhereNull('group_id');
                 })
                       ->whereIn('new_status_id', $viewStatuses);
@@ -447,14 +447,14 @@ public function cr_pending_cap($group = null){
     protected function getTechnicalTeamCurrentStatus($id)
     {
         $group = $this->resolveGroup();
-        $technicalCr = TechnicalCr::where("cr_id", $id)->whereIN('status',self::$INACTIVE_STATUS_ARRAY)->first();
+        $technicalCr = TechnicalCr::where("cr_id", $id)->whereRaw('CAST(status AS CHAR) = ?', ['0'])->first();
         //dd($technicalCr);
         
         if ($technicalCr) {
             return $technicalCr->technical_cr_team()
                 ->where('group_id', $group)
                 //->where('status', '0')
-				->whereIN('status',self::$INACTIVE_STATUS_ARRAY)
+				->whereRaw('CAST(status AS CHAR) = ?', ['0'])
                 ->first();
         }
 
@@ -472,16 +472,16 @@ public function cr_pending_cap($group = null){
 			return Change_request_statuse::where('cr_id', $changeRequest->id)
             ->whereIn('new_status_id', $viewStatuses)
             //->where('active', '1')
-			->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+			//->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+			->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->first();
 		}
         
     }
-    
 	
 	public function getCurrentStatusForDivision($changeRequest)
     {
-        $status = Change_request_statuse::where('cr_id', $changeRequest->id)->whereIN('active',self::$ACTIVE_STATUS_ARRAY)->first();
+        $status = Change_request_statuse::where('cr_id', $changeRequest->id)->whereRaw('CAST(active AS CHAR) = ?', ['1'])->first();
         return $status;
         
     }
@@ -489,7 +489,8 @@ public function cr_pending_cap($group = null){
     protected function getCurrentStatusCab($changeRequest, $viewStatuses)
     {
         return Change_request_statuse::where('cr_id', $changeRequest->id)
-            ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+            //->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+			->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->first();
     }
 
@@ -513,7 +514,8 @@ public function cr_pending_cap($group = null){
             })
             ->where('type_id', $typeId)
             //->where('active', '1')
-			->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+			//->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+			->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->orderBy('id', 'DESC')
             ->get();
     }

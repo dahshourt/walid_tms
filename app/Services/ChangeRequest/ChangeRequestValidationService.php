@@ -56,7 +56,7 @@ class ChangeRequestValidationService
 
         $technicalDefaultGroup = session('default_group') ?: auth()->user()->default_group;
         $cr = Change_request::find($id);
-        $technicalCr = TechnicalCr::where("cr_id", $id)->whereIN('status',self::$INACTIVE_STATUS_ARRAY)->first();
+        $technicalCr = TechnicalCr::where("cr_id", $id)->whereRaw('CAST(status AS CHAR) = ?', ['0'])->first();
 
         if (!$technicalCr) {
             return false;
@@ -65,7 +65,6 @@ class ChangeRequestValidationService
 		$updateService->mirrorCrStatusToTechStreams($id, (int) $workflow->workflowstatus[0]->to_status_id, null, 'actor');
         return $this->processTechnicalTeamStatus($technicalCr, $oldStatusData, $workflow, $technicalDefaultGroup, $request);
     }
-    
 
     /**
      * Process technical team status based on workflow
@@ -103,7 +102,7 @@ class ChangeRequestValidationService
                 $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
     
                 $countAllTeams = $technicalCr->technical_cr_team->count();
-                $countApprovedTeams = $technicalCr->technical_cr_team->whereIN('status',self::$ACTIVE_STATUS_ARRAY)->count();
+                $countApprovedTeams = $technicalCr->technical_cr_team->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
     
                 if ($countAllTeams > $countApprovedTeams) {
                     return true; // Still waiting for other teams
@@ -188,7 +187,7 @@ class ChangeRequestValidationService
 					{
 						$technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
 						$countAllTeams = $technicalCr->technical_cr_team->count();
-						$countApprovedTeams = $technicalCr->technical_cr_team->whereIN('status',self::$ACTIVE_STATUS_ARRAY)->count();
+						$countApprovedTeams = $technicalCr->technical_cr_team->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
 						if ($countAllTeams == $countApprovedTeams) {
 							$technicalCr->status = '1';
 							$technicalCr->save();
@@ -222,7 +221,7 @@ class ChangeRequestValidationService
             $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
             
             $countAllTeams = $technicalCr->technical_cr_team->count();
-            $countApprovedTeams = $technicalCr->technical_cr_team->whereIN('status',self::$ACTIVE_STATUS_ARRAY)->count();
+            $countApprovedTeams = $technicalCr->technical_cr_team->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
             
             if ($countAllTeams == $countApprovedTeams) {
                 $technicalCr->status = '1';
@@ -248,7 +247,7 @@ class ChangeRequestValidationService
             $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
 
             $countAllTeams = $technicalCr->technical_cr_team->count();
-            $countApprovedTeams = $technicalCr->technical_cr_team->whereIN('status',self::$ACTIVE_STATUS_ARRAY)->count();
+            $countApprovedTeams = $technicalCr->technical_cr_team->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
 
             if ($countAllTeams > $countApprovedTeams) {
                 return true; // Still waiting for other teams
@@ -270,7 +269,8 @@ class ChangeRequestValidationService
             ->where('new_status_id', $statusData['id'])
             ->where('group_id', $groupId)
             //->where('active','1')
-			->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+			//->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+			->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->first();
 
         if (!$currentStatus) {
