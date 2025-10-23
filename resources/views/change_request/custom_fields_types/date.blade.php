@@ -1,3 +1,4 @@
+ 
 @if($item->CustomField->type == "date")
     @php
         $disabled = "";
@@ -16,7 +17,7 @@
     @if( isset($item->validation_type_id)&&($item->validation_type_id==1))
         <span style="color: red;">*</span>
     @endif
-        @if((isset($item->enable)&&($item->enable==1)))
+        @if(isset($cr))
         <input type="date" name="{{ $item->CustomField->name }}" value="{{ $custom_field_value }}" class="form-control form-control-lg" {{ $required }} {{ $disabled }} />
         @else
             @if(isset($cr))
