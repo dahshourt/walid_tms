@@ -138,7 +138,7 @@ class ChangeRequestUpdateService
 
         $user_id = Auth::user()->id;
         //$cabCr = CabCr::where("cr_id", $id)->where('status', '0')->first();
-        $cabCr = CabCr::where("cr_id", $id)->whereIN('status',self::$INACTIVE_STATUS_ARRAY)->first();
+        $cabCr = CabCr::where("cr_id", $id)->whereRaw('CAST(status AS CHAR) = ?', ['0'])->first();
         $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
 
         unset($request['cab_cr_flag']);
@@ -228,8 +228,8 @@ class ChangeRequestUpdateService
 				if (in_array($new_status_id, $promo_special_flow_ids, true)) 
 				{
 					$oldStatusId = $request->old_status_id ?? null;
-					$current_status_data = Change_request_statuse::where('cr_id', $id)->where('new_status_id', $oldStatusId)->whereIN('active',self::$ACTIVE_STATUS_ARRAY)->first();
-					$technicalCr = TechnicalCr::where("cr_id", $id)->whereIN('status',self::$INACTIVE_STATUS_ARRAY)->first();
+					$current_status_data = Change_request_statuse::where('cr_id', $id)->where('new_status_id', $oldStatusId)->whereRaw('CAST(active AS CHAR) = ?', ['1'])->first();
+					$technicalCr = TechnicalCr::where("cr_id", $id)->whereRaw('CAST(status AS CHAR) = ?', ['0'])->first();
 					TechnicalCrTeam::create([
 						'group_id'          => $current_status_data->reference_group_id,
 						'technical_cr_id'   => $technicalCr->id,
@@ -384,7 +384,8 @@ class ChangeRequestUpdateService
             Change_request_statuse::where('cr_id', $id)
                 ->where('new_status_id', $oldStatusId)
                 //->where('active', '1')
-				->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+				//->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+				->whereRaw('CAST(active AS CHAR) = ?', ['1'])
                 ->update(['assignment_user_id' => $request->assignment_user_id]);
         }
 
@@ -394,7 +395,8 @@ class ChangeRequestUpdateService
                 Change_request_statuse::where('cr_id', $id)
                     ->where('new_status_id', $oldStatusId)
                     //->where('active', '1')
-					->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+					//->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+					->whereRaw('CAST(active AS CHAR) = ?', ['1'])
                     ->update(['assignment_user_id' => $request->$field]);
             }
         }
@@ -408,7 +410,7 @@ class ChangeRequestUpdateService
     private function processCabApproval($id, $request): bool
     {
         $userId = Auth::user()->id ?? $request->user_id;
-        $cabCr  = CabCr::where("cr_id", $id)->whereIN('status',self::$ACTIVE_STATUS_ARRAY)->first();
+        $cabCr  = CabCr::where("cr_id", $id)->whereRaw('CAST(status AS CHAR) = ?', ['1'])->first();
 
         if (!$cabCr) {
             return false;
@@ -424,7 +426,7 @@ class ChangeRequestUpdateService
             $cabCr->cab_cr_user()->where('user_id', $userId)->update(['status' => '1']);
 
             $countAllUsers      = $cabCr->cab_cr_user->count();
-            $countApprovedUsers = $cabCr->cab_cr_user->whereIN('status',self::$ACTIVE_STATUS_ARRAY)->count();
+            $countApprovedUsers = $cabCr->cab_cr_user->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
 
             if ($countAllUsers > $countApprovedUsers) {
                 return true;
@@ -544,7 +546,8 @@ class ChangeRequestUpdateService
         return NewWorkFlow::query()
             ->where('from_status_id', $fromStatusId)
             //->where('active', '1')
-			->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+			//->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+			->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->whereHas('workflowstatus', fn($q) => $q->where('to_status_id', $toStatusId))
             ->exists();
     }
