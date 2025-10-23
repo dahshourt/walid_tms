@@ -23,12 +23,12 @@
                                 
                                 </td>
                                     <td>{{ $item->previous_status? $item->previous_status->status_name : "" }}</td>
-                                    <td>{{ $item['from_status']['status_name'] }}</td>
+                                    <td>{{ $item['from_status']? $item['from_status']['status_name']:"" }}</td>
                                     
                                      <!-- <td>{{ count($item->workflowstatus) }}</td> -->
                                      <td>
                                          @foreach($item->workflowstatus as $itm)
-                                            {{$itm->to_status->status_name}} , 
+                                            {{$itm->to_status ? $itm->to_status->status_name:""}} , 
                                          @endforeach
                                      </td>
                                     <td>{{ $item['to_status_label'] }}</td>

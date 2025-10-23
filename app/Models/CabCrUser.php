@@ -35,13 +35,26 @@ class CabCrUser extends Model
     {
         return $this->status == self::INACTIVE;
     }
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    // public function user()
+    // {
+    //     return $this->belongsTo(User::class);
+    // }
 
     public function cab_cr()
     {
         return $this->belongsTo(CabCr::class);
     }
+    public function cabCr()
+    {
+        return $this->belongsTo(CabCr::class, 'cab_cr_id', 'id');
+    }
+    
+    /**
+     * Get the user
+     */
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+    
 }

@@ -195,7 +195,23 @@ class ChangeRequestController extends Controller
             ]);
             return redirect('/')->with('error', 'You do not have permission to access this page.');
         }
-    }
+    }// cr_pending_cap
+    public function cr_pending_cap()
+    {
+        try {
+            //$this->authorize('CR Waiting Approval');
+            
+            $title = 'CR Pending Cap';
+            $collection = $this->changerequest->cr_pending_cap();
+            
+            return view("{$this->view}.cr_pending_cap", compact('collection', 'title'));
+        } catch (AuthorizationException $e) {
+            Log::warning('Unauthorized access attempt to division manager CRs', [
+                'user_id' => auth()->id()
+            ]);
+            return redirect('/')->with('error', 'You do not have permission to access this page.');
+        }
+    }// cr_pending_cap
 
     /**
      * Select and store group in session
@@ -1202,6 +1218,114 @@ class ChangeRequestController extends Controller
                 'message' => $message,
             ], 200);
 
+        } catch (\Exception $e) {
+            Log::error('Failed to process division manager action (JSON)', [
+                'cr_id' => $cr_id,
+                'action' => $action,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Failed to process action. Please try again.',
+            ], 500);
+        }
+    }
+    public function handlePendingCap(Request $request)
+    {
+       
+        $cr_id = $request->query('crId');
+        $action = $request->query('action');
+        $token = $request->query('token');
+
+        if (!$cr_id || !$action || !$token) {
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Invalid request. Missing parameters.',
+            ], 400);
+        }
+
+        $cr = Change_request::find($cr_id);
+        if (!$cr) {
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Change Request not found.',
+            ], 404);
+        }
+
+        $expectedToken = $this->generateSecurityToken($cr);
+        if ($token !== $expectedToken) {
+            Log::warning('Invalid token used for division manager action (JSON)', [
+                'cr_id' => $cr_id,
+                'ip' => request()->ip()
+            ]);
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Unauthorized access. Invalid token.',
+            ], 403);
+        }
+
+        $current_status = Change_request_statuse::where('cr_id', $cr_id)
+            ->where('active', '1')
+            ->value('new_status_id');
+
+        if ($current_status !=  config('change_request.status_ids.pending_cab')) {
+            $message = $current_status == config('change_request.status_ids.pending_cab_proceed')
+                ? 'You already rejected this CR.' 
+                : 'You already approved this CR.';
+            return response()->json([
+                'isSuccess' => false,
+                'message' => $message,
+            ], 400);
+        }
+
+      
+
+        try {
+           
+            // $updateRequest = new Request([
+            //     'old_status_id' => $current_status,
+            //     'new_status_id' => $workflowIdForAction,
+            // ]);
+            // $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
+if($action=='approve'){
+    $requestData = new \Illuminate\Http\Request([
+        'old_status_id' => config('change_request.status_ids.pending_cab'),
+        'new_status_id' => config('change_request.status_ids.pending_cab_proceed'),
+        'cab_cr_flag' => '1',
+        'user_id' => auth()->user()->id,
+    ]); 
+
+}
+else {
+
+    $requestData = new \Illuminate\Http\Request([
+        'old_status_id' => config('change_request.status_ids.pending_cab'),
+        'new_status_id' => config('change_request.status_ids.pending_cab_review'),
+        'cab_cr_flag' => '1',
+        'user_id' => auth()->user()->id,
+    ]); 
+
+}
+$repo = new ChangeRequestRepository();
+          //print_r($requestData); die;
+               
+                $repo->update($cr_id, $requestData);
+
+            $message = $action === 'approve' 
+                ? "CR #{$cr_id} has been successfully approved."
+                : "CR #{$cr_id} has been successfully rejected.";
+                $response = [
+                    'isSuccess' => true,
+                    'message' => $message,
+                ];
+              
+            return response()->json([
+                'status' => 200,
+                'isSuccess' => true,
+                'message' => $message,
+            ], 200);
+            
         } catch (\Exception $e) {
             Log::error('Failed to process division manager action (JSON)', [
                 'cr_id' => $cr_id,

@@ -38,6 +38,8 @@ Route::get('/cr/division_manager/action', 'ChangeRequest\ChangeRequestController
 Route::middleware(['auth'])->group(
     function () {
        Route::get('/change_request/approved_active', 'ChangeRequest\ChangeRequestController@handleDivisionManagerAction1');
+       Route::get('/change_request2/approved_active_cab', 'ChangeRequest\ChangeRequestController@handlePendingCap');
+
        // Route::post('/change_request/rejected_active', 'ChangeRequest\ChangeRequestController@rejected_active');
         Route::get('/statistics', 'HomeController@StatisticsDashboard');
         Route::get('/dashboard', 'HomeController@StatisticsDashboard');
@@ -134,6 +136,7 @@ Route::middleware(['auth'])->group(
 
         Route::resource('change_request', 'ChangeRequest\ChangeRequestController');
         Route::get('change_request2/dvision_manager_cr', 'ChangeRequest\ChangeRequestController@dvision_manager_cr')->name('dvision_manager_cr');
+        Route::get('change_request2/cr_pending_cap', 'ChangeRequest\ChangeRequestController@cr_pending_cap')->name('cr_pending_cap');
         Route::get('dvision_manager_cr/unreadNotifications', 'ChangeRequest\ChangeRequestController@unreadNotifications');
         Route::get('change_request1/asd/{group?}', 'ChangeRequest\ChangeRequestController@asd')->name('change_request.asd');
         Route::post('/select-group/{group}', 'ChangeRequest\ChangeRequestController@selectGroup')->name('select_group');
