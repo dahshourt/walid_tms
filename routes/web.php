@@ -85,6 +85,9 @@ Route::middleware(['auth'])->group(
         Route::resource('directors', 'Director\DirectorController')->except(['show', 'destroy']);
         Route::post('directors/updateactive', 'Director\DirectorController@updateStatus')->name('directors.updateStatus');
 
+        Route::resource('units', 'Units\UnitController')->except(['show', 'destroy']);
+        Route::post('units/updateactive', 'Units\UnitController@updateStatus')->name('units.updateStatus');
+
 		 Route::resource('stages', Stages\StageController::class);
        Route::post('stage/updateactive', 'Stages\StageController@updateactive');
        Route::resource('parents', Parents\ParentController::class);
