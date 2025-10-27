@@ -12,7 +12,7 @@ steps:
   fetchDepth: 0  
   displayName: 'Checkout repository'
 
-# Get list of changed files
+#  Get list of changed files 
 - script: |
     echo "Getting changed files..."
     
