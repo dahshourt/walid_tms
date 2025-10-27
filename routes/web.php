@@ -85,6 +85,10 @@ Route::middleware(['auth'])->group(
         Route::resource('directors', 'Director\DirectorController')->except(['show', 'destroy']);
         Route::post('directors/updateactive', 'Director\DirectorController@updateStatus')->name('directors.updateStatus');
 
+        // Custom Fields Management Routes
+        Route::resource('custom-fields', 'CustomField\CustomFieldController')->except(['show', 'destroy']);
+        Route::post('custom-fields/updateactive', 'CustomField\CustomFieldController@updateStatus')->name('custom-fields.updateStatus');
+        Route::get('custom-fields/get-table-options', 'CustomField\CustomFieldController@getTableOptions')->name('custom-fields.get-table-options');
 		 Route::resource('stages', Stages\StageController::class);
        Route::post('stage/updateactive', 'Stages\StageController@updateactive');
        Route::resource('parents', Parents\ParentController::class);
