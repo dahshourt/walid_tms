@@ -576,7 +576,7 @@
                                                                                         </svg>
                                                                                     <!--end::Svg Icon-->
                                                                                     </span>
-                                                                        <span class="menu-text">Manage Custom Fields</span>
+                                                                        <span class="menu-text">Custom Fields</span>
 
                                                                     </a>
                                                                 </li>
