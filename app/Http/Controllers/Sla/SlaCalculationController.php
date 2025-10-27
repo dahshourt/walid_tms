@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SlaCalculation;
 use App\Models\Status;
 use App\Models\Group;
+use App\Models\GroupStatuses;
 use Illuminate\Http\Request;
 
 class SlaCalculationController extends Controller
@@ -32,8 +33,23 @@ class SlaCalculationController extends Controller
         view()->share('form_title', 'SLA');
         view()->share('route', 'sla-calculations');
         $statuses = Status::all();
-        $groups = Group::all();
-        return view('sla.calculations.create', compact('statuses', 'groups'));
+       // $groups = Group::all();
+        return view('sla.calculations.create', compact('statuses'));
+    }
+
+    public function getGroups($status_id)
+    { 
+        $groups = GroupStatuses::with('group')
+        ->where('status_id', $status_id)
+        ->get()
+        ->map(function ($item) {
+            return [
+                'id' => $item->group_id,
+                'name' => $item->group ? $item->group->title : null
+            ];
+        });
+
+     return response()->json($groups);
     }
 
 /*public function store(Request $request)
