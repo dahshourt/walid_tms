@@ -40,7 +40,7 @@
                             @include("$view.form")
                             <div class="card-footer">
                                 <button type="submit" class="btn btn-success mr-2">Submit</button>
-                                <a href="{{ route('directors.index') }}" class="btn btn-secondary">Cancel</a>
+                                <button type="reset" class="btn btn-secondary">Cancel</button>
                             </div>
                         </form>
                         <!--end::Form-->

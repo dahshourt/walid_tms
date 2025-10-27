@@ -33,7 +33,7 @@
                             <h3 class="card-title">Add {{ $form_title }}</h3>
                         </div>
                         <!--begin::Form-->
-                        <form class="form" action='{{ route("directors.store") }}' method="post" enctype="multipart/form-data">
+                        <form class="form" action='{{ route("units.store") }}' method="post" enctype="multipart/form-data">
                             {{ csrf_field() }}
                             @include("$view.form")
                             <div class="card-footer">

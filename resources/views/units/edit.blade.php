@@ -12,7 +12,7 @@
                 <!--begin::Heading-->
                 <div class="d-flex flex-column">
                     <!--begin::Title-->
-                    <h2 class="text-white font-weight-bold my-2 mr-5">{{ $title }}</h2>
+                    <h2 class="text-white font-weight-bold my-2 mr-5">{{$title}}</h2>
                     <!--end::Title-->
                 </div>
                 <!--end::Heading-->
@@ -30,11 +30,13 @@
                     <!--begin::Card-->
                     <div class="card card-custom gutter-b example example-compact">
                         <div class="card-header">
-                            <h3 class="card-title">Add {{ $form_title }}</h3>
+                            <h3 class="card-title">Edit {{ $form_title }}</h3>
                         </div>
                         <!--begin::Form-->
-                        <form class="form" action='{{ route("directors.store") }}' method="post" enctype="multipart/form-data">
+                        <form class="form" action='{{ route("units.update", $row->id) }}' method="post" enctype="multipart/form-data">
                             {{ csrf_field() }}
+                            {{ method_field('PATCH') }}
+                            <input type="hidden" name="id" value="{{ $row->id }}">
                             @include("$view.form")
                             <div class="card-footer">
                                 <button type="submit" class="btn btn-success mr-2">Submit</button>
