@@ -1,7 +1,17 @@
-trigger:
-  branches:
-    include:
-      - DevMaster
+# Manual trigger only - no automatic triggers
+trigger: none
+
+# Allow manual runs
+parameters:
+- name: baseBranch
+  displayName: 'Compare against branch'
+  type: string
+  default: 'origin/DevMaster'
+  
+- name: customCommit
+  displayName: 'Custom starting commit (optional - leave empty for last merge)'
+  type: string
+  default: ''
 
 pool:
   vmImage: ubuntu-latest
@@ -12,32 +22,67 @@ steps:
   fetchDepth: 0  
   displayName: 'Checkout repository'
 
-#  Get list of changed files 
+# Get all changed files since last merge or custom commit
 - script: |
-    echo "Getting changed files..."
+    echo "Getting all changed files since last merge..."
     
-    if [ "$(git rev-list --count HEAD)" -eq 1 ]; then
-      echo "First commit - getting all files"
-      git ls-files > changed_files.txt
+    # Get the custom commit if provided, otherwise find last merge commit
+    if [ -n "${{ parameters.customCommit }}" ]; then
+      BASE_COMMIT="${{ parameters.customCommit }}"
+      echo "Using custom commit: $BASE_COMMIT"
     else
-      # compare between last two commits
-      PREV_COMMIT=$(git rev-parse HEAD~1)
-      CURR_COMMIT=$(git rev-parse HEAD)
-      echo "Comparing: $PREV_COMMIT → $CURR_COMMIT"
+      # Find the last merge commit in DevMaster
+      BASE_COMMIT=$(git log ${{ parameters.baseBranch }} --merges -1 --format="%H")
       
-      # git changed files
-      git diff --name-only --diff-filter=ACMR $PREV_COMMIT $CURR_COMMIT > changed_files.txt
+      if [ -z "$BASE_COMMIT" ]; then
+        echo "No merge commit found, using first commit in branch"
+        BASE_COMMIT=$(git rev-list --max-parents=0 HEAD)
+      else
+        echo "Found last merge commit: $BASE_COMMIT"
+        git log -1 --oneline $BASE_COMMIT
+      fi
     fi
     
-    echo "Changed files:"
-    cat changed_files.txt
+    CURRENT_COMMIT=$(git rev-parse HEAD)
+    echo "Comparing: $BASE_COMMIT → $CURRENT_COMMIT"
     
-    # check if no files changed 
+    # Get all changed files between base and current
+    git diff --name-only --diff-filter=ACMR $BASE_COMMIT $CURRENT_COMMIT > changed_files.txt
+    
+    # Count files
+    FILE_COUNT=$(wc -l < changed_files.txt)
+    echo ""
+    echo "Found $FILE_COUNT changed file(s):"
+    echo "================================"
+    cat changed_files.txt
+    echo "================================"
+    
+    # Save commit info for artifact
+    echo "Base commit: $BASE_COMMIT" > commit_info.txt
+    echo "Current commit: $CURRENT_COMMIT" >> commit_info.txt
+    echo "Total files: $FILE_COUNT" >> commit_info.txt
+    
+    # Check if no files changed 
     if [ ! -s changed_files.txt ]; then
-      echo "No files changed!"
+      echo "No files changed between commits!"
       exit 0
     fi
-  displayName: 'Get changed files list'
+  displayName: 'Get changed files since last merge'
+
+# Show detailed git log
+- script: |
+    echo "Commits included in this package:"
+    echo "===================================="
+    
+    if [ -n "${{ parameters.customCommit }}" ]; then
+      BASE="${{ parameters.customCommit }}"
+    else
+      BASE=$(git log ${{ parameters.baseBranch }} --merges -1 --format="%H")
+    fi
+    
+    git log --oneline --graph $BASE..HEAD
+    echo "===================================="
+  displayName: 'Show commit history'
 
 # Copy changed files to deploy folder
 - script: |
@@ -49,32 +94,81 @@ steps:
     echo "Copying changed files to deploy directory..."
     mkdir -p deploy
     
+    SUCCESS_COUNT=0
+    FAIL_COUNT=0
+    
     while IFS= read -r file; do
       if [ -f "$file" ]; then
         target_dir="deploy/$(dirname "$file")"
         mkdir -p "$target_dir"
         cp -v "$file" "deploy/$file"
         echo "Copied: $file"
+        SUCCESS_COUNT=$((SUCCESS_COUNT + 1))
       else
         echo "File not found: $file"
+        FAIL_COUNT=$((FAIL_COUNT + 1))
       fi
     done < changed_files.txt
     
+    # Copy commit info
+    cp commit_info.txt deploy/
+    
+    echo ""
+    echo "Summary:"
+    echo "  Successfully copied: $SUCCESS_COUNT files"
+    echo "  Failed: $FAIL_COUNT files"
     echo "Done copying changed files."
   displayName: 'Prepare deploy folder'
+
+# Create a manifest file
+- script: |
+    if [ -d "deploy" ]; then
+      echo "Creating manifest file..."
+      echo "# Deployment Package Manifest" > deploy/MANIFEST.md
+      echo "" >> deploy/MANIFEST.md
+      echo "**Generated:** $(date)" >> deploy/MANIFEST.md
+      echo "" >> deploy/MANIFEST.md
+      cat commit_info.txt >> deploy/MANIFEST.md
+      echo "" >> deploy/MANIFEST.md
+      echo "## Changed Files:" >> deploy/MANIFEST.md
+      echo "" >> deploy/MANIFEST.md
+      while IFS= read -r file; do
+        echo "- $file" >> deploy/MANIFEST.md
+      done < changed_files.txt
+      
+      echo "Manifest created"
+    fi
+  displayName: 'Create manifest'
+  condition: succeeded()
 
 # Zip the deploy folder
 - task: ArchiveFiles@2
   inputs:
     rootFolderOrFile: 'deploy'
     includeRootFolder: false
-    archiveFile: '$(Build.ArtifactStagingDirectory)/changed.zip'
+    archiveFile: '$(Build.ArtifactStagingDirectory)/changed_$(Build.BuildId).zip'
     replaceExistingArchive: true
-  displayName: 'Create ZIP with changed files only'
+  displayName: 'Create ZIP with all changed files'
   condition: succeeded()
 
 # Publish artifact
-- publish: $(Build.ArtifactStagingDirectory)/changed.zip
-  artifact: changed-files
-  displayName: 'Publish changed files artifact'
+- task: PublishBuildArtifacts@1
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)/changed_$(Build.BuildId).zip'
+    ArtifactName: 'deployment-package-$(Build.BuildId)'
+    publishLocation: 'Container'
+  displayName: 'Publish deployment package'
+  condition: succeeded()
+
+# Summary
+- script: |
+    echo ""
+    echo "╔════════════════════════════════════════╗"
+    echo "║     ✅ Pipeline Completed Successfully  ║"
+    echo "╚════════════════════════════════════════╝"
+    echo ""
+    echo "📦 Artifact: deployment-package-$(Build.BuildId)"
+    echo "📁 Download your ZIP file from the pipeline artifacts"
+    echo ""
+  displayName: 'Pipeline Summary'
   condition: succeeded()
