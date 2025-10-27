@@ -5,8 +5,16 @@
                                     <th scope="row">{{ $item->id }}</th>
                                     <td>{{ $item->name }}</td>
                                     <td>{{ $item->stage->name }}</td>
-                                    <td>{{ $item->group_statuses->where('type', App\Models\GroupStatuses::SETBY)->pluck('group.title')->implode(', ') }}</td>
-                                    <td>{{ $item->group_statuses->where('type', App\Models\GroupStatuses::VIEWBY)->pluck('group.title')->implode(', ') }}</td>
+                                    <td>
+                                        @if($item->setByGroupStatuses)
+                                            {{ $item->setByGroupStatuses->pluck('group.title')->implode(', ') }}
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($item->viewByGroupStatuses)
+                                            {{ $item->viewByGroupStatuses->pluck('group.title')->implode(', ') }}
+                                        @endif
+                                    </td>
                                     @can('Active Status')
                                     <td>
                                         @if($item->active)
@@ -26,7 +34,7 @@
 @else
 
 <tr>
-    <td colspan="7" style="text-align:center">No Data Found</td>                                   
+    <td colspan="7" style="text-align:center">No Data Found</td>
 </tr>
 
 @endif
