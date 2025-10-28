@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Services\EwsMailReader;
+use App\Http\Controllers\sla\SlaCalculationController;
 
 
 
@@ -206,6 +207,7 @@ Route::middleware(['auth'])->group(
         Route::post('final-confirmation/submit', 'FinalConfirmation\FinalConfirmationController@submit')->name('final_confirmation.submit');
         // Notification Routes
         Route::resource('notification_templates', NotificationTemplates\NotificationTemplatesController::class);
+        Route::get('/get-groups/{status_id}', [SlaCalculationController::class, 'getGroups'])->name('get.groups');
 
 
         //test ews

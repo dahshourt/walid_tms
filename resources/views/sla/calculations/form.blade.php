@@ -19,7 +19,7 @@
     {{-- Status Dropdown --}}
     <div class="form-group">
         <label for="status_id">Status:</label>
-        <select id="status_id" name="status_id" class="form-control">
+        <select id="status_id" name="status_id"   class="form-control">
             <option value="">-- Select Status --</option>
             @foreach($statuses as $status)
                 <option value="{{ $status->id }}" 
@@ -32,19 +32,22 @@
     </div>
 
     {{-- Groups Dropdown --}}
-    <div class="form-group">
+    <div class="form-group mt-3">
         <label for="group_id">Group:</label>
-        <select id="group_id" name="group_id" class="form-control">
+        <select name="group_id" id="group_id" class="form-control">
             <option value="">-- Select Group --</option>
-            @foreach($groups as $group)
-                <option value="{{ $group->id }}" 
-                    {{ (isset($row) && $row->group_id == $group->id) || old('group_id') == $group->id ? 'selected' : '' }}>
-                    {{ $group->name }}
-                </option>
-            @endforeach
+            @if(isset($groups) && count($groups) > 0)
+                @foreach($groups as $group)
+                    <option value="{{ $group->id }}" 
+                        {{ (isset($row) && $row->group_id == $group->id) || old('group_id') == $group->id ? 'selected' : '' }}>
+                        {{ $group->name }}
+                    </option>
+                @endforeach
+            @endif
         </select>
-        {!! $errors->first('group_id', '<span class="form-control-feedback">:message</span>') !!}
+        {!! $errors->first('group_id', '<span class="form-control-feedback text-danger">:message</span>') !!}
     </div>
+
 
     {{-- SLA Time Input --}}
     <div class="form-group">
