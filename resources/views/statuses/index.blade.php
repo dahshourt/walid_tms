@@ -120,7 +120,7 @@
 									</div>
 									<div class="card-body">
 										<!--begin: Datatable-->
-										<table class="table table-separate table-head-custom table-checkable" id="kt_datatable2">
+										<table class="table table-separate table-head-custom table-checkable" id="dfUsageTable" pagination="true" pagination-size="50">
 											<thead>
 												<tr>
 													<th>#</th>
@@ -141,7 +141,7 @@
 										<!--end: Datatable-->
 									</div>
 								</div>
-								{{ $collection->links() }}
+								
 								<!--end::Card-->
 							</div>
 							<!--end::Container-->
