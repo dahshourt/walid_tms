@@ -4,15 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Status extends Model
 {
     use HasFactory;
+
     protected $table = "statuses";
     protected $with = ['high_level'];
     protected $appends = array('name');
 
-    
 
     /**
      * The attributes that are mass assignable. test
@@ -43,6 +44,18 @@ class Status extends Model
         return $this->hasMany(GroupStatuses::class);
     }
 
+    public function setByGroupStatuses(): HasMany
+    {
+        return $this->group_statuses()
+            ->where('type', GroupStatuses::SETBY);
+    }
+
+    public function viewByGroupStatuses(): HasMany
+    {
+        return $this->group_statuses()
+            ->where('type', GroupStatuses::VIEWBY);
+    }
+
     public function from_status()
     {
         return $this->hasMany(StatusWorkFlow::class, 'from_status_id');
@@ -60,12 +73,12 @@ class Status extends Model
 
     public function high_level()
     {
-        return $this->belongsTo(HighLevelStatuses::class, 'high_level_status_id')->where('active','1');
+        return $this->belongsTo(HighLevelStatuses::class, 'high_level_status_id')->where('active', '1');
     }
 
     public function getNameAttribute()
     {
-        return $this->status_name;  
+        return $this->status_name;
     }
 
 }

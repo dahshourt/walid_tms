@@ -13,14 +13,20 @@ use App\Models\Technical_team;
 class StatusRepository implements StatusRepositoryInterface
 {
 
-    
+
     public  static function getAll()
     {
         return Status::with('group_statuses','stage','group_statuses.group')->get();
     }
-    public function paginateAll()
+    public function paginateAll(array $relations = [])
     {
-        return Status::latest()->paginate(10);
+        $query = Status::latest();
+
+        if (count($relations) > 0) {
+            $query = $query->with($relations);
+        }
+
+        return $query->paginate(10);
     }
 
     public function create($request)
@@ -67,22 +73,22 @@ class StatusRepository implements StatusRepositoryInterface
 
     public function update($request, $id)
     {
-        
-		
+
+
 			$status =  Status::where('id', $id)->update($request->except('set_group_id','view_group_id','_method','_token'));
 
-	
+
         $this->StoreStatusGroup($id,$request);
         return $status;
     }
-	
+
 	public function update1($request, $id)
     {
-		
+
 			$status =  Status::where('id', $id)->update($request);
 
-	
-        
+
+
         return $status;
     }
 
@@ -92,14 +98,14 @@ class StatusRepository implements StatusRepositoryInterface
     }
 	public function updateactive($active,$id){
 		if($active){
-			
+
 		return 	$this->update1(['active'=>'0'],$id);
 		} else{
-			
+
 					return 	$this->update1(['active'=>'1'],$id);
 
 		}
-		
+
 	}
 
     public function get_crs_group_by_status_OLD($status_req, $workflow_type_req)
@@ -108,13 +114,13 @@ class StatusRepository implements StatusRepositoryInterface
         $new_sta = trim(json_encode($status_req), '[]');
         return  DB::select
         ("
-            SELECT 
+            SELECT
             COUNT(cr.id) 'CRs_Count', (select st.status_name from  statuses st where st.id in(cr_status.new_status_id))  'Status_Name'
         FROM
             change_request AS cr
-            
+
             left join change_request_statuses as cr_status on cr.id = cr_status.cr_id
-            
+
             where cr_status.active = 1
             AND cr_status.new_status_id IN($new_sta)
             AND cr.workflow_type_id = \"$workflow_type_req\"
@@ -128,13 +134,13 @@ class StatusRepository implements StatusRepositoryInterface
         $new_sta = trim(json_encode($status_req), '[]');
         return  DB::select
         ("
-            SELECT 
+            SELECT
             COUNT(cr.id) 'CRs_Count', (select st.status_name from  statuses st where st.id in(cr_status.new_status_id))  'Status_Name'
         FROM
             change_request AS cr
-            
+
             left join change_request_statuses as cr_status on cr.id = cr_status.cr_id
-            
+
             where cr_status.active = 1
             AND cr_status.new_status_id IN($new_sta)
             AND cr.workflow_type_id = \"$workflow_type_req\"
@@ -154,6 +160,6 @@ class StatusRepository implements StatusRepositoryInterface
         return Status::where('id', $status_id)->first();
     }
 
-    
+
 
 }
