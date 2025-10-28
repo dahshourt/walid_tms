@@ -12,6 +12,8 @@ use App\Http\Repository\Groups\GroupRepository;
 use App\Exports\StatusesExport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+
 class StatusController extends Controller
 {
     use ValidatesRequests;
@@ -143,7 +145,7 @@ class StatusController extends Controller
 
 	}
 
-    public function export()
+    public function export(): BinaryFileResponse
     {
         $this->authorize('List Statuses');
 
