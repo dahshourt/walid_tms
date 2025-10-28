@@ -34,6 +34,7 @@ class NewWorkflowRepository implements NewWorkflowRepositoryInterface
         return NewWorkFlow::where('type_id','!=',7)->with([
             'from_status', 
             'workflowstatus.to_status',
+            'previous_status',
         ])->get();
 
     }
