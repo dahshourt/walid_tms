@@ -78,13 +78,14 @@ Route::middleware(['auth'])->group(
 
         Route::post('user/updateactive', 'Users\UserController@updateactive');//groupco
         Route::post('groups/updateactive', 'Groups\GroupController@updateactive');
+        Route::get('statuses/export', 'Statuses\StatusController@export')->name('statuses.export');
         Route::resource('statuses', Statuses\StatusController::class);
         Route::post('status/updateactive', 'Statuses\StatusController@updateactive');
         Route::resource('division_manager', Division_manager\Division_managerController::class);
 
         Route::resource('directors', 'Director\DirectorController')->except(['show', 'destroy']);
         Route::post('directors/updateactive', 'Director\DirectorController@updateStatus')->name('directors.updateStatus');
-        
+
         // Custom Fields Management Routes
         Route::resource('custom-fields', 'CustomField\CustomFieldController')->except(['show', 'destroy']);
         Route::post('custom-fields/updateactive', 'CustomField\CustomFieldController@updateStatus')->name('custom-fields.updateStatus');
