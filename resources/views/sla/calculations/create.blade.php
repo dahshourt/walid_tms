@@ -66,3 +66,33 @@
 					<!--end::Content-->
 
 @endsection
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+$(document).ready(function () {
+    $('#status_id').on('change', function () {
+	 
+        var statusId = $(this).val();
+
+        // Clear and disable the group dropdown initially
+        $('#group_id').empty().append('<option value="">-- Select Group --</option>').prop('disabled', true);
+		 
+        if (statusId) {
+            $.ajax({
+                url: "{{ route('get.groups', '') }}/" + statusId,
+                type: "GET",
+                dataType: "json",
+                success: function (data) {
+                    $('#group_id').prop('disabled', false);
+                    $.each(data, function (key, group) {
+                        $('#group_id').append('<option value="' + group.id + '">' + group.name + '</option>');
+                    });
+                },
+                error: function () {
+                    alert('Failed to fetch groups. Please try again.');
+                }
+            });
+        }
+    });
+});
+</script>
