@@ -615,7 +615,10 @@ class Change_request extends Model
             return $status;
         }
     }
-
+    public static function getHoldRequests()
+    {
+        return self::where('hold', 1)->get();
+    }
     private function attachWorkflowInfoById($status)
     {
         if (!$status) {

@@ -122,6 +122,25 @@ public function cr_pending_cap($group = null){
 
    
 }
+
+
+public function cr_hold_promo($group = null)
+{
+  
+
+    // Get all hold requests with relationships
+    $allRequests = Change_request::with(['RequestStatuses.status'])
+        ->where('hold', 1) 
+        
+        ->orderBy('id', 'DESC')
+       
+        ->get();
+
+  
+
+    return $allRequests;
+}
+
     public function divisionManagerCr($group = null)
     {
         $userEmail = auth()->user()->email;
