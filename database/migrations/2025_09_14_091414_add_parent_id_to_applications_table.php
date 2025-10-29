@@ -15,15 +15,14 @@ class AddParentIdToApplicationsTable extends Migration
     {
         Schema::table('applications', function (Blueprint $table) {
             //
-			$table->foreignId('parent_id')
+            $table->foreignId('parent_id')
                 ->nullable()
                 ->after('id')
                 ->constrained('applications')
                 ->nullOnDelete()      // if parent deleted → set child.parent_id = null
                 ->cascadeOnUpdate();  // keep FK valid on id changes (rare)
         });
-		
-		
+
     }
 
     /**

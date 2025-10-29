@@ -7,9 +7,8 @@ use App\Http\Repository\Statuses\StatusWorkFlowRepository;
 
 class StatusWorkFlowFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new StatusWorkFlowRepository();
     }
-
 }

@@ -15,13 +15,13 @@ class GroupStatusResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'id'                => $this->id,
-            'status_id'         => $this->status_id,
-            'group_id'          => $this->group_id,
-            'type'              => $this->type,
-            'created_at'        => $this->created_at,
-            'updated_at'        => $this->updated_at,
-            'group'             => new GroupResource($this->group),
+            'id' => $this->id,
+            'status_id' => $this->status_id,
+            'group_id' => $this->group_id,
+            'type' => $this->type,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+            'group' => new GroupResource($this->group),
         ];
     }
 }

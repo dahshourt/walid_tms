@@ -19,7 +19,7 @@ class CreateChangeRequestStatusesTable extends Migration
             $table->foreignId('old_status_id');
             $table->foreignId('new_status_id');
             $table->foreignId('user_id');
-			$table->enum('active', ['0', '1','2'])->default(1);
+            $table->enum('active', ['0', '1', '2'])->default(1);
             $table->foreign('cr_id')->references('id')->on('change_request')->onDelete('cascade');
             $table->foreign('old_status_id')->references('id')->on('statuses')->onDelete('cascade');
             $table->foreign('new_status_id')->references('id')->on('statuses')->onDelete('cascade');

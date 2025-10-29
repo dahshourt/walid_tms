@@ -1,12 +1,11 @@
 <?php
+
 namespace App\Traits\ChangeRequest;
 
 trait ChangeRequestConstants
 {
     /**
      * Get required fields for change request creation/update
-     *
-     * @return array
      */
     protected function getRequiredFields(): array
     {
@@ -20,14 +19,12 @@ trait ChangeRequestConstants
             'updated_at', 'category_id', 'priority_id', 'unit_id', 'department_id',
             'application_id', 'workflow_type_id', 'division_manager', 'creator_mobile_number',
             'calendar', 'CR_duration', 'chnage_requester_id', 'start_CR_time',
-            'end_CR_time', 'release_name', 'cr_no'
+            'end_CR_time', 'release_name', 'cr_no',
         ];
     }
 
     /**
      * Get fields that should be excluded from processing
-     *
-     * @return array
      */
     protected function getExcludedFields(): array
     {
@@ -40,14 +37,12 @@ trait ChangeRequestConstants
             'technical_attachments', 'cap_users', 'analysis_feedback', 'technical_feedback',
             'need_ux_ui', 'business_feedback', 'rejection_reason_id', 'technical_teams',
             'CR_estimation', 'cr_member', 'cr_no', 'deployment_impact', 'need_down_time',
-            'proposed_available_time'
+            'proposed_available_time',
         ];
     }
 
     /**
      * Get workflow type constants
-     *
-     * @return array
      */
     protected function getWorkflowTypes(): array
     {
@@ -62,8 +57,6 @@ trait ChangeRequestConstants
 
     /**
      * Get status IDs from configuration
-     *
-     * @return array
      */
     protected function getStatusIds(): array
     {
@@ -72,8 +65,6 @@ trait ChangeRequestConstants
 
     /**
      * Get working hours configuration
-     *
-     * @return array
      */
     protected function getWorkingHours(): array
     {
@@ -87,8 +78,6 @@ trait ChangeRequestConstants
 
     /**
      * Get default values configuration
-     *
-     * @return array
      */
     protected function getDefaultValues(): array
     {
@@ -97,8 +86,6 @@ trait ChangeRequestConstants
 
     /**
      * Get mail notification settings
-     *
-     * @return array
      */
     protected function getMailNotificationSettings(): array
     {
@@ -111,9 +98,6 @@ trait ChangeRequestConstants
 
     /**
      * Get SLA configuration for a specific workflow type
-     *
-     * @param string $workflowType
-     * @return array
      */
     protected function getSlaConfiguration(string $workflowType = 'normal'): array
     {
@@ -125,8 +109,6 @@ trait ChangeRequestConstants
 
     /**
      * Get validation rules for change request fields
-     *
-     * @return array
      */
     protected function getValidationRules(): array
     {
@@ -135,8 +117,6 @@ trait ChangeRequestConstants
 
     /**
      * Get custom field configuration
-     *
-     * @return array
      */
     protected function getCustomFieldConfiguration(): array
     {
@@ -148,8 +128,6 @@ trait ChangeRequestConstants
 
     /**
      * Get upload configuration
-     *
-     * @return array
      */
     protected function getUploadConfiguration(): array
     {
@@ -161,9 +139,6 @@ trait ChangeRequestConstants
 
     /**
      * Check if a workflow type is valid
-     *
-     * @param int $workflowTypeId
-     * @return bool
      */
     protected function isValidWorkflowType(int $workflowTypeId): bool
     {
@@ -172,9 +147,6 @@ trait ChangeRequestConstants
 
     /**
      * Check if a status ID is a special status
-     *
-     * @param int $statusId
-     * @return bool
      */
     protected function isSpecialStatus(int $statusId): bool
     {
@@ -182,7 +154,7 @@ trait ChangeRequestConstants
             'pending_production_deployment',
             'production_deployment',
             'business_approval',
-            'cr_manager_review'
+            'cr_manager_review',
         ];
 
         foreach ($specialStatuses as $status) {
@@ -196,51 +168,43 @@ trait ChangeRequestConstants
 
     /**
      * Get the first CR number for a workflow type
-     *
-     * @param int $workflowTypeId
-     * @return int
      */
     protected function getFirstCrNumber(int $workflowTypeId): int
     {
         $firstCrNumbers = $this->getDefaultValues()['first_cr_no'];
+
         return $firstCrNumbers[$workflowTypeId] ?? $firstCrNumbers['default'];
     }
 
     /**
      * Check if it's a working day
-     *
-     * @param \Carbon\Carbon $date
-     * @return bool
      */
     protected function isWorkingDay(\Carbon\Carbon $date): bool
     {
         $weekendDays = $this->getWorkingHours()['weekend_days'];
-        return !in_array($date->dayOfWeek, $weekendDays);
+
+        return ! in_array($date->dayOfWeek, $weekendDays);
     }
 
     /**
      * Check if time is within working hours
-     *
-     * @param \Carbon\Carbon $time
-     * @return bool
      */
     protected function isWorkingTime(\Carbon\Carbon $time): bool
     {
         $workingHours = $this->getWorkingHours();
         $hour = $time->hour;
+
         return $hour >= $workingHours['start'] && $hour < $workingHours['end'];
     }
 
     /**
      * Get field mapping for logging
-     *
-     * @return array
      */
     protected function getFieldMappingForLogging(): array
     {
         return [
             'title' => 'Subject',
-            'description' => 'Description', 
+            'description' => 'Description',
             'priority_id' => 'Priority',
             'category_id' => 'Category',
             'application_id' => 'Application',
@@ -256,8 +220,6 @@ trait ChangeRequestConstants
 
     /**
      * Get estimation action types
-     *
-     * @return array
      */
     protected function getEstimationActionTypes(): array
     {
@@ -271,8 +233,6 @@ trait ChangeRequestConstants
 
     /**
      * Get role column mappings
-     *
-     * @return array
      */
     protected function getRoleColumnMappings(): array
     {
@@ -281,25 +241,25 @@ trait ChangeRequestConstants
                 'start_column' => 'start_design_time',
                 'end_column' => 'end_design_time',
                 'duration_column' => 'design_duration',
-                'action' => 'design'
+                'action' => 'design',
             ],
             'developer_id' => [
                 'start_column' => 'start_develop_time',
                 'end_column' => 'end_develop_time',
                 'duration_column' => 'develop_duration',
-                'action' => 'dev'
+                'action' => 'dev',
             ],
             'tester_id' => [
                 'start_column' => 'start_test_time',
                 'end_column' => 'end_test_time',
                 'duration_column' => 'test_duration',
-                'action' => 'test'
+                'action' => 'test',
             ],
             'chnage_requester_id' => [
                 'start_column' => 'start_CR_time',
                 'end_column' => 'end_CR_time',
                 'duration_column' => 'CR_duration',
-                'action' => 'CR'
+                'action' => 'CR',
             ],
         ];
     }

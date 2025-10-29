@@ -4,7 +4,6 @@ namespace App\Http\Repository\Units;
 
 use App\Contracts\Units\UnitsRepositoryInterface;
 use App\Models\Unit;
-use Illuminate\Support\Facades\DB;
 
 class UnitsRepository implements UnitsRepositoryInterface
 {
@@ -33,6 +32,7 @@ class UnitsRepository implements UnitsRepositoryInterface
     {
         $unit = Unit::findOrFail($id);
         $unit->update($request);
+
         return $unit;
     }
 

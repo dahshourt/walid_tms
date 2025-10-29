@@ -23,7 +23,7 @@ class CreateChangeRequestTable extends Migration
             $table->foreignId('tester_id')->nullable();
             $table->foreignId('designer_id')->nullable();
             $table->foreignId('requester_id')->nullable();
-           
+
             $table->integer('design_duration')->nullable();
             $table->dateTime('start_design_time')->nullable();
             $table->dateTime('end_design_time')->nullable();
@@ -31,7 +31,7 @@ class CreateChangeRequestTable extends Migration
             $table->integer('develop_duration')->nullable();
             $table->dateTime('start_develop_time')->nullable();
             $table->dateTime('end_develop_time')->nullable();
-            
+
             $table->integer('test_duration')->nullable();
             $table->dateTime('start_test_time')->nullable();
             $table->dateTime('end_test_time')->nullable();
@@ -40,9 +40,6 @@ class CreateChangeRequestTable extends Migration
 
             $table->integer('helpdesk_id')->nullable();
 
-            
-
-
             $table->string('requester_name')->nullable();
             $table->string('requester_email')->nullable();
             $table->string('requester_unit')->nullable();
@@ -50,17 +47,13 @@ class CreateChangeRequestTable extends Migration
             $table->string('requester_department')->nullable();
             $table->string('application_name')->nullable();
 
-
             $table->enum('testable', ['0', '1'])->default(1);
-
 
             $table->foreign('developer_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('tester_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('designer_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('requester_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('depend_cr_id')->references('id')->on('change_request')->onDelete('cascade');
-
-            
 
             $table->timestamps();
         });

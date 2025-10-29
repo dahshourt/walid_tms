@@ -17,16 +17,11 @@ class Stage extends Model
     protected $fillable = [
         'name',
         'active',
-        
-    ];
 
+    ];
 
     public function statuses()
     {
         return $this->hasMany(Status::class);
     }
-
-    
-    
-
 }

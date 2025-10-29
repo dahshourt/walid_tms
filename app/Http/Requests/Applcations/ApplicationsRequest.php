@@ -2,13 +2,11 @@
 
 namespace App\Http\Requests\Applcations;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Foundation\Http\FormRequest;
 
 class ApplicationsRequest extends FormRequest
 {
-
     /**
      * Determine if the supervisor is authorized to make this request.
      *
@@ -28,11 +26,11 @@ class ApplicationsRequest extends FormRequest
     {
         if ($this->isMethod('POST')) {
             return $this->createRules();
-        } else {
-            return $this->updateRules();
         }
-    }
 
+        return $this->updateRules();
+
+    }
 
     /**
      * Get the create validation rules that apply to the request.
@@ -42,10 +40,10 @@ class ApplicationsRequest extends FormRequest
     public function createRules()
     {
         return [
-            'name' => ['required','string', 'unique:applications'],
+            'name' => ['required', 'string', 'unique:applications'],
             'workflow_type_id' => ['required'],
-            //'active' => ['required','int'],
-            
+            // 'active' => ['required','int'],
+
         ];
     }
 
@@ -56,17 +54,13 @@ class ApplicationsRequest extends FormRequest
      */
     public function updateRules()
     {
-       
-        
+
         return [
-            'name' => ['required','string', 'unique:applications,name,'.$this->id],
+            'name' => ['required', 'string', 'unique:applications,name,' . $this->id],
             'workflow_type_id' => ['required'],
-            //'active' => ['required','int'],
+            // 'active' => ['required','int'],
         ];
     }
-
-
-    
 
     /**
      * Get custom attributes for validator errors.

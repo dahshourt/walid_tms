@@ -1,9 +1,8 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ChangeRequest\Api\TechnicalFeedbackController;
 use App\Http\Controllers\ChangeRequest\Api\EmailApprovalController;
+use App\Http\Controllers\ChangeRequest\Api\TechnicalFeedbackController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------

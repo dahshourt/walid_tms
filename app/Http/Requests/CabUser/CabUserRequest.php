@@ -27,28 +27,26 @@ class CabUserRequest extends FormRequest
 
         if ($this->isMethod('POST')) {
             return $this->createRules();
-        } else {
-            return $this->updateRules();
         }
 
-    }
+        return $this->updateRules();
 
+    }
 
     public function createRules()
     {
         return [
-            'system_id' => ['required',Rule::unique('system_user_cabs')->where('user_id', request()->user_id)],
-            'user_id' => ['required',Rule::unique('system_user_cabs')->where('system_id', request()->system_id)],
+            'system_id' => ['required', Rule::unique('system_user_cabs')->where('user_id', request()->user_id)],
+            'user_id' => ['required', Rule::unique('system_user_cabs')->where('system_id', request()->system_id)],
 
         ];
     }
 
-
     public function updateRules()
     {
         return [
-            'system_id' => ['required',Rule::unique('system_user_cabs')->where('user_id', request()->user_id)->ignore($this->id)],
-            'user_id' => ['required',Rule::unique('system_user_cabs')->where('system_id', request()->system_id)->ignore($this->id)],
+            'system_id' => ['required', Rule::unique('system_user_cabs')->where('user_id', request()->user_id)->ignore($this->id)],
+            'user_id' => ['required', Rule::unique('system_user_cabs')->where('system_id', request()->system_id)->ignore($this->id)],
 
         ];
     }

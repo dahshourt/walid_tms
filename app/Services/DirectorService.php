@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace App\Services;
+
 use App\Http\Repository\Director\DirectorRepository;
 use App\Models\Director;
 
@@ -39,8 +40,8 @@ class DirectorService
     {
         $director = $this->findDirector($id);
 
-        $new_status = (int) !$director->status;
+        $new_status = (int) ! $director->status;
 
-        return $this->directorRepository->updateStatus((string)$new_status, $id);
+        return $this->directorRepository->updateStatus((string) $new_status, $id);
     }
 }

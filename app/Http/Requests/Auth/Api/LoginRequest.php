@@ -27,9 +27,10 @@ class LoginRequest extends FormRequest
     }
 
     // override failed validation
-    protected function failedValidation(Validator $validator) { 
+    protected function failedValidation(Validator $validator)
+    {
         throw new HttpResponseException(response()->json([
-            'message' => $validator->messages()
-          ], 422));
+            'message' => $validator->messages(),
+        ], 422));
     }
 }

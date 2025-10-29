@@ -9,11 +9,10 @@ class CabCrUser extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'user_id','cab_cr_id', 'status'
-    ];
     const INACTIVE = '0';
+
     const APPROVED = '1';
+
     const REJECTED = '2';
 
     public static $statuses = [
@@ -22,16 +21,21 @@ class CabCrUser extends Model
         self::REJECTED => 'Rejected',
     ];
 
-    public function isApproved ()
+    protected $fillable = [
+        'user_id', 'cab_cr_id', 'status',
+    ];
+
+    public function isApproved()
     {
         return $this->status == self::APPROVED;
     }
-    public function isRejected ()
+
+    public function isRejected()
     {
         return $this->status == self::REJECTED;
     }
 
-    public function isInactive ()
+    public function isInactive()
     {
         return $this->status == self::INACTIVE;
     }
@@ -44,11 +48,12 @@ class CabCrUser extends Model
     {
         return $this->belongsTo(CabCr::class);
     }
+
     public function cabCr()
     {
         return $this->belongsTo(CabCr::class, 'cab_cr_id', 'id');
     }
-    
+
     /**
      * Get the user
      */
@@ -56,5 +61,4 @@ class CabCrUser extends Model
     {
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
-    
 }

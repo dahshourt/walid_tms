@@ -2,43 +2,51 @@
 
 namespace App\Http\Controllers\Parents\Api;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Foundation\Validation\ValidatesRequests;
-use App\Http\Requests\Parents\Api\ParentRequest;
 use App\Factories\Parents\ParentFactory;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Parents\Api\ParentRequest;
+use Illuminate\Foundation\Validation\ValidatesRequests;
 
 class ParentController extends Controller
 {
     use ValidatesRequests;
+
     private $parent;
 
-    function __construct(ParentFactory $parent){
-        
-        $this->parent = $parent::index();
-        
-    }
- public function subtype($id)
+    public function __construct(ParentFactory $parent)
     {
-       
-       $get_parent_subtype =  $this->parent->get_parent_subtype($id);
-       return response()->json(['data' => $get_parent_subtype],200);
+
+        $this->parent = $parent::index();
+
     }
+
+    public function subtype($id)
+    {
+
+        $get_parent_subtype = $this->parent->get_parent_subtype($id);
+
+        return response()->json(['data' => $get_parent_subtype], 200);
+    }
+
     public function index()
     {
         $systems = $this->parent->getAll();
-        return response()->json(['data' => $systems],200);
+
+        return response()->json(['data' => $systems], 200);
     }
+
     /**
      * Send or resend the verification code.
      *
-     * @param \Illuminate\Http\Request $request
-     * @throws \Illuminate\Validation\ValidationException
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function store(ParentRequest $request)
     {
-        
-       $asd= $this->parent->create($request->all());
+
+        $asd = $this->parent->create($request->all());
 
         return response()->json([
             'message' => $asd,
@@ -48,20 +56,21 @@ class ParentController extends Controller
     /**
      * Send or resend the verification code.
      *
-     * @param \Illuminate\Http\Request $request
-     * @throws \Illuminate\Validation\ValidationException
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function update(ParentRequest $request, $id)
     {
         $parent = $this->parent->find($id);
-        if(!$parent)
-        {
+        if (! $parent) {
             return response()->json([
                 'message' => 'parent Not Exists',
-            ],422);
+            ], 422);
         }
-        $this->parent->update($request->except('_method'),$id);
+        $this->parent->update($request->except('_method'), $id);
+
         return response()->json([
             'message' => 'Updated Successfully',
         ]);
@@ -70,46 +79,46 @@ class ParentController extends Controller
     public function show($id)
     {
         $parent = $this->parent->find($id);
-        if(!$parent)
-        {
+        if (! $parent) {
             return response()->json([
                 'message' => 'parent Not Exists',
-            ],422);
+            ], 422);
         }
-        return response()->json(['data' => $parent],200);
+
+        return response()->json(['data' => $parent], 200);
     }
 
     public function StageStatuses($id)
     {
         $parent = $this->parent->find($id);
-        if(!$parent)
-        {
+        if (! $parent) {
             return response()->json([
                 'message' => 'parent Not Exists',
-            ],422);
+            ], 422);
         }
-        return response()->json(['data' => $parent->statuses],200);
-    }
-public function parent_systems($system){
-    $get_parent_subtype =  $this->parent->get_parent_subtype($system);
-       return response()->json(['data' => $get_parent_subtype],200);
 
-}
-    public function destroy()
-    {
-        
+        return response()->json(['data' => $parent->statuses], 200);
     }
-	public function updateactive($id){
-		   $parent = $this->parent->find($id);
-		   
-		   $this->parent->updateactive($parent['active'],$id);
-		   
-		    return response()->json([
+
+    public function parent_systems($system)
+    {
+        $get_parent_subtype = $this->parent->get_parent_subtype($system);
+
+        return response()->json(['data' => $get_parent_subtype], 200);
+
+    }
+
+    public function destroy() {}
+
+    public function updateactive($id)
+    {
+        $parent = $this->parent->find($id);
+
+        $this->parent->updateactive($parent['active'], $id);
+
+        return response()->json([
             'message' => 'Updated Successfully',
         ]);
 
-		  
-		
-	}
-
+    }
 }

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Units;
 
 use App\Http\Controllers\Controller;
-use App\Services\UnitsService;
 use App\Http\Requests\Units\UnitsRequest;
+use App\Services\UnitsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,7 +23,7 @@ class UnitController extends Controller
         $title = 'Units';
         $form_title = 'Unit';
         $OtherRoute = 'units';
-        view()->share(compact('view','route','title','form_title', 'OtherRoute'));
+        view()->share(compact('view', 'route', 'title', 'form_title', 'OtherRoute'));
     }
 
     public function index(): View
@@ -71,14 +71,13 @@ class UnitController extends Controller
 
     public function updateStatus(Request $request): JsonResponse
     {
-         $this->authorize('Edit Units');
+        $this->authorize('Edit Units');
 
         $this->unitsService->updateUnitStatus($request->post('id'));
 
         return response()->json([
             'message' => 'Updated Successfully',
-            'status' => 'success'
+            'status' => 'success',
         ]);
     }
-
 }

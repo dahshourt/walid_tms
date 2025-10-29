@@ -23,7 +23,7 @@ class CreateModuleRulesTable extends Migration
             $table->enum('active', ['0', '1'])->default(1);
 
             $table->foreign('module_id')->references('id')->on('modules')->onDelete('cascade');
-            
+
             $table->timestamps();
         });
     }

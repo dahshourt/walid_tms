@@ -25,7 +25,7 @@ class DivisionManagerExists implements Rule
      */
     public function passes($attribute, $value)
     {
-        if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($value, FILTER_VALIDATE_EMAIL)) {
             return false;
         }
 
@@ -36,14 +36,18 @@ class DivisionManagerExists implements Rule
         $ldap_rootdn = config('constants.active-directory.ldap_rootdn');
 
         $ldap = ldap_connect($ldap_host);
-        if (!$ldap) return false;
+        if (! $ldap) {
+            return false;
+        }
 
         ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
         ldap_set_option($ldap, LDAP_OPT_REFERRALS, 0);
 
-        if (!ldap_bind($ldap, $ldap_binddn, $pwd)) return false;
-        
-        $escapedMail = ldap_escape($value, "", LDAP_ESCAPE_FILTER);
+        if (! ldap_bind($ldap, $ldap_binddn, $pwd)) {
+            return false;
+        }
+
+        $escapedMail = ldap_escape($value, '', LDAP_ESCAPE_FILTER);
         $result = ldap_search($ldap, $ldap_rootdn, "(mail=$escapedMail)");
 
         return ldap_count_entries($ldap, $result) > 0;

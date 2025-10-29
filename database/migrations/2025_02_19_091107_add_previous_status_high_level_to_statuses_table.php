@@ -15,7 +15,7 @@ class AddPreviousStatusHighLevelToStatusesTable extends Migration
     {
         Schema::table('statuses', function (Blueprint $table) {
             //
-            $table->integer('previous_status_high_level')->nullable(); 
+            $table->integer('previous_status_high_level')->nullable();
         });
     }
 

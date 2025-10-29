@@ -15,7 +15,7 @@ class AddSlaToStatusesTable extends Migration
     {
         Schema::table('statuses', function (Blueprint $table) {
             //
-            $table->integer('sla')->default(0)->comment('Integer value in days');; 
+            $table->integer('sla')->default(0)->comment('Integer value in days');
         });
     }
 

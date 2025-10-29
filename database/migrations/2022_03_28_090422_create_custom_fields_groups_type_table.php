@@ -15,7 +15,7 @@ class CreateCustomFieldsGroupsTypeTable extends Migration
     {
         Schema::create('custom_fields_groups_type', function (Blueprint $table) {
             $table->id();
-            $table->enum('form_type', ['1', '2','3'])->default(1)->comment('1- create ticket , 2- update ticket , 3 search');
+            $table->enum('form_type', ['1', '2', '3'])->default(1)->comment('1- create ticket , 2- update ticket , 3 search');
             $table->foreignId('group_id')->nullable();
             $table->foreignId('wf_type_id')->nullable();
             $table->foreignId('custom_field_id');

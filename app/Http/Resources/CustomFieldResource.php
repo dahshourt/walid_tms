@@ -15,16 +15,16 @@ class CustomFieldResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'id'                                => $this->id,
-            'type'                              => $this->type,
-            'name'                              => $this->name,
-            'label'                             => $this->label,
-            'class'                             => $this->class,
-            'default_value'                     => $this->default_value,
-            'related_table'                     => $this->related_table,
-            'active'                            => $this->active,
-            'enable'                            => $this->enable,
-            'custom_field_group'                => $this->custom_field_group ??new CustomFieldGroupResource($this->custom_field_group),
+            'id' => $this->id,
+            'type' => $this->type,
+            'name' => $this->name,
+            'label' => $this->label,
+            'class' => $this->class,
+            'default_value' => $this->default_value,
+            'related_table' => $this->related_table,
+            'active' => $this->active,
+            'enable' => $this->enable,
+            'custom_field_group' => $this->custom_field_group ?? new CustomFieldGroupResource($this->custom_field_group),
         ];
     }
 }

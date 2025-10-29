@@ -15,7 +15,7 @@ class CreateWorkflowSpecialTable extends Migration
     {
         Schema::create('workflow_special', function (Blueprint $table) {
             $table->id();
-            $table->tinyInteger('no_need_desgin')->default(0); // 1- no need desgin 
+            $table->tinyInteger('no_need_desgin')->default(0); // 1- no need desgin
             $table->tinyInteger('not_testable')->default(0); // 1- not testable
             $table->foreignId('workflow_type_id')->nullable();
             $table->foreignId('from_status_id')->nullable();

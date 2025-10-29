@@ -3,26 +3,24 @@
 namespace App\Http\Controllers\Sla;
 
 use App\Http\Controllers\Controller;
-use App\Models\SlaCalculation;
-use App\Models\Status;
 use App\Models\Group;
 use App\Models\GroupStatuses;
+use App\Models\SlaCalculation;
+use App\Models\Status;
 use Illuminate\Http\Request;
 
 class SlaCalculationController extends Controller
 {
-     public function __construct()
-    {
-        
-    }
+    public function __construct() {}
 
     public function index()
     {
         $this->authorize('SLA Calculations');
         view()->share('title', 'List');
-        //view()->share('form_title', 'SLA');
+        // view()->share('form_title', 'SLA');
         view()->share('route', 'sla-calculations');
         $calculations = SlaCalculation::with('status')->get();
+
         return view('sla.calculations.index', compact('calculations'));
     }
 
@@ -33,55 +31,56 @@ class SlaCalculationController extends Controller
         view()->share('form_title', 'SLA');
         view()->share('route', 'sla-calculations');
         $statuses = Status::all();
-       // $groups = Group::all();
+
+        // $groups = Group::all();
         return view('sla.calculations.create', compact('statuses'));
     }
 
     public function getGroups($status_id)
-    { 
+    {
         $groups = GroupStatuses::with('group')
-        ->where('status_id', $status_id)
-        ->get()
-        ->map(function ($item) {
-            return [
-                'id' => $item->group_id,
-                'name' => $item->group ? $item->group->title : null
-            ];
-        });
+            ->where('status_id', $status_id)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->group_id,
+                    'name' => $item->group ? $item->group->title : null,
+                ];
+            });
 
-     return response()->json($groups);
+        return response()->json($groups);
     }
 
-/*public function store(Request $request)
-{ 
-    $validated = $request->validate([
-        'unit_sla_time'     => 'required|integer|min:1',
-        'division_sla_time' => 'required|integer|min:1', 
-        'director_sla_time' => 'required|integer|min:1',
-        'sla_type_unit'          => 'required|in:day,hour',
-        'sla_type_division'          => 'required|in:day,hour',
-        'sla_type_director'          => 'required|in:day,hour',
-        'status_id'     => 'required|exists:statuses,id',
-        'group_id'      => 'required|exists:groups,id',
-    ]);
-
-    SlaCalculation::create($validated);
-
-    return redirect()->route('sla-calculations.index')
-                     ->with('success', 'SLA Calculation created successfully.');
-}*/
-
-   public function store(Request $request)
+    /*public function store(Request $request)
     {
         $validated = $request->validate([
-            'unit_sla_time'        => 'nullable|integer|min:1',
-            'division_sla_time'    => 'nullable|integer|min:1',
-            'director_sla_time'    => 'nullable|integer|min:1',
-            'sla_type_unit'        => 'nullable|in:day,hour',
-            'sla_type_division'    => 'nullable|in:day,hour',
-            'sla_type_director'    => 'nullable|in:day,hour',
-            'status_id'            => 'required|exists:statuses,id',
-            'group_id'             => 'required|exists:groups,id',
+            'unit_sla_time'     => 'required|integer|min:1',
+            'division_sla_time' => 'required|integer|min:1',
+            'director_sla_time' => 'required|integer|min:1',
+            'sla_type_unit'          => 'required|in:day,hour',
+            'sla_type_division'          => 'required|in:day,hour',
+            'sla_type_director'          => 'required|in:day,hour',
+            'status_id'     => 'required|exists:statuses,id',
+            'group_id'      => 'required|exists:groups,id',
+        ]);
+
+        SlaCalculation::create($validated);
+
+        return redirect()->route('sla-calculations.index')
+                         ->with('success', 'SLA Calculation created successfully.');
+    }*/
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'unit_sla_time' => 'nullable|integer|min:1',
+            'division_sla_time' => 'nullable|integer|min:1',
+            'director_sla_time' => 'nullable|integer|min:1',
+            'sla_type_unit' => 'nullable|in:day,hour',
+            'sla_type_division' => 'nullable|in:day,hour',
+            'sla_type_director' => 'nullable|in:day,hour',
+            'status_id' => 'required|exists:statuses,id',
+            'group_id' => 'required|exists:groups,id',
         ]);
 
         // ✅ Ensure at least one SLA level is provided
@@ -96,13 +95,13 @@ class SlaCalculationController extends Controller
         }
 
         // ✅ Hierarchy Validation: must follow Unit → Division → Director
-        if (!empty($validated['division_sla_time']) && empty($validated['unit_sla_time'])) {
+        if (! empty($validated['division_sla_time']) && empty($validated['unit_sla_time'])) {
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['hierarchy' => 'Division SLA cannot be set without Unit SLA.']);
         }
 
-        if (!empty($validated['director_sla_time']) &&
+        if (! empty($validated['director_sla_time']) &&
             (empty($validated['unit_sla_time']) || empty($validated['division_sla_time']))) {
             return redirect()->back()
                 ->withInput()
@@ -111,8 +110,8 @@ class SlaCalculationController extends Controller
 
         // ✅ Check for duplicate (same group_id + status_id)
         $exists = SlaCalculation::where('group_id', $validated['group_id'])
-                                ->where('status_id', $validated['status_id'])
-                                ->exists();
+            ->where('status_id', $validated['status_id'])
+            ->exists();
 
         if ($exists) {
             return redirect()->back()
@@ -124,11 +123,8 @@ class SlaCalculationController extends Controller
         SlaCalculation::create($validated);
 
         return redirect()->route('sla-calculations.index')
-                        ->with('success', 'SLA Calculation created successfully.');
+            ->with('success', 'SLA Calculation created successfully.');
     }
-
-
-
 
     public function show(SlaCalculation $slaCalculation)
     {
@@ -136,41 +132,43 @@ class SlaCalculationController extends Controller
     }
 
     public function edit(SlaCalculation $slaCalculation)
-    { 
+    {
         $this->authorize('Edit SLA');
         view()->share('title', 'Edit');
         view()->share('form_title', 'Edit SLA');
         view()->share('route', 'sla-calculations');
-         $statuses = Status::all();
-         $groups = Group::all();
-         $row = SlaCalculation::with('status')->find($slaCalculation->id);
+        $statuses = Status::all();
+        $groups = Group::all();
+        $row = SlaCalculation::with('status')->find($slaCalculation->id);
+
         return view('sla.calculations.edit', compact('slaCalculation', 'row', 'statuses', 'groups'));
     }
 
     public function update(Request $request, SlaCalculation $slaCalculation)
-{
-    $validated = $request->validate([
-        'unit_sla_time'     => 'required|integer|min:1',
-        'division_sla_time' => 'required|integer|min:1', 
-        'director_sla_time' => 'required|integer|min:1',
-        'sla_type_unit'          => 'required|in:day,hour',
-        'sla_type_division'          => 'required|in:day,hour',
-        'sla_type_director'          => 'required|in:day,hour',
-        'status_id'     => 'required|exists:statuses,id',
-        'group_id'      => 'required|exists:groups,id',
-    ]);
+    {
+        $validated = $request->validate([
+            'unit_sla_time' => 'required|integer|min:1',
+            'division_sla_time' => 'required|integer|min:1',
+            'director_sla_time' => 'required|integer|min:1',
+            'sla_type_unit' => 'required|in:day,hour',
+            'sla_type_division' => 'required|in:day,hour',
+            'sla_type_director' => 'required|in:day,hour',
+            'status_id' => 'required|exists:statuses,id',
+            'group_id' => 'required|exists:groups,id',
+        ]);
 
-    $slaCalculation->update($validated);
+        $slaCalculation->update($validated);
 
-    return redirect()->route('sla-calculations.index')
-                    ->with('success', 'SLA Calculation updated successfully.');
-}
+        return redirect()->route('sla-calculations.index')
+            ->with('success', 'SLA Calculation updated successfully.');
+    }
 
     public function destroy(SlaCalculation $slaCalculation)
     {
 
         $slaCalculation->delete();
+
         return redirect()->route('sla-calculations.index')
-                         ->with('success', 'SLA Calculation deleted successfully.');
+            ->with('success', 'SLA Calculation deleted successfully.');
     }
 }

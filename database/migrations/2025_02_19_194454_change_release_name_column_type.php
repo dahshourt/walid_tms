@@ -16,7 +16,7 @@ class ChangeReleaseNameColumnType extends Migration
         Schema::table('change_request', function (Blueprint $table) {
             // Change the column type to integer
             $table->unsignedBigInteger('release_name')->change();
-    
+
             // Add foreign key constraint
             $table->foreign('release_name')->references('id')->on('releases')->onDelete('cascade');
         });
@@ -32,7 +32,7 @@ class ChangeReleaseNameColumnType extends Migration
         Schema::table('change_request', function (Blueprint $table) {
             // Drop foreign key constraint
             $table->dropForeign(['release_name']);
-    
+
             // Revert the column type back to string
             $table->string('release_name')->change();
         });

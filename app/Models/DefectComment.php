@@ -10,22 +10,23 @@ class DefectComment extends Model
     use HasFactory;
 
     public $table = 'defect_comments';
-	protected $fillable = [
+
+    protected $fillable = [
         'defect_id',
         'user_id',
         'comment',
-        
+
     ];
 
     public function defect()
     {
-        return $this->belongsTo(Defect::class,'defect_id');
+        return $this->belongsTo(Defect::class, 'defect_id');
 
     }
 
     public function user()
     {
-        return $this->belongsTo(User::class,'user_id');
+        return $this->belongsTo(User::class, 'user_id');
 
     }
 }

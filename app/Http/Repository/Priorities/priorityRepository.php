@@ -1,17 +1,13 @@
 <?php
 
 namespace App\Http\Repository\Priorities;
-use App\Contracts\Priorities\PriorityRepositoryInterface;
 
+use App\Contracts\Priorities\PriorityRepositoryInterface;
 // declare Entities
 use App\Models\Priority;
 
-
-
 class priorityRepository implements PriorityRepositoryInterface
 {
-
-    
     public function getAll()
     {
         return Priority::all();
@@ -36,15 +32,14 @@ class priorityRepository implements PriorityRepositoryInterface
     {
         return Priority::find($id);
     }
-public function updateactive($active,$id){
-		if($active){
-		return 	$this->update(['active'=>'0'],$id);
-		} else{
-			
-					return 	$this->update(['active'=>'1'],$id);
 
-		}
-		
-	}
+    public function updateactive($active, $id)
+    {
+        if ($active) {
+            return $this->update(['active' => '0'], $id);
+        }
 
+        return $this->update(['active' => '1'], $id);
+
+    }
 }

@@ -16,7 +16,7 @@ class CreateTechnicalCrsTable extends Migration
         Schema::create('technical_crs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('cr_id')->nullable();
-            $table->enum('status', ['0', '1','2'])->default(0);
+            $table->enum('status', ['0', '1', '2'])->default(0);
             $table->timestamps();
             $table->foreign('cr_id')->references('id')->on('change_request')->onDelete('cascade');
         });

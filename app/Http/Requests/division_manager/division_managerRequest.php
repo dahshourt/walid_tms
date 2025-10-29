@@ -26,28 +26,26 @@ class division_managerRequest extends FormRequest
 
         if ($this->isMethod('POST')) {
             return $this->createRules();
-        } else {
-            return $this->updateRules();
         }
 
-    }
+        return $this->updateRules();
 
+    }
 
     public function createRules()
     {
         return [
-            'name' => ['required','string', 'unique:division_managers'],
-            'division_manager_email' => ['required','string', 'unique:division_managers'],
+            'name' => ['required', 'string', 'unique:division_managers'],
+            'division_manager_email' => ['required', 'string', 'unique:division_managers'],
 
         ];
     }
 
-
     public function updateRules()
     {
         return [
-            'name' => ['required','string', 'unique:division_managers,name,'.$this->id],
-            'division_manager_email' => ['required','string', 'unique:division_managers,division_manager_email,'.$this->id],
+            'name' => ['required', 'string', 'unique:division_managers,name,' . $this->id],
+            'division_manager_email' => ['required', 'string', 'unique:division_managers,division_manager_email,' . $this->id],
 
         ];
     }

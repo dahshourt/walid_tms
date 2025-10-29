@@ -16,24 +16,22 @@ class WorkFlowType extends Model
      */
     protected $hidden = [
         'updated_at',
-        'created_at'
+        'created_at',
     ];
+
     protected $table = 'workflow_type';
+
     protected $fillable = [
-        'name','parent_id' ,'active'
+        'name', 'parent_id', 'active',
     ];
 
-   
-
-    public function children() 
+    public function children()
     {
-        return $this->hasMany(WorkFlowType::class,'parent_id');
+        return $this->hasMany(WorkFlowType::class, 'parent_id');
     }
-    public function parent() 
-    {
-        return $this->belongsTo(WorkFlowType::class,'parent_id');
-    }
-    
-    
 
+    public function parent()
+    {
+        return $this->belongsTo(WorkFlowType::class, 'parent_id');
+    }
 }

@@ -2,11 +2,7 @@
 
 namespace App\Listeners;
 
-use Illuminate\Auth\Events\Login;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 
 class UpdateLastLogin
 {
@@ -29,7 +25,7 @@ class UpdateLastLogin
     public function handle($event)
     {
         $user = $event->user;
-        $user->last_login = Carbon::now(); 
+        $user->last_login = Carbon::now();
         $user->save();
     }
 }

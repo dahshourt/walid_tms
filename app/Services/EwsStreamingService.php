@@ -2,28 +2,32 @@
 
 namespace App\Services;
 
-use jamesiarmes\PhpEws\Client;
-use jamesiarmes\PhpEws\Request\SubscribeType;
-use jamesiarmes\PhpEws\Request\GetEventsType;
-use jamesiarmes\PhpEws\Type\StreamingSubscriptionRequestType;
-use jamesiarmes\PhpEws\ArrayType\NonEmptyArrayOfNotificationEventTypesType;
-use jamesiarmes\PhpEws\Enumeration\NotificationEventTypeType;
-use jamesiarmes\PhpEws\Type\DistinguishedFolderIdType;
-use jamesiarmes\PhpEws\Enumeration\DistinguishedFolderIdNameType;
+use Exception;
 use jamesiarmes\PhpEws\ArrayType\NonEmptyArrayOfBaseFolderIdsType;
+use jamesiarmes\PhpEws\ArrayType\NonEmptyArrayOfNotificationEventTypesType;
+use jamesiarmes\PhpEws\Client;
+use jamesiarmes\PhpEws\Enumeration\DistinguishedFolderIdNameType;
+use jamesiarmes\PhpEws\Enumeration\NotificationEventTypeType;
+use jamesiarmes\PhpEws\Request\SubscribeType;
+use jamesiarmes\PhpEws\Type\DistinguishedFolderIdType;
+use Log;
 
 class EwsStreamingService
 {
     protected $client;
+
     protected $mailReader;
+
     protected $subscriptionId;
+
     protected $watermark;
+
     protected $running = false;
 
     public function __construct()
     {
-        $host = config('services.ews.host');        
-        $username = config('services.ews.username'); 
+        $host = config('services.ews.host');
+        $username = config('services.ews.username');
         $password = config('services.ews.password');
 
         $this->client = new Client($host, $username, $password, Client::VERSION_2016);
@@ -35,21 +39,23 @@ class EwsStreamingService
         try {
             // Create subscription
             $this->createSubscription();
-            
-            if (!$this->subscriptionId) {
-                \Log::error('Failed to create EWS subscription');
+
+            if (! $this->subscriptionId) {
+                Log::error('Failed to create EWS subscription');
+
                 return false;
             }
 
-            \Log::info('EWS Streaming service started with subscription: ' . $this->subscriptionId);
-            
+            Log::info('EWS Streaming service started with subscription: ' . $this->subscriptionId);
+
             $this->running = true;
-            
+
             // Start the streaming loop
             $this->streamEvents();
-            
-        } catch (\Exception $e) {
-            \Log::error('Error starting EWS streaming service: ' . $e->getMessage());
+
+        } catch (Exception $e) {
+            Log::error('Error starting EWS streaming service: ' . $e->getMessage());
+
             return false;
         }
     }
@@ -57,12 +63,12 @@ class EwsStreamingService
     public function stopListening()
     {
         $this->running = false;
-        
+
         if ($this->subscriptionId) {
             try {
                 $this->unsubscribe();
-            } catch (\Exception $e) {
-                \Log::error('Error unsubscribing from EWS: ' . $e->getMessage());
+            } catch (Exception $e) {
+                Log::error('Error unsubscribing from EWS: ' . $e->getMessage());
             }
         }
     }
@@ -93,9 +99,9 @@ class EwsStreamingService
 
         try {
             $response = $this->client->Subscribe($request);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Log the full exception details for debugging.
-            \Log::error('Exception while creating EWS subscription', [
+            Log::error('Exception while creating EWS subscription', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -106,17 +112,18 @@ class EwsStreamingService
         // Check the response for errors.
         $responseMessage = $response->ResponseMessages->SubscribeResponseMessage[0];
         if ($responseMessage->ResponseClass !== 'Success') {
-            \Log::error('Failed to create EWS subscription', [
+            Log::error('Failed to create EWS subscription', [
                 'ResponseClass' => $responseMessage->ResponseClass,
                 'MessageText' => $responseMessage->MessageText,
                 'ResponseCode' => $responseMessage->ResponseCode,
             ]);
+
             return false;
         }
 
         $this->subscriptionId = $responseMessage->SubscriptionId;
         $this->watermark = $responseMessage->Watermark;
-        \Log::info('Successfully created EWS subscription: ' . $this->subscriptionId);
+        Log::info('Successfully created EWS subscription: ' . $this->subscriptionId);
 
         return true;
     }
@@ -125,7 +132,7 @@ class EwsStreamingService
     {
         while ($this->running) {
             try {
-                \Log::info('Polling for events with watermark: ' . $this->watermark);
+                Log::info('Polling for events with watermark: ' . $this->watermark);
                 $request = new \jamesiarmes\PhpEws\Request\GetEventsType();
                 $request->SubscriptionId = $this->subscriptionId;
                 $request->Watermark = $this->watermark;
@@ -135,7 +142,7 @@ class EwsStreamingService
                 $responseMessage = $response->ResponseMessages->GetEventsResponseMessage[0];
 
                 if ($responseMessage->ResponseClass == 'Success') {
-                    \Log::info('Successfully polled events.');
+                    Log::info('Successfully polled events.');
 
                     // We only process events and update the watermark if a notification is present.
                     if (isset($responseMessage->Notification)) {
@@ -149,7 +156,7 @@ class EwsStreamingService
                     }
                 } else {
                     // Log when the poll was not successful
-                    \Log::warning('EWS poll was not successful.', [
+                    Log::warning('EWS poll was not successful.', [
                         'ResponseClass' => $responseMessage->ResponseClass,
                         'MessageText' => $responseMessage->MessageText,
                         'ResponseCode' => $responseMessage->ResponseCode,
@@ -158,16 +165,16 @@ class EwsStreamingService
 
                 // Brief pause before polling again.
                 sleep(5);
-            } catch (\Exception $e) {
-                \Log::error('Error in EWS event polling: ' . $e->getMessage());
+            } catch (Exception $e) {
+                Log::error('Error in EWS event polling: ' . $e->getMessage());
 
                 // If the subscription is no longer valid, try to recreate it.
                 if (strpos($e->getMessage(), 'ErrorSubscriptionNotFound') !== false) {
-                    \Log::info('Subscription not found. Attempting to recreate EWS subscription...');
-                    if (!$this->createSubscription()) {
+                    Log::info('Subscription not found. Attempting to recreate EWS subscription...');
+                    if (! $this->createSubscription()) {
                         // If recreation fails, stop the listener to avoid a loop.
                         $this->running = false;
-                        \Log::error('Failed to recreate subscription. Stopping listener.');
+                        Log::error('Failed to recreate subscription. Stopping listener.');
                     }
                 } else {
                     // For other errors, wait before retrying.
@@ -185,7 +192,8 @@ class EwsStreamingService
 
         if (empty($events)) {
             // No new mail or created events were found in this notification.
-            \Log::info('No new mail or created events were found in this notification.');
+            Log::info('No new mail or created events were found in this notification.');
+
             return;
         }
 
@@ -193,11 +201,11 @@ class EwsStreamingService
         $lastEvent = end($events);
         if (isset($lastEvent->Watermark)) {
             $this->watermark = $lastEvent->Watermark;
-            \Log::info('Watermark updated from mail event.');
+            Log::info('Watermark updated from mail event.');
         }
 
         foreach ($events as $event) {
-            \Log::info('New mail event detected, processing...');
+            Log::info('New mail event detected, processing...');
             // We trigger the mail reader, which will fetch the latest unread emails.
             $this->mailReader->handleApprovals(10);
         }
@@ -205,19 +213,19 @@ class EwsStreamingService
 
     protected function unsubscribe()
     {
-        if (!$this->subscriptionId) {
+        if (! $this->subscriptionId) {
             return;
         }
 
         try {
             $request = new \jamesiarmes\PhpEws\Request\UnsubscribeType();
             $request->SubscriptionId = $this->subscriptionId;
-            
+
             $this->client->Unsubscribe($request);
-            \Log::info('Successfully unsubscribed from EWS notifications');
-            
-        } catch (\Exception $e) {
-            \Log::error('Error unsubscribing from EWS: ' . $e->getMessage());
+            Log::info('Successfully unsubscribed from EWS notifications');
+
+        } catch (Exception $e) {
+            Log::error('Error unsubscribing from EWS: ' . $e->getMessage());
         }
     }
 }

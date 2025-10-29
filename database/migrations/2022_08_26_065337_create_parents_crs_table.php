@@ -17,7 +17,7 @@ class CreateParentsCrsTable extends Migration
             $table->id();
             $table->integer('parent_id')->nullable();
             $table->string('application_name')->nullable();
-            
+
             $table->enum('active', ['0', '1'])->default(1);
             $table->timestamps();
         });

@@ -13,9 +13,9 @@ class RenameSlaTimeColumnInSlaCalculationsTable extends Migration
      */
     public function up()
     {
-       Schema::table('sla_calculations', function (Blueprint $table) {
-        $table->renameColumn('sla_time', 'unit_sla_time');
-    });
+        Schema::table('sla_calculations', function (Blueprint $table) {
+            $table->renameColumn('sla_time', 'unit_sla_time');
+        });
     }
 
     /**
@@ -26,7 +26,7 @@ class RenameSlaTimeColumnInSlaCalculationsTable extends Migration
     public function down()
     {
         Schema::table('sla_calculations', function (Blueprint $table) {
-        $table->renameColumn('unit_sla_time', 'sla_time');
-    });
+            $table->renameColumn('unit_sla_time', 'sla_time');
+        });
     }
 }

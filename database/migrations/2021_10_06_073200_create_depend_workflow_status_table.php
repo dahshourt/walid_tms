@@ -17,7 +17,7 @@ class CreateDependWorkflowStatusTable extends Migration
             $table->id();
             $table->foreignId('to_status_id');
             $table->foreignId('depend_status_id');
-			$table->enum('active', ['0', '1'])->default(1);
+            $table->enum('active', ['0', '1'])->default(1);
             $table->foreign('depend_status_id')->references('id')->on('statuses')->onDelete('cascade');
             $table->foreign('to_status_id')->references('id')->on('statuses')->onDelete('cascade');
             $table->timestamps();

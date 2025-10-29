@@ -3,8 +3,9 @@
 namespace App\Http\Controllers\CustomField;
 
 use App\Http\Controllers\Controller;
-use App\Services\CustomField\CustomFieldService;
 use App\Http\Requests\CustomField\CustomFieldRequest;
+use App\Services\CustomField\CustomFieldService;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,13 +24,11 @@ class CustomFieldController extends Controller
         $title = 'Custom Fields';
         $form_title = 'Custom Field';
         $OtherRoute = 'custom-fields';
-        view()->share(compact('view','route','title','form_title', 'OtherRoute'));
+        view()->share(compact('view', 'route', 'title', 'form_title', 'OtherRoute'));
     }
 
     /**
      * Display a listing of the custom fields.
-     *
-     * @return View
      */
     public function index(): View
     {
@@ -42,8 +41,6 @@ class CustomFieldController extends Controller
 
     /**
      * Show the form for creating a new custom field.
-     *
-     * @return View
      */
     public function create(): View
     {
@@ -56,9 +53,6 @@ class CustomFieldController extends Controller
 
     /**
      * Store a newly created custom field in storage.
-     *
-     * @param CustomFieldRequest $request
-     * @return RedirectResponse
      */
     public function store(CustomFieldRequest $request): RedirectResponse
     {
@@ -68,19 +62,18 @@ class CustomFieldController extends Controller
             $this->customFieldService->createCustomField($request->validated());
 
             return redirect()->back()
-                           ->with('status', 'Custom Field created successfully');
-        } catch (\Exception $e) {
+                ->with('status', 'Custom Field created successfully');
+        } catch (Exception $e) {
             return redirect()->back()
-                           ->withInput()
-                           ->with('error', 'Failed to create custom field: ' . $e->getMessage());
+                ->withInput()
+                ->with('error', 'Failed to create custom field: ' . $e->getMessage());
         }
     }
 
     /**
      * Show the form for editing the specified custom field.
      *
-     * @param int $id
-     * @return View
+     * @param  int  $id
      */
     public function edit($id): View
     {
@@ -88,7 +81,7 @@ class CustomFieldController extends Controller
 
         $row = $this->customFieldService->findCustomField($id);
 
-        if (!$row) {
+        if (! $row) {
             abort(404, 'Custom Field not found');
         }
 
@@ -100,9 +93,7 @@ class CustomFieldController extends Controller
     /**
      * Update the specified custom field in storage.
      *
-     * @param CustomFieldRequest $request
-     * @param int $id
-     * @return RedirectResponse
+     * @param  int  $id
      */
     public function update(CustomFieldRequest $request, $id): RedirectResponse
     {
@@ -111,26 +102,23 @@ class CustomFieldController extends Controller
         try {
             $updated = $this->customFieldService->updateCustomField($request->validated(), $id);
 
-            if (!$updated) {
+            if (! $updated) {
                 return redirect()->back()
-                               ->withInput()
-                               ->with('error', 'Custom Field not found');
+                    ->withInput()
+                    ->with('error', 'Custom Field not found');
             }
 
             return redirect()->back()
-                           ->with('status', 'Custom Field updated successfully');
-        } catch (\Exception $e) {
+                ->with('status', 'Custom Field updated successfully');
+        } catch (Exception $e) {
             return redirect()->back()
-                           ->withInput()
-                           ->with('error', 'Failed to update custom field: ' . $e->getMessage());
+                ->withInput()
+                ->with('error', 'Failed to update custom field: ' . $e->getMessage());
         }
     }
 
     /**
      * Update the status of the specified custom field.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function updateStatus(Request $request): JsonResponse
     {
@@ -140,30 +128,27 @@ class CustomFieldController extends Controller
             $id = $request->post('id');
             $updated = $this->customFieldService->updateCustomFieldStatus($id);
 
-            if (!$updated) {
+            if (! $updated) {
                 return response()->json([
                     'message' => 'Custom Field not found',
-                    'status' => 'error'
+                    'status' => 'error',
                 ], 404);
             }
 
             return response()->json([
                 'message' => 'Status updated successfully',
-                'status' => 'success'
+                'status' => 'success',
             ]);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'message' => 'Failed to update status: ' . $e->getMessage(),
-                'status' => 'error'
+                'status' => 'error',
             ], 500);
         }
     }
 
     /**
      * Get table options for select/multiselect fields.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function getTableOptions(Request $request): JsonResponse
     {
@@ -172,18 +157,18 @@ class CustomFieldController extends Controller
         try {
             $tableName = $request->get('table');
 
-            if (!$tableName) {
+            if (! $tableName) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Table name is required'
+                    'message' => 'Table name is required',
                 ]);
             }
 
             // Validate table name to prevent SQL injection
-            if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $tableName)) {
+            if (! preg_match('/^[a-zA-Z_][a-zA-Z0-9_]*$/', $tableName)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Invalid table name format'
+                    'message' => 'Invalid table name format',
                 ]);
             }
 
@@ -191,13 +176,13 @@ class CustomFieldController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $options
+                'data' => $options,
             ]);
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error loading table options: ' . $e->getMessage()
+                'message' => 'Error loading table options: ' . $e->getMessage(),
             ]);
         }
     }

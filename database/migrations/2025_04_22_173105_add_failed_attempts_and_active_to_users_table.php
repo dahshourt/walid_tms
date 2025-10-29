@@ -15,7 +15,7 @@ class AddFailedAttemptsAndActiveToUsersTable extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->integer('failed_attempts')->default(1);
-            
+
         });
     }
 

@@ -2,13 +2,12 @@
 
 namespace App\Http\Requests\RolesRequest\Api;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class RolesRequest extends FormRequest
 {
-
     /**
      * Determine if the supervisor is authorized to make this request.
      *
@@ -19,17 +18,15 @@ class RolesRequest extends FormRequest
         return true;
     }
 
-   
-
     public function rules()
     {
         if ($this->isMethod('POST')) {
             return $this->createRules();
-        } else {
-            return $this->updateRules();
         }
-    }
 
+        return $this->updateRules();
+
+    }
 
     /**
      * Get the create validation rules that apply to the request.
@@ -39,8 +36,8 @@ class RolesRequest extends FormRequest
     public function createRules()
     {
         return [
-            'name' => ['required','string', 'unique:roles'],
-            
+            'name' => ['required', 'string', 'unique:roles'],
+
         ];
     }
 
@@ -52,17 +49,15 @@ class RolesRequest extends FormRequest
     public function updateRules()
     {
         return [
-            'name' => ['required','string', 'unique:roles,name,' . request()->role],
-             
+            'name' => ['required', 'string', 'unique:roles,name,' . request()->role],
+
         ];
     }
 
- 
-    protected function failedValidation(Validator $validator) { 
+    protected function failedValidation(Validator $validator)
+    {
         throw new HttpResponseException(response()->json([
-            'message' => $validator->messages()
-          ], 422));
+            'message' => $validator->messages(),
+        ], 422));
     }
-
-   
 }

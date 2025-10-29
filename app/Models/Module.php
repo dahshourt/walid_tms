@@ -8,14 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class Module extends Model
 {
     use HasFactory;
-public function module_rules()
-{
-    return $this->hasMany(Module_Rules::class, 'module_id');
 
-}
+    public function module_rules()
+    {
+        return $this->hasMany(Module_Rules::class, 'module_id');
 
-
-
-
-
+    }
 }

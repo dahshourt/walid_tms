@@ -2,13 +2,12 @@
 
 namespace App\Models;
 
+use App\Traits\BindsDynamically;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BindsDynamically;
 
 class CustomField extends Model
 {
-
     use BindsDynamically;
     use HasFactory;
 
@@ -19,11 +18,17 @@ class CustomField extends Model
      */
     protected $hidden = [
         'updated_at',
-        'created_at'
+        'created_at',
     ];
-    protected $table = 'custom_fields';
-    protected $fillable = [ 'type','active','name','label','class','default_value','related_table' ];
 
+    protected $table = 'custom_fields';
+
+    protected $fillable = ['type', 'active', 'name', 'label', 'class', 'default_value', 'related_table'];
+
+    public static function findId($name)
+    {
+        return static::where('name', $name)->first();
+    }
 
     public function custom_field_group()
     {
@@ -40,19 +45,8 @@ class CustomField extends Model
         return $this->hasMany(CustomFieldGroup::class);
     }
 
-
     public function getCustomFieldValue()
     {
         return $this->setTableName($this->related_table)->getDataByDynamicTable();
     }
-    
-
-
-    public static function findId($name)
-    {
-        return static::where('name', $name)->first();
-    }
-
-
-    
 }

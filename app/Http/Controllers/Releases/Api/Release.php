@@ -1,19 +1,23 @@
 <?php
 
 namespace App\Http\Controllers\Releases\Api;
+
 use App\Factories\Releases\ReleaseFactory;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Http\Resources\releaseResource;
+use Illuminate\Http\Request;
+
 class Release extends Controller
 {
     private $release;
 
-    function __construct(ReleaseFactory $release){
+    public function __construct(ReleaseFactory $release)
+    {
 
         $this->release = $release::index();
 
     }
+
     /**
      * Display a listing of the resource.
      *
@@ -21,9 +25,9 @@ class Release extends Controller
      */
     public function index()
     {
-        $list_release =   $this->release->list();
-      
-        return response()->json(['data' => $list_release],200);
+        $list_release = $this->release->list();
+
+        return response()->json(['data' => $list_release], 200);
     }
 
     /**
@@ -39,14 +43,13 @@ class Release extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
-      $add_release =   $this->release->create($request);
-      
-      return response()->json(['data' => "Added Successfully"],200);
+        $add_release = $this->release->create($request);
+
+        return response()->json(['data' => 'Added Successfully'], 200);
     }
 
     /**
@@ -57,9 +60,10 @@ class Release extends Controller
      */
     public function show($id)
     {
-        $release =   $this->release->show($id);
-       // $release = releaseResource::collection($release); 
-      return response()->json(['data' => $release],200);
+        $release = $this->release->show($id);
+
+        // $release = releaseResource::collection($release);
+        return response()->json(['data' => $release], 200);
     }
 
     /**
@@ -68,28 +72,20 @@ class Release extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id,Request $request)
-    {
-        
-        
-      
-    }
+    public function edit($id, Request $request) {}
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function update($id, Request $request)
     {
-       
-        
-        $release =   $this->release->update($id, $request->all());
-        if($release)
-        {
-            return response()->json(['data' => "Updated"],200);
+
+        $release = $this->release->update($id, $request->all());
+        if ($release) {
+            return response()->json(['data' => 'Updated'], 200);
         }
     }
 
@@ -106,13 +102,15 @@ class Release extends Controller
 
     public function lisVendor()
     {
-        $list_vendo =   $this->release->listVendor();
-        return response()->json(['data' => $list_vendo],200);
+        $list_vendo = $this->release->listVendor();
+
+        return response()->json(['data' => $list_vendo], 200);
     }
 
     public function lisReleaseStatus()
     {
-        $listReleaseStatus =   $this->release->listStatus();
-        return response()->json(['data' => $listReleaseStatus],200);
+        $listReleaseStatus = $this->release->listStatus();
+
+        return response()->json(['data' => $listReleaseStatus], 200);
     }
 }

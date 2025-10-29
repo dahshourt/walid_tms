@@ -1,10 +1,10 @@
 <?php
+
 namespace App\Contracts\Users;
 
 interface UserRepositoryInterface
 {
-
-	public function getAll();
+    public function getAll();
 
     public function paginateAll();
 
@@ -15,6 +15,6 @@ interface UserRepositoryInterface
     public function update($request, $id);
 
     public function delete($id);
-	public function updateactive($active,$id);
 
+    public function updateactive($active, $id);
 }

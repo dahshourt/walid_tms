@@ -2,24 +2,24 @@
 
 namespace App\Http\Controllers\Prerequisites;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Foundation\Validation\ValidatesRequests;
-use App\Http\Requests\Prerequisites\PrerequisitesRequest;
 use App\Factories\Prerequisites\PrerequisitesFactory;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Prerequisites\PrerequisitesRequest;
 use App\Models\change_request;
 use App\Models\Group;
-use App\Models\Status;
 use App\Models\Prerequisite;
 use App\Models\PrerequisiteAttachment;
+use App\Models\Status;
+use Illuminate\Http\Request;
 
 class PrerequisitesController extends Controller
 {
     private $prerequisites;
+
     private $route = 'prerequisites';
 
-
-    public function __construct(PrerequisitesFactory $prerequisites){
+    public function __construct(PrerequisitesFactory $prerequisites)
+    {
         $this->prerequisites = $prerequisites::index();
         $this->view = 'prerequisites';
         $view = 'prerequisites';
@@ -27,8 +27,9 @@ class PrerequisitesController extends Controller
         $OtherRoute = 'prerequisites';
         $title = 'Prerequisites';
         $form_title = 'Prerequisite';
-        view()->share(compact('view','route','title','form_title','OtherRoute'));
+        view()->share(compact('view', 'route', 'title', 'form_title', 'OtherRoute'));
     }
+
     /**
      * Display a listing of the resource.
      *
@@ -38,7 +39,8 @@ class PrerequisitesController extends Controller
     {
         $this->authorize('List Prerequisites'); // permission check
         $collection = $this->prerequisites->paginateAll();
-        return view("$this->view.index",compact('collection'));
+
+        return view("$this->view.index", compact('collection'));
     }
 
     /**
@@ -52,8 +54,8 @@ class PrerequisitesController extends Controller
         $changeRequests = change_request::where('workflow_type_id', 9)->get();
         $groups = Group::all();
         $defaultStatusId = Status::where('status_name', 'Open')->value('id');
-        
-        return view("$this->view.create", compact('changeRequests','groups','defaultStatusId'));
+
+        return view("$this->view.create", compact('changeRequests', 'groups', 'defaultStatusId'));
     }
 
     /**
@@ -66,29 +68,28 @@ class PrerequisitesController extends Controller
     {
         $this->authorize('Create Prerequisite'); // permission check
         $this->prerequisites->create($request->all());
-        return redirect()->back()->with('status' , 'Prerequisite Created Successfully' );
+
+        return redirect()->back()->with('status', 'Prerequisite Created Successfully');
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Prerequisite  $prerequisite
      * @return \Illuminate\Http\Response
      */
     // In PrerequisitesController.php
     public function show(Prerequisite $prerequisite)
     {
         $this->authorize('Show Prerequisite');
-        
-        
+
         $prerequisite->load(['promo', 'group', 'status', 'comments', 'attachments', 'logs']);
-        
+
         return view("$this->view.show", [
             'row' => $prerequisite,
             'form_title' => 'View Prerequisite',
-            'changeRequests' => collect([$prerequisite->promo]),    
-            'groups' => collect([$prerequisite->group]),    
-            'statuses' => collect([$prerequisite->status]),    
+            'changeRequests' => collect([$prerequisite->promo]),
+            'groups' => collect([$prerequisite->group]),
+            'statuses' => collect([$prerequisite->status]),
             'currentStatus' => $prerequisite->status,
             'title' => 'View Prerequisite',
             'comments' => $prerequisite->comments,
@@ -99,7 +100,6 @@ class PrerequisitesController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  \App\Models\Prerequisite  $prerequisite
      * @return \Illuminate\Http\Response
      */
     public function edit(Prerequisite $prerequisite)
@@ -107,11 +107,11 @@ class PrerequisitesController extends Controller
         $this->authorize('Edit Prerequisite');
 
         $prerequisite->load(['comments', 'attachments', 'logs']);
-        
+
         $changeRequests = change_request::where('workflow_type_id', 9)
             ->select('id', 'cr_no', 'title')
             ->get();
-            
+
         $groups = Group::select('id', 'title')->get();
 
         $currentStatus = $prerequisite->status;
@@ -127,7 +127,7 @@ class PrerequisitesController extends Controller
         } else {
             $availableStatuses = collect([$currentStatus]);
         }
-        
+
         return view("$this->view.edit", [
             'row' => $prerequisite,
             'form_title' => 'Prerequisite',
@@ -144,14 +144,12 @@ class PrerequisitesController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Prerequisite  $prerequisite
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, Prerequisite $prerequisite)
     {
         $this->authorize('Edit Prerequisite'); // permission check
-        
+
         $this->prerequisites->update($request->all(), $prerequisite);
 
         return redirect()->route("$this->route.index")->with('status', 'Prerequisite Updated Successfully');
@@ -160,7 +158,6 @@ class PrerequisitesController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Prerequisite  $prerequisite
      * @return \Illuminate\Http\Response
      */
     public function destroy(Prerequisite $prerequisite)
@@ -180,5 +177,4 @@ class PrerequisitesController extends Controller
 
         return redirect()->back()->with('error', 'File not found.');
     }
-
 }

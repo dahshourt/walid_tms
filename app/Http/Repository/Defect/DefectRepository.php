@@ -2,40 +2,36 @@
 
 namespace App\Http\Repository\Defect;
 
-use App\Contracts\Factories\Defect\DefectFactory;
 use App\Contracts\Defect\DefectRepositoryInterface;
 use App\Models\Defect;
+use App\Models\DefectAttachment;
 use App\Models\DefectComment;
 use App\Models\DefectLog;
 use App\Models\DefectStatus;
-use App\Models\DefectAttachment;
-use App\Models\Technical_team;
 use App\Models\Group;
 use App\Models\Status;
-
-
-
 use Auth;
+
 class DefectRepository implements DefectRepositoryInterface
 {
     public function AddDefect($request)
-    { 
+    {
         return $defect = Defect::create([
-            'cr_id'      => $request->cr_id,
-            'subject'    => $request->title,
-            'group_id'   => $request->technical_team,
-            'status_id'  =>$request->defect_status,
+            'cr_id' => $request->cr_id,
+            'subject' => $request->title,
+            'group_id' => $request->technical_team,
+            'status_id' => $request->defect_status,
             'created_by' => Auth::user()->id,
         ]);
-        
+
     }
 
     public function AddDefectComment($defect_id, $comment)
     {
         return $defect = DefectComment::create([
             'defect_id' => $defect_id,
-            'user_id'   => Auth::user()->id,
-            'comment'   => $comment,
+            'user_id' => Auth::user()->id,
+            'comment' => $comment,
         ]);
     }
 
@@ -43,30 +39,30 @@ class DefectRepository implements DefectRepositoryInterface
     {
         return $defect = DefectLog::create([
             'defect_id' => $defect_id,
-            'user_id'   => Auth::user()->id,
-            'log_text'  => $text_log,
+            'user_id' => Auth::user()->id,
+            'log_text' => $text_log,
         ]);
     }
 
     public function AddDefectStatus($defect_id, $previous_status_id, $new_status_id)
     {
         return $defect = DefectStatus::create([
-            'defect_id'           => $defect_id,
-            'user_id'             => Auth::user()->id,
-            'previous_status_id'  => $previous_status_id,
-            'new_status_id'       => $new_status_id
+            'defect_id' => $defect_id,
+            'user_id' => Auth::user()->id,
+            'previous_status_id' => $previous_status_id,
+            'new_status_id' => $new_status_id,
         ]);
     }
 
     public function Defect_Attach($data, $defect_id)
     {
-        foreach ($data as  $key=>$file) {
-            $filename = rand(10,1000)."_".$file->getClientOriginalName();
+        foreach ($data as $key => $file) {
+            $filename = rand(10, 1000) . '_' . $file->getClientOriginalName();
             $file->move(public_path('uploads/defects'), $filename);
             $defect_attachment = DefectAttachment::create([
                 'defect_id' => $defect_id,
-                'user_id'   => Auth::user()->id,
-                'file'      => $filename,
+                'user_id' => Auth::user()->id,
+                'file' => $filename,
             ]);
         }
     }
@@ -78,16 +74,16 @@ class DefectRepository implements DefectRepositoryInterface
 
     public function get_defect_comments($defect_id)
     {
-        return DefectComment::where("defect_id", $defect_id)->get();
+        return DefectComment::where('defect_id', $defect_id)->get();
     }
 
     public function get_defect_attachments($defect_id)
     {
-        return DefectAttachment::where("defect_id", $defect_id)->get();
+        return DefectAttachment::where('defect_id', $defect_id)->get();
     }
 
     public function update_defect($defect_id, $request)
-    { 
+    {
         return Defect::where('id', $defect_id)->update([
             'subject' => $request->title,
             'group_id' => $request->technical_team,
@@ -95,35 +91,35 @@ class DefectRepository implements DefectRepositoryInterface
         ]);
     }
 
-    public function getAll($group = null){
+    public function getAll($group = null)
+    {
 
-        if(empty($group)){
-            if(session('default_group')){
+        if (empty($group)) {
+            if (session('default_group')) {
                 $group = session('default_group');
-    
-            }else {
+
+            } else {
                 $group = auth()->user()->default_group;
             }
         }
 
         $isTechnicalTeam = Group::where('id', $group)->where('technical_team', '1')->exists();
         $isUATTeam = Group::where('id', $group)->where('title', 'UAT')->exists();
-        
+
         $query = Defect::with('current_status');
 
-        if($isTechnicalTeam){
+        if ($isTechnicalTeam) {
             $pendingStatus = Status::where('status_name', 'Pending')->value('id');
             $query->where('group_id', $group)->where('status_id', $pendingStatus);
-        }
-        elseif($isUATTeam){
+        } elseif ($isUATTeam) {
             $solvedStatus = Status::where('status_name', 'Solved')->value('id');
             $notDefectStatus = Status::where('status_name', 'Not Defect')->value('id');
             $query->whereIn('status_id', [$solvedStatus, $notDefectStatus]);
 
-        }
-        else{
+        } else {
             $query->where('group_id', $group);
         }
+
         return $query->paginate(10);
     }
 
@@ -131,7 +127,6 @@ class DefectRepository implements DefectRepositoryInterface
     {
         return Group::where('id', $tech_id)->first();
     }
-
 
     public function get_defect_logs($id)
     {

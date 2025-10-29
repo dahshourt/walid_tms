@@ -2,8 +2,8 @@
 
 namespace App\Rules;
 
-use Illuminate\Contracts\Validation\Rule;
 use App\Models\Change_request;
+use Illuminate\Contracts\Validation\Rule;
 
 class checkCRS implements Rule
 {
@@ -26,10 +26,11 @@ class checkCRS implements Rule
      */
     public function passes($attribute, $value)
     {
-        if(change_request::find($value)){
-return true;
-       }
-       return false;
+        if (change_request::find($value)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

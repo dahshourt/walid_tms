@@ -9,28 +9,25 @@ class GroupStatuses extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'status_id',
-        'group_id',
-        'type'
-    ];
-
-
-     /**
+    /**
      * The code of group type set by.
      *
      * @var string
      */
-    CONST SETBY = 1;
+    const SETBY = 1;
 
     /**
      * The code of group type view by.
      *
      * @var string
      */
-    CONST VIEWBY = 2;
+    const VIEWBY = 2;
 
-
+    protected $fillable = [
+        'status_id',
+        'group_id',
+        'type',
+    ];
 
     public function status()
     {

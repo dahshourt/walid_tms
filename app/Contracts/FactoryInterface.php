@@ -4,5 +4,5 @@ namespace App\Contracts;
 
 interface FactoryInterface
 {
-	static public function index();
+    public static function index();
 }

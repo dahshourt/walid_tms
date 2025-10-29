@@ -40,7 +40,7 @@ class UnitsRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('units', 'name')->ignore($unitId)
+                Rule::unique('units', 'name')->ignore($unitId),
             ],
             'manager_name' => ['required', 'email', 'max:255', new DivisionManagerExists()],
             'status' => ['required', 'in:0,1'],

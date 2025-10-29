@@ -1,10 +1,10 @@
 <?php
+
 namespace App\Contracts\CustomField;
 
 interface CustomFieldGroupTypeRepositoryInterface
 {
-
-	public function getAll();
+    public function getAll();
 
     public function find($id);
 
@@ -13,5 +13,4 @@ interface CustomFieldGroupTypeRepositoryInterface
     public function update($request, $id);
 
     public function delete($id);
-
 }

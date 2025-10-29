@@ -17,11 +17,11 @@ class CreateAttachementsCrsTable extends Migration
             $table->id();
             $table->text('file');
             $table->foreignId('user_id')
-            ->references('id')->on('users')
-            ->onDelete('cascade');
+                ->references('id')->on('users')
+                ->onDelete('cascade');
             $table->foreignId('cr_id')
-            ->references('id')->on('change_request')
-            ->onDelete('cascade');
+                ->references('id')->on('change_request')
+                ->onDelete('cascade');
             $table->timestamps();
         });
     }

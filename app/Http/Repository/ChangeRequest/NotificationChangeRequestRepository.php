@@ -20,10 +20,10 @@ class AttachmentsCRSRepository implements NotificationChangeRequestRepositoryInt
         if ($cr->workflow_type_id == 4) {
             $user = $cr->requester;
             $division = $cr->division_manger->email;
-            //dd($cr->division_manger->email);
+            // dd($cr->division_manger->email);
             $details = [
-                'subject' => 'New CR#'.$cr->cr_no,
-                'body' => 'New Creation CR'.$cr->title,
+                'subject' => 'New CR#' . $cr->cr_no,
+                'body' => 'New Creation CR' . $cr->title,
                 'thanks' => 'Thank you for using App',
                 'actionText' => 'View My Site',
                 'actionURL' => url('/'),
@@ -33,16 +33,16 @@ class AttachmentsCRSRepository implements NotificationChangeRequestRepositoryInt
         }
         if ($cr->workflow_type_id == 3) {
             $details = [
-                'subject' => 'New CR#'.$cr->cr_no,
-                'body' => 'New Creation CR'.$cr->title,
+                'subject' => 'New CR#' . $cr->cr_no,
+                'body' => 'New Creation CR' . $cr->title,
                 'thanks' => 'Thank you for using App',
                 'actionText' => 'View My Site',
                 'actionURL' => url('/'),
             ];
-            //dd($cr->division_manger->email);
+            // dd($cr->division_manger->email);
             $approval = [
-                'subject' => ' Request Approval on CR#'.$cr->cr_no,
-                'body' => 'kindly approve on CR'.$cr->cr_no,
+                'subject' => ' Request Approval on CR#' . $cr->cr_no,
+                'body' => 'kindly approve on CR' . $cr->cr_no,
                 'thanks' => 'Thank you for using App',
                 'actionText' => 'View My Site',
                 'actionURL' => url('/'),

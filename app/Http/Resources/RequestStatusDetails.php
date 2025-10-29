@@ -15,11 +15,11 @@ class RequestStatusDetails extends JsonResource
     public function toArray($request)
     {
         return [
-            'id'                => $this->id,
-            'status_name'       => $this->status_name,
-            'name'              => $this->status_name,
-            'type'              => $this->type,
-            'heigh_level'       =>new HighLevelStatusesResource($this->high_level)
+            'id' => $this->id,
+            'status_name' => $this->status_name,
+            'name' => $this->status_name,
+            'type' => $this->type,
+            'heigh_level' => new HighLevelStatusesResource($this->high_level),
         ];
     }
 }

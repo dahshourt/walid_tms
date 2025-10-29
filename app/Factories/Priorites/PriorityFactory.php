@@ -7,9 +7,8 @@ use App\Http\Repository\Priorities\PriorityRepository;
 
 class PriorityFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new PriorityRepository();
     }
-
 }

@@ -7,9 +7,8 @@ use App\Http\Repository\Parents\ParentRepository;
 
 class ParentFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new ParentRepository();
     }
-
 }

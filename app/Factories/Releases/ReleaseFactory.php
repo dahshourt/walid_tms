@@ -7,9 +7,8 @@ use App\Http\Repository\Releases\ReleaseRepository;
 
 class ReleaseFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new ReleaseRepository();
     }
-
 }

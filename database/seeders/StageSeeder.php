@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use DB;
+use Illuminate\Database\Seeder;
 
 class StageSeeder extends Seeder
 {
@@ -16,27 +16,27 @@ class StageSeeder extends Seeder
     {
         //
         DB::table('stages')->insert([
-            'name' => "Analysis",
+            'name' => 'Analysis',
             'active' => '1',
         ]);
         DB::table('stages')->insert([
-            'name' => "Estimation",
+            'name' => 'Estimation',
             'active' => '1',
         ]);
         DB::table('stages')->insert([
-            'name' => "Design",
+            'name' => 'Design',
             'active' => '1',
         ]);
         DB::table('stages')->insert([
-            'name' => "Development",
+            'name' => 'Development',
             'active' => '1',
         ]);
         DB::table('stages')->insert([
-            'name' => "Testing",
+            'name' => 'Testing',
             'active' => '1',
         ]);
         DB::table('stages')->insert([
-            'name' => "Sanity",
+            'name' => 'Sanity',
             'active' => '1',
         ]);
     }

@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers\Stages\Api;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Foundation\Validation\ValidatesRequests;
-use App\Http\Requests\Stages\Api\StageRequest;
 use App\Factories\Stages\StageFactory;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Stages\Api\StageRequest;
+use Illuminate\Foundation\Validation\ValidatesRequests;
 
 class StageController extends Controller
 {
     use ValidatesRequests;
+
     private $stage;
 
-    function __construct(StageFactory $stage){
+    public function __construct(StageFactory $stage)
+    {
 
         $this->stage = $stage::index();
 
@@ -21,14 +23,17 @@ class StageController extends Controller
     public function index()
     {
         $stages = $this->stage->getAll();
-        return response()->json(['data' => $stages],200);
+
+        return response()->json(['data' => $stages], 200);
     }
+
     /**
      * Send or resend the verification code.
      *
-     * @param \Illuminate\Http\Request $request
-     * @throws \Illuminate\Validation\ValidationException
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function store(StageRequest $request)
     {
@@ -42,20 +47,21 @@ class StageController extends Controller
     /**
      * Send or resend the verification code.
      *
-     * @param \Illuminate\Http\Request $request
-     * @throws \Illuminate\Validation\ValidationException
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function update(StageRequest $request, $id)
     {
         $stage = $this->stage->find($id);
-        if(!$stage)
-        {
+        if (! $stage) {
             return response()->json([
                 'message' => 'stage Not Exists',
-            ],422);
+            ], 422);
         }
-        $this->stage->update($request->except('_method'),$id);
+        $this->stage->update($request->except('_method'), $id);
+
         return response()->json([
             'message' => 'Updated Successfully',
         ]);
@@ -64,42 +70,38 @@ class StageController extends Controller
     public function show($id)
     {
         $stage = $this->stage->find($id);
-        if(!$stage)
-        {
+        if (! $stage) {
             return response()->json([
                 'message' => 'stage Not Exists',
-            ],422);
+            ], 422);
         }
-        return response()->json(['data' => $stage],200);
+
+        return response()->json(['data' => $stage], 200);
     }
 
     public function StageStatuses($id)
     {
         $stage = $this->stage->find($id);
-        if(!$stage)
-        {
+        if (! $stage) {
             return response()->json([
                 'message' => 'stage Not Exists',
-            ],422);
+            ], 422);
         }
-        return response()->json(['data' => $stage->statuses],200);
+
+        return response()->json(['data' => $stage->statuses], 200);
     }
 
-    public function destroy()
+    public function destroy() {}
+
+    public function updateactive($id)
     {
+        $stage = $this->stage->find($id);
 
-    }
-	public function updateactive($id){
-		   $stage = $this->stage->find($id);
+        $this->stage->updateactive($stage['active'], $id);
 
-		   $this->stage->updateactive($stage['active'],$id);
-
-		    return response()->json([
+        return response()->json([
             'message' => 'Updated Successfully',
         ]);
 
-
-
-	}
-
+    }
 }

@@ -7,9 +7,8 @@ use App\Http\Repository\Departments\DepartmentRepository;
 
 class DepartmentFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new DepartmentRepository();
     }
-
 }

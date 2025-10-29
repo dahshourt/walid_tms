@@ -7,9 +7,8 @@ use App\Http\Repository\Permissions\PermissionRepository;
 
 class PermissionFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new PermissionRepository();
     }
-
 }

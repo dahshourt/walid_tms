@@ -14,7 +14,6 @@ class UserGroups extends Model
         'group_id',
     ];
 
-
     public function user()
     {
         return $this->belongsTo(User::class);
@@ -24,5 +23,4 @@ class UserGroups extends Model
     {
         return $this->belongsTo(Group::class);
     }
-
 }

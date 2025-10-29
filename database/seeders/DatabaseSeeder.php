@@ -21,9 +21,9 @@ class DatabaseSeeder extends Seeder
             StatusSeeder::class,
             GroupStatusSeeder::class,
             RoleSeeder::class,
-			ModuleSeeder::class,
-			Module_RulesSeeder::class,
-			PermissionSeeder::class
+            ModuleSeeder::class,
+            Module_RulesSeeder::class,
+            PermissionSeeder::class,
         ]);
         // \App\Models\User::factory(10)->create();
     }

@@ -1,21 +1,13 @@
 <?php
 
 namespace App\Console\Commands;
-use App\Http\Controllers\Releases\ReleaseController;
-use Illuminate\Console\Command;
+
 use App\Factories\Releases\ReleaseFactory;
+use Illuminate\Console\Command;
 
 class UpdateReleaseAndCrs extends Command
-{ 
-
-     protected $releaseController;
-        public function __construct(ReleaseFactory $releaseFactory)
-        {
-            parent::__construct();
-
-            // Manually instantiate the controller with its dependency
-            $this->releaseController =  $releaseFactory::index();
-        }
+{
+    protected $releaseController;
 
     /**
      * The name and signature of the console command.
@@ -30,6 +22,14 @@ class UpdateReleaseAndCrs extends Command
      * @var string
      */
     protected $description = 'Command description';
+
+    public function __construct(ReleaseFactory $releaseFactory)
+    {
+        parent::__construct();
+
+        // Manually instantiate the controller with its dependency
+        $this->releaseController = $releaseFactory::index();
+    }
 
     /**
      * Create a new command instance.

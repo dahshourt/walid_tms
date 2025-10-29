@@ -3,7 +3,6 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -19,7 +18,7 @@ class mail extends Notification
     public function __construct($data)
     {
         //
-        $this->data=$data;
+        $this->data = $data;
     }
 
     /**
@@ -41,17 +40,12 @@ class mail extends Notification
      */
     public function toMail($notifiable)
     {
-        if(isset($this->data['email_cc']))
-        {
+        if (isset($this->data['email_cc'])) {
             return (new MailMessage)->cc($this->data['email_cc'])->subject($this->data['subject'])->line($this->data['body']);
 
         }
-        else
-        {
-            return (new MailMessage)->subject($this->data['subject'])->line($this->data['body']);
 
-        }
-
+        return (new MailMessage)->subject($this->data['subject'])->line($this->data['body']);
 
     }
 

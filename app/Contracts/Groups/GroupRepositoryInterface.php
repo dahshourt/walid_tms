@@ -1,11 +1,12 @@
 <?php
+
 namespace App\Contracts\Groups;
 
 interface GroupRepositoryInterface
 {
+    public function getAll();
 
-	public function getAll();
-	public function getAllWithFilter($parent_id);
+    public function getAllWithFilter($parent_id);
 
     public function find($id);
 
@@ -14,6 +15,6 @@ interface GroupRepositoryInterface
     public function update($request, $id);
 
     public function delete($id);
-	public function updateactive($active,$id);
 
+    public function updateactive($active, $id);
 }

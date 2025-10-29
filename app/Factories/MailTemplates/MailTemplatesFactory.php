@@ -7,9 +7,8 @@ use App\Http\Repository\MailTemplates\MailTemplatesRepository;
 
 class MailTemplatesFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new MailTemplatesRepository();
     }
-
 }

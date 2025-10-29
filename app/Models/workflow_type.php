@@ -8,6 +8,4 @@ use Illuminate\Database\Eloquent\Model;
 class Workflow_type extends Model
 {
     use HasFactory;
-
-     
 }

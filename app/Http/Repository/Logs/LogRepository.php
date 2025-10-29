@@ -1,28 +1,25 @@
 <?php
 
 namespace App\Http\Repository\Logs;
-use App\Contracts\Logs\LogRepositoryInterface;
 
+use App\Contracts\Logs\LogRepositoryInterface;
 // declare Entities
-use App\Models\Log;
-use App\Models\User;
-use App\Models\NewWorkFlow;
-use App\Models\Priority;
-use App\Models\Unit;
 use App\Models\Application;
 use App\Models\Category;
-use App\Models\DivisionManagers;
 use App\Models\CustomField;
-use App\Models\NeedDownTime;
 use App\Models\DeploymentImpact;
+use App\Models\DivisionManagers;
+use App\Models\Log;
+use App\Models\NeedDownTime;
+use App\Models\NewWorkFlow;
+use App\Models\Priority;
 use App\Models\Rejection_reason;
-
-
+use App\Models\Unit;
+use App\Models\User;
+use Auth;
 
 class LogRepository implements LogRepositoryInterface
 {
-
-
     public function getAll()
     {
         return Log::all();
@@ -53,35 +50,30 @@ class LogRepository implements LogRepositoryInterface
         return Log::where('cr_id', $id)->get();
     }
 
+    public function updateactive($active, $id)
+    {
+        if ($active) {
+            return $this->update(['active' => '0'], $id);
+        }
 
-    public function updateactive($active,$id){
-		if($active){
-		return 	$this->update(['active'=>'0'],$id);
-		} else{
+        return $this->update(['active' => '1'], $id);
 
-					return 	$this->update(['active'=>'1'],$id);
-
-		}
-
-	}
-
-
+    }
 
     public function logCreate($id, $request, $changeRequest_old, $type = 'create')
     {
-        
-               
+
         $log = new LogRepository();
-        //$user_id = $request->user_id ? $request->user_id : \Auth::user()->id;
+        // $user_id = $request->user_id ? $request->user_id : \Auth::user()->id;
 
         if ($request instanceof \Illuminate\Support\Collection) {
-            $user_id = $request->get('user_id', \Auth::id());
+            $user_id = $request->get('user_id', Auth::id());
         } elseif (is_array($request)) {
-            $user_id = $request['user_id'] ?? \Auth::id();
+            $user_id = $request['user_id'] ?? Auth::id();
         } elseif ($request instanceof \Illuminate\Http\Request) {
-            $user_id = $request->input('user_id', \Auth::id());
+            $user_id = $request->input('user_id', Auth::id());
         } else {
-            $user_id = \Auth::id();
+            $user_id = Auth::id();
         }
 
         $user = User::find($user_id);
@@ -90,79 +82,81 @@ class LogRepository implements LogRepositoryInterface
 
         if ($type === 'create') {
             $this->createLog($log, $id, $user->id, 'Issue opened by ' . $user->user_name);
+
             return true;
         }
         if ($type === 'shifting') {
             $this->createLog($log, $id, $user->id, 'CR shifted by admin : ' . $user->user_name);
+
             return true;
         }
 
         $fields = [
-            //'analysis_feedback' => 'Analysis FeedBack',
-            //'comment' => 'Comment',
+            // 'analysis_feedback' => 'Analysis FeedBack',
+            // 'comment' => 'Comment',
             'testable' => ['message' => 'Testable flag changed to'],
             'priority_id' => ['model' => Priority::class, 'field' => 'name', 'message' => 'Priority Changed To'],
-            //'technical_feedback' => 'Technical Feedback Is',
+            // 'technical_feedback' => 'Technical Feedback Is',
             'unit_id' => ['model' => Unit::class, 'field' => 'name', 'message' => 'CR Assigned To Unit'],
-            //'creator_mobile_number' => 'Creator Mobile Changed To',
-            //'title' => 'Subject Changed To',
+            // 'creator_mobile_number' => 'Creator Mobile Changed To',
+            // 'title' => 'Subject Changed To',
             'application_id' => ['model' => Application::class, 'field' => 'name', 'message' => 'Title Changed To'],
-            //'description' => 'CR Description To',
+            // 'description' => 'CR Description To',
             'category_id' => ['model' => Category::class, 'field' => 'name', 'message' => 'CR Category Changed To'],
             'division_manager_id' => ['model' => DivisionManagers::class, 'field' => 'name', 'message' => 'Division Managers To'],
-			'need_down_time' => ['model' => NeedDownTime::class, 'field' => 'name', 'message' => 'Need down time Changed To'],
-			'rejection_reason_id' => ['model' => Rejection_reason::class, 'field' => 'name', 'message' => 'rejection Reason Changed To'],
-			'deployment_impact' => ['model' => DeploymentImpact::class, 'field' => 'name', 'message' => 'Deployment Impact Changed To'],
+            'need_down_time' => ['model' => NeedDownTime::class, 'field' => 'name', 'message' => 'Need down time Changed To'],
+            'rejection_reason_id' => ['model' => Rejection_reason::class, 'field' => 'name', 'message' => 'rejection Reason Changed To'],
+            'deployment_impact' => ['model' => DeploymentImpact::class, 'field' => 'name', 'message' => 'Deployment Impact Changed To'],
         ];
-		$excludeNames = ['develop_duration', 'design_duration', 'test_duration'];
+        $excludeNames = ['develop_duration', 'design_duration', 'test_duration'];
 
-// fetch custom fields you want to append
-		$customFields = CustomField::query()
-			->whereIn('type', ['input', 'textArea'])
-			->whereNotIn('name', $excludeNames)
-			->get();
-		
-		$customFieldMap = $customFields->mapWithKeys(function ($cf) {
-			// Fallback message if label is null
-			$label = $cf->label ?: Str::of($cf->name)->replace('_', ' ')->title();
-			$base = [
-				'message' => "{$label} Changed To",
-			];
+        // fetch custom fields you want to append
+        $customFields = CustomField::query()
+            ->whereIn('type', ['input', 'textArea'])
+            ->whereNotIn('name', $excludeNames)
+            ->get();
 
-			// If the custom field is linked to another table, include that hint
-			// (adjust 'field' if your related table uses another display column)
-			if (!empty($cf->related_table)) {
-				$base['table'] = $cf->related_table;
-				$base['field'] = 'name';
-			}
+        $customFieldMap = $customFields->mapWithKeys(function ($cf) {
+            // Fallback message if label is null
+            $label = $cf->label ?: Str::of($cf->name)->replace('_', ' ')->title();
+            $base = [
+                'message' => "{$label} Changed To",
+            ];
 
-			return [$cf->name => $base];
-		})->toArray();
+            // If the custom field is linked to another table, include that hint
+            // (adjust 'field' if your related table uses another display column)
+            if (! empty($cf->related_table)) {
+                $base['table'] = $cf->related_table;
+                $base['field'] = 'name';
+            }
 
-		// append without overriding existing keys in $fields
-		$fields += $customFieldMap;
+            return [$cf->name => $base];
+        })->toArray();
+
+        // append without overriding existing keys in $fields
+        $fields += $customFieldMap;
         foreach ($fields as $field => $info) {
             if (isset($request->$field)) {
                 $oldValue = $change_request->$field ?? null;
                 $newValue = $request->$field;
                 if ($oldValue != $newValue) {
                     if (is_array($info)) {
-						if(isset($info['model']))
-						{
-							$modelName = $info['model'];
-							$fieldName = $info['field'];
-							$valueName = $modelName::find($newValue)?->$fieldName;	
-							$message = $info['message'] . " \"$valueName\"";
-						}
-						else
-						{
-							$message = $info['message'] . " \"$newValue\"";
-						}
-						
+                        if (isset($info['model'])) {
+                            $modelName = $info['model'];
+                            $fieldName = $info['field'];
+                            $valueName = $modelName::find($newValue)?->$fieldName;
+                            $message = $info['message'] . " \"$valueName\"";
+                        } else {
+                            $message = $info['message'] . " \"$newValue\"";
+                        }
+
                     } else {
-						
-                        if($info['message']) $message = $info['message'] . " \"$newValue\"";
-						else $message = "$info \"$newValue\"";
+
+                        if ($info['message']) {
+                            $message = $info['message'] . " \"$newValue\"";
+                        } else {
+                            $message = "$info \"$newValue\"";
+                        }
                     }
 
                     $this->createLog($log, $id, $user->id, "$message By {$user->user_name}");
@@ -206,10 +200,10 @@ class LogRepository implements LogRepositoryInterface
 
         // Status change
         if (isset($request->new_status_id)) {
-           // echo $request->new_status_id; die;
+            // echo $request->new_status_id; die;
             $workflow = NewWorkFlow::find($request->new_status_id);
-            $status_title = $workflow->workflowstatus->count() > 1 
-                ? $workflow->to_status_label 
+            $status_title = $workflow->workflowstatus->count() > 1
+                ? $workflow->to_status_label
                 : $workflow->workflowstatus[0]->to_status->status_name;
 
             $this->createLog($log, $id, $user->id, "Issue manually set to status '$status_title' by {$user->user_name}");
@@ -231,7 +225,7 @@ class LogRepository implements LogRepositoryInterface
     {
         if (isset($request->$field) && $request->$field != $old->$field) {
             $status = $request->$field == 1 ? 'Active' : 'InActive';
-            $this->createLog($logRepo, $crId, $userId, "$messagePrefix $status BY " . \Auth::user()->user_name);
+            $this->createLog($logRepo, $crId, $userId, "$messagePrefix $status BY " . Auth::user()->user_name);
         }
     }
 
@@ -249,9 +243,4 @@ class LogRepository implements LogRepositoryInterface
             $this->createLog($logRepo, $crId, $user->id, "Issue start time set to '{$request->$startField}' and end time set to '{$request->$endField}' by {$user->user_name}");
         }
     }
-
-
-
-    
-
 }

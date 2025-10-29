@@ -1,10 +1,10 @@
 <?php
+
 namespace App\Contracts\Workflow;
 
 interface WorkflowDependRepositoryInterface
 {
-
-	public function getAll();
+    public function getAll();
 
     public function find($id);
 
@@ -13,5 +13,4 @@ interface WorkflowDependRepositoryInterface
     public function update($request, $id);
 
     public function delete($id);
-
 }

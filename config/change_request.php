@@ -74,9 +74,9 @@ return [
         'pending_production_deployment' => 127,
         'production_deployment' => 128,
         'business_approval' => 22,
-        'pending_cab'=>38,
-        'pending_cab_proceed'=>160,
-        'pending_cab_review'=>37,
+        'pending_cab' => 38,
+        'pending_cab_proceed' => 160,
+        'pending_cab_review' => 37,
         'set_kickoff' => 110,
         'cr_manager_review' => 99,
         'design_phase' => 40,
@@ -94,40 +94,39 @@ return [
         'pending_production_deployment_in_house' => 20,
 
         'Reject' => 19,
-        'Cancel' => 82
+        'Cancel' => 82,
 
     ],
 
-	'parked_status_ids' => [
-        //'pending_uat' => 78,
+    'parked_status_ids' => [
+        // 'pending_uat' => 78,
         'provide_technical_fb' => 146,
         'technical_fb' => 108,
         'confirmed_sdd' => 149,
         'set_md_prerequisites' => 112,
         'final_uat_results_fb' => 167,
-		'promo_closure' => 129,
+        'promo_closure' => 129,
 
     ],
-	'promo_parked_status_ids' => [
+    'promo_parked_status_ids' => [
         'promo_closure' => 129,
         'review_uat_results_fb' => 168,
     ],
-	'promo_depend_statuses' => [
-        //'pending_uat' => 78,
+    'promo_depend_statuses' => [
+        // 'pending_uat' => 78,
         'uat_in_progress' => 173,
         'smoke_test' => 68,
     ],
-	'promo_unparked_ids' => [
-       'support_technical_issue' => 155,
-       'pending_uat' => 78,
+    'promo_unparked_ids' => [
+        'support_technical_issue' => 155,
+        'pending_uat' => 78,
     ],
-	'promo_special_flow_ids' => [
-       'resume_implementation' => 156,
-       'resume_implementation' => 156,
-       'fix_defect_on_production' => 171,
-       'rollback' => 134,
+    'promo_special_flow_ids' => [
+        'resume_implementation' => 156,
+        'resume_implementation' => 156,
+        'fix_defect_on_production' => 171,
+        'rollback' => 134,
     ],
-
 
     /*
     |--------------------------------------------------------------------------
@@ -260,7 +259,7 @@ return [
         'max_file_size' => 10240, // 10MB in KB
         'allowed_extensions' => [
             'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
-            'jpg', 'jpeg', 'png', 'gif', 'txt', 'zip', 'rar'
+            'jpg', 'jpeg', 'png', 'gif', 'txt', 'zip', 'rar',
         ],
         'storage_disk' => 'local',
         'storage_path' => 'change_requests',
@@ -279,10 +278,9 @@ return [
         'max_per_request' => 20,
         'types' => [
             'text', 'textarea', 'select', 'checkbox', 'radio',
-            'date', 'datetime', 'number', 'email', 'url'
+            'date', 'datetime', 'number', 'email', 'url',
         ],
     ],
-
 
     /*
     |--------------------------------------------------------------------------
@@ -365,7 +363,5 @@ return [
         'timeout' => 300, // 5 minutes
         'chunk_size' => 1000,
     ],
-
-
 
 ];

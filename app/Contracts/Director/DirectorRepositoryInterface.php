@@ -3,7 +3,6 @@
 namespace App\Contracts\Director;
 
 use App\Models\Director;
-use Illuminate\Support\Collection;
 
 interface DirectorRepositoryInterface
 {

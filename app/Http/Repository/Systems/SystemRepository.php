@@ -1,17 +1,13 @@
 <?php
 
 namespace App\Http\Repository\Systems;
-use App\Contracts\Systems\SystemRepositoryInterface;
 
+use App\Contracts\Systems\SystemRepositoryInterface;
 // declare Entities
 use App\Models\Application;
 
-
-
 class SystemRepository implements SystemRepositoryInterface
 {
-
-    
     public function getAll()
     {
         return Application::with('workflow_type')->get();
@@ -36,15 +32,14 @@ class SystemRepository implements SystemRepositoryInterface
     {
         return Application::find($id);
     }
-public function updateactive($active,$id){
-		if($active){
-		return 	$this->update(['active'=>'0'],$id);
-		} else{
-			
-					return 	$this->update(['active'=>'1'],$id);
 
-		}
-		
-	}
+    public function updateactive($active, $id)
+    {
+        if ($active) {
+            return $this->update(['active' => '0'], $id);
+        }
 
+        return $this->update(['active' => '1'], $id);
+
+    }
 }

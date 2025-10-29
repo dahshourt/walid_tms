@@ -11,7 +11,6 @@ class CompareOldValue implements Rule
      *
      * @return void
      */
-
     protected $expectedValue;
 
     public function __construct($expectedValue)

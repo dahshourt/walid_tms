@@ -39,13 +39,13 @@ class DirectorRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('directors', 'user_name')->ignore($directorId)
+                Rule::unique('directors', 'user_name')->ignore($directorId),
             ],
             'email' => [
                 'required',
                 'email',
                 'max:255',
-                Rule::unique('directors', 'email')->ignore($directorId)
+                Rule::unique('directors', 'email')->ignore($directorId),
             ],
             'status' => ['nullable', 'in:0,1'],
         ];

@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use DB;
+use Illuminate\Database\Seeder;
 
 class GroupStatusSeeder extends Seeder
 {
@@ -77,7 +77,7 @@ class GroupStatusSeeder extends Seeder
             'group_id' => 11,
             'type' => '2',
         ]);
-        
+
         DB::table('group_statuses')->insert([
             'status_id' => 7,
             'group_id' => 11,
@@ -89,6 +89,5 @@ class GroupStatusSeeder extends Seeder
             'type' => '2',
         ]);
 
-        
     }
 }

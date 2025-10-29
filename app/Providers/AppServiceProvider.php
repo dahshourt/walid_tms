@@ -2,14 +2,12 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Pagination\Paginator;
-use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use App\Contracts\ChangeRequest\ChangeRequestRepositoryInterface;
-use App\Http\Repository\Director\DirectorRepository;
-use App\Contracts\Director\DirectorRepositoryInterface;
+use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,7 +29,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         //
-        //URL::forceRootUrl('https://10.19.44.26/index.php'); // replace with your server IP
+        // URL::forceRootUrl('https://10.19.44.26/index.php'); // replace with your server IP
         Paginator::useBootstrap();
         Schema::defaultstringLength(191);
     }

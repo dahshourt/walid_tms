@@ -7,9 +7,8 @@ use App\Http\Repository\Categories\CategoreyRepository;
 
 class CategoryFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new CategoreyRepository();
     }
-
 }

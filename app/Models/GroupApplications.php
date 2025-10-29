@@ -14,9 +14,6 @@ class GroupApplications extends Model
         'group_id',
     ];
 
-
-    
-
     public function application()
     {
         return $this->belongsTo(application::class);

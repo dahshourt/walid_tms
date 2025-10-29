@@ -30,40 +30,40 @@ class CustomFieldRequest extends FormRequest
             'type' => [
                 'required',
                 'string',
-                Rule::in(array_keys(config('input_types', [])))
+                Rule::in(array_keys(config('input_types', []))),
             ],
             'name' => [
                 'required',
                 'string',
                 'max:255',
                 'regex:/^[a-zA-Z_]+$/',
-                Rule::unique('custom_fields', 'name')->ignore($customFieldId)
+                Rule::unique('custom_fields', 'name')->ignore($customFieldId),
             ],
             'label' => [
                 'required',
                 'string',
-                'max:255'
+                'max:255',
             ],
             'class' => [
                 'nullable',
                 'string',
-                'max:255'
+                'max:255',
             ],
             'default_value' => [
                 'nullable',
                 'string',
-                'max:1000'
+                'max:1000',
             ],
             'related_table' => [
                 'nullable',
                 'required_if:type,select,multiselect',
                 'string',
-                'max:255'
+                'max:255',
             ],
             'active' => [
                 'sometimes',
-                'in:1,0'
-            ]
+                'in:1,0',
+            ],
         ];
     }
 
@@ -90,8 +90,6 @@ class CustomFieldRequest extends FormRequest
 
     /**
      * Get custom attributes for validator errors.
-     *
-     * @return array
      */
     public function attributes(): array
     {
@@ -102,21 +100,19 @@ class CustomFieldRequest extends FormRequest
             'class' => 'CSS class',
             'default_value' => 'default value',
             'related_table' => 'related table',
-            'active' => 'status'
+            'active' => 'status',
         ];
     }
 
     /**
      * Prepare the data for validation.
-     *
-     * @return void
      */
     protected function prepareForValidation(): void
     {
         // Convert name to lowercase and replace spaces with underscores
         if ($this->has('name')) {
             $this->merge([
-                'name' => strtolower(str_replace(' ', '_', trim($this->name)))
+                'name' => strtolower(str_replace(' ', '_', trim($this->name))),
             ]);
         }
 

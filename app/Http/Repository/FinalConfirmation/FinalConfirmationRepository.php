@@ -5,17 +5,13 @@ namespace App\Http\Repository\FinalConfirmation;
 use App\Models\Change_request;
 use App\Models\Change_request_statuse;
 use App\Models\Status;
-use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use Exception;
 use Illuminate\Support\Facades\Log;
 
 class FinalConfirmationRepository
 {
     /**
      * Find change request by CR number
-     *
-     * @param string $crNumber
-     * @return Change_request|null
      */
     public function findCRByNumber(string $crNumber): ?Change_request
     {
@@ -24,20 +20,18 @@ class FinalConfirmationRepository
                 ->where('cr_no', $crNumber)
                 ->first();
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error finding CR by number in FinalConfirmationRepository', [
                 'cr_number' => $crNumber,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }
 
     /**
      * Get current active status for a change request
-     *
-     * @param int $crId
-     * @return Change_request_statuse|null
      */
     public function getCurrentStatus(int $crId): ?Change_request_statuse
     {
@@ -47,11 +41,12 @@ class FinalConfirmationRepository
                 ->where('active', '1')
                 ->first();
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error getting current status in FinalConfirmationRepository', [
                 'cr_id' => $crId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return null;
         }
     }

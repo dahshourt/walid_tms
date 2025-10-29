@@ -1,17 +1,13 @@
 <?php
 
 namespace App\Http\Repository\Units;
-use App\Contracts\Units\UnitRepositoryInterface;
 
+use App\Contracts\Units\UnitRepositoryInterface;
 // declare Entities
 use App\Models\Unit;
 
-
-
 class UnitRepository implements UnitRepositoryInterface
 {
-
-    
     public function getAll()
     {
         return Unit::all();
@@ -36,15 +32,14 @@ class UnitRepository implements UnitRepositoryInterface
     {
         return Unit::find($id);
     }
-public function updateactive($active,$id){
-		if($active){
-		return 	$this->update(['active'=>'0'],$id);
-		} else{
-			
-					return 	$this->update(['active'=>'1'],$id);
 
-		}
-		
-	}
+    public function updateactive($active, $id)
+    {
+        if ($active) {
+            return $this->update(['active' => '0'], $id);
+        }
 
+        return $this->update(['active' => '1'], $id);
+
+    }
 }

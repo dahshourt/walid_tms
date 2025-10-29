@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class ReleaseLogs extends Model
 {
     use HasFactory;
+
     public $table = 'release_logs';
+
     protected $fillable = [
         'release_id',
         'user_id',
@@ -16,9 +18,9 @@ class ReleaseLogs extends Model
         'status_id',
     ];
 
-    public function release() 
+    public function release()
     {
-        return $this->belongsTo(Release::class,'release_id');
+        return $this->belongsTo(Release::class, 'release_id');
     }
 
     public function user()
@@ -28,8 +30,6 @@ class ReleaseLogs extends Model
 
     public function status()
     {
-        return $this->belongsTo(Status::class,'status_id');
+        return $this->belongsTo(Status::class, 'status_id');
     }
-
-
 }

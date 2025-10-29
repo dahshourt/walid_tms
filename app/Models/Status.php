@@ -10,10 +10,11 @@ class Status extends Model
 {
     use HasFactory;
 
-    protected $table = "statuses";
-    protected $with = ['high_level'];
-    protected $appends = array('name');
+    protected $table = 'statuses';
 
+    protected $with = ['high_level'];
+
+    protected $appends = ['name'];
 
     /**
      * The attributes that are mass assignable. test
@@ -80,5 +81,4 @@ class Status extends Model
     {
         return $this->status_name;
     }
-
 }

@@ -17,7 +17,9 @@ use App\Http\Resources\MyCRSResource;
 class ChangeRequestController extends Controller
 {
     private $changerequest;
+
     private $changerequeststatus;
+
     private $workflow;
 
     public function __construct(ChangeRequestFactory $changerequest, ChangeRequestStatusFactory $changerequeststatus, NewWorkFlowFactory $workflow, AttachmetsCRSFactory $attachments)
@@ -36,7 +38,7 @@ class ChangeRequestController extends Controller
     public function index()
     {
         $ChangeRequests = $this->changerequest->getAll();
-        //dd($ChangeRequests);
+        // dd($ChangeRequests);
         $ChangeRequests = ChangeRequestListResource::collection($ChangeRequests);
 
         return response()->json(['data' => $ChangeRequests], 200);
@@ -49,24 +51,23 @@ class ChangeRequestController extends Controller
      */
     public function create()
     {
-        
+
         $this->changerequest->create($request->all());
 
         return response()->json([
-           'message' => 'Created Successfully',
-       ]);
+            'message' => 'Created Successfully',
+        ]);
     }
 
     /**
      * Store a newly created resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
-     *
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(changeRequest_Requests $request)
     {
-        //dd();
+        // dd();
         $cr_id = $this->changerequest->create($request->all());
 
         if ($request->file()) {
@@ -82,12 +83,11 @@ class ChangeRequestController extends Controller
     /**
      * Display the specified resource.
      *
-     * @param int $id
-     *
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function show($id)
-    { 
+    {
         $cr = $this->changerequest->find($id);
 
         if ($cr) {
@@ -95,7 +95,7 @@ class ChangeRequestController extends Controller
         } else {
             $cr = null;
         }
-        //dd($cr);
+        // dd($cr);
 
         return response()->json(['data' => $cr], 200);
     }
@@ -103,20 +103,16 @@ class ChangeRequestController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param int $id
-     *
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
-    {
-    }
+    public function edit($id) {}
 
     /**
      * Update the specified resource in storage.
      *
-     * @param \Illuminate\Http\Request $request
-     * @param int                      $id
-     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function update(changeRequest_Requests $request, $id)
@@ -140,13 +136,10 @@ class ChangeRequestController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param int $id
-     *
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
-    {
-    }
+    public function destroy($id) {}
 
     public function search_result($id)
     {

@@ -7,9 +7,8 @@ use App\Http\Repository\Roles\RolesRepository;
 
 class RolesFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new RolesRepository();
     }
-
 }

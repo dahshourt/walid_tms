@@ -27,7 +27,7 @@ class AddReleaseStatusToReleasesTable extends Migration
     public function down()
     {
         Schema::table('releases', function (Blueprint $table) {
-             $table->dropColumn('release_status');
+            $table->dropColumn('release_status');
         });
     }
 }

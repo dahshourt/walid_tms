@@ -2,13 +2,12 @@
 
 namespace App\Http\Requests\Change_Request\Api;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class attachments_CRS_Request extends FormRequest
 {
-
     /**
      * Determine if the supervisor is authorized to make this request.
      *
@@ -19,17 +18,15 @@ class attachments_CRS_Request extends FormRequest
     //    return true;
     // }
 
-
-
     public function rules()
     {
         if ($this->isMethod('POST')) {
             return $this->createRules();
-        } else {
-            return $this->updateRules();
         }
-    }
 
+        return $this->updateRules();
+
+    }
 
     /**
      * Get the create validation rules that apply to the request.
@@ -40,8 +37,7 @@ class attachments_CRS_Request extends FormRequest
     {
 
         return [
-            'filesdata.*' => 'mimes:jpg,jpeg,png,bmp,pdf,docx,xlsx,zip,rar|max:30000'
-            
+            'filesdata.*' => 'mimes:jpg,jpeg,png,bmp,pdf,docx,xlsx,zip,rar|max:30000',
 
         ];
     }
@@ -50,18 +46,16 @@ class attachments_CRS_Request extends FormRequest
     {
         return [
 
-            'filesdata.*' => 'mimes:jpg,jpeg,png,bmp|max:20000'
-
-            
+            'filesdata.*' => 'mimes:jpg,jpeg,png,bmp|max:20000',
 
         ];
     }
 
-
-    protected function failedValidation(Validator $validator) {
+    protected function failedValidation(Validator $validator)
+    {
         throw new HttpResponseException(response()->json([
-            'message' => $validator->messages()
-          ], 422));
+            'message' => $validator->messages(),
+        ], 422));
     }
 
     /**

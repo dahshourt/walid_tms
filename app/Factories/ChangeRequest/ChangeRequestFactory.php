@@ -7,9 +7,8 @@ use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 
 class ChangeRequestFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new ChangeRequestRepository();
     }
-
 }

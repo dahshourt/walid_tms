@@ -2,13 +2,11 @@
 
 namespace App\Http\Requests\Releases;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Foundation\Http\FormRequest;
 
 class ReleaseRequest extends FormRequest
 {
-
     /**
      * Determine if the supervisor is authorized to make this request.
      *
@@ -28,11 +26,11 @@ class ReleaseRequest extends FormRequest
     {
         if ($this->isMethod('POST')) {
             return $this->createRules();
-        } else {
-            return $this->updateRules();
         }
-    }
 
+        return $this->updateRules();
+
+    }
 
     /**
      * Get the create validation rules that apply to the request.
@@ -43,15 +41,15 @@ class ReleaseRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'unique:releases,name'],
-            'go_live_planned_date' => [ 'sometimes', 'nullable','date'],
-            'planned_start_iot_date' => ['sometimes', 'nullable','date'],
-            'planned_end_iot_date' => [ 'sometimes', 'nullable','date', 'after_or_equal:planned_start_iot_date'],
-            'planned_start_e2e_date' => [ 'sometimes', 'nullable','date'],
-            'planned_end_e2e_date' => ['sometimes', 'nullable','date', 'after_or_equal:planned_start_e2e_date'],
-            'planned_start_uat_date' => ['sometimes', 'nullable','date'],
-            'planned_end_uat_date' => [ 'sometimes', 'nullable','date', 'after_or_equal:planned_start_uat_date'],
-            'planned_start_smoke_test_date' => [ 'sometimes', 'nullable','date'],
-            'planned_end_smoke_test_date' => [ 'sometimes', 'nullable','date', 'after_or_equal:planned_start_smoke_test_date'],
+            'go_live_planned_date' => ['sometimes', 'nullable', 'date'],
+            'planned_start_iot_date' => ['sometimes', 'nullable', 'date'],
+            'planned_end_iot_date' => ['sometimes', 'nullable', 'date', 'after_or_equal:planned_start_iot_date'],
+            'planned_start_e2e_date' => ['sometimes', 'nullable', 'date'],
+            'planned_end_e2e_date' => ['sometimes', 'nullable', 'date', 'after_or_equal:planned_start_e2e_date'],
+            'planned_start_uat_date' => ['sometimes', 'nullable', 'date'],
+            'planned_end_uat_date' => ['sometimes', 'nullable', 'date', 'after_or_equal:planned_start_uat_date'],
+            'planned_start_smoke_test_date' => ['sometimes', 'nullable', 'date'],
+            'planned_end_smoke_test_date' => ['sometimes', 'nullable', 'date', 'after_or_equal:planned_start_smoke_test_date'],
         ];
     }
 
@@ -65,20 +63,16 @@ class ReleaseRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'unique:releases,name,' . $this->release],
             'go_live_planned_date' => ['sometimes', 'nullable', 'date'],
-            'planned_start_iot_date' => [ 'sometimes', 'nullable','date'],
-            'planned_end_iot_date' => [ 'sometimes', 'nullable','date', 'after_or_equal:planned_start_iot_date'],
+            'planned_start_iot_date' => ['sometimes', 'nullable', 'date'],
+            'planned_end_iot_date' => ['sometimes', 'nullable', 'date', 'after_or_equal:planned_start_iot_date'],
             'planned_start_e2e_date' => ['sometimes', 'nullable', 'date'],
             'planned_end_e2e_date' => ['sometimes', 'nullable', 'date', 'after_or_equal:planned_start_e2e_date'],
             'planned_start_uat_date' => ['sometimes', 'nullable', 'date'],
-            'planned_end_uat_date' => [ 'sometimes', 'nullable','date', 'after_or_equal:planned_start_uat_date'],
-            'planned_start_smoke_test_date' => [ 'sometimes', 'nullable','date'],
-            'planned_end_smoke_test_date' => [ 'sometimes', 'nullable','date', 'after_or_equal:planned_start_smoke_test_date'],
+            'planned_end_uat_date' => ['sometimes', 'nullable', 'date', 'after_or_equal:planned_start_uat_date'],
+            'planned_start_smoke_test_date' => ['sometimes', 'nullable', 'date'],
+            'planned_end_smoke_test_date' => ['sometimes', 'nullable', 'date', 'after_or_equal:planned_start_smoke_test_date'],
         ];
     }
-
-
-
-    
 
     /**
      * Get custom attributes for validator errors.

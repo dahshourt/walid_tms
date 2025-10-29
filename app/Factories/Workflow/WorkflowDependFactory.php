@@ -7,9 +7,8 @@ use App\Http\Repository\Workflow\WorkflowDependRepository;
 
 class WorkflowDependFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new WorkflowDependRepository();
     }
-
 }

@@ -3,7 +3,6 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -16,16 +15,15 @@ class CreateTicket extends Notification
      *
      * @return void
      */
-  
- 
-  public  $cr_id;
-  public $divisin_email;
-  
-    public function __construct($cr_id,$divisin_email)
+    public $cr_id;
+
+    public $divisin_email;
+
+    public function __construct($cr_id, $divisin_email)
     {
-    $this->cr_id=$cr_id;
-    $this->divisin_email=$divisin_email;
-    
+        $this->cr_id = $cr_id;
+        $this->divisin_email = $divisin_email;
+
     }
 
     /**
@@ -62,9 +60,9 @@ class CreateTicket extends Notification
     public function toDatabase($notifiable)
     {
         return [
-            'cr_id'=> $this->cr_id,
-            'divisin_email'=>$this->divisin_email
-           
+            'cr_id' => $this->cr_id,
+            'divisin_email' => $this->divisin_email,
+
         ];
     }
 }

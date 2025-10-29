@@ -8,7 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 class Fields extends Model
 {
     use HasFactory;
-	  protected $fillable = [
-       'type','inputType','label','model', 'placeholder', 'required'
+
+    protected $fillable = [
+        'type', 'inputType', 'label', 'model', 'placeholder', 'required',
     ];
 }

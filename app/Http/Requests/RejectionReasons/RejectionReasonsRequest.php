@@ -2,13 +2,12 @@
 
 namespace App\Http\Requests\RejectionReasons;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class RejectionReasonsRequest extends FormRequest
 {
-
     /**
      * Determine if the supervisor is authorized to make this request.
      *
@@ -28,11 +27,11 @@ class RejectionReasonsRequest extends FormRequest
     {
         if ($this->isMethod('POST')) {
             return $this->createRules();
-        } else {
-            return $this->updateRules();
         }
-    }
 
+        return $this->updateRules();
+
+    }
 
     /**
      * Get the create validation rules that apply to the request.
@@ -42,9 +41,9 @@ class RejectionReasonsRequest extends FormRequest
     public function createRules()
     {
         return [
-            'name' => ['required','string', 'unique:rejection_reasons'],
+            'name' => ['required', 'string', 'unique:rejection_reasons'],
             'active' => ['int'],
-            
+
         ];
     }
 
@@ -55,13 +54,13 @@ class RejectionReasonsRequest extends FormRequest
      */
     public function updateRules()
     {
-       
-        
+
         return [
-            'name' => ['required','string', 'unique:rejection_reasons,name,'.$this->id],
-            
+            'name' => ['required', 'string', 'unique:rejection_reasons,name,' . $this->id],
+
         ];
     }
+
     protected function prepareForValidation()
     {
         // Set 'active' to 1 if not present in the request
@@ -70,14 +69,12 @@ class RejectionReasonsRequest extends FormRequest
         ]);
     }
 
-
-    protected function failedValidation(Validator $validator) { 
+    protected function failedValidation(Validator $validator)
+    {
         throw new HttpResponseException(response()->json([
-            'message' => $validator->messages()
-          ], 422));
+            'message' => $validator->messages(),
+        ], 422));
     }
-
-    
 
     /**
      * Get custom attributes for validator errors.
