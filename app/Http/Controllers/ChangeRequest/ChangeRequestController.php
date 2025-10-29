@@ -548,6 +548,9 @@ class ChangeRequestController extends Controller
             Log::error('Failed to update change request', [
                 'cr_id' => $id,
                 'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
                 'user_id' => auth()->id()
             ]);
             return redirect()->back()->with('error', 'Failed to update change request.');

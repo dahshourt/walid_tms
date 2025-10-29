@@ -785,4 +785,24 @@ class Change_request extends Model
 
         return in_array($current_status, [config('change_request.status_ids.Reject'), config('change_request.status_ids.Cancel')]);
     }
+
+    public function resDeveloper()
+    {
+        return $this->hasOne(CrAssignee::class, 'cr_id', 'id')->where('role', 'developer')->latest();
+    }
+
+    public function resTester()
+    {
+        return $this->hasOne(CrAssignee::class, 'cr_id', 'id')->where('role', 'tester')->latest();
+    }
+
+    public function resDesigner()
+    {
+        return $this->hasOne(CrAssignee::class, 'cr_id', 'id')->where('role', 'designer')->latest();
+    }
+
+    public function resCrMember()
+    {
+        return $this->hasOne(CrAssignee::class, 'cr_id', 'id')->where('role', 'cr_member')->latest();
+    }
 }

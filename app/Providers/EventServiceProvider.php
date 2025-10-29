@@ -25,6 +25,10 @@ class EventServiceProvider extends ServiceProvider
         \Illuminate\Auth\Events\Login::class => [
             \App\Listeners\UpdateLastLogin::class,
         ],
+
+        \App\Events\ChangeRequestCreated::class => [
+            \App\Listeners\SendChangeRequestNotifications::class,
+        ],
     ];
 
     

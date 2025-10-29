@@ -23,7 +23,10 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
 			ModuleSeeder::class,
 			Module_RulesSeeder::class,
-			PermissionSeeder::class
+			PermissionSeeder::class,
+            CustomFieldsTableSeeder::class,
+            CrCreationNotification::class
+
         ]);
         // \App\Models\User::factory(10)->create();
     }

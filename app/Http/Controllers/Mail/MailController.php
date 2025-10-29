@@ -126,8 +126,13 @@ class MailController extends Controller
     } // end method
 
     // Notify group when status changes.
-    public function notifyGroup($cr_id , $old_status_id , $new_status_id, $group_id){
+    public function notifyGroup($cr_id , $old_status_id , $new_status_id, $group_id, $userToNotify){
         $recipients = [];
+        if (!empty($userToNotify)) {
+            $emails = User::whereIn('id', $userToNotify)->pluck('email')->filter()->toArray();
+            $recipients = array_merge($recipients, $emails);
+        }
+        
         $cr_link = route('show.cr', $cr_id);
 
         $cr = Change_request::find($cr_id);
@@ -149,7 +154,6 @@ class MailController extends Controller
 
         } */
         $recipients[] = $mail;
-        //dd($recipients);
         $templateContent = [
             'subject' => "CR #$cr_no status has been changed",
             'body' => "Dear $group_name, <br><br>"

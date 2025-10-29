@@ -11,6 +11,7 @@ use App\Http\Controllers\Mail\MailController;
 use App\Traits\ChangeRequest\ChangeRequestConstants;
 use Auth;
 use Illuminate\Support\Arr;
+use App\Events\ChangeRequestCreated;
 
 class ChangeRequestCreationService
 {
@@ -42,7 +43,8 @@ class ChangeRequestCreationService
         
         $this->logRepository->logCreate($changeRequest->id, $statusData, null, 'create');
         
-        $this->sendCreationEmails($changeRequest, $statusData);
+        //$this->sendCreationEmails($changeRequest, $statusData);
+        event(new ChangeRequestCreated($changeRequest, $statusData));
 
         return [
             "id" => $changeRequest->id,
