@@ -118,6 +118,7 @@ Route::middleware(['auth'])->group(
        Route::get('workflow/list/all', 'Workflow\NewWorkFlowController@ListAllWorkflows');
        Route::get('workflow/same/from/status', 'Workflow\NewWorkFlowController@SameFromWorkflow');
        Route::post('workflow2/updateactive', 'Workflow\NewWorkFlowController@updateactive');
+       Route::get('workflow/export', 'Workflow\NewWorkFlowController@exportWorkflows')->name('workflow.export');
        //Route::resource('searchs', Search\SearchController::class);
        Route::get('/search/result', 'Search\SearchController@search_result');
       // Route::get('/search/advanced_search', 'Search\SearchController@advanced_search');

@@ -46,6 +46,11 @@ class NewWorkFlow extends Model
         return $this->hasMany(NewWorkFlowStatuses::class,'new_workflow_id');
     }
 
+    public function type()
+    {
+        return $this->belongsTo(WorkFlowType::class,'type_id');
+    }
+
    /*public function workflowStatuses()
     {
         return $this->hasMany(NewWorkFlowStatuses::class, 'new_workflow_id', 'id');

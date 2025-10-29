@@ -35,6 +35,7 @@ class NewWorkflowRepository implements NewWorkflowRepositoryInterface
             'from_status', 
             'workflowstatus.to_status',
             'previous_status',
+            'type:id,name',
         ])->get();
 
     }

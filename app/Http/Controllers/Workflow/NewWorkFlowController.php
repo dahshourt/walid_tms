@@ -13,6 +13,7 @@ use App\Http\Repository\Statuses\StatusWorkFlowRepository;
 use App\Factories\Workflow\WorkflowFactory;
 use Illuminate\Http\Request;
 use App\Http\Resources\WorkFlowResource;
+use Maatwebsite\Excel\Facades\Excel;
 
 class NewWorkFlowController extends Controller
 {
@@ -38,9 +39,8 @@ class NewWorkFlowController extends Controller
         $this->authorize('List Workflows'); // permission check
        
         $collection = $this->NewWorkflow->ListAllWorkflowWithoutRelease();
-        $types = (new Workflow_type_repository)->get_workflow_all_subtype();
 
-        return view("$this->view.index",compact('collection','types'));
+        return view("$this->view.index",compact('collection'));
     }
 
     public function ListAllWorkflows()
@@ -175,6 +175,14 @@ class NewWorkFlowController extends Controller
         }
         $same_time_from = $request->same_time_from;
         return view("$this->view.from_previous",compact('same_time_from','statuses'));
+    }
+
+    public function exportWorkflows()
+    {
+        $this->authorize('List Workflows'); // permission check
+
+        $filename = 'workflows_' . now()->format('Y_m_d_H_i_s') . '.xlsx';
+        return Excel::download(new \App\Exports\WorkflowsExport(), $filename);
     }
 
 }
