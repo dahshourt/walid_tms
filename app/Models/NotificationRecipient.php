@@ -10,8 +10,8 @@ class NotificationRecipient extends Model
     use HasFactory;
 
     protected $fillable = [
-        'notification_rule_id', 'channel', 
-        'recipient_type', 'recipient_identifier'
+        'notification_rule_id', 'channel',
+        'recipient_type', 'recipient_identifier',
     ];
 
     public function rule()

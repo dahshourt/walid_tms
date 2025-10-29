@@ -11,7 +11,7 @@ class CustomFieldsTableSeeder extends Seeder
     {
         // Disable foreign key checks to avoid constraint issues
         DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        
+
         // Insert new custom fields
         $fields = [
             [
@@ -22,7 +22,7 @@ class CustomFieldsTableSeeder extends Seeder
                 'class' => 'date',
                 'active' => '1',
                 'created_at' => null,
-                'updated_at' => null
+                'updated_at' => null,
             ],
             [
                 'id' => 99,
@@ -32,7 +32,7 @@ class CustomFieldsTableSeeder extends Seeder
                 'class' => 'checkbox',
                 'active' => '1',
                 'created_at' => null,
-                'updated_at' => null
+                'updated_at' => null,
             ],
             [
                 'id' => 100,
@@ -42,7 +42,7 @@ class CustomFieldsTableSeeder extends Seeder
                 'class' => 'radio',
                 'active' => '1',
                 'created_at' => null,
-                'updated_at' => null
+                'updated_at' => null,
             ],
             [
                 'id' => 101,
@@ -52,7 +52,7 @@ class CustomFieldsTableSeeder extends Seeder
                 'class' => 'text',
                 'active' => '1',
                 'created_at' => null,
-                'updated_at' => null
+                'updated_at' => null,
             ],
             [
                 'id' => 102,
@@ -64,8 +64,8 @@ class CustomFieldsTableSeeder extends Seeder
                 'related_table' => 'applications',
                 'active' => '1',
                 'created_at' => null,
-                'updated_at' => null
-            ]
+                'updated_at' => null,
+            ],
         ];
 
         // Insert or update the fields
@@ -84,7 +84,7 @@ class CustomFieldsTableSeeder extends Seeder
             'proposed_available_time',
             'kick_off_meeting_date',
             'accumulative_mds',
-            'Deployment Date'
+            'Deployment Date',
         ];
 
         DB::table('custom_fields')

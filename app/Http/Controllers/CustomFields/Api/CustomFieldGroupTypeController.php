@@ -215,6 +215,6 @@ class CustomFieldGroupTypeController extends Controller
         $CustomFields = $this->custom_field_group_type->CustomFieldsForReleases($form_type);
         $CustomFields = CustomFieldSelectedGroupResource::collection($CustomFields);
 
-        return response()->json(['data' => $CustomFields],200);
+        return response()->json(['data' => $CustomFields], 200);
     }
 }

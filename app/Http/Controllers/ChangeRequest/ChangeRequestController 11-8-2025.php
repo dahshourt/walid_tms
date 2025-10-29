@@ -908,7 +908,7 @@ class ChangeRequestController extends Controller
     {
 
         $id = $request->id;
-        $changerequest = $this->changerequest->UpateChangeRequestStatus($id,$request);
+        $changerequest = $this->changerequest->UpateChangeRequestStatus($id, $request);
 
         // $this->changerequest->updateStatus($id);
 

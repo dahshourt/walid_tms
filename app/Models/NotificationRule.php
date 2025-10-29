@@ -8,14 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 class NotificationRule extends Model
 {
     use HasFactory;
+
     protected $fillable = [
-        'name', 'code', 'description', 'event_class', 
-        'conditions', 'template_id', 'is_active', 'priority'
+        'name', 'code', 'description', 'event_class',
+        'conditions', 'template_id', 'is_active', 'priority',
     ];
 
     protected $casts = [
         'conditions' => 'array',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
     ];
 
     public function template()

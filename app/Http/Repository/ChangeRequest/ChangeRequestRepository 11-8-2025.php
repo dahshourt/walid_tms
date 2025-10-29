@@ -865,8 +865,8 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
                 ]);
             } else { // approve
                 $CabCr->cab_cr_user()->where('user_id', $user_id)->update([
-                        'status' => '1',
-                    ]);
+                    'status' => '1',
+                ]);
 
                 $count_all_users = $CabCr->cab_cr_user->count(); // get count for all users that are approve CR
                 $count_approved_users = $CabCr->cab_cr_user->where('status', '1')->count(); // get count for all users that need to take action on cr}
@@ -943,8 +943,8 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
                     ]);
                 } else { // approve
                     $TechnicalCr->technical_cr_team()->where('group_id', $technical_default_group)->update([
-                            'status' => '1',
-                        ]);
+                        'status' => '1',
+                    ]);
 
                     $count_all_teams = $TechnicalCr->technical_cr_team->count(); // get count for all users that are approve CR
                     $count_approved_teams = $TechnicalCr->technical_cr_team->where('status', '1')->count(); // get count for all users that need to take action on cr}

@@ -1,354 +1,85 @@
 <?php
+
 namespace App\Services\ChangeRequest;
 
-use App\Models\{
-    Change_request, 
-    User, 
-    TechnicalCr, 
-    TechnicalCrTeam, 
-    NewWorkFlow, 
-    Status
-};
-use App\Models\Change_request_statuse as ChangeRequestStatus;
-use Carbon\Carbon;
-use App\Traits\ChangeRequest\ChangeRequestConstants;
-use App\Services\ChangeRequest\{
-    ChangeRequestUpdateService
-};
-use Auth;
 use App\Http\Repository\ChangeRequest\ChangeRequestStatusRepository;
+use App\Models\Change_request;
+use App\Models\Change_request_statuse as ChangeRequestStatus;
+use App\Models\NewWorkFlow;
+use App\Models\Status;
+use App\Models\TechnicalCr;
+use App\Models\TechnicalCrTeam;
+use App\Models\User;
+use App\Traits\ChangeRequest\ChangeRequestConstants;
+use Auth;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class ChangeRequestValidationService
 {
     use ChangeRequestConstants;
-	private const ACTIVE_STATUS = '1';
+
+    private const ACTIVE_STATUS = '1';
+
     private const INACTIVE_STATUS = '0';
+
     private const COMPLETED_STATUS = '2';
-	
-	public static array $ACTIVE_STATUS_ARRAY = [self::ACTIVE_STATUS,1];
-	public static array $INACTIVE_STATUS_ARRAY = [self::INACTIVE_STATUS,0];
-    public static array $COMPLETED_STATUS_ARRAY = [self::COMPLETED_STATUS,2];
-    
+
+    public static array $ACTIVE_STATUS_ARRAY = [self::ACTIVE_STATUS, 1];
+
+    public static array $INACTIVE_STATUS_ARRAY = [self::INACTIVE_STATUS, 0];
+
+    public static array $COMPLETED_STATUS_ARRAY = [self::COMPLETED_STATUS, 2];
+
     /**
      * Handle technical team validation workflow
      *
-     * @param int $id
-     * @param mixed $request
-     * @return bool
+     * @param  int  $id
+     * @param  mixed  $request
      */
     public function handleTechnicalTeamValidation($id, $request): bool
     {
-		
+
         $newStatusId = $request->new_status_id ?? null;
         $oldStatusId = $request->old_status_id ?? null;
 
-        if (!$newStatusId || !$oldStatusId) {
+        if (! $newStatusId || ! $oldStatusId) {
             return false;
         }
 
         $workflow = NewWorkFlow::find($newStatusId);
         $oldStatusData = Status::find($oldStatusId);
 
-        if (!$oldStatusData || !$oldStatusData->view_technical_team_flag) {
+        if (! $oldStatusData || ! $oldStatusData->view_technical_team_flag) {
             return false;
         }
 
         $technicalDefaultGroup = session('default_group') ?: auth()->user()->default_group;
         $cr = Change_request::find($id);
-        $technicalCr = TechnicalCr::where("cr_id", $id)->whereRaw('CAST(status AS CHAR) = ?', ['0'])->first();
+        $technicalCr = TechnicalCr::where('cr_id', $id)->whereRaw('CAST(status AS CHAR) = ?', ['0'])->first();
 
-        if (!$technicalCr) {
+        if (! $technicalCr) {
             return false;
         }
         $updateService = new ChangeRequestUpdateService();
-		$updateService->mirrorCrStatusToTechStreams($id, (int) $workflow->workflowstatus[0]->to_status_id, null, 'actor');
+        $updateService->mirrorCrStatusToTechStreams($id, (int) $workflow->workflowstatus[0]->to_status_id, null, 'actor');
+
         return $this->processTechnicalTeamStatus($technicalCr, $oldStatusData, $workflow, $technicalDefaultGroup, $request);
     }
 
     /**
-     * Process technical team status based on workflow
-     *
-     * @param TechnicalCr $technicalCr
-     * @param Status $oldStatusData
-     * @param NewWorkFlow $workflow
-     * @param int $group
-     * @param mixed $request
-     * @return bool
-     */
-    protected function processTechnicalTeamStatus($technicalCr, $oldStatusData, $workflow, $group, $request): bool
-    {
-        $statusIds = $this->getStatusIds();
-        $toStatusData = NewWorkFlow::find($request->new_status_id);
-        $parkedIds = array_values(config('change_request.parked_status_ids', []));
-        $promo_unparked_ids = array_values(config('change_request.promo_unparked_ids', []));
-        
-        $this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$group);
-        
-        
-        if (in_array($toStatusData->workflowstatus[0]->to_status->id, $parkedIds, true)) {
-            $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
-            
-            if ($checkWorkflowType) { // reject
-                $technicalCr->status = '2';
-                $technicalCr->save();
-                $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '2']);
-                foreach($technicalCr->technical_cr_team->pluck('group_id')->toArray() as $key=>$groupId)
-                {
-                    //$this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
-					if($groupId != $group) $this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
-                }
-            } else { // approve
-                $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
-    
-                $countAllTeams = $technicalCr->technical_cr_team->count();
-                $countApprovedTeams = $technicalCr->technical_cr_team()->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
-    
-                if ($countAllTeams > $countApprovedTeams) {
-                    return true; // Still waiting for other teams
-                } else {
-                    $technicalCr->status = '1';
-                    $technicalCr->save();
-                }
-            }
-    
-            return false;
-        }
-        else
-        {
-			
-            // handle if next status is also technical flag
-            if($toStatusData->workflowstatus[0]->to_status->view_technical_team_flag)
-            {
-				$technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
-            
-                TechnicalCrTeam::create([
-                    'group_id' => $group,
-                    'technical_cr_id' => $technicalCr->id,
-                    'current_status_id' => $workflow->workflowstatus[0]->to_status_id,
-                    'status' => "0",
-                ]);
-                $newStatusRow = Status::find($workflow->workflowstatus[0]->to_status_id);
-                $previous_group_id = session('current_group') ?: auth()->user()->default_group;
-				
-                $payload = $this->buildStatusData(
-                    $technicalCr->cr_id,
-                    $request->old_status_id,
-                    (int) $workflow->workflowstatus[0]->to_status_id,
-                    $group,
-                    (int) $group,
-                    (int) $previous_group_id,
-                    //(int) $newStatusRow->group_statuses->where('type','2')->pluck('group_id')->toArray()[0],
-                    (int) $group,
-                    Auth::id(),
-                    '1'
-                );
-                $statusRepository = new ChangeRequestStatusRepository();
-                $statusRepository->create($payload);
-                return true;
-            }
-            else // no need to wait other teams
-            {
-				
-                $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
-				if ($checkWorkflowType) { // reject
-					$technicalCr->status = '2';
-                    $technicalCr->save();
-                    $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '2']);
-                    foreach($technicalCr->technical_cr_team->pluck('group_id')->toArray() as $key=>$groupId)
-                    {
-						if($groupId != $group) $this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
-                    }
-                }
-                else
-                {
-					
-					if (in_array($toStatusData->workflowstatus[0]->to_status->id, $promo_unparked_ids, true)) 
-					{
-						$technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
-						$newStatusRow = Status::find($workflow->workflowstatus[0]->to_status_id);
-						$previous_group_id = session('current_group') ?: auth()->user()->default_group;
-						$payload = $this->buildStatusData(
-							$technicalCr->cr_id,
-							$request->old_status_id,
-							(int) $workflow->workflowstatus[0]->to_status_id,
-							NULL,
-							(int) $group,
-							(int) $previous_group_id,
-							(int) $newStatusRow->group_statuses->where('type','2')->pluck('group_id')->toArray()[0],
-							Auth::id(),
-							'1'
-						);
-						$statusRepository = new ChangeRequestStatusRepository();
-						$statusRepository->create($payload);
-						return true;
-					}
-					else
-					{
-						$technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
-						$countAllTeams = $technicalCr->technical_cr_team->count();
-						$countApprovedTeams = $technicalCr->technical_cr_team()->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
-						if ($countAllTeams == $countApprovedTeams) {
-							$technicalCr->status = '1';
-							$technicalCr->save();
-						}	
-					}
-                    
-                }
-                
-                return false;
-            }
-        }
-        // Handle pending production deployment case
-        if ($oldStatusData->id == $statusIds['pending_production_deployment']) {
-            $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
-            
-            TechnicalCrTeam::create([
-                'group_id' => $group,
-                'technical_cr_id' => $technicalCr->id,
-                'current_status_id' => $workflow->workflowstatus[0]->to_status_id,
-                'status' => "0",
-            ]);
-
-           
-
-            
-            return true;
-        }
-
-        // Handle production deployment case
-        if ($oldStatusData->id == $statusIds['production_deployment']) {
-            $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
-            
-            $countAllTeams = $technicalCr->technical_cr_team->count();
-            $countApprovedTeams = $technicalCr->technical_cr_team()->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
-            
-            if ($countAllTeams == $countApprovedTeams) {
-                $technicalCr->status = '1';
-                $technicalCr->save();
-            }
-            
-            return true;
-        }
-
-        // Handle approve/reject workflow
-        $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
-
-        if ($checkWorkflowType) { // reject
-            $technicalCr->status = '2';
-            $technicalCr->save();
-            $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '2']);
-            foreach($technicalCr->technical_cr_team->pluck('group_id')->toArray() as $key=>$groupId)
-            {
-				if($groupId != $group) $this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
-				//$this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
-            }
-        } else { // approve
-            $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
-
-            $countAllTeams = $technicalCr->technical_cr_team->count();
-            $countApprovedTeams = $technicalCr->technical_cr_team()->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
-
-            if ($countAllTeams > $countApprovedTeams) {
-                return true; // Still waiting for other teams
-            } else {
-                $technicalCr->status = '1';
-                $technicalCr->save();
-            }
-        }
-
-        return false;
-    }
-
-
-    /**
-     * Update the current status record
-     */
-    private function updateCurrentStatusByGroup(int $changeRequestId, array $statusData , int $groupId ): void {
-        $currentStatus = ChangeRequestStatus::where('cr_id', $changeRequestId)
-            ->where('new_status_id', $statusData['id'])
-            ->where('group_id', $groupId)
-            //->where('active','1')
-			//->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-			->whereRaw('CAST(active AS CHAR) = ?', ['1'])
-            ->first();
-
-        if (!$currentStatus) {
-            Log::warning('Current status not found for update', [
-                'cr_id' => $changeRequestId,
-                'old_status_id' => $statusData['old_status_id']
-            ]);
-            return;
-        }
-
-        $workflowActive = '2';
-
-        $slaDifference = $this->calculateSlaDifference($currentStatus->created_at);
-        // Only update if conditions are met
-            $currentStatus->update([
-                'sla_dif' => $slaDifference,
-                'active' => $workflowActive
-            ]);
-
-    }
-	
-	
-    /**
-     * Calculate SLA difference in days
-     */
-    private function calculateSlaDifference(string $createdAt): int
-    {
-        return Carbon::parse($createdAt)->diffInDays(Carbon::now());
-    }
-
-
-    /**
-     * Build status data array
-     */
-    private function buildStatusData(
-        int $changeRequestId,
-        int $oldStatusId,
-        int $newStatusId,
-        ?int $group_id,
-        ?int $reference_group_id,
-        ?int $previous_group_id,
-        ?int $current_group_id,
-        int $userId,
-        string $active
-    ): array {
-        $status = Status::find($newStatusId);
-        $sla    = $status ? (int) $status->sla : 0;
-
-        return [
-            'cr_id'                     => $changeRequestId,
-            'old_status_id'             => $oldStatusId,
-            'new_status_id'             => $newStatusId,
-            'group_id'                  => $group_id,
-            'reference_group_id'        => $reference_group_id,
-            'previous_group_id'         => $previous_group_id,
-            'current_group_id'          => $current_group_id,
-            'user_id'                   => $userId,
-            'sla'                       => $sla,
-            'active'                    => $active, // '0' | '1' | '2'
-        ];
-    }
-
-
-
-    /**
      * Validate user permissions for change request operations
      *
-     * @param int $crId
-     * @param int $userId
-     * @param string $operation
-     * @return bool
+     * @param  int  $crId
+     * @param  int  $userId
+     * @param  string  $operation
      */
     public function validateUserPermissions($crId, $userId, $operation = 'update'): bool
     {
         $cr = Change_request::find($crId);
         $user = User::find($userId);
 
-        if (!$cr || !$user) {
+        if (! $cr || ! $user) {
             return false;
         }
 
@@ -371,137 +102,11 @@ class ChangeRequestValidationService
     }
 
     /**
-     * Check if user can create change requests
-     *
-     * @param User $user
-     * @return bool
-     */
-    protected function canCreateChangeRequest(User $user): bool
-    {
-        // Basic permission check - all authenticated users can create CRs
-        return true;
-    }
-
-    /**
-     * Check if user can update a change request
-     *
-     * @param Change_request $cr
-     * @param User $user
-     * @return bool
-     */
-    protected function canUpdateChangeRequest(Change_request $cr, User $user): bool
-    {
-        // Requester can always update their own CR
-        if ($cr->requester_id == $user->id) {
-            return true;
-        }
-
-        // Division manager can update CRs under their division
-        if (strtolower($cr->division_manager) === strtolower($user->email)) {
-            return true;
-        }
-
-        // Assigned users can update the CR
-        if (in_array($user->id, [$cr->developer_id, $cr->tester_id, $cr->designer_id])) {
-            return true;
-        }
-
-        // Users with admin privileges
-        $adminGroups = [
-            $this->getGroupIds()['admin'],
-            $this->getGroupIds()['management']
-        ];
-
-        $userGroups = $user->user_groups->pluck('group_id')->toArray();
-        
-        return !empty(array_intersect($adminGroups, $userGroups));
-    }
-
-    /**
-     * Check if user can delete a change request
-     *
-     * @param Change_request $cr
-     * @param User $user
-     * @return bool
-     */
-    protected function canDeleteChangeRequest(Change_request $cr, User $user): bool
-    {
-        // Only requester and admins can delete
-        if ($cr->requester_id == $user->id) {
-            return true;
-        }
-
-        $adminGroups = [$this->getGroupIds()['admin']];
-        $userGroups = $user->user_groups->pluck('group_id')->toArray();
-        
-        return !empty(array_intersect($adminGroups, $userGroups));
-    }
-
-    /**
-     * Check if user can assign change requests
-     *
-     * @param Change_request $cr
-     * @param User $user
-     * @return bool
-     */
-    protected function canAssignChangeRequest(Change_request $cr, User $user): bool
-    {
-        // Team leads and managers can assign
-        $managerGroups = [
-            $this->getGroupIds()['admin'],
-            $this->getGroupIds()['management']
-        ];
-
-        $userGroups = $user->user_groups->pluck('group_id')->toArray();
-        
-        return !empty(array_intersect($managerGroups, $userGroups));
-    }
-
-    /**
-     * Check if user can approve change requests
-     *
-     * @param Change_request $cr
-     * @param User $user
-     * @return bool
-     */
-    protected function canApproveChangeRequest(Change_request $cr, User $user): bool
-    {
-        // Division manager can approve business requirements
-        if (strtolower($cr->division_manager) === strtolower($user->email)) {
-            return true;
-        }
-
-        // Technical team members can approve technical aspects
-        $technicalGroups = [
-            $this->getGroupIds()['technical_team'],
-            $this->getGroupIds()['admin']
-        ];
-
-        $userGroups = $user->user_groups->pluck('group_id')->toArray();
-        
-        return !empty(array_intersect($technicalGroups, $userGroups));
-    }
-
-    /**
-     * Check if user can reject change requests
-     *
-     * @param Change_request $cr
-     * @param User $user
-     * @return bool
-     */
-    protected function canRejectChangeRequest(Change_request $cr, User $user): bool
-    {
-        // Same permissions as approve
-        return $this->canApproveChangeRequest($cr, $user);
-    }
-
-    /**
      * Validate workflow transition
      *
-     * @param int $fromStatus
-     * @param int $toStatus
-     * @param int $workflowType
-     * @return bool
+     * @param  int  $fromStatus
+     * @param  int  $toStatus
+     * @param  int  $workflowType
      */
     public function validateWorkflowTransition($fromStatus, $toStatus, $workflowType): bool
     {
@@ -518,9 +123,7 @@ class ChangeRequestValidationService
     /**
      * Validate change request data before creation/update
      *
-     * @param array $data
-     * @param int|null $crId
-     * @return array
+     * @param  int|null  $crId
      */
     public function validateChangeRequestData(array $data, $crId = null): array
     {
@@ -544,10 +147,352 @@ class ChangeRequestValidationService
     }
 
     /**
-     * Validate field constraints
+     * Validate file uploads
+     */
+    public function validateFileUploads(array $files): array
+    {
+        $errors = [];
+        $uploadConfig = $this->getUploadConfiguration();
+
+        foreach ($files as $key => $fileArray) {
+            if (is_array($fileArray)) {
+                foreach ($fileArray as $index => $file) {
+                    $fileErrors = $this->validateSingleFile($file, $uploadConfig);
+                    if (! empty($fileErrors)) {
+                        $errors["{$key}.{$index}"] = $fileErrors;
+                    }
+                }
+            } else {
+                $fileErrors = $this->validateSingleFile($fileArray, $uploadConfig);
+                if (! empty($fileErrors)) {
+                    $errors[$key] = $fileErrors;
+                }
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Validate custom field values
+     */
+    public function validateCustomFields(array $customFields): array
+    {
+        $errors = [];
+        $customFieldConfig = $this->getCustomFieldConfiguration();
+
+        if (! $customFieldConfig['enabled']) {
+            return ['custom_fields' => 'Custom fields are not enabled.'];
+        }
+
+        if (count($customFields) > $customFieldConfig['max_per_request']) {
+            $errors['custom_fields'] = "Maximum {$customFieldConfig['max_per_request']} custom fields allowed per request.";
+        }
+
+        foreach ($customFields as $fieldName => $fieldValue) {
+            // Skip system fields
+            if (in_array($fieldName, ['_token', '_method'])) {
+                continue;
+            }
+
+            // Validate field value based on type (if type information is available)
+            $fieldErrors = $this->validateCustomFieldValue($fieldName, $fieldValue);
+            if (! empty($fieldErrors)) {
+                $errors[$fieldName] = $fieldErrors;
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Process technical team status based on workflow
      *
-     * @param array $data
-     * @return array
+     * @param  TechnicalCr  $technicalCr
+     * @param  Status  $oldStatusData
+     * @param  NewWorkFlow  $workflow
+     * @param  int  $group
+     * @param  mixed  $request
+     */
+    protected function processTechnicalTeamStatus($technicalCr, $oldStatusData, $workflow, $group, $request): bool
+    {
+        $statusIds = $this->getStatusIds();
+        $toStatusData = NewWorkFlow::find($request->new_status_id);
+        $parkedIds = array_values(config('change_request.parked_status_ids', []));
+        $promo_unparked_ids = array_values(config('change_request.promo_unparked_ids', []));
+
+        $this->updateCurrentStatusByGroup($technicalCr->cr_id, $oldStatusData->toArray(), $group);
+
+        if (in_array($toStatusData->workflowstatus[0]->to_status->id, $parkedIds, true)) {
+            $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
+
+            if ($checkWorkflowType) { // reject
+                $technicalCr->status = '2';
+                $technicalCr->save();
+                $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '2']);
+                foreach ($technicalCr->technical_cr_team->pluck('group_id')->toArray() as $key => $groupId) {
+                    // $this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
+                    if ($groupId != $group) {
+                        $this->updateCurrentStatusByGroup($technicalCr->cr_id, $oldStatusData->toArray(), $groupId);
+                    }
+                }
+            } else { // approve
+                $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
+
+                $countAllTeams = $technicalCr->technical_cr_team->count();
+                $countApprovedTeams = $technicalCr->technical_cr_team()->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
+
+                if ($countAllTeams > $countApprovedTeams) {
+                    return true; // Still waiting for other teams
+                }
+                $technicalCr->status = '1';
+                $technicalCr->save();
+
+            }
+
+            return false;
+        }
+
+        // handle if next status is also technical flag
+        if ($toStatusData->workflowstatus[0]->to_status->view_technical_team_flag) {
+            $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
+
+            TechnicalCrTeam::create([
+                'group_id' => $group,
+                'technical_cr_id' => $technicalCr->id,
+                'current_status_id' => $workflow->workflowstatus[0]->to_status_id,
+                'status' => '0',
+            ]);
+            $newStatusRow = Status::find($workflow->workflowstatus[0]->to_status_id);
+            $previous_group_id = session('current_group') ?: auth()->user()->default_group;
+
+            $payload = $this->buildStatusData(
+                $technicalCr->cr_id,
+                $request->old_status_id,
+                (int) $workflow->workflowstatus[0]->to_status_id,
+                $group,
+                (int) $group,
+                (int) $previous_group_id,
+                // (int) $newStatusRow->group_statuses->where('type','2')->pluck('group_id')->toArray()[0],
+                (int) $group,
+                Auth::id(),
+                '1'
+            );
+            $statusRepository = new ChangeRequestStatusRepository();
+            $statusRepository->create($payload);
+
+            return true;
+        }
+        // no need to wait other teams
+
+        $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
+        if ($checkWorkflowType) { // reject
+            $technicalCr->status = '2';
+            $technicalCr->save();
+            $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '2']);
+            foreach ($technicalCr->technical_cr_team->pluck('group_id')->toArray() as $key => $groupId) {
+                if ($groupId != $group) {
+                    $this->updateCurrentStatusByGroup($technicalCr->cr_id, $oldStatusData->toArray(), $groupId);
+                }
+            }
+        } else {
+
+            if (in_array($toStatusData->workflowstatus[0]->to_status->id, $promo_unparked_ids, true)) {
+                $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
+                $newStatusRow = Status::find($workflow->workflowstatus[0]->to_status_id);
+                $previous_group_id = session('current_group') ?: auth()->user()->default_group;
+                $payload = $this->buildStatusData(
+                    $technicalCr->cr_id,
+                    $request->old_status_id,
+                    (int) $workflow->workflowstatus[0]->to_status_id,
+                    null,
+                    (int) $group,
+                    (int) $previous_group_id,
+                    (int) $newStatusRow->group_statuses->where('type', '2')->pluck('group_id')->toArray()[0],
+                    Auth::id(),
+                    '1'
+                );
+                $statusRepository = new ChangeRequestStatusRepository();
+                $statusRepository->create($payload);
+
+                return true;
+            }
+
+            $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
+            $countAllTeams = $technicalCr->technical_cr_team->count();
+            $countApprovedTeams = $technicalCr->technical_cr_team()->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
+            if ($countAllTeams == $countApprovedTeams) {
+                $technicalCr->status = '1';
+                $technicalCr->save();
+            }
+
+        }
+
+        return false;
+
+        // Handle pending production deployment case
+        if ($oldStatusData->id == $statusIds['pending_production_deployment']) {
+            $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
+
+            TechnicalCrTeam::create([
+                'group_id' => $group,
+                'technical_cr_id' => $technicalCr->id,
+                'current_status_id' => $workflow->workflowstatus[0]->to_status_id,
+                'status' => '0',
+            ]);
+
+            return true;
+        }
+
+        // Handle production deployment case
+        if ($oldStatusData->id == $statusIds['production_deployment']) {
+            $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
+
+            $countAllTeams = $technicalCr->technical_cr_team->count();
+            $countApprovedTeams = $technicalCr->technical_cr_team()->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
+
+            if ($countAllTeams == $countApprovedTeams) {
+                $technicalCr->status = '1';
+                $technicalCr->save();
+            }
+
+            return true;
+        }
+
+        // Handle approve/reject workflow
+        $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
+
+        if ($checkWorkflowType) { // reject
+            $technicalCr->status = '2';
+            $technicalCr->save();
+            $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '2']);
+            foreach ($technicalCr->technical_cr_team->pluck('group_id')->toArray() as $key => $groupId) {
+                if ($groupId != $group) {
+                    $this->updateCurrentStatusByGroup($technicalCr->cr_id, $oldStatusData->toArray(), $groupId);
+                }
+                // $this->updateCurrentStatusByGroup($technicalCr->cr_id,$oldStatusData->toArray(),$groupId);
+            }
+        } else { // approve
+            $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
+
+            $countAllTeams = $technicalCr->technical_cr_team->count();
+            $countApprovedTeams = $technicalCr->technical_cr_team()->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
+
+            if ($countAllTeams > $countApprovedTeams) {
+                return true; // Still waiting for other teams
+            }
+            $technicalCr->status = '1';
+            $technicalCr->save();
+
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if user can create change requests
+     */
+    protected function canCreateChangeRequest(User $user): bool
+    {
+        // Basic permission check - all authenticated users can create CRs
+        return true;
+    }
+
+    /**
+     * Check if user can update a change request
+     */
+    protected function canUpdateChangeRequest(Change_request $cr, User $user): bool
+    {
+        // Requester can always update their own CR
+        if ($cr->requester_id == $user->id) {
+            return true;
+        }
+
+        // Division manager can update CRs under their division
+        if (strtolower($cr->division_manager) === strtolower($user->email)) {
+            return true;
+        }
+
+        // Assigned users can update the CR
+        if (in_array($user->id, [$cr->developer_id, $cr->tester_id, $cr->designer_id])) {
+            return true;
+        }
+
+        // Users with admin privileges
+        $adminGroups = [
+            $this->getGroupIds()['admin'],
+            $this->getGroupIds()['management'],
+        ];
+
+        $userGroups = $user->user_groups->pluck('group_id')->toArray();
+
+        return ! empty(array_intersect($adminGroups, $userGroups));
+    }
+
+    /**
+     * Check if user can delete a change request
+     */
+    protected function canDeleteChangeRequest(Change_request $cr, User $user): bool
+    {
+        // Only requester and admins can delete
+        if ($cr->requester_id == $user->id) {
+            return true;
+        }
+
+        $adminGroups = [$this->getGroupIds()['admin']];
+        $userGroups = $user->user_groups->pluck('group_id')->toArray();
+
+        return ! empty(array_intersect($adminGroups, $userGroups));
+    }
+
+    /**
+     * Check if user can assign change requests
+     */
+    protected function canAssignChangeRequest(Change_request $cr, User $user): bool
+    {
+        // Team leads and managers can assign
+        $managerGroups = [
+            $this->getGroupIds()['admin'],
+            $this->getGroupIds()['management'],
+        ];
+
+        $userGroups = $user->user_groups->pluck('group_id')->toArray();
+
+        return ! empty(array_intersect($managerGroups, $userGroups));
+    }
+
+    /**
+     * Check if user can approve change requests
+     */
+    protected function canApproveChangeRequest(Change_request $cr, User $user): bool
+    {
+        // Division manager can approve business requirements
+        if (strtolower($cr->division_manager) === strtolower($user->email)) {
+            return true;
+        }
+
+        // Technical team members can approve technical aspects
+        $technicalGroups = [
+            $this->getGroupIds()['technical_team'],
+            $this->getGroupIds()['admin'],
+        ];
+
+        $userGroups = $user->user_groups->pluck('group_id')->toArray();
+
+        return ! empty(array_intersect($technicalGroups, $userGroups));
+    }
+
+    /**
+     * Check if user can reject change requests
+     */
+    protected function canRejectChangeRequest(Change_request $cr, User $user): bool
+    {
+        // Same permissions as approve
+        return $this->canApproveChangeRequest($cr, $user);
+    }
+
+    /**
+     * Validate field constraints
      */
     protected function validateFieldConstraints(array $data): array
     {
@@ -573,7 +518,7 @@ class ChangeRequestValidationService
 
         // Validate workflow type
         if (isset($data['workflow_type_id'])) {
-            if (!$this->isValidWorkflowType($data['workflow_type_id'])) {
+            if (! $this->isValidWorkflowType($data['workflow_type_id'])) {
                 $errors['workflow_type_id'] = 'Invalid workflow type selected.';
             }
         }
@@ -582,7 +527,7 @@ class ChangeRequestValidationService
         $estimationFields = ['design_duration', 'develop_duration', 'test_duration', 'CR_duration'];
         foreach ($estimationFields as $field) {
             if (isset($data[$field]) && $data[$field] !== null) {
-                if (!is_numeric($data[$field]) || $data[$field] < 0) {
+                if (! is_numeric($data[$field]) || $data[$field] < 0) {
                     $errors[$field] = "The {$field} must be a positive number.";
                 }
                 if ($data[$field] > 2000) {
@@ -592,13 +537,13 @@ class ChangeRequestValidationService
         }
 
         // Validate email format for division manager
-        if (isset($data['division_manager']) && !filter_var($data['division_manager'], FILTER_VALIDATE_EMAIL)) {
+        if (isset($data['division_manager']) && ! filter_var($data['division_manager'], FILTER_VALIDATE_EMAIL)) {
             $errors['division_manager'] = 'Division manager must be a valid email address.';
         }
 
         // Validate mobile number format
-        if (isset($data['creator_mobile_number']) && !empty($data['creator_mobile_number'])) {
-            if (!preg_match('/^[0-9\-\+\s\(\)]+$/', $data['creator_mobile_number'])) {
+        if (isset($data['creator_mobile_number']) && ! empty($data['creator_mobile_number'])) {
+            if (! preg_match('/^[0-9\-\+\s\(\)]+$/', $data['creator_mobile_number'])) {
                 $errors['creator_mobile_number'] = 'Invalid mobile number format.';
             }
         }
@@ -609,9 +554,7 @@ class ChangeRequestValidationService
     /**
      * Validate business rules
      *
-     * @param array $data
-     * @param int|null $crId
-     * @return array
+     * @param  int|null  $crId
      */
     protected function validateBusinessRules(array $data, $crId = null): array
     {
@@ -635,7 +578,7 @@ class ChangeRequestValidationService
         $userFields = ['developer_id', 'tester_id', 'designer_id'];
         foreach ($userFields as $field) {
             if (isset($data[$field]) && $data[$field]) {
-                if (!User::where('id', $data[$field])->where('active', 1)->exists()) {
+                if (! User::where('id', $data[$field])->where('active', 1)->exists()) {
                     $errors[$field] = 'Selected user does not exist or is inactive.';
                 }
             }
@@ -656,7 +599,7 @@ class ChangeRequestValidationService
         }
 
         // Validate calendar date for scheduled CRs
-        if (isset($data['calendar']) && !empty($data['calendar'])) {
+        if (isset($data['calendar']) && ! empty($data['calendar'])) {
             $calendarDate = \Carbon\Carbon::parse($data['calendar']);
             if ($calendarDate->isPast()) {
                 $errors['calendar'] = 'Calendar date cannot be in the past.';
@@ -669,10 +612,9 @@ class ChangeRequestValidationService
     /**
      * Check for circular dependencies
      *
-     * @param int $crId
-     * @param int $dependCrId
-     * @param array $visited
-     * @return bool
+     * @param  int  $crId
+     * @param  int  $dependCrId
+     * @param  array  $visited
      */
     protected function hasCircularDependency($crId, $dependCrId, $visited = []): bool
     {
@@ -695,48 +637,17 @@ class ChangeRequestValidationService
     }
 
     /**
-     * Validate file uploads
-     *
-     * @param array $files
-     * @return array
-     */
-    public function validateFileUploads(array $files): array
-    {
-        $errors = [];
-        $uploadConfig = $this->getUploadConfiguration();
-
-        foreach ($files as $key => $fileArray) {
-            if (is_array($fileArray)) {
-                foreach ($fileArray as $index => $file) {
-                    $fileErrors = $this->validateSingleFile($file, $uploadConfig);
-                    if (!empty($fileErrors)) {
-                        $errors["{$key}.{$index}"] = $fileErrors;
-                    }
-                }
-            } else {
-                $fileErrors = $this->validateSingleFile($fileArray, $uploadConfig);
-                if (!empty($fileErrors)) {
-                    $errors[$key] = $fileErrors;
-                }
-            }
-        }
-
-        return $errors;
-    }
-
-    /**
      * Validate a single file upload
      *
-     * @param mixed $file
-     * @param array $config
-     * @return array
+     * @param  mixed  $file
      */
     protected function validateSingleFile($file, array $config): array
     {
         $errors = [];
 
-        if (!$file || !$file->isValid()) {
+        if (! $file || ! $file->isValid()) {
             $errors[] = 'Invalid file upload.';
+
             return $errors;
         }
 
@@ -747,13 +658,13 @@ class ChangeRequestValidationService
 
         // Check file extension
         $extension = strtolower($file->getClientOriginalExtension());
-        if (!in_array($extension, $config['allowed_extensions'])) {
+        if (! in_array($extension, $config['allowed_extensions'])) {
             $errors[] = "File type '{$extension}' is not allowed. Allowed types: " . implode(', ', $config['allowed_extensions']);
         }
 
         // Check MIME type for additional security
         $mimeType = $file->getMimeType();
-        if (!$this->isAllowedMimeType($mimeType, $extension)) {
+        if (! $this->isAllowedMimeType($mimeType, $extension)) {
             $errors[] = 'File type does not match its content.';
         }
 
@@ -762,10 +673,6 @@ class ChangeRequestValidationService
 
     /**
      * Check if MIME type is allowed for the given extension
-     *
-     * @param string $mimeType
-     * @param string $extension
-     * @return bool
      */
     protected function isAllowedMimeType(string $mimeType, string $extension): bool
     {
@@ -788,46 +695,9 @@ class ChangeRequestValidationService
     }
 
     /**
-     * Validate custom field values
-     *
-     * @param array $customFields
-     * @return array
-     */
-    public function validateCustomFields(array $customFields): array
-    {
-        $errors = [];
-        $customFieldConfig = $this->getCustomFieldConfiguration();
-
-        if (!$customFieldConfig['enabled']) {
-            return ['custom_fields' => 'Custom fields are not enabled.'];
-        }
-
-        if (count($customFields) > $customFieldConfig['max_per_request']) {
-            $errors['custom_fields'] = "Maximum {$customFieldConfig['max_per_request']} custom fields allowed per request.";
-        }
-
-        foreach ($customFields as $fieldName => $fieldValue) {
-            // Skip system fields
-            if (in_array($fieldName, ['_token', '_method'])) {
-                continue;
-            }
-
-            // Validate field value based on type (if type information is available)
-            $fieldErrors = $this->validateCustomFieldValue($fieldName, $fieldValue);
-            if (!empty($fieldErrors)) {
-                $errors[$fieldName] = $fieldErrors;
-            }
-        }
-
-        return $errors;
-    }
-
-    /**
      * Validate custom field value
      *
-     * @param string $fieldName
-     * @param mixed $fieldValue
-     * @return array
+     * @param  mixed  $fieldValue
      */
     protected function validateCustomFieldValue(string $fieldName, $fieldValue): array
     {
@@ -839,20 +709,20 @@ class ChangeRequestValidationService
         }
 
         // Validate specific field types based on field name patterns
-        if (strpos($fieldName, 'email') !== false && !empty($fieldValue)) {
-            if (!filter_var($fieldValue, FILTER_VALIDATE_EMAIL)) {
+        if (strpos($fieldName, 'email') !== false && ! empty($fieldValue)) {
+            if (! filter_var($fieldValue, FILTER_VALIDATE_EMAIL)) {
                 $errors[] = 'Invalid email format.';
             }
         }
 
-        if (strpos($fieldName, 'url') !== false && !empty($fieldValue)) {
-            if (!filter_var($fieldValue, FILTER_VALIDATE_URL)) {
+        if (strpos($fieldName, 'url') !== false && ! empty($fieldValue)) {
+            if (! filter_var($fieldValue, FILTER_VALIDATE_URL)) {
                 $errors[] = 'Invalid URL format.';
             }
         }
 
-        if (strpos($fieldName, 'phone') !== false && !empty($fieldValue)) {
-            if (!preg_match('/^[0-9\-\+\s\(\)]+$/', $fieldValue)) {
+        if (strpos($fieldName, 'phone') !== false && ! empty($fieldValue)) {
+            if (! preg_match('/^[0-9\-\+\s\(\)]+$/', $fieldValue)) {
                 $errors[] = 'Invalid phone number format.';
             }
         }
@@ -862,8 +732,6 @@ class ChangeRequestValidationService
 
     /**
      * Get status IDs for workflow validation
-     *
-     * @return array
      */
     protected function getStatusIds(): array
     {
@@ -883,8 +751,6 @@ class ChangeRequestValidationService
 
     /**
      * Get validation rules configuration
-     *
-     * @return array
      */
     protected function getValidationRules(): array
     {
@@ -909,19 +775,17 @@ class ChangeRequestValidationService
     /**
      * Check if workflow type is valid
      *
-     * @param int $workflowTypeId
-     * @return bool
+     * @param  int  $workflowTypeId
      */
     protected function isValidWorkflowType($workflowTypeId): bool
     {
         $validWorkflowTypes = array_values($this->getWorkflowTypes());
+
         return in_array($workflowTypeId, $validWorkflowTypes);
     }
 
     /**
      * Get workflow type constants
-     *
-     * @return array
      */
     protected function getWorkflowTypes(): array
     {
@@ -936,8 +800,6 @@ class ChangeRequestValidationService
 
     /**
      * Get file upload configuration
-     *
-     * @return array
      */
     protected function getUploadConfiguration(): array
     {
@@ -945,7 +807,7 @@ class ChangeRequestValidationService
             'max_file_size' => config('change_request.file_upload.max_file_size', 10240), // KB
             'max_files_per_request' => config('change_request.file_upload.max_files_per_request', 10),
             'allowed_extensions' => config('change_request.file_upload.allowed_extensions', [
-                'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'rar'
+                'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'rar',
             ]),
             'upload_path' => config('change_request.file_upload.upload_path', 'uploads/change_requests/'),
         ];
@@ -953,8 +815,6 @@ class ChangeRequestValidationService
 
     /**
      * Get custom field configuration
-     *
-     * @return array
      */
     protected function getCustomFieldConfiguration(): array
     {
@@ -963,15 +823,13 @@ class ChangeRequestValidationService
             'max_per_request' => config('change_request.custom_fields.max_per_request', 20),
             'max_field_length' => config('change_request.custom_fields.max_field_length', 1000),
             'allowed_field_types' => config('change_request.custom_fields.allowed_types', [
-                'text', 'number', 'email', 'url', 'phone', 'date', 'textarea'
+                'text', 'number', 'email', 'url', 'phone', 'date', 'textarea',
             ]),
         ];
     }
 
     /**
      * Get group IDs from configuration
-     *
-     * @return array
      */
     protected function getGroupIds(): array
     {
@@ -983,6 +841,78 @@ class ChangeRequestValidationService
             'developer' => config('change_request.group_ids.developer', 5),
             'tester' => config('change_request.group_ids.tester', 6),
             'designer' => config('change_request.group_ids.designer', 7),
+        ];
+    }
+
+    /**
+     * Update the current status record
+     */
+    private function updateCurrentStatusByGroup(int $changeRequestId, array $statusData, int $groupId): void
+    {
+        $currentStatus = ChangeRequestStatus::where('cr_id', $changeRequestId)
+            ->where('new_status_id', $statusData['id'])
+            ->where('group_id', $groupId)
+            // ->where('active','1')
+            // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            ->first();
+
+        if (! $currentStatus) {
+            Log::warning('Current status not found for update', [
+                'cr_id' => $changeRequestId,
+                'old_status_id' => $statusData['old_status_id'],
+            ]);
+
+            return;
+        }
+
+        $workflowActive = '2';
+
+        $slaDifference = $this->calculateSlaDifference($currentStatus->created_at);
+        // Only update if conditions are met
+        $currentStatus->update([
+            'sla_dif' => $slaDifference,
+            'active' => $workflowActive,
+        ]);
+
+    }
+
+    /**
+     * Calculate SLA difference in days
+     */
+    private function calculateSlaDifference(string $createdAt): int
+    {
+        return Carbon::parse($createdAt)->diffInDays(Carbon::now());
+    }
+
+    /**
+     * Build status data array
+     */
+    private function buildStatusData(
+        int $changeRequestId,
+        int $oldStatusId,
+        int $newStatusId,
+        ?int $group_id,
+        ?int $reference_group_id,
+        ?int $previous_group_id,
+        ?int $current_group_id,
+        int $userId,
+        string $active
+    ): array {
+        $status = Status::find($newStatusId);
+        $sla = $status ? (int) $status->sla : 0;
+
+        return [
+            'cr_id' => $changeRequestId,
+            'old_status_id' => $oldStatusId,
+            'new_status_id' => $newStatusId,
+            'group_id' => $group_id,
+            'reference_group_id' => $reference_group_id,
+            'previous_group_id' => $previous_group_id,
+            'current_group_id' => $current_group_id,
+            'user_id' => $userId,
+            'sla' => $sla,
+            'active' => $active, // '0' | '1' | '2'
         ];
     }
 }

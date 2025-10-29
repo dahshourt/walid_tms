@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers\NotificationTemplates;
 
+use App\Factories\NotificationTemplates\NotificationTemplatesFactory;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Factories\NotificationTemplates\NotificationTemplatesFactory;
-
 
 class NotificationTemplatesController extends Controller
 {
@@ -14,27 +13,28 @@ class NotificationTemplatesController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-
     private $NotificationTemplates;
 
-    function __construct(NotificationTemplatesFactory $NotificationTemplates){
+    public function __construct(NotificationTemplatesFactory $NotificationTemplates)
+    {
 
         $this->NotificationTemplates = $NotificationTemplates::index();
         $this->view = 'NotificationTemplates';
         $view = 'NotificationTemplates';
         $route = 'NotificationTemplates';
         $OtherRoute = 'NotificationTemplates';
-        
+
         $title = 'Notification Templates';
         $form_title = 'Notification Templates';
-        view()->share(compact('view','route','title','form_title','OtherRoute'));
-        
+        view()->share(compact('view', 'route', 'title', 'form_title', 'OtherRoute'));
+
     }
 
     public function index()
     {
         $collection = $this->NotificationTemplates->getAll();
-        return view("$this->view.index",compact('collection'));
+
+        return view("$this->view.index", compact('collection'));
     }
 
     /**
@@ -50,13 +50,13 @@ class NotificationTemplatesController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
-        $store= $this->NotificationTemplates->create($request->all());
-        return redirect()->back()->with('status' , 'Template Added Successfully' );
+        $store = $this->NotificationTemplates->create($request->all());
+
+        return redirect()->back()->with('status', 'Template Added Successfully');
 
     }
 
@@ -69,7 +69,8 @@ class NotificationTemplatesController extends Controller
     public function show($id)
     {
         $row = $this->NotificationTemplates->find($id);
-        return view("$this->view.show",compact('row'));
+
+        return view("$this->view.show", compact('row'));
     }
 
     /**
@@ -81,20 +82,21 @@ class NotificationTemplatesController extends Controller
     public function edit($id)
     {
         $row = $this->NotificationTemplates->find($id);
-        return view("$this->view.edit",compact('row'));
+
+        return view("$this->view.edit", compact('row'));
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
     {
-        $this->NotificationTemplates->update($request->all() , $id);
-        return redirect()->back()->with('status' , 'Template Updated Successfully' );
+        $this->NotificationTemplates->update($request->all(), $id);
+
+        return redirect()->back()->with('status', 'Template Updated Successfully');
     }
 
     /**
@@ -106,6 +108,7 @@ class NotificationTemplatesController extends Controller
     public function destroy($id)
     {
         $this->NotificationTemplates->delete($id);
+
         return redirect()->back()->with('success', 'Template deleted successfully!');
     }
 }

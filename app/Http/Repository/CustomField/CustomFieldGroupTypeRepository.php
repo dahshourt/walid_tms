@@ -215,7 +215,7 @@ class CustomFieldGroupTypeRepository implements CustomFieldGroupTypeRepositoryIn
              $q->where('form_type',$form_type);
          })->get();
          return $result; */
-        $result = CustomFieldGroup::with('CustomField')->where('form_type',$form_type)->orderBy('sort')->get();
+        $result = CustomFieldGroup::with('CustomField')->where('form_type', $form_type)->orderBy('sort')->get();
 
         return $result;
     }

@@ -13,7 +13,7 @@ class NotificationLog extends Model
         'notification_rule_id', 'template_id', 'event_class', 'event_data',
         'subject', 'body', 'recipients_to', 'recipients_cc', 'recipients_bcc',
         'status', 'error_message', 'sent_at', 'retry_count',
-        'related_model_type', 'related_model_id'
+        'related_model_type', 'related_model_id',
     ];
 
     protected $casts = [
@@ -21,7 +21,7 @@ class NotificationLog extends Model
         'recipients_to' => 'array',
         'recipients_cc' => 'array',
         'recipients_bcc' => 'array',
-        'sent_at' => 'datetime'
+        'sent_at' => 'datetime',
     ];
 
     public function rule()
@@ -33,5 +33,4 @@ class NotificationLog extends Model
     {
         return $this->belongsTo(NotificationTemplate::class, 'template_id');
     }
-
 }

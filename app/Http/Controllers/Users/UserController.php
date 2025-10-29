@@ -179,6 +179,6 @@ class UserController extends Controller
 
         return response()->json([
             'data' => $user,
-        ],200);
+        ], 200);
     }
 }

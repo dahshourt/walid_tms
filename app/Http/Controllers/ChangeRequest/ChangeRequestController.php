@@ -2,57 +2,58 @@
 
 namespace App\Http\Controllers\ChangeRequest;
 
+use App\Factories\Applications\ApplicationFactory;
 use App\Factories\ChangeRequest\AttachmetsCRSFactory;
 use App\Factories\ChangeRequest\ChangeRequestFactory;
 use App\Factories\ChangeRequest\ChangeRequestStatusFactory;
+use App\Factories\CustomField\CustomFieldGroupTypeFactory;
+use App\Factories\Defect\DefectFactory;
 use App\Factories\NewWorkFlow\NewWorkFlowFactory;
+use App\Factories\Users\UserFactory;
+use App\Factories\Workflow\Workflow_type_factory;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Mail\MailController;
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
+use App\Http\Repository\RejectionReasons\RejectionReasonsRepository;
 use App\Http\Requests\Change_Request\Api\attachments_CRS_Request;
 use App\Http\Requests\Change_Request\Api\changeRequest_Requests;
-use App\Http\Resources\ChangeRequestListResource;
-use App\Http\Resources\ChangeRequestResource;
-use App\Http\Resources\MyAssignmentsCRSResource;
 use App\Http\Resources\MyCRSResource;
-use App\Factories\Workflow\Workflow_type_factory;
-use App\Factories\CustomField\CustomFieldGroupTypeFactory;
-use App\Factories\Applications\ApplicationFactory;
-use App\Factories\Users\UserFactory;
-use App\Factories\Defect\DefectFactory;
 use App\Models\Application;
-use App\Models\Group;
-use App\Models\Change_request;
-use App\Http\Repository\RejectionReasons\RejectionReasonsRepository;
-use App\Models\Attachements_crs;
-use App\Models\User;
-use App\Models\Defect;
-use App\Models\WorkFlowType;
-use App\Models\ChangeRequestTechnicalTeam;
-use App\Models\Change_request_statuse;
 use App\Models\ApplicationImpact;
+use App\Models\Attachements_crs;
+use App\Models\Change_request;
+use App\Models\Change_request_statuse;
+use App\Models\ChangeRequestTechnicalTeam;
+use App\Models\Group;
+use App\Models\User;
+use App\Models\WorkFlowType;
+use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
-
+use Throwable;
 
 class ChangeRequestController extends Controller
 {
     // Constants for better maintainability
     private const FORM_TYPE_CREATE = 1;
+
     private const FORM_TYPE_EDIT = 2;
+
     private const ATTACHMENT_TYPE_TECHNICAL = 1;
+
     private const ATTACHMENT_TYPE_BUSINESS = 2;
+
     private const MAX_FILE_SIZE = 5120; // 5MB in KB
 
     private const ALLOWED_MIMES = [
         'doc', 'docx', 'xls', 'xlsx', 'pdf', 'zip', 'rar',
-        'jpeg', 'jpg', 'png', 'gif', 'msg'
+        'jpeg', 'jpg', 'png', 'gif', 'msg',
     ];
 
     private const ALLOWED_MIME_TYPES = [
@@ -63,23 +64,31 @@ class ChangeRequestController extends Controller
         'application/pdf',
         'application/zip',
         'application/x-rar-compressed',
-		'application/x-rar',
-		'application/vnd.rar',
+        'application/x-rar',
+        'application/vnd.rar',
         'image/jpeg',
         'image/png',
         'image/gif',
         'application/vnd.ms-outlook',
-		'text/html' // ← to allow “web page saved as .doc”
+        'text/html', // ← to allow “web page saved as .doc”
     ];
 
     private $changerequest;
+
     private $changerequeststatus;
+
     private $workflow;
+
     private $workflow_type;
+
     private $attachments;
+
     private $custom_field_group_type;
+
     private $applications;
+
     private $defects;
+
     private $view = 'change_request';
 
     public function __construct(
@@ -105,19 +114,6 @@ class ChangeRequestController extends Controller
     }
 
     /**
-     * Share common view data across all views
-     */
-    private function shareViewData(): void
-    {
-        view()->share([
-            'view' => $this->view,
-            'route' => 'change_request',
-            'title' => 'List Change Requests',
-            'form_title' => 'CR'
-        ]);
-    }
-
-    /**
      * Display a listing of the resource.
      */
     public function index()
@@ -130,8 +126,9 @@ class ChangeRequestController extends Controller
         } catch (AuthorizationException $e) {
             Log::warning('Unauthorized access attempt to change requests list', [
                 'user_id' => auth()->id(),
-                'ip' => request()->ip()
+                'ip' => request()->ip(),
             ]);
+
             return redirect('/')->with('error', 'You do not have permission to access this page.');
         }
     }
@@ -191,24 +188,28 @@ class ChangeRequestController extends Controller
             return view("{$this->view}.dvision_manager_cr", compact('collection', 'title'));
         } catch (AuthorizationException $e) {
             Log::warning('Unauthorized access attempt to division manager CRs', [
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
+
             return redirect('/')->with('error', 'You do not have permission to access this page.');
         }
-    }// cr_pending_cap
+    }
+
+    // cr_pending_cap
     public function cr_pending_cap()
     {
         try {
-            //$this->authorize('CR Waiting Approval');
-            
+            // $this->authorize('CR Waiting Approval');
+
             $title = 'CR Pending Cap';
             $collection = $this->changerequest->cr_pending_cap();
-            
+
             return view("{$this->view}.cr_pending_cap", compact('collection', 'title'));
         } catch (AuthorizationException $e) {
             Log::warning('Unauthorized access attempt to division manager CRs', [
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
+
             return redirect('/')->with('error', 'You do not have permission to access this page.');
         }
     }// cr_pending_cap
@@ -220,13 +221,13 @@ class ChangeRequestController extends Controller
     {
         $group = Group::find($groupId);
 
-        if (!$group) {
+        if (! $group) {
             return redirect()->back()->with('error', 'Group not found.');
         }
 
         session([
             'default_group' => $groupId,
-            'default_group_name' => $group->title
+            'default_group_name' => $group->title,
         ]);
 
         return redirect()->back()->with('success', 'Group selected successfully.');
@@ -238,12 +239,12 @@ class ChangeRequestController extends Controller
     // selectUserGroup Function
     public function asd(?int $group = null)
     {
-        if (!$group) {
+        if (! $group) {
             return redirect()->back()->with('error', 'No group provided.');
         }
 
         $selectedGroup = Group::find($group);
-        if (!$selectedGroup) {
+        if (! $selectedGroup) {
             return redirect()->back()->with('error', 'Group not found.');
         }
 
@@ -251,18 +252,19 @@ class ChangeRequestController extends Controller
         $userGroups = auth()->user()->user_groups()->with('group')->get();
         $hasAccess = $userGroups->pluck('group.id')->contains($group);
 
-        if (!$hasAccess) {
+        if (! $hasAccess) {
             Log::warning('User attempted to access unauthorized group', [
                 'user_id' => auth()->id(),
-                'group_id' => $group
+                'group_id' => $group,
             ]);
+
             return redirect()->back()->with('error', 'You do not have access to this group.');
         }
 
         session([
             'default_group' => $group,
             'current_group' => $group,
-            'current_group_name' => $selectedGroup->title
+            'current_group_name' => $selectedGroup->title,
         ]);
 
         return redirect()->back()->with('success', 'Group selected successfully.');
@@ -275,8 +277,9 @@ class ChangeRequestController extends Controller
     {
         $this->authorize('Create ChangeRequest');
 
-        //$target_systems = $this->applications->getAll();
+        // $target_systems = $this->applications->getAll();
         $target_systems = $this->applications->getAllWithFilter();
+
         return view("{$this->view}.list_work_flow", compact('target_systems'));
     }
 
@@ -288,12 +291,12 @@ class ChangeRequestController extends Controller
         $this->authorize('Create ChangeRequest');
 
         $target_system_id = request()->get('target_system_id');
-        if (!$target_system_id) {
+        if (! $target_system_id) {
             return redirect()->back()->with('error', 'Target system ID is required.');
         }
 
         $target_system = $this->applications->find($target_system_id);
-        if (!$target_system) {
+        if (! $target_system) {
             return redirect()->back()->with('error', 'Target system not found.');
         }
 
@@ -302,10 +305,9 @@ class ChangeRequestController extends Controller
             $workflow_type_id,
             self::FORM_TYPE_CREATE
         );
-        $title = (!empty($workflow_type_id) && $workflow_type_id == 9)
+        $title = (! empty($workflow_type_id) && $workflow_type_id == 9)
             ? "Create {$target_system->name} Promo"
             : "Create {$target_system->name} CR";
-
 
         // $title = "Create {$target_system->name} CR";
 
@@ -343,17 +345,18 @@ class ChangeRequestController extends Controller
             Log::info('Change request created successfully', [
                 'cr_id' => $cr_id,
                 'cr_no' => $cr_no,
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             return redirect()->back()->with('status', "Created Successfully CR#{$cr_no}");
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to create change request', [
                 'error' => $e,
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
+
             return redirect()->back()->with('error', 'Failed to create change request. Please try again.');
         }
     }
@@ -366,16 +369,16 @@ class ChangeRequestController extends Controller
         $this->authorize('Show ChangeRequest');
 
         $cr = $this->changerequest->findById($id);
-        if (!$cr) {
+        if (! $cr) {
             return redirect()->back()->with('error', 'Change request not found.');
         }
 
         $cr = $this->changerequest->find($id);
-        if (!$cr) {
+        if (! $cr) {
             $cr = Change_request::find($id);
         }
 
-        if (!$cr) {
+        if (! $cr) {
             return redirect()->back()->with('error', 'Change request not found.');
         }
 
@@ -391,11 +394,12 @@ class ChangeRequestController extends Controller
 
         $logs_ers = $cr->logs;
         $technical_teams = Group::where('technical_team', '1')->get();
-        $title = (!empty($workflow_type_id) && $workflow_type_id == 9) ? "View Promo" :
-            "View Change Request";
-        $form_title = (!empty($workflow_type_id) && $workflow_type_id == 9)
-            ? "Promo"
+        $title = (! empty($workflow_type_id) && $workflow_type_id == 9) ? 'View Promo' :
+            'View Change Request';
+        $form_title = (! empty($workflow_type_id) && $workflow_type_id == 9)
+            ? 'Promo'
             : view()->shared('form_title');
+
         return view("{$this->view}.show", compact(
             'CustomFields',
             'cr',
@@ -421,25 +425,23 @@ class ChangeRequestController extends Controller
     {
         $this->authorize('Edit ChangeRequest');
 
-
-		if($cab_cr_flag) request()->request->add(['cab_cr_flag' => true]);
+        if ($cab_cr_flag) {
+            request()->request->add(['cab_cr_flag' => true]);
+        }
         // Validate division manager access if requested
         if (request()->has('check_dm')) {
             $validation = $this->validateDivisionManagerAccess($id);
             if ($validation) {
                 return $validation;
             }
+        } else {
+            if (! $cab_cr_flag) {
+                $cr = $this->changerequest->find($id);
+                if (! $cr) {
+                    return redirect()->to('/change_request')->with('status', 'You have no access to edit this CR');
+                }
+            }
         }
-		else
-		{
-			if(!$cab_cr_flag)
-			{
-				$cr = $this->changerequest->find($id);
-				if (!$cr) {
-					return redirect()->to('/change_request')->with('status', 'You have no access to edit this CR');
-				}
-			}
-		}
 
         $cr = $this->getCRForEdit($id, $cab_cr_flag);
 
@@ -449,9 +451,9 @@ class ChangeRequestController extends Controller
 
         $editData = $this->prepareEditData($cr, $id);
         $editData['cab_cr_flag'] = $cab_cr_flag;
+
         return view("{$this->view}.edit", $editData);
     }
-
 
     /**
      * Download attachment file
@@ -461,7 +463,7 @@ class ChangeRequestController extends Controller
         $file = Attachements_crs::findOrFail($id);
         $filePath = public_path("uploads/{$file->file_name}");
 
-        if (!file_exists($filePath)) {
+        if (! file_exists($filePath)) {
             return redirect()->back()->withErrors('File not found.');
         }
 
@@ -476,11 +478,12 @@ class ChangeRequestController extends Controller
         $file = Attachements_crs::findOrFail($id);
 
         // Authorization check
-        if (!auth()->user()->hasRole('Super Admin') && auth()->user()->id !== $file->user->id) {
+        if (! auth()->user()->hasRole('Super Admin') && auth()->user()->id !== $file->user->id) {
             Log::warning('Unauthorized file deletion attempt', [
                 'user_id' => auth()->id(),
-                'file_id' => $id
+                'file_id' => $id,
             ]);
+
             return redirect()->back()->withErrors('You are not allowed to delete this file.');
         }
 
@@ -498,7 +501,7 @@ class ChangeRequestController extends Controller
      */
     public function update(changeRequest_Requests $request, int $id)
     {
-        //dd($request->all());
+        // dd($request->all());
         $this->authorize('Edit ChangeRequest');
 
         DB::beginTransaction();
@@ -508,7 +511,6 @@ class ChangeRequestController extends Controller
 
             // Handle CAP users email notification
 
-
             // Validate attachments
             $this->validateAttachments($request);
 
@@ -516,34 +518,34 @@ class ChangeRequestController extends Controller
             $cr_id = $this->changerequest->update($id, $request);
 
             if ($cr_id === false) {
-                throw new \Exception('Failed to update change request');
+                throw new Exception('Failed to update change request');
             }
 
             // Handle file uploads
             $this->handleFileUploads($request, $id);
 
-			$this->handleCapUsersNotification($request, $id);
+            $this->handleCapUsersNotification($request, $id);
 
             DB::commit();
 
             Log::info('Change request updated successfully', [
                 'cr_id' => $id,
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
-			$previousUrl = url()->previous();
+            $previousUrl = url()->previous();
 
-			if (Str::contains($previousUrl, 'edit_cab')) {
-				// Do something if previous URL contains "edit_cab"
-				return redirect()->to('/change_request')->with('status', 'Updated Successfully');
-			} else {
-				//return redirect()->back()->with('status', 'Updated Successfully');
+            if (Str::contains($previousUrl, 'edit_cab')) {
+                // Do something if previous URL contains "edit_cab"
                 return redirect()->to('/change_request')->with('status', 'Updated Successfully');
-			}
+            }
+
+            // return redirect()->back()->with('status', 'Updated Successfully');
+            return redirect()->to('/change_request')->with('status', 'Updated Successfully');
+
             //
 
-
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             Log::error('Failed to update change request', [
                 'cr_id' => $id,
@@ -551,8 +553,9 @@ class ChangeRequestController extends Controller
                 'file' => $e->getFile(),
                 'line' => $e->getLine(),
                 'trace' => $e->getTraceAsString(),
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
+
             return redirect()->back()->with('error', 'Failed to update change request.');
         }
     }
@@ -567,12 +570,12 @@ class ChangeRequestController extends Controller
         $token = $request->query('token');
 
         // Validate request parameters
-        if (!$cr_id || !$action || !$token) {
+        if (! $cr_id || ! $action || ! $token) {
             return $this->renderActionResponse(false, 'Error', 'Invalid request. Missing parameters.', 400);
         }
 
         $cr = Change_request::find($cr_id);
-        if (!$cr) {
+        if (! $cr) {
             return $this->renderActionResponse(false, 'Error', 'Change Request not found.', 404);
         }
 
@@ -581,8 +584,9 @@ class ChangeRequestController extends Controller
         if ($token !== $expectedToken) {
             Log::warning('Invalid token used for division manager action', [
                 'cr_id' => $cr_id,
-                'ip' => request()->ip()
+                'ip' => request()->ip(),
             ]);
+
             return $this->renderActionResponse(false, 'Error', 'Unauthorized access. Invalid token.', 403);
         }
 
@@ -593,6 +597,7 @@ class ChangeRequestController extends Controller
 
         if ($current_status != '22') {
             $message = $current_status == '19' ? 'You already rejected this CR.' : 'You already approved this CR.';
+
             return $this->renderActionResponse(false, 'Error', $message, 400);
         }
 
@@ -610,7 +615,7 @@ class ChangeRequestController extends Controller
         $this->authorize('My Assignments');
 
         $collection = $this->changerequest->my_assignments_crs();
-        $title = "My Assignments";
+        $title = 'My Assignments';
 
         return view("{$this->view}.index", compact('collection', 'title'));
     }
@@ -642,6 +647,7 @@ class ChangeRequestController extends Controller
 
         $crs_in_queues = 0; // This seems to be unused in the original
         $user_name = $user->user_name;
+
         return view("{$this->view}.CRsByuser", compact(
             'collection',
             'user_name',
@@ -667,6 +673,7 @@ class ChangeRequestController extends Controller
     public function reorderhome()
     {
         $this->authorize('Shift ChangeRequest');
+
         return view("{$this->view}.shifiting");
     }
 
@@ -688,9 +695,10 @@ class ChangeRequestController extends Controller
         if ($result['status']) {
             return redirect()->back()->with('success', $result['message']);
         }
-        if (!$result['status']) {
+        if (! $result['status']) {
             return redirect()->back()->with('error', $result['message']);
         }
+
         return redirect()->back()->with('error', $result['message']);
     }
 
@@ -704,7 +712,474 @@ class ChangeRequestController extends Controller
 
         return response()->json([
             'message' => 'Updated Successfully',
-            'status' => 'success'
+            'status' => 'success',
+        ]);
+    }
+
+    /**
+     * Search result method (seems to be a placeholder in original)
+     */
+    public function search_result(int $id)
+    {
+        // This appears to be a placeholder method in the original code
+        $cr = '39390'; // This should be dynamic based on actual search logic
+
+        return response()->json(['data' => $cr], 200);
+    }
+
+    /**
+     * Handle division manager action (JSON response version)
+     */
+    public function handleDivisionManagerAction1(Request $request)
+    {
+        $cr_id = $request->query('crId');
+        $action = $request->query('action');
+        $token = $request->query('token');
+
+        if (! $cr_id || ! $action || ! $token) {
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Invalid request. Missing parameters.',
+            ], 400);
+        }
+
+        $cr = Change_request::find($cr_id);
+        if (! $cr) {
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Change Request not found.',
+            ], 404);
+        }
+
+        $expectedToken = $this->generateSecurityToken($cr);
+        if ($token !== $expectedToken) {
+            Log::warning('Invalid token used for division manager action (JSON)', [
+                'cr_id' => $cr_id,
+                'ip' => request()->ip(),
+            ]);
+
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Unauthorized access. Invalid token.',
+            ], 403);
+        }
+
+        $current_status = Change_request_statuse::where('cr_id', $cr_id)
+            ->where('active', '1')
+            ->value('new_status_id');
+
+        if ($current_status != '22') {
+            $message = $current_status == '19'
+                ? 'You already rejected this CR.'
+                : 'You already approved this CR.';
+
+            return response()->json([
+                'isSuccess' => false,
+                'message' => $message,
+            ], 400);
+        }
+
+        $workflowIdForAction = $this->getWorkflowIdForAction($cr->workflow_type_id, $action);
+        if (! $workflowIdForAction) {
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Unsupported workflow type.',
+            ], 400);
+        }
+
+        try {
+            $repo = new ChangeRequestRepository();
+            $updateRequest = new Request([
+                'old_status_id' => $current_status,
+                'new_status_id' => $workflowIdForAction,
+            ]);
+            $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
+
+            $message = $action === 'approve'
+                ? "CR #{$cr_id} has been successfully approved."
+                : "CR #{$cr_id} has been successfully rejected.";
+
+            return response()->json([
+                'isSuccess' => true,
+                'message' => $message,
+            ], 200);
+
+        } catch (Exception $e) {
+            Log::error('Failed to process division manager action (JSON)', [
+                'cr_id' => $cr_id,
+                'action' => $action,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Failed to process action. Please try again.',
+            ], 500);
+        }
+    }
+
+    public function handlePendingCap(Request $request)
+    {
+
+        $cr_id = $request->query('crId');
+        $action = $request->query('action');
+        $token = $request->query('token');
+
+        if (! $cr_id || ! $action || ! $token) {
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Invalid request. Missing parameters.',
+            ], 400);
+        }
+
+        $cr = Change_request::find($cr_id);
+        if (! $cr) {
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Change Request not found.',
+            ], 404);
+        }
+
+        $expectedToken = $this->generateSecurityToken($cr);
+        if ($token !== $expectedToken) {
+            Log::warning('Invalid token used for division manager action (JSON)', [
+                'cr_id' => $cr_id,
+                'ip' => request()->ip(),
+            ]);
+
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Unauthorized access. Invalid token.',
+            ], 403);
+        }
+
+        $current_status = Change_request_statuse::where('cr_id', $cr_id)
+            ->where('active', '1')
+            ->value('new_status_id');
+
+        if ($current_status != config('change_request.status_ids.pending_cab')) {
+            $message = $current_status == config('change_request.status_ids.pending_cab_proceed')
+                ? 'You already rejected this CR.'
+                : 'You already approved this CR.';
+
+            return response()->json([
+                'isSuccess' => false,
+                'message' => $message,
+            ], 400);
+        }
+
+        try {
+
+            // $updateRequest = new Request([
+            //     'old_status_id' => $current_status,
+            //     'new_status_id' => $workflowIdForAction,
+            // ]);
+            // $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
+            if ($action == 'approve') {
+                $requestData = new \Illuminate\Http\Request([
+                    'old_status_id' => config('change_request.status_ids.pending_cab'),
+                    'new_status_id' => config('change_request.status_ids.pending_cab_proceed'),
+                    'cab_cr_flag' => '1',
+                    'user_id' => auth()->user()->id,
+                ]);
+
+            } else {
+
+                $requestData = new \Illuminate\Http\Request([
+                    'old_status_id' => config('change_request.status_ids.pending_cab'),
+                    'new_status_id' => config('change_request.status_ids.pending_cab_review'),
+                    'cab_cr_flag' => '1',
+                    'user_id' => auth()->user()->id,
+                ]);
+
+            }
+            $repo = new ChangeRequestRepository();
+            // print_r($requestData); die;
+
+            $repo->update($cr_id, $requestData);
+
+            $message = $action === 'approve'
+                ? "CR #{$cr_id} has been successfully approved."
+                : "CR #{$cr_id} has been successfully rejected.";
+            $response = [
+                'isSuccess' => true,
+                'message' => $message,
+            ];
+
+            return response()->json([
+                'status' => 200,
+                'isSuccess' => true,
+                'message' => $message,
+            ], 200);
+
+        } catch (Exception $e) {
+            Log::error('Failed to process division manager action (JSON)', [
+                'cr_id' => $cr_id,
+                'action' => $action,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Failed to process action. Please try again.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Update attachment files
+     */
+    public function update_attach(attachments_CRS_Request $request)
+    {
+        $this->authorize('Edit ChangeRequest');
+
+        if (! $request->hasFile('filesdata')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No files provided',
+            ], 400);
+        }
+
+        try {
+            $cr_id = $request->get('id');
+            $this->attachments->add_files($request->file('filesdata'), $cr_id);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Files uploaded successfully',
+            ], 200);
+
+        } catch (Exception $e) {
+            Log::error('Failed to upload attachment files', [
+                'cr_id' => $request->get('id'),
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to upload files',
+            ], 500);
+        }
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(int $id)
+    {
+        $this->authorize('Delete ChangeRequest');
+
+        try {
+            // Implementation for deleting change request
+            // This was empty in the original code
+            Log::info('Change request deletion attempted', [
+                'cr_id' => $id,
+                'user_id' => auth()->id(),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Change request deleted successfully',
+            ], 200);
+
+        } catch (Exception $e) {
+            Log::error('Failed to delete change request', [
+                'cr_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete change request',
+            ], 500);
+        }
+    }
+
+    public function showTestableForm()
+    {
+        $this->authorize('Edit Testable Form');
+
+        return view($this->view . '.testable_form');
+
+    }
+
+    public function updateTestableFlag(Request $request)
+    {
+        // dd($request->all());
+        $this->authorize('Edit Testable Form');
+
+        $request->validate([
+            'cr_number' => 'required|exists:change_request,cr_no',
+            'testable' => 'required|in:0,1',
+        ]);
+        DB::beginTransaction();
+        try {
+            // $id = $request->cr_number;
+            $id = Change_request::where('cr_no', $request->cr_number)->firstOrFail()->id;
+            // dd($id);
+            // Update change request
+            $cr_id = $this->changerequest->updateTestableFlag($id, $request);
+
+            if ($cr_id === false) {
+                throw new Exception('Failed to update change request');
+            }
+
+            DB::commit();
+
+            Log::info('Change request updated successfully', [
+                'cr_id' => $id,
+                'user_id' => auth()->id(),
+            ]);
+
+            // return redirect()->to('/change_request')->with('status', 'Updated Successfully');
+            return redirect()->back()->with('status', 'Updated Successfully');
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update change request', [
+                'cr_id' => $id,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to update change request.');
+        }
+    }
+
+    public function showAddAttachmentsForm()
+    {
+        $this->authorize('Admin Add Attachments and Feedback');
+
+        return view($this->view . '.add_attachments');
+    }
+
+    public function storeAttachments(Request $request)
+    {
+
+        $this->authorize('Admin Add Attachments and Feedback');
+
+        $validator = Validator::make($request->all(), [
+            'cr_number' => 'required|exists:change_request,cr_no',
+            'business_feedback' => 'nullable|string|max:5000',
+            'technical_feedback' => 'nullable|string|max:5000',
+        ], [
+            'cr_number.required' => 'CR number is required',
+            'cr_number.exists' => 'The specified CR number does not exist',
+        ]);
+        if ($validator->fails()) {
+            return redirect()->back()
+                ->withErrors($validator)
+                ->withInput();
+        }
+        try {
+            $this->validateAttachments($request);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()
+                ->withErrors($e->validator)
+                ->withInput();
+        }
+
+        if ($request->hasFile('business_attachments') || $request->hasFile('technical_attachments')) {
+            $changeRequest = Change_request::where('cr_no', $request->cr_number)
+                ->select('id', 'workflow_type_id')
+                ->firstOrFail();
+            $status = DB::table('change_request_statuses')
+                ->where('cr_id', $changeRequest->id)
+                ->where('active', '1')
+                ->orderBy('id', 'desc')
+                ->first();
+
+            $status_id = $status->new_status_id ?? null;
+            if ($changeRequest->workflow_type_id == 3) {
+                if (! in_array($status_id, [
+                    config('change_request.status_ids.pending_production_deployment_in_house'),
+                    config('change_request.status_ids.pending_stage_deployment_in_house'),
+                ])) {
+                    return redirect()->back()
+                        ->with('error', 'Change request is not in pending production deployment or pending stage deployment status.')
+                        ->withInput();
+                }
+            }
+        }
+
+        DB::beginTransaction();
+        try {
+            // $id = $request->cr_number;
+            $id = Change_request::where('cr_no', $request->cr_number)->firstOrFail()->id;
+            // dd($id);
+            // Update change request
+            $cr_id = $this->changerequest->addFeedback($id, $request);
+
+            if ($cr_id === false) {
+                throw new Exception('Failed to update change request');
+            }
+
+            $this->handleFileUploads($request, $id);
+
+            DB::commit();
+
+            Log::info('Change request updated successfully', [
+                'cr_id' => $id,
+                'user_id' => auth()->id(),
+            ]);
+
+            // return redirect()->to('/change_request')->with('status', 'Updated Successfully');
+            return redirect()->back()->with('status', 'Updated Successfully');
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update change request', [
+                'cr_id' => $id,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to update change request.');
+        }
+
+    }
+
+    public function unreadNotifications()
+    {
+        $user = Auth::user();
+
+        // Get all unread notifications for the user
+        $unreadNotifications = $user->unreadNotifications;
+
+        // Filter notifications based on group ID
+        $filteredNotifications = $unreadNotifications->filter(function ($notification) use ($user) {
+            // Assuming 'user_action_id' is the key in the JSON structure within the 'data' column
+            $groupIdInNotification = $notification->data['user_action_id'] ?? null;
+            if (isset($groupIdInNotification)) {
+                if ($groupIdInNotification == $user->id) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
+
+        // Check if filtered notifications are empty
+        if ($filteredNotifications->isEmpty()) {
+            // If empty, return all unread notifications
+            return;
+        }
+
+        // If not empty, return filtered notifications
+        return response()->json($filteredNotifications);
+
+    }
+
+    /**
+     * Share common view data across all views
+     */
+    private function shareViewData(): void
+    {
+        view()->share([
+            'view' => $this->view,
+            'route' => 'change_request',
+            'title' => 'List Change Requests',
+            'form_title' => 'CR',
         ]);
     }
 
@@ -720,19 +1195,19 @@ class ChangeRequestController extends Controller
         foreach ($attachmentTypes as $type) {
 
             if ($request->hasFile($type)) {
-                //dd($request->all());
+                // dd($request->all());
                 $file = $request->file($type);
 
                 // Get extension
-                //dd($file[0]->getClientOriginalExtension(),implode(',', self::ALLOWED_MIMES),implode(',', self::ALLOWED_MIME_TYPES));
+                // dd($file[0]->getClientOriginalExtension(),implode(',', self::ALLOWED_MIMES),implode(',', self::ALLOWED_MIME_TYPES));
                 $validator = Validator::make($request->all(), [
                     "{$type}.*" => [
                         'required',
                         'file',
                         'mimes:' . implode(',', self::ALLOWED_MIMES),
                         'mimetypes:' . implode(',', self::ALLOWED_MIME_TYPES),
-                        'max:' . self::MAX_FILE_SIZE
-                    ]
+                        'max:' . self::MAX_FILE_SIZE,
+                    ],
                 ], [
                     "{$type}.*.required" => 'Please upload an attachment',
                     "{$type}.*.mimes" => 'Only ' . implode(',', self::ALLOWED_MIMES) . ' files are allowed',
@@ -741,7 +1216,7 @@ class ChangeRequestController extends Controller
                 ]);
 
                 if ($validator->fails()) {
-                    throw new \Exception($validator->errors()->first());
+                    throw new Exception($validator->errors()->first());
                 }
             }
         }
@@ -787,7 +1262,7 @@ class ChangeRequestController extends Controller
                 'isSuccess' => false,
                 'title' => 'Error',
                 'message' => 'You already took action on this CR',
-                'status' => 400
+                'status' => 400,
             ], 400);
         }
 
@@ -804,13 +1279,13 @@ class ChangeRequestController extends Controller
         }
 
         $cr = $this->changerequest->findById($id);
-        if (!$cr) {
+        if (! $cr) {
             return redirect()->back()->with('status', 'CR not exists');
         }
 
         $cr = $this->changerequest->find($id);
 
-        if (!$cr) {
+        if (! $cr) {
             return redirect()->to('/change_request')->with('status', 'You have no access to edit this CR');
         }
 
@@ -824,7 +1299,7 @@ class ChangeRequestController extends Controller
     {
         $cr = $this->changerequest->findCr($id);
 
-        if (!$cr) {
+        if (! $cr) {
             return redirect()->back()->with('status', 'You have no access to edit this CR');
         }
 
@@ -835,7 +1310,7 @@ class ChangeRequestController extends Controller
         $user_id = auth()->id();
         $cr_cab_user = $cr->cab_cr->cab_cr_user->pluck('user_id')->toArray();
 
-        if (!in_array($user_id, $cr_cab_user)) {
+        if (! in_array($user_id, $cr_cab_user)) {
             return redirect()->to('/')->with('status', 'You have no access to edit this CR');
         }
 
@@ -902,16 +1377,15 @@ class ChangeRequestController extends Controller
             ->where('custom_field_name', 'man_days')
             ->values()
             ->toArray();
-        $reject = new   RejectionReasonsRepository();
+        $reject = new RejectionReasonsRepository();
         $rejects = $reject->workflows($workflow_type_id);
-        $form_title = (!empty($workflow_type_id) && $workflow_type_id == 9)
-            ? "Promo"
+        $form_title = (! empty($workflow_type_id) && $workflow_type_id == 9)
+            ? 'Promo'
             : view()->shared('form_title');
 
-        $title = (!empty($workflow_type_id) && $workflow_type_id == 9)
-            ? "List Promo"
+        $title = (! empty($workflow_type_id) && $workflow_type_id == 9)
+            ? 'List Promo'
             : view()->shared('title');
-
 
         //  echo "<pre>";
         //  print_r( $rejects);
@@ -939,6 +1413,7 @@ class ChangeRequestController extends Controller
                 ->value('application_name');
 
             $res = ApplicationFactory::index()->get_app_id_by_name($parentCR);
+
             return $res
                 ? UserFactory::index()->get_user_by_group($res->id)
                 : UserFactory::index()->get_user_by_group($cr->application_id);
@@ -954,7 +1429,7 @@ class ChangeRequestController extends Controller
     {
         try {
             return $cr->technical_Cr_first->technical_cr_team->pluck('group')->toArray();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return [];
         }
     }
@@ -978,7 +1453,7 @@ class ChangeRequestController extends Controller
      */
     private function assignTechnicalTeams(Request $request, int $id): void
     {
-        if (!isset($request->technical_teams) || empty($request->technical_teams)) {
+        if (! isset($request->technical_teams) || empty($request->technical_teams)) {
             return;
         }
 
@@ -987,7 +1462,7 @@ class ChangeRequestController extends Controller
                 'cr_id' => $id,
                 'technical_team_id' => $teamId,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ]);
         }
     }
@@ -1008,11 +1483,11 @@ class ChangeRequestController extends Controller
                 $emails[] = $user->email;
             }
         }
-		$cr = Change_request::find($id);
+        $cr = Change_request::find($id);
 
-        if (!empty($emails)) {
+        if (! empty($emails)) {
             $mail = new MailController();
-            $mail->send_mail_to_cap_users($emails, $id,$cr->cr_no);
+            $mail->send_mail_to_cap_users($emails, $id, $cr->cr_no);
         }
     }
 
@@ -1033,7 +1508,7 @@ class ChangeRequestController extends Controller
             'isSuccess' => $isSuccess,
             'title' => $title,
             'message' => $message,
-            'status' => $status
+            'status' => $status,
         ], $status);
     }
 
@@ -1047,7 +1522,7 @@ class ChangeRequestController extends Controller
         // Determine workflow ID based on action and workflow type
         $workflowIdForAction = $this->getWorkflowIdForAction($workflow_type_id, $action);
 
-        if (!$workflowIdForAction) {
+        if (! $workflowIdForAction) {
             return $this->renderActionResponse(false, 'Error', 'Unsupported workflow type.', 400);
         }
 
@@ -1063,7 +1538,7 @@ class ChangeRequestController extends Controller
             Log::info('Division manager action processed', [
                 'cr_id' => $cr->id,
                 'action' => $action,
-                'workflow_id' => $workflowIdForAction
+                'workflow_id' => $workflowIdForAction,
             ]);
 
             $message = $action === 'approve'
@@ -1072,11 +1547,11 @@ class ChangeRequestController extends Controller
 
             return $this->renderActionResponse(true, 'Success', $message, 200);
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Failed to process division manager action', [
                 'cr_id' => $cr->id,
                 'action' => $action,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return $this->renderActionResponse(false, 'Error', 'Failed to process action. Please try again.', 500);
@@ -1135,451 +1610,4 @@ class ChangeRequestController extends Controller
 
         return $query;
     }
-
-    /**
-     * Search result method (seems to be a placeholder in original)
-     */
-    public function search_result(int $id)
-    {
-        // This appears to be a placeholder method in the original code
-        $cr = '39390'; // This should be dynamic based on actual search logic
-        return response()->json(['data' => $cr], 200);
-    }
-
-    /**
-     * Handle division manager action (JSON response version)
-     */
-    public function handleDivisionManagerAction1(Request $request)
-    {
-        $cr_id = $request->query('crId');
-        $action = $request->query('action');
-        $token = $request->query('token');
-
-        if (!$cr_id || !$action || !$token) {
-            return response()->json([
-                'isSuccess' => false,
-                'message' => 'Invalid request. Missing parameters.',
-            ], 400);
-        }
-
-        $cr = Change_request::find($cr_id);
-        if (!$cr) {
-            return response()->json([
-                'isSuccess' => false,
-                'message' => 'Change Request not found.',
-            ], 404);
-        }
-
-        $expectedToken = $this->generateSecurityToken($cr);
-        if ($token !== $expectedToken) {
-            Log::warning('Invalid token used for division manager action (JSON)', [
-                'cr_id' => $cr_id,
-                'ip' => request()->ip()
-            ]);
-            return response()->json([
-                'isSuccess' => false,
-                'message' => 'Unauthorized access. Invalid token.',
-            ], 403);
-        }
-
-        $current_status = Change_request_statuse::where('cr_id', $cr_id)
-            ->where('active', '1')
-            ->value('new_status_id');
-
-        if ($current_status != '22') {
-            $message = $current_status == '19'
-                ? 'You already rejected this CR.'
-                : 'You already approved this CR.';
-            return response()->json([
-                'isSuccess' => false,
-                'message' => $message,
-            ], 400);
-        }
-
-        $workflowIdForAction = $this->getWorkflowIdForAction($cr->workflow_type_id, $action);
-        if (!$workflowIdForAction) {
-            return response()->json([
-                'isSuccess' => false,
-                'message' => 'Unsupported workflow type.',
-            ], 400);
-        }
-
-        try {
-            $repo = new ChangeRequestRepository();
-            $updateRequest = new Request([
-                'old_status_id' => $current_status,
-                'new_status_id' => $workflowIdForAction,
-            ]);
-            $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
-
-            $message = $action === 'approve'
-                ? "CR #{$cr_id} has been successfully approved."
-                : "CR #{$cr_id} has been successfully rejected.";
-
-            return response()->json([
-                'isSuccess' => true,
-                'message' => $message,
-            ], 200);
-
-        } catch (\Exception $e) {
-            Log::error('Failed to process division manager action (JSON)', [
-                'cr_id' => $cr_id,
-                'action' => $action,
-                'error' => $e->getMessage()
-            ]);
-            
-            return response()->json([
-                'isSuccess' => false,
-                'message' => 'Failed to process action. Please try again.',
-            ], 500);
-        }
-    }
-    public function handlePendingCap(Request $request)
-    {
-       
-        $cr_id = $request->query('crId');
-        $action = $request->query('action');
-        $token = $request->query('token');
-
-        if (!$cr_id || !$action || !$token) {
-            return response()->json([
-                'isSuccess' => false,
-                'message' => 'Invalid request. Missing parameters.',
-            ], 400);
-        }
-
-        $cr = Change_request::find($cr_id);
-        if (!$cr) {
-            return response()->json([
-                'isSuccess' => false,
-                'message' => 'Change Request not found.',
-            ], 404);
-        }
-
-        $expectedToken = $this->generateSecurityToken($cr);
-        if ($token !== $expectedToken) {
-            Log::warning('Invalid token used for division manager action (JSON)', [
-                'cr_id' => $cr_id,
-                'ip' => request()->ip()
-            ]);
-            return response()->json([
-                'isSuccess' => false,
-                'message' => 'Unauthorized access. Invalid token.',
-            ], 403);
-        }
-
-        $current_status = Change_request_statuse::where('cr_id', $cr_id)
-            ->where('active', '1')
-            ->value('new_status_id');
-
-        if ($current_status !=  config('change_request.status_ids.pending_cab')) {
-            $message = $current_status == config('change_request.status_ids.pending_cab_proceed')
-                ? 'You already rejected this CR.' 
-                : 'You already approved this CR.';
-            return response()->json([
-                'isSuccess' => false,
-                'message' => $message,
-            ], 400);
-        }
-
-      
-
-        try {
-           
-            // $updateRequest = new Request([
-            //     'old_status_id' => $current_status,
-            //     'new_status_id' => $workflowIdForAction,
-            // ]);
-            // $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
-if($action=='approve'){
-    $requestData = new \Illuminate\Http\Request([
-        'old_status_id' => config('change_request.status_ids.pending_cab'),
-        'new_status_id' => config('change_request.status_ids.pending_cab_proceed'),
-        'cab_cr_flag' => '1',
-        'user_id' => auth()->user()->id,
-    ]); 
-
-}
-else {
-
-    $requestData = new \Illuminate\Http\Request([
-        'old_status_id' => config('change_request.status_ids.pending_cab'),
-        'new_status_id' => config('change_request.status_ids.pending_cab_review'),
-        'cab_cr_flag' => '1',
-        'user_id' => auth()->user()->id,
-    ]); 
-
-}
-$repo = new ChangeRequestRepository();
-          //print_r($requestData); die;
-               
-                $repo->update($cr_id, $requestData);
-
-            $message = $action === 'approve' 
-                ? "CR #{$cr_id} has been successfully approved."
-                : "CR #{$cr_id} has been successfully rejected.";
-                $response = [
-                    'isSuccess' => true,
-                    'message' => $message,
-                ];
-              
-            return response()->json([
-                'status' => 200,
-                'isSuccess' => true,
-                'message' => $message,
-            ], 200);
-            
-        } catch (\Exception $e) {
-            Log::error('Failed to process division manager action (JSON)', [
-                'cr_id' => $cr_id,
-                'action' => $action,
-                'error' => $e->getMessage()
-            ]);
-            
-            return response()->json([
-                'isSuccess' => false,
-                'message' => 'Failed to process action. Please try again.',
-            ], 500);
-        }
-    }
-
-    /**
-     * Update attachment files
-     */
-    public function update_attach(attachments_CRS_Request $request)
-    {
-        $this->authorize('Edit ChangeRequest');
-
-        if (!$request->hasFile('filesdata')) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No files provided'
-            ], 400);
-        }
-
-        try {
-            $cr_id = $request->get('id');
-            $this->attachments->add_files($request->file('filesdata'), $cr_id);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Files uploaded successfully'
-            ], 200);
-
-        } catch (\Exception $e) {
-            Log::error('Failed to upload attachment files', [
-                'cr_id' => $request->get('id'),
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to upload files'
-            ], 500);
-        }
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(int $id)
-    {
-        $this->authorize('Delete ChangeRequest');
-
-        try {
-            // Implementation for deleting change request
-            // This was empty in the original code
-            Log::info('Change request deletion attempted', [
-                'cr_id' => $id,
-                'user_id' => auth()->id()
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Change request deleted successfully'
-            ], 200);
-
-        } catch (\Exception $e) {
-            Log::error('Failed to delete change request', [
-                'cr_id' => $id,
-                'error' => $e->getMessage()
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete change request'
-            ], 500);
-        }
-    }
-
-    public function showTestableForm()
-    {
-        $this->authorize('Edit Testable Form');
-
-        return view($this->view.'.testable_form');
-
-    }
-
-    public function updateTestableFlag(Request $request)
-    {
-        //dd($request->all());
-        $this->authorize('Edit Testable Form');
-
-        $request->validate([
-            'cr_number' => 'required|exists:change_request,cr_no',
-            'testable' => 'required|in:0,1'
-        ]);
-        DB::beginTransaction();
-        try {
-            //$id = $request->cr_number;
-            $id = Change_request::where('cr_no', $request->cr_number)->firstOrFail()->id;
-            //dd($id);
-            // Update change request
-            $cr_id = $this->changerequest->updateTestableFlag($id, $request);
-
-            if ($cr_id === false) {
-                throw new \Exception('Failed to update change request');
-            }
-
-            DB::commit();
-
-            Log::info('Change request updated successfully', [
-                'cr_id' => $id,
-                'user_id' => auth()->id()
-            ]);
-
-            //return redirect()->to('/change_request')->with('status', 'Updated Successfully');
-			return redirect()->back()->with('status', 'Updated Successfully');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Failed to update change request', [
-                'cr_id' => $id,
-                'error' => $e->getMessage(),
-                'user_id' => auth()->id()
-            ]);
-            return redirect()->back()->with('error', 'Failed to update change request.');
-        }
-    }
-
-    public function showAddAttachmentsForm()
-    {
-        $this->authorize('Admin Add Attachments and Feedback');
-
-        return view($this->view.'.add_attachments');
-    }
-
-    public function storeAttachments(Request $request){
-
-        $this->authorize('Admin Add Attachments and Feedback');
-
-        $validator = Validator::make($request->all(), [
-            'cr_number' => 'required|exists:change_request,cr_no',
-            'business_feedback' => 'nullable|string|max:5000',
-            'technical_feedback' => 'nullable|string|max:5000',
-        ], [
-            'cr_number.required' => 'CR number is required',
-            'cr_number.exists' => 'The specified CR number does not exist',
-        ]);
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-        try {
-            $this->validateAttachments($request);
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return redirect()->back()
-                ->withErrors($e->validator)
-                ->withInput();
-        }
-
-        if ($request->hasFile('business_attachments') || $request->hasFile('technical_attachments')) {
-            $changeRequest = Change_request::where('cr_no', $request->cr_number)
-                ->select('id', 'workflow_type_id')
-                ->firstOrFail();
-            $status = DB::table('change_request_statuses')
-                ->where('cr_id', $changeRequest->id)
-                ->where('active', '1')
-                ->orderBy('id', 'desc')
-                ->first();
-
-            $status_id = $status->new_status_id ?? null;
-            if ($changeRequest->workflow_type_id == 3) {
-                if (!in_array($status_id, [
-                    config('change_request.status_ids.pending_production_deployment_in_house'),
-                    config('change_request.status_ids.pending_stage_deployment_in_house')
-                ])) {
-                    return redirect()->back()
-                        ->with('error', 'Change request is not in pending production deployment or pending stage deployment status.')
-                        ->withInput();
-                }
-            }
-        }
-
-        DB::beginTransaction();
-        try {
-            //$id = $request->cr_number;
-            $id = Change_request::where('cr_no', $request->cr_number)->firstOrFail()->id;
-            //dd($id);
-            // Update change request
-            $cr_id = $this->changerequest->addFeedback($id, $request);
-
-            if ($cr_id === false) {
-                throw new \Exception('Failed to update change request');
-            }
-
-            $this->handleFileUploads($request, $id);
-
-            DB::commit();
-
-            Log::info('Change request updated successfully', [
-                'cr_id' => $id,
-                'user_id' => auth()->id()
-            ]);
-
-            //return redirect()->to('/change_request')->with('status', 'Updated Successfully');
-			return redirect()->back()->with('status', 'Updated Successfully');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Failed to update change request', [
-                'cr_id' => $id,
-                'error' => $e->getMessage(),
-                'user_id' => auth()->id()
-            ]);
-            return redirect()->back()->with('error', 'Failed to update change request.');
-        }
-
-    }
-
-	public function unreadNotifications()
-    {
-        $user = Auth::user();
-
-        // Get all unread notifications for the user
-        $unreadNotifications = $user->unreadNotifications;
-
-        // Filter notifications based on group ID
-        $filteredNotifications = $unreadNotifications->filter(function ($notification) use ($user) {
-            // Assuming 'user_action_id' is the key in the JSON structure within the 'data' column
-            $groupIdInNotification = $notification->data['user_action_id'] ?? null;
-            if(isset($groupIdInNotification)){
-                if($groupIdInNotification == $user->id){
-                    return true;
-                }
-            }
-            return false;
-        });
-
-        // Check if filtered notifications are empty
-        if ($filteredNotifications->isEmpty()) {
-            // If empty, return all unread notifications
-            return;
-        } else {
-            // If not empty, return filtered notifications
-            return response()->json($filteredNotifications);
-        }
-    }
-
 }

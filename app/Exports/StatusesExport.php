@@ -4,27 +4,24 @@ namespace App\Exports;
 
 use App\Models\Status;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 
-class StatusesExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize
+class StatusesExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping
 {
     /**
-    * @return \Illuminate\Support\Collection
-    */
+     * @return \Illuminate\Support\Collection
+     */
     public function collection()
     {
         return Status::with([
             'stage:id,name',
             'setByGroupStatuses.group:id,title',
-            'viewByGroupStatuses.group:id,title'
+            'viewByGroupStatuses.group:id,title',
         ])->get();
     }
 
-    /**
-     * @return array
-     */
     public function headings(): array
     {
         return [
@@ -33,13 +30,12 @@ class StatusesExport implements FromCollection, WithHeadings, WithMapping, Shoul
             'Stage',
             'Set By Group',
             'View By Group',
-            'Active'
+            'Active',
         ];
     }
 
     /**
-     * @param \App\Models\Status $status
-     * @return array
+     * @param  \App\Models\Status  $status
      */
     public function map($status): array
     {
@@ -59,7 +55,7 @@ class StatusesExport implements FromCollection, WithHeadings, WithMapping, Shoul
             $status->stage->name,
             $setByGroups,
             $viewByGroups,
-            $status->active ? 'Active' : 'Inactive'
+            $status->active ? 'Active' : 'Inactive',
         ];
     }
 }

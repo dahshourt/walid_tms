@@ -2,8 +2,6 @@
 
 namespace App\Listeners;
 
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 use App\Services\Notification\NotificationService;
 
 class SendChangeRequestNotifications
@@ -13,9 +11,8 @@ class SendChangeRequestNotifications
      *
      * @return void
      */
-
     protected $notificationService;
-    
+
     public function __construct(NotificationService $notificationService)
     {
         $this->notificationService = $notificationService;

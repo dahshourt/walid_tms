@@ -1,10 +1,10 @@
 <?php
+
 namespace App\Contracts\NotificationTemplates;
 
 interface NotificationTemplatesRepositoryInterface
 {
-
-	public function getAll();
+    public function getAll();
 
     public function find($id);
 
@@ -13,6 +13,4 @@ interface NotificationTemplatesRepositoryInterface
     public function update($request, $id);
 
     public function delete($id);
-	
-
 }

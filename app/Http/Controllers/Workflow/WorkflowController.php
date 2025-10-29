@@ -126,6 +126,6 @@ class WorkflowController extends Controller
             return redirect()->back()->with('Workflow', 'status Not Exists');
         }
 
-        return redirect()->back()->with('Workflow' , 'Updated Successfully');
+        return redirect()->back()->with('Workflow', 'Updated Successfully');
     }
 }

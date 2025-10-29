@@ -292,6 +292,6 @@ class ReleaseController extends Controller
         $this->authorize('Show Release Logs');
         $logs = $this->release->DisplayLogs($id);
 
-        return view("$this->view.release_logs",compact('logs'));
+        return view("$this->view.release_logs", compact('logs'));
     }
 }

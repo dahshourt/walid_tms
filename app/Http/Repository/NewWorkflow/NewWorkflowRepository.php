@@ -217,6 +217,6 @@ class NewWorkflowRepository implements NewWorkflowRepositoryInterface
 
     public function ListTypeWorkflow($type_id)
     {
-        return NewWorkFlow::where('type_id',$type_id)->get();
+        return NewWorkFlow::where('type_id', $type_id)->get();
     }
 }
