@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Services\EwsMailReader;
-use App\Http\Controllers\sla\SlaCalculationController;
+use App\Http\Controllers\Sla\SlaCalculationController;
 
 
 

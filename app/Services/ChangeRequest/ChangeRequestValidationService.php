@@ -102,7 +102,7 @@ class ChangeRequestValidationService
                 $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
     
                 $countAllTeams = $technicalCr->technical_cr_team->count();
-                $countApprovedTeams = $technicalCr->technical_cr_team->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
+                $countApprovedTeams = $technicalCr->technical_cr_team()->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
     
                 if ($countAllTeams > $countApprovedTeams) {
                     return true; // Still waiting for other teams
@@ -187,7 +187,7 @@ class ChangeRequestValidationService
 					{
 						$technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
 						$countAllTeams = $technicalCr->technical_cr_team->count();
-						$countApprovedTeams = $technicalCr->technical_cr_team->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
+						$countApprovedTeams = $technicalCr->technical_cr_team()->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
 						if ($countAllTeams == $countApprovedTeams) {
 							$technicalCr->status = '1';
 							$technicalCr->save();
@@ -221,7 +221,7 @@ class ChangeRequestValidationService
             $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
             
             $countAllTeams = $technicalCr->technical_cr_team->count();
-            $countApprovedTeams = $technicalCr->technical_cr_team->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
+            $countApprovedTeams = $technicalCr->technical_cr_team()->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
             
             if ($countAllTeams == $countApprovedTeams) {
                 $technicalCr->status = '1';
@@ -247,7 +247,7 @@ class ChangeRequestValidationService
             $technicalCr->technical_cr_team()->where('group_id', $group)->update(['status' => '1']);
 
             $countAllTeams = $technicalCr->technical_cr_team->count();
-            $countApprovedTeams = $technicalCr->technical_cr_team->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
+            $countApprovedTeams = $technicalCr->technical_cr_team()->whereRaw('CAST(status AS CHAR) = ?', ['1'])->count();
 
             if ($countAllTeams > $countApprovedTeams) {
                 return true; // Still waiting for other teams

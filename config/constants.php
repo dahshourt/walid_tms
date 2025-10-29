@@ -40,5 +40,10 @@ return [
 			//'adel.atef@te.eg', 
 			//'yousry.mostafa@te.eg', 
 			//'it.qa@te.eg'
+		],
+	'rules' =>
+		[
+			'notify_division_manager_default' => 'CR Created - Notify Division Manager (Regular)',
+			'notify_division_manager_promo' => 'CR Created - Notify Division Manager (Promo)',
 		]
 ];

@@ -12,7 +12,8 @@ use App\Models\{
     NewWorkFlow,
     CustomField,
     ChangeRequestCustomField,
-    Change_request_statuse
+    Change_request_statuse,
+    CrAssignee
 };
 use App\Http\Repository\{
     Logs\LogRepository,
@@ -75,6 +76,9 @@ class ChangeRequestUpdateService
         // 3) Assignments
         $this->handleUserAssignments($id, $request);
 
+        // handle CR Assignees {developer, tester, designer, cr_member}
+        $this->handleCrAssignees($id, $request);
+
         // 4) CAB users (if any)
         $this->handleCabUsers($id, $request);
 
@@ -110,6 +114,28 @@ class ChangeRequestUpdateService
 
         return true;
     }
+
+    // CR Assignees
+    protected function handleCrAssignees($id, $request): void
+    {
+        $assignments = [
+            'developer' => $request->developer_id ?? null,
+            'tester' => $request->tester_id ?? null,
+            'designer' => $request->designer_id ?? null,
+            'cr_member' => $request->cr_member ?? null,
+        ];
+
+        foreach ($assignments as $role => $userId) {
+            if (!empty($userId)) {
+                CrAssignee::create([
+                    'cr_id' => $id,
+                    'role' => $role,
+                    'user_id' => $userId,
+                ]);
+            }
+        }
+    }
+
 
     public function updateTestableFlag($id, $request)
     {

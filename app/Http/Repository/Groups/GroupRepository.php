@@ -56,8 +56,10 @@ class GroupRepository implements GroupRepositoryInterface
     public function create($request)
     {
         $group = Group::create(Arr::except($request, 'application_id'));
-        $this->StoreApplicationGroup($group->id,$request['application_id']);
-
+        if(isset($request['application_id']) && !empty($request['application_id']))
+        {
+            $this->StoreApplicationGroup($group->id,$request['application_id']);
+        }
         //$this->StoreApplicationGroup($group->id,$request);
         return $group;
     }
@@ -71,7 +73,10 @@ class GroupRepository implements GroupRepositoryInterface
     {
      
         $group = Group::where('id', $id)->update($request->except('application_id','_method','_token'));
-        $this->StoreApplicationGroup($id,$request['application_id']);
+        if(isset($request['application_id']) && !empty($request['application_id']))
+        {
+            $this->StoreApplicationGroup($id,$request['application_id']);
+        }
         return $group;
     }
 
