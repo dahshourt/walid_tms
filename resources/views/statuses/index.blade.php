@@ -15,7 +15,7 @@
 										<!--begin::Title-->
 										<h2 class="text-white font-weight-bold my-2 mr-5">{{ $title }}</h2>
 										<!--end::Title-->
-										
+
 									</div>
 									<!--end::Heading-->
 								</div>
@@ -27,7 +27,7 @@
 						<div class="d-flex flex-column-fluid">
 							<!--begin::Container-->
 							<div class="container">
-								
+
 								<!--begin::Card-->
 								<div class="card">
 									<div class="card-header flex-wrap border-0 pt-6 pb-0">
@@ -100,6 +100,7 @@
 												<!--end::Dropdown Menu-->
 											</div>
 											<!--end::Dropdown-->
+										<div class="d-flex">
 											@can('Create Status')
 											<!--begin::Button-->
 											<a href='{{ url("$route/create") }}' class="btn btn-primary font-weight-bolder">
@@ -116,6 +117,40 @@
 											</span>New Record</a>
 											<!--end::Button-->
 											@endcan
+
+											<!--begin::Export Button-->
+											@if($collection->count() > 0)
+												<a href="{{ route('statuses.export') }}"
+												   class="btn btn-success font-weight-bolder ml-3">
+													<span class="svg-icon svg-icon-md">
+														<!--begin::Svg Icon | path:assets/media/svg/icons/Files/Download.svg-->
+														<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+															<g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+																<rect x="0" y="0" width="24" height="24"/>
+																<path d="M7,18 L17,18 C18.1045695,18 19,18.8954305 19,20 C19,21.1045695 18.1045695,22 17,22 L7,22 C5.8954305,22 5,21.1045695 5,20 C5,18.8954305 5.8954305,18 7,18 Z M7,20 L17,20 C17.5522847,20 18,20.4477153 18,21 C18,21.5522847 17.5522847,22 17,22 L7,22 C6.44771525,22 6,21.5522847 6,21 C6,20.4477153 6.44771525,20 7,20 Z" fill="#000000" fill-rule="nonzero"/>
+																<path d="M12,2 C12.5522847,2 13,2.44771525 13,3 L13,13.5857864 L15.2928932,11.2928932 C15.6834175,10.9023689 16.3165825,10.9023689 16.7071068,11.2928932 C17.0976311,11.6834175 17.0976311,12.3165825 16.7071068,12.7071068 L12.7071068,16.7071068 C12.3165825,17.0976311 11.6834175,17.0976311 11.2928932,16.7071068 L7.29289322,12.7071068 C6.90236893,12.3165825 6.90236893,11.6834175 7.29289322,11.2928932 C7.68341751,10.9023689 8.31658249,10.9023689 8.70710678,11.2928932 L11,13.5857864 L11,3 C11,2.44771525 11.4477153,2 12,2 Z" fill="#000000"/>
+															</g>
+														</svg>
+														<!--end::Svg Icon-->
+													</span>Export Excel
+												</a>
+											@else
+												<span class="btn btn-secondary font-weight-bolder ml-3" style="opacity: 0.6; cursor: not-allowed;" title="No data available to export">
+													<span class="svg-icon svg-icon-md">
+														<!--begin::Svg Icon | path:assets/media/svg/icons/Files/Download.svg-->
+														<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+															<g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+																<rect x="0" y="0" width="24" height="24"/>
+																<path d="M7,18 L17,18 C18.1045695,18 19,18.8954305 19,20 C19,21.1045695 18.1045695,22 17,22 L7,22 C5.8954305,22 5,21.1045695 5,20 C5,18.8954305 5.8954305,18 7,18 Z M7,20 L17,20 C17.5522847,20 18,20.4477153 18,21 C18,21.5522847 17.5522847,22 17,22 L7,22 C6.44771525,22 6,21.5522847 6,21 C6,20.4477153 6.44771525,20 7,20 Z" fill="#000000" fill-rule="nonzero"/>
+																<path d="M12,2 C12.5522847,2 13,2.44771525 13,3 L13,13.5857864 L15.2928932,11.2928932 C15.6834175,10.9023689 16.3165825,10.9023689 16.7071068,11.2928932 C17.0976311,11.6834175 17.0976311,12.3165825 16.7071068,12.7071068 L12.7071068,16.7071068 C12.3165825,17.0976311 11.6834175,17.0976311 11.2928932,16.7071068 L7.29289322,12.7071068 C6.90236893,12.3165825 6.90236893,11.6834175 7.29289322,11.2928932 C7.68341751,10.9023689 8.31658249,10.9023689 8.70710678,11.2928932 L11,13.5857864 L11,3 C11,2.44771525 11.4477153,2 12,2 Z" fill="#000000"/>
+															</g>
+														</svg>
+														<!--end::Svg Icon-->
+													</span>Export Excel
+												</span>
+											@endif
+											<!--end::Export Button-->
+										</div>
 										</div>
 									</div>
 									<div class="card-body">
@@ -141,7 +176,6 @@
 										<!--end: Datatable-->
 									</div>
 								</div>
-								
 								<!--end::Card-->
 							</div>
 							<!--end::Container-->
@@ -149,6 +183,6 @@
 						<!--end::Entry-->
 					</div>
 					<!--end::Content-->
-					
+
 
 @endsection

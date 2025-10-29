@@ -16,12 +16,10 @@ class NewWorkFlow extends Model
      */
     protected $hidden = [
         'updated_at',
-        'created_at',
+        'created_at'
     ];
-
     protected $table = 'new_workflow';
-
-    protected $fillable = [
+    protected $fillable = [ 
         'previous_status_id',
         'from_status_id',
         'active',
@@ -29,26 +27,32 @@ class NewWorkFlow extends Model
         'same_time_from',
         'workflow_type', // this is flag especially or not
         'to_status_label',
-        'type_id', // this is workflow type id
+        'type_id' //this is workflow type id 
     ];
+
 
     public function from_status()
     {
-        return $this->belongsTo(Status::class, 'from_status_id');
+        return $this->belongsTo(Status::class,'from_status_id');
     }
 
     public function previous_status()
     {
-        return $this->belongsTo(Status::class, 'previous_status_id');
+        return $this->belongsTo(Status::class,'previous_status_id');
     }
 
     public function workflowstatus()
     {
-        return $this->hasMany(NewWorkFlowStatuses::class, 'new_workflow_id');
+        return $this->hasMany(NewWorkFlowStatuses::class,'new_workflow_id');
     }
 
-    /*public function workflowStatuses()
-     {
-         return $this->hasMany(NewWorkFlowStatuses::class, 'new_workflow_id', 'id');
-     }*/
+    public function type()
+    {
+        return $this->belongsTo(WorkFlowType::class,'type_id');
+    }
+
+   /*public function workflowStatuses()
+    {
+        return $this->hasMany(NewWorkFlowStatuses::class, 'new_workflow_id', 'id');
+    }*/
 }
