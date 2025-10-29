@@ -178,14 +178,15 @@ public function cr_pending_cap($group = null){
         $crs = Change_request::with('Req_status.status')
             ->whereHas('Req_status', function ($query) use ($userId, $viewStatuses) {
                 $query->where('assignment_user_id', $userId)
+						->whereRaw('CAST(active AS CHAR) = ?', ['1'])
                       ->whereIn('new_status_id', $viewStatuses);
             })
-            ->orWhere(function ($query) use ($userId) {
+            /* ->orWhere(function ($query) use ($userId) {
                 $query->whereHas('CurrentRequestStatuses', function ($q) {
                     $q->where('new_status_id', config('change_request.status_ids.cr_manager_review'))
                       ->whereRaw('CAST(active AS CHAR) = ?', ['1']);
                 })->orWhere('change_request.requester_id', $userId);
-            })
+            }) */
             ->paginate(50);
         }
 

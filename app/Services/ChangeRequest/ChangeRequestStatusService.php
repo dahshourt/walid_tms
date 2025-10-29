@@ -303,13 +303,12 @@ class ChangeRequestStatusService
         $workflowActive = $workflow->workflow_type == self::WORKFLOW_NORMAL
             ? self::INACTIVE_STATUS
             : self::COMPLETED_STATUS;
-
         $slaDifference = $this->calculateSlaDifference($currentStatus->created_at);
         // Only update if conditions are met
         if ($this->shouldUpdateCurrentStatus($statusData['old_status_id'], $technicalTeamCounts)) {
             $currentStatus->update([
                 'sla_dif' => $slaDifference,
-                'active' => $workflowActive
+                'active' => self::COMPLETED_STATUS
             ]);
 
             $this->handleDependentStatuses($changeRequestId, $currentStatus, $workflowActive);
@@ -464,6 +463,7 @@ class ChangeRequestStatusService
         $cr_status = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('new_status_id', $oldStatusId)
             ->whereRaw('CAST(active AS CHAR) != ?', ['0'])->first();
         //->where('active','!=', '0')->first();
+		
         $parkedIds = array_values(config('change_request.promo_parked_status_ids', []));
 
 		$all_depend_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id', $cr_status->old_status_id)->whereRaw('CAST(active AS CHAR) != ?', ['0'])->whereNULL('group_id')
@@ -482,19 +482,20 @@ class ChangeRequestStatusService
         })->get();
 
 
-        //dd($cr_status,$all_depend_statuses,$depend_statuses,$depend_active_statuses);
-
-        if ($depend_statuses->count() == $all_depend_statuses->count()) {
+        
+        /* if ($depend_statuses->count() == $all_depend_statuses->count()) {
             foreach ($depend_statuses as $status) {
-
+				
                 $get_next_workflow = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id',
                     $status->new_status_id)->first();
+					
                 if ($get_next_workflow) {
                     $check_special_workflow = NewWorkFlow::where('from_status_id',
                         $get_next_workflow->old_status_id)->where('type_id',
                         $workflow->type_id)->whereHas('workflowstatus', function ($query) use ($get_next_workflow) {
                         $query->where('to_status_id', $get_next_workflow->new_status_id);
                     })->first();
+					//dd($check_special_workflow->workflow_type);
                     if ($check_special_workflow->workflow_type == 1) {
                         $get_next_workflow->update(['active' => self::ACTIVE_STATUS]);
                         $active = 0;
@@ -503,7 +504,7 @@ class ChangeRequestStatusService
                 }
 
             }
-        }
+        } */
 
         if ($changeRequest->workflow_type_id == 9) {
             $NextStatusWorkflow = NewWorkFlow::find($newStatusId);
@@ -518,8 +519,7 @@ class ChangeRequestStatusService
         } else {
             $active = $depend_active_statuses->count() > 0 ? self::INACTIVE_STATUS : self::ACTIVE_STATUS;
         }
-
-        $this->active_flag = $active;
+		$this->active_flag = $active;
         return $active;
 
     }

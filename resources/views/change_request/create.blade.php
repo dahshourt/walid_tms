@@ -39,7 +39,7 @@
 													@php
 														// to get the cr id from the session message
 														preg_match('/CR#(\d+)/', session('status'), $matches);
-														$cr_id = $matches[1] ?? null;
+														$cr_id = session('cr_id') ?? null;
 														$cr_link = $cr_id ? route('show.cr', $cr_id) : null;
 													@endphp
 
