@@ -9,7 +9,11 @@ use App\Factories\Statuses\StatusFactory;
 use App\Http\Resources\StatusResource;
 use App\Http\Repository\Stages\StageRepository;
 use App\Http\Repository\Groups\GroupRepository;
+use App\Exports\StatusesExport;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+
 class StatusController extends Controller
 {
     use ValidatesRequests;
@@ -36,7 +40,7 @@ class StatusController extends Controller
     {
         $this->authorize('List Statuses'); // permission check
         //  = $this->status->getAll();
-        $collection = StatusResource::collection($this->status->paginateAll(['setByGroupStatuses.group', 'viewByGroupStatuses.group', 'stage']));
+        $collection = StatusResource::collection($this->status->paginateAll(['setByGroupStatuses.group', 'viewByGroupStatuses.group', 'stage:id,name']));
         return view("$this->view.index",compact('collection'));
     }
     /**
@@ -140,5 +144,12 @@ class StatusController extends Controller
 
 
 	}
+
+    public function export(): BinaryFileResponse
+    {
+        $this->authorize('List Statuses');
+
+        return Excel::download(new StatusesExport, 'statuses_' . date('Y-m-d_H-i-s') . '.xlsx');
+    }
 
 }
