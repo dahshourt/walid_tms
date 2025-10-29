@@ -345,7 +345,7 @@ class ChangeRequestController extends Controller
                 'cr_no' => $cr_no,
                 'user_id' => auth()->id()
             ]);
-
+			session()->flash('cr_id',$cr_id);
             return redirect()->back()->with('status', "Created Successfully CR#{$cr_no}");
 
         } catch (\Exception $e) {
