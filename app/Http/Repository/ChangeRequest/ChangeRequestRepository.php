@@ -98,7 +98,12 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
     public function cr_pending_cap()
     {
         return $this->searchService->cr_pending_cap();
-    }
+    }//cr_hold_promo
+
+    public function cr_hold_promo()
+    {
+        return $this->searchService->cr_hold_promo();
+    }//cr_hold_promo
 
     public function my_assignments_crs()
     {
@@ -147,6 +152,12 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
     {
         return $this->schedulingService->reorderTimes($crId);
     }
+    public function holdPromo($crId)
+    {
+       
+        return $this->schedulingService->holdPromo($crId);
+    }
+
 
     public function reorderChangeRequests($crId)
     {

@@ -305,6 +305,48 @@ if ($hasDesignStatus) {
 //         }
 //     }
 // }
+
+
+public function holdPromo($id): array
+{
+    try {
+        $cr = Change_request::where('cr_no', $id)
+            ->where('workflow_type_id', 9)
+            ->first();
+
+        // If not found
+        if (!$cr) {
+            return [
+                'status' => false,
+                'message' => "Change Request with number {$id} not found."
+            ];
+        }
+
+        // Check if on hold
+        if ($cr->hold == 1) {
+            return [
+                'status' => false,
+                'message' => "Change Request #{$cr->cr_no} is currently on hold."
+            ];
+        }
+          $cr->RequestStatuses()
+        ->where('active', '1')
+        ->update(['active' => '3']);
+
+        $cr->update(['hold' => 1]);
+
+        return [
+            'status' => true,
+            'message' => "Successfully hold  promo CR #{$cr->cr_no}."
+        ];
+    } catch (\Exception $e) {
+        return [
+            'status' => false,
+            'message' => 'An error occurred while hold : ' . $e->getMessage()
+        ];
+    }
+}
+
 protected function processTestPhase($cr): void
 {
     if (!$cr || $cr->test_duration <= 0) {

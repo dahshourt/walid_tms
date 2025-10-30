@@ -48,13 +48,11 @@
  													<th>Title</th>
 													<th>Description</th>
 													<th>Status</th>
-													<th>Actions</th>
-													@if(!empty($roles_name) && isset($roles_name[0]) && $roles_name[0] != "Viewer")
 												
-													@endif
-													@canany(['Edit ChangeRequest' , 'Show ChangeRequest'])
-													<th>show</th>
-													@endcanany
+												
+													@can('Edit cr pending cap')
+													<th>Actions</th>
+													@endcan
 												</tr>
 											</thead>
 											<tbody>

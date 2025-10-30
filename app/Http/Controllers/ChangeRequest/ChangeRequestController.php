@@ -199,7 +199,7 @@ class ChangeRequestController extends Controller
     public function cr_pending_cap()
     {
         try {
-            //$this->authorize('CR Waiting Approval');
+            $this->authorize('Show cr pending cap');
             
             $title = 'CR Pending Cap';
             $collection = $this->changerequest->cr_pending_cap();
@@ -211,7 +211,25 @@ class ChangeRequestController extends Controller
             ]);
             return redirect('/')->with('error', 'You do not have permission to access this page.');
         }
-    }// cr_pending_cap
+    }// cr_hold_promo
+
+    public function cr_hold_promo()
+    {
+        try {
+            $this->authorize('show hold cr');
+            
+            $title = 'CR Hold Promo';
+            $collection = $this->changerequest->cr_hold_promo();
+            
+            return view("{$this->view}.cr_hold_promo", compact('collection', 'title'));
+        } catch (AuthorizationException $e) {
+            Log::warning('Unauthorized access attempt to division manager CRs', [
+                'user_id' => auth()->id()
+            ]);
+            return redirect('/')->with('error', 'You do not have permission to access this page.');
+        }
+    }// cr_hold_promo
+
 
     /**
      * Select and store group in session
@@ -684,6 +702,26 @@ class ChangeRequestController extends Controller
         $crId = $request->input('change_request_id');
         $repository = new ChangeRequestRepository();
         $result = $repository->reorderTimes($crId);
+
+        if ($result['status']) {
+            return redirect()->back()->with('success', $result['message']);
+        }
+        if (!$result['status']) {
+            return redirect()->back()->with('error', $result['message']);
+        }
+        return redirect()->back()->with('error', $result['message']);
+    }
+    public function holdChangeRequest(Request $request)
+    {
+       // $this->authorize('Shift ChangeRequest');
+
+        $request->validate([
+            'change_request_id' => 'required|exists:change_request,cr_no',
+        ]);
+
+        $crId = $request->input('change_request_id');
+        $repository = new ChangeRequestRepository();
+        $result = $repository->holdPromo($crId);
 
         if ($result['status']) {
             return redirect()->back()->with('success', $result['message']);
@@ -1234,9 +1272,107 @@ class ChangeRequestController extends Controller
             ], 500);
         }
     }
-    public function handlePendingCap(Request $request)
+
+
+    public function approved_continue(Request $request)
     {
        
+        $cr_id = $request->query('crId');
+        $action = $request->query('action');
+        $token = $request->query('token');
+
+        if (!$cr_id || !$action || !$token) {
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Invalid request. Missing parameters.',
+            ], 400);
+        }
+
+        $cr = Change_request::find($cr_id);
+        if (!$cr) {
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Change Request not found.',
+            ], 404);
+        }
+
+        $expectedToken = $this->generateSecurityToken($cr);
+        if ($token !== $expectedToken) {
+            Log::warning('Invalid token used for division manager action (JSON)', [
+                'cr_id' => $cr_id,
+                'ip' => request()->ip()
+            ]);
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Unauthorized access. Invalid token.',
+            ], 403);
+        }
+
+    
+      
+
+        try {
+           
+          
+if($action=='approve'){
+    Change_request_statuse::where('cr_id', $cr->id)
+        ->where('active', '3')
+        ->update(['active' => '1']);
+
+   
+
+}
+else {
+
+    Change_request_statuse::where('cr_id', $cr->id)
+    ->where('active', '3')
+    ->update(['active' => '2']);
+    $firstStatus = Change_request_statuse::where('cr_id', $cr->id)
+    ->orderBy('id', 'asc') // or desc, depending on which you want
+    ->first();
+
+if ($firstStatus) {
+    // Duplicate the row
+    $newStatus = $firstStatus->replicate(); // clone all fields
+    $newStatus->active = '1';              // change only what you need
+    $newStatus->save();                    // insert the new record
+}
+
+}
+$cr->update(['hold' => 0]);
+
+            $message = $action === 'approve' 
+                ? "CR #{$cr_id} has been successfully re hold."
+                : "CR #{$cr_id} has been successfully rejected.";
+                $response = [
+                    'isSuccess' => true,
+                    'message' => $message,
+                ];
+              
+            return response()->json([
+                'status' => 200,
+                'isSuccess' => true,
+                'message' => $message,
+            ], 200);
+            
+        } catch (\Exception $e) {
+            Log::error('Failed to process division manager action (JSON)', [
+                'cr_id' => $cr_id,
+                'action' => $action,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Failed to process action. Please try again.',
+            ], 500);
+        }
+    }
+
+
+    public function handlePendingCap(Request $request)
+    {
+        $this->authorize('Edit cr pending cap');
         $cr_id = $request->query('crId');
         $action = $request->query('action');
         $token = $request->query('token');
