@@ -12,6 +12,7 @@ class NotificationService
     public function handleEvent($event)
     {
         $eventClass = get_class($event);
+        //dd($event, $event->request->all());
         
         // Get all active rules for this event
         $rules = NotificationRule::with(['template', 'recipients'])
@@ -19,10 +20,11 @@ class NotificationService
             ->where('is_active', true)
             ->orderBy('priority', 'desc')
             ->get();
-
+        //dd($rules);
         foreach ($rules as $rule) {
             // Check if conditions match
             if ($this->evaluateConditions($rule, $event)) {
+                //dd($rule);
                 $this->processNotification($rule, $event);
             }
         }
@@ -30,34 +32,30 @@ class NotificationService
 
     protected function evaluateConditions($rule, $event)
     {
+        
         if (empty($rule->conditions)) {
             return true; // No conditions = always execute
         }
 
         $conditions = $rule->conditions;
         
-        // Check workflow_type condition (when workflow promo)
+        // Check workflow_type condition
         if (isset($conditions['workflow_type'])) {
             if ($event->changeRequest->workflow_type_id != $conditions['workflow_type']) {
                 return false;
             }
         }
         
-        // Check workflow_type_not condition (when workflow should not promo)
+        // Check workflow_type_not condition
         if (isset($conditions['workflow_type_not'])) {
             if ($event->changeRequest->workflow_type_id == $conditions['workflow_type_not']) {
                 return false;
             }
         }
     
-        if (isset($conditions['from_status_id'])) {
-            if (isset($event->oldStatusId) && $event->oldStatusId != $conditions['from_status_id']) {
-                return false;
-            }
-        }
-        
-        if (isset($conditions['to_status_id'])) {
-            if (isset($event->newStatusId) && $event->newStatusId != $conditions['to_status_id']) {
+        // Check new_status_id (for status update events)
+        if (isset($conditions['new_status_id'])) {
+            if (!isset($event->newStatusIds) || !in_array($conditions['new_status_id'], $event->newStatusIds)) {
                 return false;
             }
         }
@@ -67,8 +65,14 @@ class NotificationService
 
     protected function processNotification($rule, $event)
     {
+        // Check active_flag for status update events - only send if status is active
+        if (isset($event->active_flag) && $event->active_flag != '1') {
+            return; // Skip notification if status is not active
+        }
+        
         // Resolve recipients (get the recipients that will receive the notification)
         $recipients = $this->resolveRecipients($rule, $event);
+        //dd($recipients);
         
         if (empty($recipients['to'])) {
             return; // No recipients no notification will be sent
@@ -154,7 +158,34 @@ class NotificationService
                     return $tester ? [$tester->email] : [];
                 }
                 return [];
+
+            case 'cr_member':
+                if (isset($event->request->cr_member)) {
+                    $cr_member = \App\Models\User::find($event->request->cr_member);
+                    return $cr_member ? [$cr_member->email] : [];
+                }
+                return [];
             
+            case 'assigned_group':
+                // Get the group assigned to handle the CR
+                if (isset($event->changeRequest->application_id)) {
+                    return ['Ticketing.DEV@te.eg']; // test
+                    /*$app = $event->changeRequest->application;
+                    if ($app && $app->group_applications->first()) {
+                        $group = $app->group_applications->first()->group;
+                        return $group ? [$group->head_group_email] : [];
+                    }*/
+                }
+                return [];
+            
+            case 'designer':
+                if (isset($event->changeRequest->designer_id)) {
+                    $designer = $event->changeRequest->designer;
+                    return $designer ? [$designer->email] : [];
+                }
+                return [];
+            
+            // Add more types as needed
             default:
                 return [];
         }
@@ -221,6 +252,38 @@ class NotificationService
         $approveLink = "mailto:{$qcEmail}?subject=" . rawurlencode($subject) . "&cc={$replyToEmail};{$ticketingDev}&body=approved";
         $rejectLink = "mailto:{$qcEmail}?subject=" . rawurlencode($subject) . "&cc={$replyToEmail};{$ticketingDev}&body=rejected";
         
+        // Get old and new status names for status update events
+        $oldStatus = '';
+        $newStatus = '';
+        
+        if (isset($statusData['old_status_id'])) {
+            $oldStatusModel = \App\Models\Status::find($statusData['old_status_id']);
+            $oldStatus = $oldStatusModel->status_name ?? '';
+        }
+        
+        // For new status, use the specific status from the rule condition (not all statuses)
+        // This shows only the relevant status that triggered this notification
+        $conditions = $rule->conditions ?? [];
+        if (isset($conditions['new_status_id'])) {
+            // Use the specific status from the condition
+            $newStatusModel = \App\Models\Status::find($conditions['new_status_id']);
+            $newStatus = $newStatusModel->status_name ?? '';
+        } elseif (isset($event->newStatusIds) && !empty($event->newStatusIds)) {
+            // Fallback: use first status from workflow if no condition specified
+            $newStatusModel = \App\Models\Status::whereIn('id', $event->newStatusIds)->first();
+            $newStatus = $newStatusModel->status_name ?? '';
+        }
+        
+        // Get group name for group notifications
+        $groupName = '';
+        if (isset($cr->application_id)) {
+            $app = $cr->application;
+            if ($app && $app->group_applications->first()) {
+                $group = $app->group_applications->first()->group;
+                $groupName = $group ? $group->title : '';
+            }
+        }
+        
         return [
             'cr_no' => $cr->cr_no,
             'cr_id' => $cr->id,
@@ -231,6 +294,9 @@ class NotificationService
             'first_name' => $firstName,
             'division_manager_name' => $divisionManagerName,
             'current_status' => $cr->currentStatusRel->status->status_name ?? 'N/A',
+            'old_status' => $oldStatus,
+            'new_status' => $newStatus,
+            'group_name' => $groupName,
             'cr_link' => $crLink,
             'approve_link' => $approveLink,
             'reject_link' => $rejectLink,

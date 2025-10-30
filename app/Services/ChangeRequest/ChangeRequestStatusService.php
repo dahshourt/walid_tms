@@ -19,6 +19,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use App\Events\ChangeRequestStatusUpdated;
 
 class ChangeRequestStatusService
 {
@@ -201,7 +202,10 @@ class ChangeRequestStatusService
 
         $this->createNewStatuses($changeRequest, $statusData, $workflow, $userId, $request);
 
-        $this->handleNotifications($statusData, $changeRequest->id, $request);
+        //$this->handleNotifications($statusData, $changeRequest->id, $request);
+        event(new ChangeRequestStatusUpdated($changeRequest, $statusData, $request, $this->active_flag));
+
+
     }
 
     /**
@@ -668,9 +672,10 @@ class ChangeRequestStatusService
         */
 
         // Notify group when status changes.
-
+        //dd($request->all(), $statusData);
         $newStatusId = NewWorkFlowStatuses::where('new_workflow_id',
-            $statusData['new_status_id'])->get()->pluck('to_status_id')->toArray();
+            $request->new_status_id)->get()->pluck('to_status_id')->toArray();
+        //dd($newStatusId);
         $userToNotify = [];
         if (in_array(config('change_request.status_ids.pending_cd_analysis'), $newStatusId)) {
             if (!empty($request->cr_member)) {
