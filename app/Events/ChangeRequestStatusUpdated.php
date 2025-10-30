@@ -11,13 +11,15 @@ use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 use App\Models\change_request;
 
-class ChangeRequestCreated
+class ChangeRequestStatusUpdated
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-
     public $changeRequest;
     public $statusData;
+    public $request;
+    public $active_flag;
+    public $newStatusIds; // Array of actual status IDs from the new workflow
     public $creator;
 
     // to run the event after the current commit
@@ -28,11 +30,19 @@ class ChangeRequestCreated
      *
      * @return void
      */
-    public function __construct(change_request $changeRequest, array $statusData = [])
+    public function __construct(change_request $changeRequest, array $statusData = [], $request, $active_flag)
     {
         $this->changeRequest = $changeRequest;
         $this->statusData = $statusData;
-        // Creator is the requester
+        $this->request = $request;
+        $this->active_flag = $active_flag;
+        // Important note: number 2.
+        // Get actual status IDs from workflow
+        // 2: $statusData['new_status_id'] is actually new_workflow_id
+        // Get the actual status IDs that this workflow transitions to
+        $this->newStatusIds = \App\Models\NewWorkFlowStatuses::where('new_workflow_id', $statusData['new_status_id'] ?? null)
+            ->pluck('to_status_id')
+            ->toArray();
         $this->creator = $changeRequest->requester;
     }
 

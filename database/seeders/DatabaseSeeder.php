@@ -25,7 +25,8 @@ class DatabaseSeeder extends Seeder
 			Module_RulesSeeder::class,
 			PermissionSeeder::class,
             CustomFieldsTableSeeder::class,
-            CrCreationNotification::class
+            CrCreationNotification::class,
+            CrUpdateNotification::class
 
         ]);
         // \App\Models\User::factory(10)->create();
