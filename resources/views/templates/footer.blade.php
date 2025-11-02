@@ -237,12 +237,12 @@ let fullUrl = `${baseUrl}?crId=${id}&action=approve&token=${token}`;
 						
                         toastr.error(msg.message || "Action failed.");
                     }
-					//window.location.reload();
+					window.location.reload();
                 },
                 error: function(xhr, status, error) {
                     toastr.error("Something went wrong: " + error);
                     alert("Error: " + error + "\nStatus: " + status + "\nResponse: " + xhr.responseText);
-                   // window.location.reload();
+                    window.location.reload();
                 }
             });
         }
@@ -353,7 +353,7 @@ let fullUrl = `${baseUrl}?crId=${id}&action=reject&token=${token}`;
                 error: function(xhr, status, error) {
                     toastr.error("Something went wrong: " + error);
                     alert("Error: " + error + "\nStatus: " + status + "\nResponse: " + xhr.responseText);
-                  //  window.location.reload();
+                    window.location.reload();
                 }
             });
         }
@@ -383,12 +383,12 @@ let fullUrl = `${baseUrl}?crId=${id}&action=reject&token=${token}`;
                     } else {
                         toastr.error(msg.message || "Action failed.");
                     }
-					//window.location.reload();
+					window.location.reload();
                 },
                 error: function(xhr, status, error) {
                     toastr.error("Something went wrong: " + error);
                     alert("Error: " + error + "\nStatus: " + status + "\nResponse: " + xhr.responseText);
-                  //  window.location.reload();
+                    window.location.reload();
                 }
             });
         }
