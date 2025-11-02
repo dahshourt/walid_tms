@@ -17,6 +17,7 @@ class Kernel extends ConsoleKernel
            \App\Console\Commands\UpdateReleaseAndCrs::class,
            \App\Console\Commands\UpdateToNextStatusAsCalendar::class, // Fixed class name
            \App\Console\Commands\KickOffMeetingStatusUpdate::class,
+           \App\Console\Commands\Reject_business_approvals::class,
          //  \App\Console\Commands\EwsListenerCommand::class,
 
     ];
@@ -39,6 +40,7 @@ class Kernel extends ConsoleKernel
                  ->withoutOverlapping()
                  ->runInBackground();
          $schedule->command('cron:escalation')->everyFiveMinutes();
+         $schedule->command('auto:reject-cr')->dailyAt('00:00');
 
     }
 

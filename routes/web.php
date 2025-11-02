@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Services\EwsMailReader;
 use App\Http\Controllers\Sla\SlaCalculationController;
+use App\Http\Controllers\ConfigurationController;
 
 
 
@@ -215,6 +216,8 @@ Route::middleware(['auth'])->group(
         // Notification Routes
         Route::resource('notification_templates', NotificationTemplates\NotificationTemplatesController::class);
         Route::get('/get-groups/{status_id}', [SlaCalculationController::class, 'getGroups'])->name('get.groups');
+        Route::get('/configurations', [ConfigurationController::class, 'index'])->name('configurations.index');
+        Route::post('/configurations/update', [ConfigurationController::class, 'update'])->name('configurations.update');
 
 
         //test ews
