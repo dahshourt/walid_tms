@@ -23,10 +23,10 @@ class Division_managerController extends Controller
         $this->view = 'division_manager';
         $view = 'division_manager';
         $route = 'division_manager';
-        //$OtherRoute = 'user';
+        $OtherRoute = 'division_manager';
         $title = 'Division Manager';
         $form_title = 'Division Manager';
-        view()->share(compact('view','route','title','form_title'));
+        view()->share(compact('view','route','title','form_title','OtherRoute'));
     }
 
     public function index()
@@ -92,9 +92,9 @@ class Division_managerController extends Controller
 	public function updateactive(Request $request)
     {
         $this->authorize('Active Division'); // permission check
-        
-        $data = $this->user->find($request->id);
-		$this->user->updateactive($data->active,$request->id);
+        //dd('active');
+        $data = $this->division_manager->find($request->id);
+		$this->division_manager->updateactive($data->active,$request->id);
 		   
 		    return response()->json([
             'message' => 'Updated Successfully',

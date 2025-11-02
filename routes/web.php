@@ -84,6 +84,7 @@ Route::middleware(['auth'])->group(
         Route::resource('statuses', Statuses\StatusController::class);
         Route::post('status/updateactive', 'Statuses\StatusController@updateactive');
         Route::resource('division_manager', Division_manager\Division_managerController::class);
+        Route::post('division_manager/updateactive', 'Division_manager\Division_managerController@updateactive');
 
         Route::resource('directors', 'Director\DirectorController')->except(['show', 'destroy']);
         Route::post('directors/updateactive', 'Director\DirectorController@updateStatus')->name('directors.updateStatus');
