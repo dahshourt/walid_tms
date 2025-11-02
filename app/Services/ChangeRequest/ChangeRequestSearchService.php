@@ -58,7 +58,7 @@ class ChangeRequestSearchService
     {
         $group = $this->resolveGroup($group);
         $groupData = Group::find($group);
-        $groupApplications = $groupData->group_applications->pluck('application_id')->toArray();
+		$groupApplications = $groupData->group_applications->pluck('application_id')->toArray();
         $viewStatuses = $this->getViewStatuses($group);
 
         $changeRequests = Change_request::with('RequestStatuses.status');

@@ -46,6 +46,7 @@ class ChangeRequestController extends Controller
     // Constants for better maintainability
     private const FORM_TYPE_CREATE = 1;
     private const FORM_TYPE_EDIT = 2;
+    private const FORM_TYPE_VIEW = 2;
     private const ATTACHMENT_TYPE_TECHNICAL = 1;
     private const ATTACHMENT_TYPE_BUSINESS = 2;
     private const MAX_FILE_SIZE = 5120; // 5MB in KB
@@ -403,7 +404,7 @@ class ChangeRequestController extends Controller
 
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus(
             $workflow_type_id,
-            self::FORM_TYPE_EDIT,
+            self::FORM_TYPE_VIEW,
             $status_id
         );
 
@@ -550,14 +551,15 @@ class ChangeRequestController extends Controller
             ]);
 
 			$previousUrl = url()->previous();
-
-			if (Str::contains($previousUrl, 'edit_cab')) {
+			$cr = Change_request::find($id);
+			return redirect()->to('/search/result?search='.$cr->cr_no)->with('status', 'Updated Successfully');
+			/* if (Str::contains($previousUrl, 'edit_cab')) {
 				// Do something if previous URL contains "edit_cab"
 				return redirect()->to('/change_request')->with('status', 'Updated Successfully');
 			} else {
 				//return redirect()->back()->with('status', 'Updated Successfully');
                 return redirect()->to('/change_request')->with('status', 'Updated Successfully');
-			}
+			} */
             //
 
 
