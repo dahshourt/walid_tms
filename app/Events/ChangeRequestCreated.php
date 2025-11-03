@@ -18,6 +18,7 @@ class ChangeRequestCreated
 
     public $creator;
 
+    // to run the event after the current commit
     public bool $afterCommit = true;
 
     /**

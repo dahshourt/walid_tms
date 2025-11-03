@@ -7,7 +7,7 @@
                                     <td>{{ $item->division_manager_email }}</td>
                                     @can('Active Division')
                                     <td>
-                                        @if($item->active)
+                                    @if($item->active)
                                     <span class="label label-lg label-light-success label-inline _change_active" data-id="{{ $item->id }}">Active</span>
                                     @else
                                     <span class="label label-lg label-light-danger label-inline _change_active" data-id="{{ $item->id }}">Inactive</span>
