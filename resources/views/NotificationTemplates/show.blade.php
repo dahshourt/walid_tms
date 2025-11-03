@@ -96,7 +96,7 @@
                                                     @endpush
 												<div class="card-footer">
 									
-													<a href="{{ route('mail_templates.index') }}" class="btn btn-primary">cancel</a>
+													<a href="{{ route('notification_templates.index') }}" class="btn btn-primary">cancel</a>
 												</div>
 											
 											<!--end::Form-->

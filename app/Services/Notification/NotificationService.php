@@ -7,9 +7,12 @@ use App\Models\NotificationLog;
 use App\Models\NotificationRule;
 use Exception;
 use Illuminate\Support\Facades\Mail;
+use App\Models\User;
 
 class NotificationService
 {
+    private $toMailUser;
+    private $toMailGroup; 
     public function handleEvent($event)
     {
         $eventClass = get_class($event);
@@ -21,7 +24,8 @@ class NotificationService
             ->where('is_active', true)
             ->orderBy('priority', 'desc')
             ->get();
-        // dd($rules);
+        //dd($rules);
+        //dd($event->changeRequest->application->group_applications->last()->group_id);
         foreach ($rules as $rule) {
             // Check if conditions match
             if ($this->evaluateConditions($rule, $event)) {
@@ -121,11 +125,13 @@ class NotificationService
     {
         switch ($recipient->recipient_type) {
             case 'cr_creator':
+                $this->toMailUser = $event->creator->email ?? $event->changeRequest->requester_email;
                 return [$event->creator->email ?? $event->changeRequest->requester_email];
 
             case 'division_manager':
                 // Get division manager from statusData or from CR model
                 if (isset($event->statusData['division_manager'])) {
+                    $this->toMailUser = $event->statusData['division_manager'];
                     return [$event->statusData['division_manager']];
                 }
                 // get it from the model
@@ -138,68 +144,100 @@ class NotificationService
                 return [];
                 // in case sent to specific email
             case 'static_email':
+                $this->toMailUser = $recipient->recipient_identifier;
                 return [$recipient->recipient_identifier];
 
             case 'user':
-                $user = \App\Models\User::find($recipient->recipient_identifier);
-
+                $user = User::find($recipient->recipient_identifier);
+                $this->toMailUser = $user->email;
                 return $user ? [$user->email] : [];
-
+            // need to review this 
             case 'group':
-                $group = \App\Models\Group::find($recipient->recipient_identifier);
-
+                $group = Group::find($recipient->recipient_identifier);
+                $this->toMailUser = $group->head_group_email;
                 return $group ? [$group->head_group_email] : [];
 
             case 'developer':
-                if (isset($event->changeRequest->developer_id)) {
-                    $dev = $event->changeRequest->developer;
-
+                if (isset($event->request->developer_id)) {
+                    $dev = User::find($event->request->developer_id);
+                    $this->toMailUser = $dev->email;
                     return $dev ? [$dev->email] : [];
                 }
-
+                else{
+                    $dev = $event->changeRequest->resDeveloper->user->email ?? null;;
+                    $this->toMailUser = $dev;
+                    return $dev ? [$dev] : [];
+                }
                 return [];
 
             case 'tester':
-                if (isset($event->changeRequest->tester_id)) {
-                    $tester = $event->changeRequest->tester;
-
+                if (isset($event->request->tester_id)) {
+                    $tester = User::find($event->request->tester_id);
+                    $this->toMailUser = $tester->email;
                     return $tester ? [$tester->email] : [];
                 }
-
-                return [];
-
-            case 'cr_member':
-                if (isset($event->request->cr_member)) {
-                    $cr_member = \App\Models\User::find($event->request->cr_member);
-
-                    return $cr_member ? [$cr_member->email] : [];
+                else{
+                    $tester = $event->changeRequest->resTester->user->email ?? null;
+                    $this->toMailUser = $tester;
+                    return $tester ? [$tester] : [];
                 }
-
-                return [];
-
-            case 'assigned_group':
-                // Get the group assigned to handle the CR
-                if (isset($event->changeRequest->application_id)) {
-                    return ['Ticketing.DEV@te.eg']; // test
-                    /*$app = $event->changeRequest->application;
-                    if ($app && $app->group_applications->first()) {
-                        $group = $app->group_applications->first()->group;
-                        return $group ? [$group->head_group_email] : [];
-                    }*/
-                }
-
                 return [];
 
             case 'designer':
                 if (isset($event->changeRequest->designer_id)) {
-                    $designer = $event->changeRequest->designer;
-
+                    $designer = User::find($event->changeRequest->designer_id);
+                    $this->toMailUser = $designer->email;
                     return $designer ? [$designer->email] : [];
+                }
+                else{
+                    $designer = $event->changeRequest->resDesigner->user->email ?? null;
+                    $this->toMailUser = $designer;
+                    return $designer ? [$designer] : [];
+                }
+                return [];
+
+            case 'cr_member':
+                if (isset($event->request->cr_member)) {
+                    $cr_member = User::find($event->request->cr_member);
+                    $this->toMailUser = $cr_member->email;
+                    return $cr_member ? [$cr_member->email] : [];
+                }
+                else{
+                    $cr_member = $event->changeRequest->resCrMember->user->email ?? null;
+                    $this->toMailUser = $cr_member;
+                    return $cr_member ? [$cr_member] : [];
+                }
+                return [];
+
+            case 'cr_team':
+                //dd(config('constants.mails.cr_team'));
+                return [config('constants.mails.cr_team')];
+            
+            case 'qc_team':
+                return [config('constants.mails.qc_team')];
+            
+            case 'sa_team':
+                return [config('constants.mails.sa_team')];
+            
+            case 'qa_team':
+                return [config('constants.mails.qa_team')];
+            
+            case 'uat_team':
+                return [config('constants.mails.uat_team')];
+            
+            case 'pmo_team':
+                return [config('constants.mails.pmo_team')];
+            
+            case 'assigned_dev_team':
+                // Get the group assigned to handle the CR
+                if (isset($event->changeRequest->application_id)) {
+                    $group_id = $event->changeRequest->application->group_applications->last()->group_id;
+                    $group = Group::find($group_id);
+                    return $group ? [$group->head_group_email] : [];
                 }
 
                 return [];
-
-                // Add more types as needed
+            // Add more types as needed
             default:
                 return [];
         }
@@ -232,7 +270,15 @@ class NotificationService
         }
 
         // Extract first name from email if available
-        $firstName = $creatorName;
+        $firstName = $this->toMailUser;
+        $email_parts = explode('.', explode('@', $this->toMailUser)[0]);
+        $firstName = ucfirst($email_parts[0]);
+        
+        if(empty($firstName)){
+            $firstName = "Team";
+        }
+        
+        /*
         if ($event->creator && isset($event->creator->email)) {
             $email_parts = explode('.', explode('@', $event->creator->email)[0]);
             $firstName = ucfirst($email_parts[0]);
@@ -240,7 +286,8 @@ class NotificationService
             $email_parts = explode('.', explode('@', $statusData['requester_email'])[0]);
             $firstName = ucfirst($email_parts[0]);
         }
-
+        */
+        
         // Get division manager name if available
         $divisionManagerName = '';
         $divisionManagerEmail = '';

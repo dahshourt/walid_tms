@@ -16,9 +16,7 @@
     </div>
 @endif
 
-													<div class="form-group form-group-last">
-														
-													</div>
+													
 
 													<div class="form-group">
 														<label for="user_type">Template Name:</label>
@@ -32,6 +30,15 @@
 														<label for="user_type">Template Body:</label>
 														<textarea class="form-control form-control-lg" id="summernote" name="template_body" rows="10" cols="50">{{ isset($row) ? $row->body : old('body') }}</textarea>
 													</div>
+                                                    <div class="form-group">
+														<label for="user_type">Available PlaceHolder:</label>
+														<input class="form-control form-control-lg" id="available_placeholder" name="available_placeholder" value="{{ isset($row) ? $row->available_placeholder : old('available_placeholder') }}">
+													</div>
+                                                    <div class="form-group form-check">
+                                                        <input type="checkbox" class="form-check-input" id="is_active" name="is_active" value="1" {{ (isset($row) && $row->is_active) || old('is_active') ? 'checked' : '' }}>
+                                                        <label class="form-check-label" for="is_active">Is Active</label>
+                                                    </div>
+                                                    
                                                     
                                                     
 													
@@ -57,35 +64,8 @@ $('#user_type').change(function() {
       tabsize: 2,
       height: 150
     });
-  </script>
-
-<script>
-    // JavaScript to hide/show the parent selection field
-    document.getElementById('parent').addEventListener('change', function() {
-        const parentGroup = document.getElementById('permission_parent_group');
-        const permissionParentSelect = document.getElementById('permission_parent');
-        
-        if (this.checked) {
-            parentGroup.style.display = 'none'; // Hide the parent select input if checkbox is checked
-            permissionParentSelect.value = "";  // Deselect any selected option in the dropdown
-        } else {
-            parentGroup.style.display = 'block'; // Show the parent select input if checkbox is unchecked
-        }
-    });
-
-    // Initial check when the page loads
-    window.onload = function() {
-        const parentGroup = document.getElementById('permission_parent_group');
-        const isParentChecked = document.getElementById('parent').checked;
-        const permissionParentSelect = document.getElementById('permission_parent');
-
-        if (isParentChecked) {
-            parentGroup.style.display = 'none'; // Hide on page load if checkbox is already checked
-            permissionParentSelect.value = "";  // Deselect any selected option in the dropdown
-        } else {
-            parentGroup.style.display = 'block'; // Show on page load if checkbox is unchecked
-        }
-    };
 </script>
+
+
 
 @endpush
