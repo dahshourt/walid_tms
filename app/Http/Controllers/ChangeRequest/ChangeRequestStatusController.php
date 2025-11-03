@@ -1,27 +1,28 @@
 <?php
 
 namespace App\Http\Controllers\ChangeRequest;
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Http\Requests\Change_Request\Api\changeRequest_Requests;
+
 use App\Factories\ChangeRequest\ChangeRequestFactory;
 use App\Factories\ChangeRequest\ChangeRequestStatusFactory;
 use App\Factories\Workflow\WorkflowFactory;
-use Auth;
-
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 
 class ChangeRequestStatusController extends Controller
 {
     private $changerequest;
-    private  $changerequeststatus;
-    private  $workflow;
-    function __construct(ChangeRequestFactory $changerequest,ChangeRequestStatusFactory $changerequeststatus,WorkflowFactory $workflow){
+
+    private $changerequeststatus;
+
+    private $workflow;
+
+    public function __construct(ChangeRequestFactory $changerequest, ChangeRequestStatusFactory $changerequeststatus, WorkflowFactory $workflow)
+    {
 
         $this->changerequest = $changerequest::index();
         $this->changerequeststatus = $changerequeststatus::index();
         $this->changerworkflowequeststatus = $workflow::index();
     }
-
 
     /**
      * Display a listing of the resource.
@@ -30,22 +31,25 @@ class ChangeRequestStatusController extends Controller
      */
     public function index(Request $request)
     {
-       $group= $request->header('group');
+        $group = $request->header('group');
         //
 
-       $CRs= $this->changerequeststatus->getAll($group);
-       return response()->json(['data' => $CRs],200);
-    //    return $CRs;
+        $CRs = $this->changerequeststatus->getAll($group);
+
+        return response()->json(['data' => $CRs], 200);
+        //    return $CRs;
 
     }
 
     public function list_crs()
-{
+    {
 
-    $crs=$this->changerequeststatus->list_crs();
-    return response()->json(['data' => $crs],200);
+        $crs = $this->changerequeststatus->list_crs();
 
-}
+        return response()->json(['data' => $crs], 200);
+
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -53,7 +57,7 @@ class ChangeRequestStatusController extends Controller
      */
     public function create()
     {
-       //
+        //
     }
 
     /**
@@ -88,7 +92,6 @@ class ChangeRequestStatusController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */

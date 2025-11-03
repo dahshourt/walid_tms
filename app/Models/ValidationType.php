@@ -16,10 +16,10 @@ class ValidationType extends Model
      */
     protected $hidden = [
         'updated_at',
-        'created_at'
+        'created_at',
     ];
-    protected $table = 'validation_type';
-    protected $fillable = [ 'active','name'];
 
-    
+    protected $table = 'validation_type';
+
+    protected $fillable = ['active', 'name'];
 }

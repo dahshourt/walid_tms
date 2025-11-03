@@ -1,17 +1,13 @@
 <?php
 
 namespace App\Http\Repository\Departments;
-use App\Contracts\Departments\DepartmentRepositoryInterface;
 
+use App\Contracts\Departments\DepartmentRepositoryInterface;
 // declare Entities
 use App\Models\Department;
 
-
-
 class DepartmentRepository implements DepartmentRepositoryInterface
 {
-
-    
     public function getAll()
     {
         return Department::all();
@@ -36,15 +32,14 @@ class DepartmentRepository implements DepartmentRepositoryInterface
     {
         return Department::find($id);
     }
-public function updateactive($active,$id){
-		if($active){
-		return 	$this->update(['active'=>'0'],$id);
-		} else{
-			
-					return 	$this->update(['active'=>'1'],$id);
 
-		}
-		
-	}
+    public function updateactive($active, $id)
+    {
+        if ($active) {
+            return $this->update(['active' => '0'], $id);
+        }
 
+        return $this->update(['active' => '1'], $id);
+
+    }
 }

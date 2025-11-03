@@ -17,7 +17,7 @@ class CreateCabCrUsersTable extends Migration
             $table->id();
             $table->foreignId('user_id')->nullable();
             $table->foreignId('cab_cr_id')->nullable();
-            $table->enum('status', ['0', '1','2'])->default(0);
+            $table->enum('status', ['0', '1', '2'])->default(0);
             $table->timestamps();
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('cab_cr_id')->references('id')->on('cab_crs')->onDelete('cascade');

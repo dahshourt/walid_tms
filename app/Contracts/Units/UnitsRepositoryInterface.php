@@ -3,7 +3,6 @@
 namespace App\Contracts\Units;
 
 use App\Models\Unit;
-use Illuminate\Support\Collection;
 
 interface UnitsRepositoryInterface
 {

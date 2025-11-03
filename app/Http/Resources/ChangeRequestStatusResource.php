@@ -15,9 +15,9 @@ class ChangeRequestStatusResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'id'                    => $this->id,
-            'new_status_id'         => $this->new_status_id,
-            'status'                => new RequestStatusDetails($this->status),
+            'id' => $this->id,
+            'new_status_id' => $this->new_status_id,
+            'status' => new RequestStatusDetails($this->status),
         ];
     }
 }

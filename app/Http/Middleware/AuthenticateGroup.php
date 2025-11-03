@@ -12,12 +12,11 @@ class AuthenticateGroup
      * Handle an incoming request.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
      * @return mixed
      */
-    public function handle($request, Closure $next ,$guard = null)
+    public function handle($request, Closure $next, $guard = null)
     {
-        //if ( Auth::guard($guard)->check() ) {
+        // if ( Auth::guard($guard)->check() ) {
         if (Session::get('group')) {
 
             return $next($request);

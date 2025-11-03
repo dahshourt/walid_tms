@@ -2,24 +2,26 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
+use App\Models\change_request;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use App\Models\change_request;
 
 class ChangeRequestStatusUpdated
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $changeRequest;
+
     public $statusData;
+
     public $request;
+
     public $active_flag;
+
     public $newStatusIds; // Array of actual status IDs from the new workflow
+
     public $creator;
 
     // to run the event after the current commit
@@ -30,7 +32,7 @@ class ChangeRequestStatusUpdated
      *
      * @return void
      */
-    public function __construct(change_request $changeRequest, array $statusData = [], $request, $active_flag)
+    public function __construct(change_request $changeRequest, array $statusData, $request, $active_flag)
     {
         $this->changeRequest = $changeRequest;
         $this->statusData = $statusData;

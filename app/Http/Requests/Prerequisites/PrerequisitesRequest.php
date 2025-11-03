@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests\Prerequisites;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class PrerequisitesRequest extends FormRequest
@@ -27,9 +27,10 @@ class PrerequisitesRequest extends FormRequest
     {
         if ($this->isMethod('POST')) {
             return $this->createRules();
-        } else {
-            return $this->updateRules();
         }
+
+        return $this->updateRules();
+
     }
 
     /**
@@ -71,6 +72,20 @@ class PrerequisitesRequest extends FormRequest
     }
 
     /**
+     * Get custom messages for validator errors.
+     *
+     * @return array
+     */
+    public function messages()
+    {
+        return [
+            'promo_id.required' => 'Please select a promo',
+            'group_id.required' => 'Please select a group',
+            'attachments.max' => 'The attachment must not be greater than 10MB',
+        ];
+    }
+
+    /**
      * Prepare the data for validation.
      *
      * @return void
@@ -96,23 +111,8 @@ class PrerequisitesRequest extends FormRequest
     }
 
     /**
-     * Get custom messages for validator errors.
-     *
-     * @return array
-     */
-    public function messages()
-    {
-        return [
-            'promo_id.required' => 'Please select a promo',
-            'group_id.required' => 'Please select a group',
-            'attachments.max' => 'The attachment must not be greater than 10MB',
-        ];
-    }
-
-    /**
      * Handle a failed validation attempt.
      *
-     * @param  \Illuminate\Contracts\Validation\Validator  $validator
      * @return void
      *
      * @throws \Illuminate\Validation\ValidationException

@@ -15,26 +15,21 @@ class DependWorkflow extends Model
      * @var array
      */
     protected $table = 'depend_workflow_status';
+
     protected $fillable = [
-        'to_status_id','depend_status_id','active'
-        
+        'to_status_id', 'depend_status_id', 'active',
+
     ];
+
     public function depend_workflow_from_status()
     {
-        return $this->belongsTo(Status::class,'to_status_id')->select('id','status_name');
+        return $this->belongsTo(Status::class, 'to_status_id')->select('id', 'status_name');
 
     }
+
     public function depend_workflow_depend_status()
     {
-        return $this->belongsTo(Status::class,'depend_status_id')->select('id','status_name');
+        return $this->belongsTo(Status::class, 'depend_status_id')->select('id', 'status_name');
 
     }
-    
-
-
-   
-
-    
-    
-
 }

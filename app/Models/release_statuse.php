@@ -8,7 +8,4 @@ use Illuminate\Database\Eloquent\Model;
 class release_statuse extends Model
 {
     use HasFactory;
-
-    
-
 }

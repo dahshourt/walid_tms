@@ -17,14 +17,14 @@ class MyAssignmentsCRSResource extends JsonResource
         $current_status = $this->ListCurrentStatus();
 
         return [
-            'id'                                => $this->id,
-            'title'                             => $this->title,
-            'description'                       => $this->description,
-            'active'                            => $this->active,
-            'testable'                          => $this->testable,
-            'application'                       => $this->application,
-            'cr_no'                             => $this->cr_no,
-            'current_status'                    =>new ChangeRequestStatusResource($current_status),
+            'id' => $this->id,
+            'title' => $this->title,
+            'description' => $this->description,
+            'active' => $this->active,
+            'testable' => $this->testable,
+            'application' => $this->application,
+            'cr_no' => $this->cr_no,
+            'current_status' => new ChangeRequestStatusResource($current_status),
         ];
     }
 }

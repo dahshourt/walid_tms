@@ -3,13 +3,11 @@
 namespace App\Http\Requests\Parents\Api;
 
 use App\Rules\checkCRS;
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Foundation\Http\FormRequest;
 
 class ParentRequest extends FormRequest
 {
-
     /**
      * Determine if the supervisor is authorized to make this request.
      *
@@ -29,11 +27,11 @@ class ParentRequest extends FormRequest
     {
         if ($this->isMethod('POST')) {
             return $this->createRules();
-        } else {
-            return $this->updateRules();
         }
-    }
 
+        return $this->updateRules();
+
+    }
 
     /**
      * Get the create validation rules that apply to the request.
@@ -43,9 +41,8 @@ class ParentRequest extends FormRequest
     public function createRules()
     {
         return [
-            'name' => ['required','string', 'unique:parents_crs', new checkCRS()],
-            
-            
+            'name' => ['required', 'string', 'unique:parents_crs', new checkCRS()],
+
         ];
     }
 
@@ -56,18 +53,12 @@ class ParentRequest extends FormRequest
      */
     public function updateRules()
     {
-       
-        
+
         return [
-            'name' => ['required','string', 'unique:parents_crs,name,'.$this->id],
-            'active' => ['required','int'],
+            'name' => ['required', 'string', 'unique:parents_crs,name,' . $this->id],
+            'active' => ['required', 'int'],
         ];
     }
-
-
-   
-
-    
 
     /**
      * Get custom attributes for validator errors.

@@ -2,13 +2,12 @@
 
 namespace App\Http\Requests\Workflow\Api;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class NewWorkflowRequest extends FormRequest
 {
-
     /**
      * Determine if the supervisor is authorized to make this request.
      *
@@ -28,11 +27,11 @@ class NewWorkflowRequest extends FormRequest
     {
         if ($this->isMethod('POST')) {
             return $this->createRules();
-        } else {
-            return $this->updateRules();
         }
-    }
 
+        return $this->updateRules();
+
+    }
 
     /**
      * Get the create validation rules that apply to the request.
@@ -40,19 +39,18 @@ class NewWorkflowRequest extends FormRequest
      * @return array
      */
     public function createRules()
-    { 
-        return  [
+    {
+        return [
             'type_id' => ['required'],
             'from_status_id' => ['required'],
-            'active' => ['required','int'],
-            //'to_status_label' => ['sometimes','nullable','string'],
-             'to_status_id' => ['required'],
-            'default_to_status'=>['sometimes','nullable','int']
+            'active' => ['required', 'int'],
+            // 'to_status_label' => ['sometimes','nullable','string'],
+            'to_status_id' => ['required'],
+            'default_to_status' => ['sometimes', 'nullable', 'int'],
 
         ];
-       // $rules['to_status_id'] = is_array(request()->to_status_id) ? ['required','array'] : ['required','int'];
+        // $rules['to_status_id'] = is_array(request()->to_status_id) ? ['required','array'] : ['required','int'];
 
-        
     }
 
     /**
@@ -64,19 +62,18 @@ class NewWorkflowRequest extends FormRequest
     {
         $rules = [
             'from_status_id' => ['required'],
-            
-           // 'to_status_label' => ['sometimes','nullable','string'],
-            'default_to_status'=>['sometimes','nullable','int']
+
+            // 'to_status_label' => ['sometimes','nullable','string'],
+            'default_to_status' => ['sometimes', 'nullable', 'int'],
 
         ];
-        $rules['to_status_id'] = is_array(request()->to_status_id) ? ['required','array'] : ['required','int'];
+        $rules['to_status_id'] = is_array(request()->to_status_id) ? ['required', 'array'] : ['required', 'int'];
 
         return $rules;
-       
+
     }
 
-
-    /*protected function failedValidation(Validator $validator) { 
+    /*protected function failedValidation(Validator $validator) {
         throw new HttpResponseException(response()->json([
             'message' => $validator->messages()
           ], 422));
@@ -88,8 +85,6 @@ class NewWorkflowRequest extends FormRequest
             'active' => $this->has('active') ? $this->input('active') : '0',
         ]);
     }
-    
-    
 
     /**
      * Get custom attributes for validator errors.

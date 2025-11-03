@@ -21,7 +21,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Foreign key to change_requests table (adjust if your CR table has a different name)
-            //$table->foreign('cr_id')->references('cr_no')->on('change_request');
+            // $table->foreign('cr_id')->references('cr_no')->on('change_request');
         });
     }
 

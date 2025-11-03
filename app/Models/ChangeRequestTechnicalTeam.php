@@ -8,14 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 class ChangeRequestTechnicalTeam extends Model
 {
     use HasFactory;
+
+    public $timestamps = true;
+
     protected $table = 'change_request_technical_team';
 
     protected $fillable = [
         'cr_id',
         'technical_team_id', // now referencing groups
     ];
-
-    public $timestamps = true;
 
     // Define relation to ChangeRequest
     public function changeRequest()
@@ -28,5 +29,4 @@ class ChangeRequestTechnicalTeam extends Model
     {
         return $this->belongsTo(Group::class, 'technical_team_id');
     }
-    
 }

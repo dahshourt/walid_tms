@@ -21,17 +21,14 @@ class AlterTableChangeRequest extends Migration
             $table->foreignId('unit_id')->nullable();
             $table->foreignId('department_id')->nullable();
 
-
             $table->foreignId('application_id')->nullable();
 
             $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
             $table->foreign('priority_id')->references('id')->on('priorities')->onDelete('cascade');
 
-          
             $table->foreign('unit_id')->references('id')->on('units')->onDelete('cascade');
             $table->foreign('department_id')->references('id')->on('departments')->onDelete('cascade');
 
-          
             $table->foreign('application_id')->references('id')->on('applications')->onDelete('cascade');
         });
     }

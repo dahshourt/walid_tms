@@ -2,8 +2,8 @@
 
 namespace App\Traits;
 
-
-use DB;
+use File;
+use Str;
 
 trait BindsDynamically
 {
@@ -11,70 +11,72 @@ trait BindsDynamically
 
     public function bind(string $tableName)
     {
-       $this->setTableName($tableName);
+        $this->setTableName($tableName);
     }
-
 
     public function getTableName()
     {
         return $this->tableName;
     }
 
-
     public function setTableName(string $tableName)
     {
         $this->tableName = $tableName;
+
         return $this;
     }
 
     public function getDataByDynamicTable()
     {
         $model = $this->getModelFromTable();
-		$model = new $model();
-		if($this->tableName == "users") $data = $model::where('active','1')->get();
-		else $data = $model::get();
-        
+        $model = new $model();
+        if ($this->tableName == 'users') {
+            $data = $model::where('active', '1')->get();
+        } else {
+            $data = $model::get();
+        }
+
         return $data;
     }
 
-
     public function newInstance($attributes = [], $exists = false)
     {
-       // Overridden in order to allow for late table binding.
+        // Overridden in order to allow for late table binding.
 
-       $model = parent::newInstance($attributes, $exists);
-       $model->setTable($this->table);
+        $model = parent::newInstance($attributes, $exists);
+        $model->setTable($this->table);
 
-       return $model;
+        return $model;
     }
 
-    public function  getModelByTablename() {
-        return '\\App\\Models\\' . \Str::studly(\Str::singular($this->tableName));
+    public function getModelByTablename()
+    {
+        return '\\App\\Models\\' . Str::studly(Str::singular($this->tableName));
     }
 
     public function getModelFromTable()
     {
-        foreach( $this->getModels() as $class ) {
-            if( is_subclass_of( $class, 'Illuminate\Database\Eloquent\Model' ) ) {
+        foreach ($this->getModels() as $class) {
+            if (is_subclass_of($class, 'Illuminate\Database\Eloquent\Model')) {
                 $model = new $class;
-                if ($model->getTable() === $this->tableName) return $class;
+                if ($model->getTable() === $this->tableName) {
+                    return $class;
+                }
             }
         }
+
         return false;
     }
 
-    
-
-    function getModels(){
+    public function getModels()
+    {
         $models = [];
         $modelsPath = app_path('Models');
-        $modelFiles = \File::allFiles($modelsPath);
+        $modelFiles = File::allFiles($modelsPath);
         foreach ($modelFiles as $modelFile) {
             $models[] = '\\App\\Models\\' . $modelFile->getFilenameWithoutExtension();
         }
 
         return $models;
     }
-
-
 }

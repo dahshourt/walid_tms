@@ -4,11 +4,11 @@ namespace App\Exports;
 
 use App\Models\NewWorkFlow;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 
-class WorkflowsExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize
+class WorkflowsExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping
 {
     public function collection()
     {

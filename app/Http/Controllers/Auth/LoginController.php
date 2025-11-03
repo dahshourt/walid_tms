@@ -3,12 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Providers\RouteServiceProvider;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Validator;
-
+use Session;
 
 class LoginController extends Controller
 {
@@ -39,59 +37,37 @@ class LoginController extends Controller
      */
     public function __construct()
     {
-        
-        $this->middleware('guest')->except('logout','inactive_logout');
+
+        $this->middleware('guest')->except('logout', 'inactive_logout');
     }
 
     public function username()
     {
         return 'user_name';
     }
-    public function check_active(){
+
+    public function check_active()
+    {
 
         return response()->json([
-            'active' => Auth::check() ? Auth::user()->active : false
+            'active' => Auth::check() ? Auth::user()->active : false,
         ]);
     }
-public function inactive_logout(){
 
-    Auth::logout();
-   
-    return redirect('/login')->withErrors(['msg' => "Login error. Please contact administration."])->withInput();;
-
-
-
-}
-    protected function credentials(Request $request)
+    public function inactive_logout()
     {
-        return [
-            'user_name' => $request->user_name,
-            'password' => $request->password,
-            'active' => '1'
-        ];
+
+        Auth::logout();
+
+        return redirect('/login')->withErrors(['msg' => 'Login error. Please contact administration.'])->withInput();
+
     }
 
-    protected function redirectTo()
-    {
-        return '/';
-    }
-
-    protected function redirectPath()
-    {
-        $path = '/';
-        return $path;
-    }
-
-
-    protected function authenticated(Request $request, $user)
-    {
-        return redirect('/');
-    }
     public function logout()
     {
         // Forget the specific session data
-        \Session::forget('default_group');
-        \Session::forget('default_group_name');
+        Session::forget('default_group');
+        Session::forget('default_group_name');
 
         // Perform the normal logout process
         auth()->logout();
@@ -103,4 +79,29 @@ public function inactive_logout(){
         return redirect('/login');
     }
 
+    protected function credentials(Request $request)
+    {
+        return [
+            'user_name' => $request->user_name,
+            'password' => $request->password,
+            'active' => '1',
+        ];
+    }
+
+    protected function redirectTo()
+    {
+        return '/';
+    }
+
+    protected function redirectPath()
+    {
+        $path = '/';
+
+        return $path;
+    }
+
+    protected function authenticated(Request $request, $user)
+    {
+        return redirect('/');
+    }
 }

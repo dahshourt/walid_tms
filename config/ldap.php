@@ -145,7 +145,6 @@ return [
 
                 'hosts' => explode(' ', env('LDAP_HOSTS', 'egypt.te-data.core')),
 
-
                 /*
                 |--------------------------------------------------------------------------
                 | Port
@@ -186,7 +185,6 @@ return [
 
                 'base_dn' => env('LDAP_BASE_DN', 'DC=egypt,DC=te-data, DC=core'),
 
-
                 /*
                 |--------------------------------------------------------------------------
                 | LDAP Username & Password
@@ -200,10 +198,8 @@ return [
                 |
                 */
 
-              
                 'username' => env('LDAP_USERNAME', 'appsauth@te-data.core'),
                 'password' => env('LDAP_PASSWORD', 'systemsldapnogoisa'),
-
 
                 /*
                 |--------------------------------------------------------------------------
@@ -407,10 +403,8 @@ return [
                 |
                 */
 
-              
                 'username' => env('LDAP_USERNAME', 'sAMAccountName'),
                 'password' => env('LDAP_PASSWORD', ''),
-
 
                 /*
                 |--------------------------------------------------------------------------

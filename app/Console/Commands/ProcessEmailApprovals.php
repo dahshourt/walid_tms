@@ -2,9 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Services\EwsMailReader;
-
+use Exception;
+use Illuminate\Console\Command;
+use Log;
 
 class ProcessEmailApprovals extends Command
 {
@@ -41,13 +42,14 @@ class ProcessEmailApprovals extends Command
     {
         try {
             $mailReader = new EwsMailReader();
-            $result = $mailReader->handleApprovals(20); //Process up to 20 messages
-            $this->info("Checked inbox and processed approvals.");
-            
+            $result = $mailReader->handleApprovals(20); // Process up to 20 messages
+            $this->info('Checked inbox and processed approvals.');
+
             return 0;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->error('Error processing email approvals: ' . $e->getMessage());
-            \Log::error('Email processing error: ' . $e->getMessage());
+            Log::error('Email processing error: ' . $e->getMessage());
+
             return 1;
         }
     }

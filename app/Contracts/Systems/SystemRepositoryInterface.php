@@ -1,10 +1,10 @@
 <?php
+
 namespace App\Contracts\Systems;
 
 interface SystemRepositoryInterface
 {
-
-	public function getAll();
+    public function getAll();
 
     public function find($id);
 
@@ -13,6 +13,6 @@ interface SystemRepositoryInterface
     public function update($request, $id);
 
     public function delete($id);
-	public function updateactive($active,$id);
 
+    public function updateactive($active, $id);
 }

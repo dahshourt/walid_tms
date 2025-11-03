@@ -2,13 +2,12 @@
 
 namespace App\Http\Requests\CustomFields\Api;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class CustomFieldGroupTypeRequest extends FormRequest
 {
-
     /**
      * Determine if the supervisor is authorized to make this request.
      *
@@ -34,18 +33,18 @@ class CustomFieldGroupTypeRequest extends FormRequest
     //         'head_group_email' => ['sometimes','email'],
     //         'active' => ['required'],
     //     ];
-        
+
     // }
 
     public function rules()
     {
         if ($this->isMethod('POST')) {
             return $this->createRules();
-        } else {
-            return $this->updateRules();
         }
-    }
 
+        return $this->updateRules();
+
+    }
 
     /**
      * Get the create validation rules that apply to the request.
@@ -56,10 +55,10 @@ class CustomFieldGroupTypeRequest extends FormRequest
     {
         return [
             'form_type' => ['required'],
-            'group_id' => ['nullable','integer', 'exists:groups,id'],
-            'wf_type_id' => ['nullable','integer', 'exists:workflow_type,id'],
-            //'custom_field_id' => ['required','integer', 'exists:change_request,id'],
-           
+            'group_id' => ['nullable', 'integer', 'exists:groups,id'],
+            'wf_type_id' => ['nullable', 'integer', 'exists:workflow_type,id'],
+            // 'custom_field_id' => ['required','integer', 'exists:change_request,id'],
+
         ];
     }
 
@@ -72,19 +71,19 @@ class CustomFieldGroupTypeRequest extends FormRequest
     {
         return [
             'form_type' => ['required'],
-            'group_id' => ['nullable','integer', 'exists:groups,id'],
-            'wf_type_id' => ['nullable','integer', 'exists:workflow_type,id'],
-            //'custom_field_id' => ['required','integer', 'exists:change_request,id'],
+            'group_id' => ['nullable', 'integer', 'exists:groups,id'],
+            'wf_type_id' => ['nullable', 'integer', 'exists:workflow_type,id'],
+            // 'custom_field_id' => ['required','integer', 'exists:change_request,id'],
             'active' => ['required'],
-            //'sort' => ['nullable','integer'],
+            // 'sort' => ['nullable','integer'],
         ];
     }
 
-
-    protected function failedValidation(Validator $validator) { 
+    protected function failedValidation(Validator $validator)
+    {
         throw new HttpResponseException(response()->json([
-            'message' => $validator->messages()
-          ], 422));
+            'message' => $validator->messages(),
+        ], 422));
     }
 
     /**

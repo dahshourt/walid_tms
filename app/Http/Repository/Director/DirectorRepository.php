@@ -4,7 +4,6 @@ namespace App\Http\Repository\Director;
 
 use App\Contracts\Director\DirectorRepositoryInterface;
 use App\Models\Director;
-use Illuminate\Support\Facades\DB;
 
 class DirectorRepository implements DirectorRepositoryInterface
 {
@@ -33,6 +32,7 @@ class DirectorRepository implements DirectorRepositoryInterface
     {
         $director = Director::findOrFail($id);
         $director->update($request);
+
         return $director;
     }
 

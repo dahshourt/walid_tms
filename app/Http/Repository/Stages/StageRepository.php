@@ -1,17 +1,13 @@
 <?php
 
 namespace App\Http\Repository\Stages;
-use App\Contracts\Stages\StageRepositoryInterface;
 
+use App\Contracts\Stages\StageRepositoryInterface;
 // declare Entities
 use App\Models\Stage;
 
-
-
 class StageRepository implements StageRepositoryInterface
 {
-
-    
     public function getAll()
     {
         return Stage::all();
@@ -31,23 +27,24 @@ class StageRepository implements StageRepositoryInterface
     {
         return Stage::where('id', $id)->update($request);
     }
+
     public function paginateAll()
     {
         return Stage::latest()->paginate(10);
     }
+
     public function find($id)
     {
         return Stage::find($id);
     }
-public function updateactive($active,$id){
-		if($active){
-		return 	$this->update(['active'=>'0'],$id);
-		} else{
-			
-					return 	$this->update(['active'=>'1'],$id);
 
-		}
-		
-	}
+    public function updateactive($active, $id)
+    {
+        if ($active) {
+            return $this->update(['active' => '0'], $id);
+        }
 
+        return $this->update(['active' => '1'], $id);
+
+    }
 }

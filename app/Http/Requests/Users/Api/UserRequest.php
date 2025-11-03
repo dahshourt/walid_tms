@@ -2,13 +2,12 @@
 
 namespace App\Http\Requests\Users\Api;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UserRequest extends FormRequest
 {
-
     /**
      * Determine if the supervisor is authorized to make this request.
      *
@@ -28,11 +27,11 @@ class UserRequest extends FormRequest
     {
         if ($this->isMethod('POST')) {
             return $this->createRules();
-        } else {
-            return $this->updateRules();
         }
-    }
 
+        return $this->updateRules();
+
+    }
 
     /**
      * Get the create validation rules that apply to the request.
@@ -41,18 +40,18 @@ class UserRequest extends FormRequest
      */
     public function createRules()
     {
-        
+
         return [
-            'name' => ['required','string'],
-            'user_name' => ['required','string', 'unique:users,user_name'],
-            'user_type'=>['required'],
+            'name' => ['required', 'string'],
+            'user_name' => ['required', 'string', 'unique:users,user_name'],
+            'user_type' => ['required'],
             // 'email' => ['required_if:user_type,0','email', 'unique:users,email'],
-            'email' => ['sometimes','nullable','required_if:user_type,0','email', 'unique:users,email'],
-            'password' => ['sometimes','nullable','required_if:user_type,0','confirmed'],
-            'default_group' => ['required','integer', 'exists:groups,id'],
-            'active' => ['required','integer'],
-            'group_id'   => ['required','array'],
-            'group_id.*' => ['integer', 'exists:groups,id']
+            'email' => ['sometimes', 'nullable', 'required_if:user_type,0', 'email', 'unique:users,email'],
+            'password' => ['sometimes', 'nullable', 'required_if:user_type,0', 'confirmed'],
+            'default_group' => ['required', 'integer', 'exists:groups,id'],
+            'active' => ['required', 'integer'],
+            'group_id' => ['required', 'array'],
+            'group_id.*' => ['integer', 'exists:groups,id'],
         ];
     }
 
@@ -63,28 +62,26 @@ class UserRequest extends FormRequest
      */
     public function updateRules()
     {
-        
+
         return [
-            'name' => ['required','string'],
-            'email' => ['sometimes','nullable','required_if:user_type,0','email', 'unique:users,email,' . request()->user],
-            'user_name' => ['required','string','required', 'unique:users,user_name,' . request()->user],
-            'user_type'=>['required'],
-            'password' => ['sometimes','nullable','required_if:user_type,0','confirmed'],
-            'default_group' => ['required','integer','required', 'exists:groups,id'],
-            'active' => ['required','integer'],
-            'group_id'   => ['required','array','required'],
-            'group_id.*' => ['integer','required', 'exists:groups,id']
+            'name' => ['required', 'string'],
+            'email' => ['sometimes', 'nullable', 'required_if:user_type,0', 'email', 'unique:users,email,' . request()->user],
+            'user_name' => ['required', 'string', 'required', 'unique:users,user_name,' . request()->user],
+            'user_type' => ['required'],
+            'password' => ['sometimes', 'nullable', 'required_if:user_type,0', 'confirmed'],
+            'default_group' => ['required', 'integer', 'required', 'exists:groups,id'],
+            'active' => ['required', 'integer'],
+            'group_id' => ['required', 'array', 'required'],
+            'group_id.*' => ['integer', 'required', 'exists:groups,id'],
         ];
     }
 
-
-    protected function failedValidation(Validator $validator) { 
+    protected function failedValidation(Validator $validator)
+    {
         throw new HttpResponseException(response()->json([
-            'message' => $validator->messages()
-          ], 422));
+            'message' => $validator->messages(),
+        ], 422));
     }
-
-    
 
     /**
      * Get custom attributes for validator errors.

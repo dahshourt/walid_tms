@@ -11,7 +11,6 @@ class ValidateStatus implements Rule
      *
      * @return void
      */
-
     protected $allowedStatusIds;
 
     public function __construct(array $allowedStatusIds)

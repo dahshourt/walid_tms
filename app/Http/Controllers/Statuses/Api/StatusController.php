@@ -2,35 +2,40 @@
 
 namespace App\Http\Controllers\Statuses\Api;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Foundation\Validation\ValidatesRequests;
-use App\Http\Requests\Statuses\Api\StatusRequest;
 use App\Factories\Statuses\StatusFactory;
+use App\Http\Controllers\Controller;
+use App\Http\Requests\Statuses\Api\StatusRequest;
 use App\Http\Resources\StatusResource;
+use Illuminate\Foundation\Validation\ValidatesRequests;
 
 class StatusController extends Controller
 {
     use ValidatesRequests;
+
     private $status;
 
-    function __construct(StatusFactory $status){
-        
+    public function __construct(StatusFactory $status)
+    {
+
         $this->status = $status::index();
-        
+
     }
 
     public function index()
     {
         //  = $this->status->getAll();
         $statuses = StatusResource::collection($this->status->getAll());
-        return response()->json(['data' => $statuses],200);
+
+        return response()->json(['data' => $statuses], 200);
     }
+
     /**
      * Send or resend the verification code.
      *
-     * @param \Illuminate\Http\Request $request
-     * @throws \Illuminate\Validation\ValidationException
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function store(StatusRequest $request)
     {
@@ -44,21 +49,22 @@ class StatusController extends Controller
     /**
      * Send or resend the verification code.
      *
-     * @param \Illuminate\Http\Request $request
-     * @throws \Illuminate\Validation\ValidationException
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function update(StatusRequest $request, $id)
     {
-		
+
         $status = $this->status->find($id);
-        if(!$status)
-        {
+        if (! $status) {
             return response()->json([
                 'message' => 'status Not Exists',
-            ],422);
+            ], 422);
         }
-        $this->status->update($request,$id);
+        $this->status->update($request, $id);
+
         return response()->json([
             'message' => 'Updated Successfully',
         ]);
@@ -67,31 +73,27 @@ class StatusController extends Controller
     public function show($id)
     {
         $status = $this->status->find($id);
-        if(!$status)
-        {
+        if (! $status) {
             return response()->json([
                 'message' => 'status Not Exists',
-            ],422);
+            ], 422);
         }
         $status = new StatusResource($status);
-        return response()->json(['data' => $status],200);
+
+        return response()->json(['data' => $status], 200);
     }
 
-    public function destroy()
+    public function destroy() {}
+
+    public function updateactive($id)
     {
-        
-    }
-	public function updateactive($id){
-		   $status = $this->status->find($id);
-		   
-		   $this->status->updateactive($status['active'],$id);
-		   
-		    return response()->json([
+        $status = $this->status->find($id);
+
+        $this->status->updateactive($status['active'], $id);
+
+        return response()->json([
             'message' => 'Updated Successfully',
         ]);
 
-		  
-		
-	}
-
+    }
 }

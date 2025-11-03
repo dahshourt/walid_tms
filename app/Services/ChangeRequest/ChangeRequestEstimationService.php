@@ -1,7 +1,10 @@
 <?php
+
 namespace App\Services\ChangeRequest;
 
-use App\Models\{Change_request, User, Group};
+use App\Models\Change_request;
+use App\Models\Group;
+use App\Models\User;
 use App\Traits\ChangeRequest\ChangeRequestConstants;
 use Carbon\Carbon;
 
@@ -12,11 +15,10 @@ class ChangeRequestEstimationService
     /**
      * Calculate all estimations based on request data
      *
-     * @param int $id
-     * @param Change_request $changeRequest
-     * @param mixed $request
-     * @param User $user
-     * @return array
+     * @param  int  $id
+     * @param  Change_request  $changeRequest
+     * @param  mixed  $request
+     * @param  User  $user
      */
     public function calculateEstimation($id, $changeRequest, $request, $user): array
     {
@@ -54,318 +56,9 @@ class ChangeRequestEstimationService
     }
 
     /**
-     * Calculate development estimation with time slots
-     *
-     * @param int $id
-     * @param Change_request $changeRequest
-     * @param mixed $request
-     * @param User $user
-     * @return array
-     */
-    protected function calculateDevelopmentEstimation($id, $changeRequest, $request, $user): array
-    {
-        $data = [
-            'develop_duration' => $request['dev_estimation'],
-            'developer_id' => $request['developer_id'] ?? $user->id
-        ];
- if ( isset($changeRequest['test_duration']) ) {
-    $dates = $this->getLastCRDate(
-        $id,
-        $data['developer_id'],
-        'developer_id',
-        'end_develop_time',
-        $request['dev_estimation'],
-        'dev'
-    );
-
-    $data['start_develop_time'] = $dates[0] ?? '';
-    $data['end_develop_time']   = $dates[1] ?? '';
-
-    // Calculate subsequent phase (testing) if it exists
-    if (!empty($changeRequest['test_duration'])) {
-        $testEndTime = $data['end_develop_time'];
-        $testDates = $this->getLastEndDate(
-            $id,
-            $changeRequest['tester_id'],
-            'tester_id',
-            $testEndTime,
-            $changeRequest['test_duration'],
-            'test'
-        );
-
-                $data['start_test_time'] = $testDates[0] ?? '';
-                $data['end_test_time'] = $testDates[1] ?? '';
-            }
-        }
-
-        return $data;
-    }
-
-    /**
-     * Calculate testing estimation with time slots
-     *
-     * @param int $id
-     * @param Change_request $changeRequest
-     * @param mixed $request
-     * @param User $user
-     * @return array
-     */
-    protected function calculateTestingEstimation($id, $changeRequest, $request, $user): array
-    {
-        $data = [
-            'test_duration' => $request['testing_estimation'],
-            'tester_id' => $request['tester_id'] ?? $user->id
-        ];
-    if (!empty($changeRequest['develop_duration'])) {
-        // If design phase exists, calculate testing after development
-       
-
-                // $developDates = $this->getLastEndDate(
-                //     $id,
-                //     $changeRequest['developer_id'],
-                //     'developer_id',
-                //     $changeRequest['end_design_time'],
-                //     $changeRequest['develop_duration'],
-                //     'dev'
-                // );
-
-                // $data['start_develop_time'] = $developDates[0] ?? '';
-                // $data['end_develop_time'] = $developDates[1] ?? '';
-//die("dddtt");
-                $dates = $this->getLastCRDate(
-                    $id,
-                    $changeRequest['developer_id'],
-                    'developer_id',
-                    'end_develop_time',
-                    $changeRequest['develop_duration'],
-                    'dev'
-                );
-        
-             $data['start_develop_time'] = $dates[0] ?? '';
-             $data['end_develop_time'] = $dates[1] ?? '';
-                $testDates = $this->getLastEndDate(
-                    $id,
-                    $data['tester_id'],
-                    'tester_id',
-                    $data['end_develop_time'],
-                    $request['testing_estimation'],
-                    'test'
-                );
-
-                 $data['start_test_time'] = $testDates[0] ?? ''; 
-                $data['end_test_time'] = $testDates[1] ?? '';
-            }
-        
-
-        return $data;
-    }
-
-    /**
-     * Calculate design estimation with time slots
-     *
-     * @param int $id
-     * @param Change_request $changeRequest
-     * @param mixed $request
-     * @param User $user
-     * @return array
-     */
-    protected function calculateDesignEstimation($id, $changeRequest, $request, $user): array
-    {
-        $data = [
-            'design_duration' => $request['design_estimation'],
-            'designer_id' => $request['designer_id'] ?? $user->id
-        ];
-
-        $dates = $this->getLastCRDate(
-            $id,
-            $data['designer_id'],
-            'designer_id',
-            'end_design_time',
-            $request['design_estimation'],
-            'design'
-        );
-
-        $data['start_design_time'] = $dates[0] ?? '';
-        $data['end_design_time'] = $dates[1] ?? '';
-
-        // Calculate subsequent phases if they exist
-        if (!empty($changeRequest['develop_duration'])) {
-            $developDates = $this->getLastEndDate(
-                $id,
-                $changeRequest['developer_id'],
-                'developer_id',
-                $data['end_design_time'],
-                $changeRequest['develop_duration'],
-                'dev'
-            );
-
-            $data['start_develop_time'] = $developDates[0] ?? '';
-            $data['end_develop_time'] = $developDates[1] ?? '';
-        }
-
-        if (!empty($changeRequest['test_duration'])) {
-            $testEndTime = $data['end_develop_time'] ?? $data['end_design_time'];
-            $testDates = $this->getLastEndDate(
-                $id,
-                $changeRequest['tester_id'],
-                'tester_id',
-                $testEndTime,
-                $changeRequest['test_duration'],
-                'test'
-            );
-
-            $data['start_test_time'] = $testDates[0] ?? '';
-            $data['end_test_time'] = $testDates[1] ?? '';
-        }
-
-        return $data;
-    }
-
-    /**
-     * Calculate Change Request estimation with time slots
-     *
-     * @param int $id
-     * @param Change_request $changeRequest
-     * @param mixed $request
-     * @param User $user
-     * @return array
-     */
-    protected function calculateCREstimation($id, $changeRequest, $request, $user): array
-    {
-        $data = [
-            'CR_duration' => $request['CR_duration'],
-            'chnage_requester_id' => $request['chnage_requester_id'] ?? $user->id
-        ];
-
-        $dates = $this->getLastCRDate(
-            $id,
-            $data['chnage_requester_id'],
-            'chnage_requester_id',
-            'end_CR_time',
-            $request['CR_duration'],
-            'CR'
-        );
-
-        $data['start_CR_time'] = $dates[0] ?? '';
-        $data['end_CR_time'] = $dates[1] ?? '';
-
-        return $data;
-    }
-
-    /**
-     * Get the last CR date for scheduling
-     *
-     * @param int $id
-     * @param int $userId
-     * @param string $column
-     * @param string $endDateColumn
-     * @param int $duration
-     * @param string $action
-     * @return array
-     */
-    protected function getLastCRDate($id, $userId, $column, $endDateColumn, $duration, $action): array
-    {
-        $lastEndDate = Change_request::where($column, $userId)
-            ->where('id', '!=', $id)
-            ->max($endDateColumn);
-
-        if ($lastEndDate == '' || $lastEndDate < date('Y-m-d H:i:s')) {
-            $newStartDate = date('Y-m-d H:i:s', strtotime('+3 hours'));
-        } else {
-            $newStartDate = date('Y-m-d H:i:s', strtotime('+1 hours', strtotime($lastEndDate)));
-        }
-
-        $newStartDate = date('Y-m-d H:i:s', $this->setToWorkingDate(strtotime($newStartDate)));
-        $now = Carbon::now();
-        
-        if (!Carbon::parse($newStartDate)->gt(Carbon::now())) {
-            $newStartDate = date('Y-m-d H:i:s');
-        }
-
-        $newEndDate = $this->generateEndDate(
-            $this->setToWorkingDate(strtotime($newStartDate)),
-            $duration,
-            0,
-            $userId,
-            $action
-        );
-
-        return [$newStartDate, $newEndDate];
-    }
-
-    /**
-     * Get the last end date for dependent scheduling
-     *
-     * @param int $id
-     * @param int $userId
-     * @param string $column
-     * @param string $lastEndDate
-     * @param int $duration
-     * @param string $action
-     * @return array
-     */
-    protected function getLastEndDate($id, $userId, $column, $lastEndDate, $duration, $action): array
-    {
-        // Map actions to their respective start/end dependencies
-        $actionConfig = [
-            'dev'  => ['prevField' => 'end_design_time',   'maxField' => 'end_develop_time'],
-            'test' => ['prevField' => 'end_develop_time',  'maxField' => 'end_test_time'],
-        ];
-    
-        // If action not recognized, return lastEndDate as is
-        if (!isset($actionConfig[$action])) {
-            return [$lastEndDate, $lastEndDate];
-        }
-    
-        $prevField = $actionConfig[$action]['prevField']; // Dependency from same CR
-        $maxField  = $actionConfig[$action]['maxField'];  // Max from other CRs for same user
-    
-        // 1️⃣ Get dependency end time for the same CR
-        $dependencyEnd = Change_request::where('id', $id)->value($prevField);
-    
-        // 2️⃣ Get last occupied time for this user in other CRs
-        $lastOccupied = Change_request::where($column, $userId)
-            ->where('id', '!=', $id)
-            ->max($maxField);
-    
-        // 3️⃣ Determine latest blocking time
-        $latestBlockingTime = max(
-            strtotime($dependencyEnd ?? '1970-01-01'),
-            strtotime($lastOccupied ?? '1970-01-01'),
-            strtotime($lastEndDate ?? '1970-01-01')
-        );
-    
-        // 4️⃣ New start date = +1 hour after blocking time
-        $newStartDate = date('Y-m-d H:i:s', strtotime('+1 hour', $latestBlockingTime));
-    
-        // 5️⃣ Align to working date
-        $newStartDate = date('Y-m-d H:i:s', $this->setToWorkingDate(strtotime($newStartDate)));
-    
-        // 6️⃣ If start is in the past, use now
-        if (!Carbon::parse($newStartDate)->gt(Carbon::now())) {
-            $newStartDate = Carbon::createFromTimestamp(
-                $this->setToWorkingDate(strtotime(Carbon::now()))
-            )->format('Y-m-d H:i:s');
-        }
-    
-        // 7️⃣ Generate end date
-        $newEndDate = $this->generateEndDate(
-            $this->setToWorkingDate(strtotime($newStartDate)),
-            $duration,
-            0,
-            $userId,
-            $action
-        );
-    
-        return [$newStartDate, $newEndDate];
-    }
-    
-
-    /**
      * Set date to working hours and days
      *
-     * @param int $date
-     * @return int
+     * @param  int  $date
      */
     public function setToWorkingDate($date): int
     {
@@ -405,12 +98,11 @@ class ChangeRequestEstimationService
     /**
      * Generate end date based on working hours and man power
      *
-     * @param int $startDate
-     * @param int $duration
-     * @param bool $onGoing
-     * @param int $userId
-     * @param string $action
-     * @return string
+     * @param  int  $startDate
+     * @param  int  $duration
+     * @param  bool  $onGoing
+     * @param  int  $userId
+     * @param  string  $action
      */
     public function generateEndDate($startDate, $duration, $onGoing, $userId = 0, $action = 'dev'): string
     {
@@ -436,15 +128,19 @@ class ChangeRequestEstimationService
         }
 
         // Prevent division by zero
-        if ($manPowerOngoing == 0) $manPowerOngoing = 1;
-        if ($manPower == 0) $manPower = 1;
+        if ($manPowerOngoing == 0) {
+            $manPowerOngoing = 1;
+        }
+        if ($manPower == 0) {
+            $manPower = 1;
+        }
 
         // Calculate working hours needed
         $estimationMultiplier = $this->getDefaultValues()['estimation_multiplier'];
         $multiplier = $estimationMultiplier[$action] ?? 1;
 
-        $i = ($action == 'dev') 
-            ? ($duration * (int) (($onGoing) ? (8 / $manPowerOngoing) : (8 / $manPower))) 
+        $i = ($action == 'dev')
+            ? ($duration * (int) (($onGoing) ? (8 / $manPowerOngoing) : (8 / $manPower)))
             : $duration * $multiplier;
 
         $time = $startDate;
@@ -455,12 +151,12 @@ class ChangeRequestEstimationService
             $time = strtotime('+1 hour', $time);
             $dayOfWeek = (int) date('w', $time);
             $hour = (int) date('G', $time);
-            
+
             // Only count working hours
-            if (!in_array($dayOfWeek, $weekendDays) && 
-                $hour < $workingHours['end'] && 
+            if (! in_array($dayOfWeek, $weekendDays) &&
+                $hour < $workingHours['end'] &&
                 $hour >= $workingHours['start']) {
-                --$i;
+                $i--;
             }
         }
 
@@ -469,9 +165,6 @@ class ChangeRequestEstimationService
 
     /**
      * Calculate total estimation for a change request
-     *
-     * @param array $estimations
-     * @return array
      */
     public function calculateTotalEstimation(array $estimations): array
     {
@@ -492,38 +185,7 @@ class ChangeRequestEstimationService
     }
 
     /**
-     * Calculate working days excluding weekends
-     *
-     * @param int $totalDays
-     * @return int
-     */
-    protected function calculateWorkingDays(int $totalDays): int
-    {
-        $workingHours = $this->getWorkingHours();
-        $weekendDays = count($workingHours['weekend_days']);
-        $workingDaysPerWeek = 7 - $weekendDays;
-        
-        $weeks = floor($totalDays / 7);
-        $remainingDays = $totalDays % 7;
-        
-        $workingDays = $weeks * $workingDaysPerWeek;
-        
-        // Add remaining working days
-        for ($i = 0; $i < $remainingDays; $i++) {
-            $dayOfWeek = $i % 7;
-            if (!in_array($dayOfWeek, $workingHours['weekend_days'])) {
-                $workingDays++;
-            }
-        }
-        
-        return $workingDays;
-    }
-
-    /**
      * Get estimation breakdown by phase
-     *
-     * @param Change_request $changeRequest
-     * @return array
      */
     public function getEstimationBreakdown(Change_request $changeRequest): array
     {
@@ -570,17 +232,394 @@ class ChangeRequestEstimationService
     }
 
     /**
-     * Get the status of a specific phase
+     * Validate estimation values
+     */
+    public function validateEstimations(array $estimations): array
+    {
+        $errors = [];
+        $maxHours = 2000; // Maximum allowed hours per phase
+
+        $phases = ['design_duration', 'develop_duration', 'test_duration', 'CR_duration'];
+
+        foreach ($phases as $phase) {
+            if (isset($estimations[$phase])) {
+                $value = $estimations[$phase];
+
+                if (! is_numeric($value) || $value < 0) {
+                    $errors[$phase] = "The {$phase} must be a positive number.";
+                } elseif ($value > $maxHours) {
+                    $errors[$phase] = "The {$phase} cannot exceed {$maxHours} hours.";
+                }
+            }
+        }
+
+        // Validate total estimation
+        $totalHours = array_sum(array_intersect_key($estimations, array_flip($phases)));
+        if ($totalHours > ($maxHours * 2)) {
+            $errors['total'] = 'Total estimation cannot exceed ' . ($maxHours * 2) . ' hours.';
+        }
+
+        return $errors;
+    }
+
+    /**
+     * Get resource availability for a time period
+     */
+    public function getResourceAvailability(int $userId, string $startDate, string $endDate, string $role = 'developer'): array
+    {
+        $roleColumns = $this->getRoleColumnMappings();
+        $roleConfig = $roleColumns[$role . '_id'] ?? $roleColumns['developer_id'];
+
+        $conflicts = Change_request::where($role . '_id', $userId)
+            ->where(function ($query) use ($startDate, $endDate, $roleConfig) {
+                $query->whereBetween($roleConfig['start_column'], [$startDate, $endDate])
+                    ->orWhereBetween($roleConfig['end_column'], [$startDate, $endDate])
+                    ->orWhere(function ($q) use ($startDate, $endDate, $roleConfig) {
+                        $q->where($roleConfig['start_column'], '<=', $startDate)
+                            ->where($roleConfig['end_column'], '>=', $endDate);
+                    });
+            })
+            ->get();
+
+        return [
+            'available' => $conflicts->isEmpty(),
+            'conflicts' => $conflicts,
+            'next_available' => $this->getNextAvailableTime($userId, $endDate, $role),
+        ];
+    }
+
+    /**
+     * Calculate development estimation with time slots
      *
-     * @param Change_request $changeRequest
-     * @param string $phase
-     * @return string
+     * @param  int  $id
+     * @param  Change_request  $changeRequest
+     * @param  mixed  $request
+     * @param  User  $user
+     */
+    protected function calculateDevelopmentEstimation($id, $changeRequest, $request, $user): array
+    {
+        $data = [
+            'develop_duration' => $request['dev_estimation'],
+            'developer_id' => $request['developer_id'] ?? $user->id,
+        ];
+        if (isset($changeRequest['test_duration'])) {
+            $dates = $this->getLastCRDate(
+                $id,
+                $data['developer_id'],
+                'developer_id',
+                'end_develop_time',
+                $request['dev_estimation'],
+                'dev'
+            );
+
+            $data['start_develop_time'] = $dates[0] ?? '';
+            $data['end_develop_time'] = $dates[1] ?? '';
+
+            // Calculate subsequent phase (testing) if it exists
+            if (! empty($changeRequest['test_duration'])) {
+                $testEndTime = $data['end_develop_time'];
+                $testDates = $this->getLastEndDate(
+                    $id,
+                    $changeRequest['tester_id'],
+                    'tester_id',
+                    $testEndTime,
+                    $changeRequest['test_duration'],
+                    'test'
+                );
+
+                $data['start_test_time'] = $testDates[0] ?? '';
+                $data['end_test_time'] = $testDates[1] ?? '';
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Calculate testing estimation with time slots
+     *
+     * @param  int  $id
+     * @param  Change_request  $changeRequest
+     * @param  mixed  $request
+     * @param  User  $user
+     */
+    protected function calculateTestingEstimation($id, $changeRequest, $request, $user): array
+    {
+        $data = [
+            'test_duration' => $request['testing_estimation'],
+            'tester_id' => $request['tester_id'] ?? $user->id,
+        ];
+        if (! empty($changeRequest['develop_duration'])) {
+            // If design phase exists, calculate testing after development
+
+            // $developDates = $this->getLastEndDate(
+            //     $id,
+            //     $changeRequest['developer_id'],
+            //     'developer_id',
+            //     $changeRequest['end_design_time'],
+            //     $changeRequest['develop_duration'],
+            //     'dev'
+            // );
+
+            // $data['start_develop_time'] = $developDates[0] ?? '';
+            // $data['end_develop_time'] = $developDates[1] ?? '';
+            // die("dddtt");
+            $dates = $this->getLastCRDate(
+                $id,
+                $changeRequest['developer_id'],
+                'developer_id',
+                'end_develop_time',
+                $changeRequest['develop_duration'],
+                'dev'
+            );
+
+            $data['start_develop_time'] = $dates[0] ?? '';
+            $data['end_develop_time'] = $dates[1] ?? '';
+            $testDates = $this->getLastEndDate(
+                $id,
+                $data['tester_id'],
+                'tester_id',
+                $data['end_develop_time'],
+                $request['testing_estimation'],
+                'test'
+            );
+
+            $data['start_test_time'] = $testDates[0] ?? '';
+            $data['end_test_time'] = $testDates[1] ?? '';
+        }
+
+        return $data;
+    }
+
+    /**
+     * Calculate design estimation with time slots
+     *
+     * @param  int  $id
+     * @param  Change_request  $changeRequest
+     * @param  mixed  $request
+     * @param  User  $user
+     */
+    protected function calculateDesignEstimation($id, $changeRequest, $request, $user): array
+    {
+        $data = [
+            'design_duration' => $request['design_estimation'],
+            'designer_id' => $request['designer_id'] ?? $user->id,
+        ];
+
+        $dates = $this->getLastCRDate(
+            $id,
+            $data['designer_id'],
+            'designer_id',
+            'end_design_time',
+            $request['design_estimation'],
+            'design'
+        );
+
+        $data['start_design_time'] = $dates[0] ?? '';
+        $data['end_design_time'] = $dates[1] ?? '';
+
+        // Calculate subsequent phases if they exist
+        if (! empty($changeRequest['develop_duration'])) {
+            $developDates = $this->getLastEndDate(
+                $id,
+                $changeRequest['developer_id'],
+                'developer_id',
+                $data['end_design_time'],
+                $changeRequest['develop_duration'],
+                'dev'
+            );
+
+            $data['start_develop_time'] = $developDates[0] ?? '';
+            $data['end_develop_time'] = $developDates[1] ?? '';
+        }
+
+        if (! empty($changeRequest['test_duration'])) {
+            $testEndTime = $data['end_develop_time'] ?? $data['end_design_time'];
+            $testDates = $this->getLastEndDate(
+                $id,
+                $changeRequest['tester_id'],
+                'tester_id',
+                $testEndTime,
+                $changeRequest['test_duration'],
+                'test'
+            );
+
+            $data['start_test_time'] = $testDates[0] ?? '';
+            $data['end_test_time'] = $testDates[1] ?? '';
+        }
+
+        return $data;
+    }
+
+    /**
+     * Calculate Change Request estimation with time slots
+     *
+     * @param  int  $id
+     * @param  Change_request  $changeRequest
+     * @param  mixed  $request
+     * @param  User  $user
+     */
+    protected function calculateCREstimation($id, $changeRequest, $request, $user): array
+    {
+        $data = [
+            'CR_duration' => $request['CR_duration'],
+            'chnage_requester_id' => $request['chnage_requester_id'] ?? $user->id,
+        ];
+
+        $dates = $this->getLastCRDate(
+            $id,
+            $data['chnage_requester_id'],
+            'chnage_requester_id',
+            'end_CR_time',
+            $request['CR_duration'],
+            'CR'
+        );
+
+        $data['start_CR_time'] = $dates[0] ?? '';
+        $data['end_CR_time'] = $dates[1] ?? '';
+
+        return $data;
+    }
+
+    /**
+     * Get the last CR date for scheduling
+     *
+     * @param  int  $id
+     * @param  int  $userId
+     * @param  string  $column
+     * @param  string  $endDateColumn
+     * @param  int  $duration
+     * @param  string  $action
+     */
+    protected function getLastCRDate($id, $userId, $column, $endDateColumn, $duration, $action): array
+    {
+        $lastEndDate = Change_request::where($column, $userId)
+            ->where('id', '!=', $id)
+            ->max($endDateColumn);
+
+        if ($lastEndDate == '' || $lastEndDate < date('Y-m-d H:i:s')) {
+            $newStartDate = date('Y-m-d H:i:s', strtotime('+3 hours'));
+        } else {
+            $newStartDate = date('Y-m-d H:i:s', strtotime('+1 hours', strtotime($lastEndDate)));
+        }
+
+        $newStartDate = date('Y-m-d H:i:s', $this->setToWorkingDate(strtotime($newStartDate)));
+        $now = Carbon::now();
+
+        if (! Carbon::parse($newStartDate)->gt(Carbon::now())) {
+            $newStartDate = date('Y-m-d H:i:s');
+        }
+
+        $newEndDate = $this->generateEndDate(
+            $this->setToWorkingDate(strtotime($newStartDate)),
+            $duration,
+            0,
+            $userId,
+            $action
+        );
+
+        return [$newStartDate, $newEndDate];
+    }
+
+    /**
+     * Get the last end date for dependent scheduling
+     *
+     * @param  int  $id
+     * @param  int  $userId
+     * @param  string  $column
+     * @param  string  $lastEndDate
+     * @param  int  $duration
+     * @param  string  $action
+     */
+    protected function getLastEndDate($id, $userId, $column, $lastEndDate, $duration, $action): array
+    {
+        // Map actions to their respective start/end dependencies
+        $actionConfig = [
+            'dev' => ['prevField' => 'end_design_time',   'maxField' => 'end_develop_time'],
+            'test' => ['prevField' => 'end_develop_time',  'maxField' => 'end_test_time'],
+        ];
+
+        // If action not recognized, return lastEndDate as is
+        if (! isset($actionConfig[$action])) {
+            return [$lastEndDate, $lastEndDate];
+        }
+
+        $prevField = $actionConfig[$action]['prevField']; // Dependency from same CR
+        $maxField = $actionConfig[$action]['maxField'];  // Max from other CRs for same user
+
+        // 1️⃣ Get dependency end time for the same CR
+        $dependencyEnd = Change_request::where('id', $id)->value($prevField);
+
+        // 2️⃣ Get last occupied time for this user in other CRs
+        $lastOccupied = Change_request::where($column, $userId)
+            ->where('id', '!=', $id)
+            ->max($maxField);
+
+        // 3️⃣ Determine latest blocking time
+        $latestBlockingTime = max(
+            strtotime($dependencyEnd ?? '1970-01-01'),
+            strtotime($lastOccupied ?? '1970-01-01'),
+            strtotime($lastEndDate ?? '1970-01-01')
+        );
+
+        // 4️⃣ New start date = +1 hour after blocking time
+        $newStartDate = date('Y-m-d H:i:s', strtotime('+1 hour', $latestBlockingTime));
+
+        // 5️⃣ Align to working date
+        $newStartDate = date('Y-m-d H:i:s', $this->setToWorkingDate(strtotime($newStartDate)));
+
+        // 6️⃣ If start is in the past, use now
+        if (! Carbon::parse($newStartDate)->gt(Carbon::now())) {
+            $newStartDate = Carbon::createFromTimestamp(
+                $this->setToWorkingDate(strtotime(Carbon::now()))
+            )->format('Y-m-d H:i:s');
+        }
+
+        // 7️⃣ Generate end date
+        $newEndDate = $this->generateEndDate(
+            $this->setToWorkingDate(strtotime($newStartDate)),
+            $duration,
+            0,
+            $userId,
+            $action
+        );
+
+        return [$newStartDate, $newEndDate];
+    }
+
+    /**
+     * Calculate working days excluding weekends
+     */
+    protected function calculateWorkingDays(int $totalDays): int
+    {
+        $workingHours = $this->getWorkingHours();
+        $weekendDays = count($workingHours['weekend_days']);
+        $workingDaysPerWeek = 7 - $weekendDays;
+
+        $weeks = floor($totalDays / 7);
+        $remainingDays = $totalDays % 7;
+
+        $workingDays = $weeks * $workingDaysPerWeek;
+
+        // Add remaining working days
+        for ($i = 0; $i < $remainingDays; $i++) {
+            $dayOfWeek = $i % 7;
+            if (! in_array($dayOfWeek, $workingHours['weekend_days'])) {
+                $workingDays++;
+            }
+        }
+
+        return $workingDays;
+    }
+
+    /**
+     * Get the status of a specific phase
      */
     protected function getPhaseStatus(Change_request $changeRequest, string $phase): string
     {
         $now = Carbon::now();
-        
-        $startTimeField = match($phase) {
+
+        $startTimeField = match ($phase) {
             'design' => 'start_design_time',
             'development' => 'start_develop_time',
             'testing' => 'start_test_time',
@@ -588,7 +627,7 @@ class ChangeRequestEstimationService
             default => null,
         };
 
-        $endTimeField = match($phase) {
+        $endTimeField = match ($phase) {
             'design' => 'end_design_time',
             'development' => 'end_develop_time',
             'testing' => 'end_test_time',
@@ -596,14 +635,14 @@ class ChangeRequestEstimationService
             default => null,
         };
 
-        if (!$startTimeField || !$endTimeField) {
+        if (! $startTimeField || ! $endTimeField) {
             return 'not_scheduled';
         }
 
         $startTime = $changeRequest->$startTimeField;
         $endTime = $changeRequest->$endTimeField;
 
-        if (!$startTime || !$endTime) {
+        if (! $startTime || ! $endTime) {
             return 'not_scheduled';
         }
 
@@ -622,78 +661,7 @@ class ChangeRequestEstimationService
     }
 
     /**
-     * Validate estimation values
-     *
-     * @param array $estimations
-     * @return array
-     */
-    public function validateEstimations(array $estimations): array
-    {
-        $errors = [];
-        $maxHours = 2000; // Maximum allowed hours per phase
-
-        $phases = ['design_duration', 'develop_duration', 'test_duration', 'CR_duration'];
-
-        foreach ($phases as $phase) {
-            if (isset($estimations[$phase])) {
-                $value = $estimations[$phase];
-
-                if (!is_numeric($value) || $value < 0) {
-                    $errors[$phase] = "The {$phase} must be a positive number.";
-                } elseif ($value > $maxHours) {
-                    $errors[$phase] = "The {$phase} cannot exceed {$maxHours} hours.";
-                }
-            }
-        }
-
-        // Validate total estimation
-        $totalHours = array_sum(array_intersect_key($estimations, array_flip($phases)));
-        if ($totalHours > ($maxHours * 2)) {
-            $errors['total'] = "Total estimation cannot exceed " . ($maxHours * 2) . " hours.";
-        }
-
-        return $errors;
-    }
-
-    /**
-     * Get resource availability for a time period
-     *
-     * @param int $userId
-     * @param string $startDate
-     * @param string $endDate
-     * @param string $role
-     * @return array
-     */
-    public function getResourceAvailability(int $userId, string $startDate, string $endDate, string $role = 'developer'): array
-    {
-        $roleColumns = $this->getRoleColumnMappings();
-        $roleConfig = $roleColumns[$role . '_id'] ?? $roleColumns['developer_id'];
-
-        $conflicts = Change_request::where($role . '_id', $userId)
-            ->where(function ($query) use ($startDate, $endDate, $roleConfig) {
-                $query->whereBetween($roleConfig['start_column'], [$startDate, $endDate])
-                      ->orWhereBetween($roleConfig['end_column'], [$startDate, $endDate])
-                      ->orWhere(function ($q) use ($startDate, $endDate, $roleConfig) {
-                          $q->where($roleConfig['start_column'], '<=', $startDate)
-                            ->where($roleConfig['end_column'], '>=', $endDate);
-                      });
-            })
-            ->get();
-
-        return [
-            'available' => $conflicts->isEmpty(),
-            'conflicts' => $conflicts,
-            'next_available' => $this->getNextAvailableTime($userId, $endDate, $role),
-        ];
-    }
-
-    /**
      * Get next available time for a resource
-     *
-     * @param int $userId
-     * @param string $afterDate
-     * @param string $role
-     * @return string|null
      */
     protected function getNextAvailableTime(int $userId, string $afterDate, string $role): ?string
     {
@@ -704,11 +672,12 @@ class ChangeRequestEstimationService
             ->where($roleConfig['end_column'], '>=', $afterDate)
             ->max($roleConfig['end_column']);
 
-        if (!$lastEndTime) {
+        if (! $lastEndTime) {
             return $afterDate;
         }
 
         $nextAvailable = Carbon::parse($lastEndTime)->addHours(1);
+
         return date('Y-m-d H:i:s', $this->setToWorkingDate($nextAvailable->timestamp));
     }
 }

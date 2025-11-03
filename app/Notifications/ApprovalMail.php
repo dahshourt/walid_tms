@@ -3,7 +3,6 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -19,7 +18,7 @@ class ApprovalMail extends Notification
     public function __construct($data)
     {
         //
-        $this->data=$data;
+        $this->data = $data;
     }
 
     /**

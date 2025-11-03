@@ -31,7 +31,7 @@ return [
     ],
 
     'ews' => [
-        'host'     => env('EWS_HOST'),
+        'host' => env('EWS_HOST'),
         'username' => env('EWS_USERNAME'),
         'password' => env('EWS_PASSWORD'),
     ],

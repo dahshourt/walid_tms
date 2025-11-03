@@ -2,12 +2,13 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use App\Models\Configuration;
+use Carbon\Carbon;
+use Exception;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class Reject_business_approvals extends Command
 {
@@ -29,12 +30,12 @@ class Reject_business_approvals extends Command
     public function handle(ChangeRequestRepository $repo)
     {
         Log::info('=== Auto Reject CR job started ===');
-       $configuration = Configuration::where('configuration_name', 'Division Manager Approval')->first();
+        $configuration = Configuration::where('configuration_name', 'Division Manager Approval')->first();
         $configurationValue = (int) ($configuration->configuration_value ?? 0);
         $sevenDaysAgo = Carbon::now()->subDays($configurationValue);
 
         // Fetch eligible records
-        $records = DB::table('change_request_statuses') 
+        $records = DB::table('change_request_statuses')
             ->where('new_status_id', 22)
             ->where('active', 1)
             ->where('created_at', '>', $sevenDaysAgo)
@@ -57,7 +58,7 @@ class Reject_business_approvals extends Command
                 Log::info("Auto-Reject user: {$user_id}, CR ID: {$crId}");
                 $repo->update($crId, $requestData);
                 $approvedCount++;
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 Log::error("Failed to update CR ID {$crId}: " . $e->getMessage());
             }
         }

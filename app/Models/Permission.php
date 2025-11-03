@@ -53,33 +53,6 @@ class Permission extends Model implements PermissionContract
     }
 
     /**
-     * A permission can be applied to roles.
-     */
-    public function roles(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            config('permission.models.role'),
-            config('permission.table_names.role_has_permissions'),
-            app(PermissionRegistrar::class)->pivotPermission,
-            app(PermissionRegistrar::class)->pivotRole
-        );
-    }
-
-    /**
-     * A permission belongs to some users of the model associated with its guard.
-     */
-    public function users(): BelongsToMany
-    {
-        return $this->morphedByMany(
-            getModelForGuard($this->attributes['guard_name'] ?? config('auth.defaults.guard')),
-            'model',
-            config('permission.table_names.model_has_permissions'),
-            app(PermissionRegistrar::class)->pivotPermission,
-            config('permission.column_names.model_morph_key')
-        );
-    }
-
-    /**
      * Find a permission by its name (and optionally guardName).
      *
      * @return PermissionContract|Permission
@@ -134,6 +107,46 @@ class Permission extends Model implements PermissionContract
     }
 
     /**
+     * A permission can be applied to roles.
+     */
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            config('permission.models.role'),
+            config('permission.table_names.role_has_permissions'),
+            app(PermissionRegistrar::class)->pivotPermission,
+            app(PermissionRegistrar::class)->pivotRole
+        );
+    }
+
+    /**
+     * A permission belongs to some users of the model associated with its guard.
+     */
+    public function users(): BelongsToMany
+    {
+        return $this->morphedByMany(
+            getModelForGuard($this->attributes['guard_name'] ?? config('auth.defaults.guard')),
+            'model',
+            config('permission.table_names.model_has_permissions'),
+            app(PermissionRegistrar::class)->pivotPermission,
+            config('permission.column_names.model_morph_key')
+        );
+    }
+
+    // Custom Functions
+    // Ahmed Omar
+
+    public function parent()
+    {
+        return $this->belongsTo(Permission::class, 'parent_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(Permission::class, 'parent_id');
+    }
+
+    /**
      * Get the current cached permissions.
      */
     protected static function getPermissions(array $params = [], bool $onlyOne = false): Collection
@@ -152,19 +165,5 @@ class Permission extends Model implements PermissionContract
     {
         /** @var PermissionContract|null */
         return static::getPermissions($params, true)->first();
-    }
-
-
-    // Custom Functions
-    // Ahmed Omar
-
-    public function parent()
-    {
-        return $this->belongsTo(Permission::class, 'parent_id');
-    }
-
-    public function children()
-    {
-        return $this->hasMany(Permission::class, 'parent_id');
     }
 }

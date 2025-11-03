@@ -12,7 +12,6 @@ class PrerequisiteComment extends Model
 
     protected $table = 'prerequisites_comments';
 
-
     protected $fillable = [
         'prerequisite_id',
         'user_id',

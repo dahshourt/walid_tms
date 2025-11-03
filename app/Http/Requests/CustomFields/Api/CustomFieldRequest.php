@@ -2,13 +2,12 @@
 
 namespace App\Http\Requests\CustomFields\Api;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class CustomFieldRequest extends FormRequest
 {
-
     /**
      * Determine if the supervisor is authorized to make this request.
      *
@@ -34,18 +33,18 @@ class CustomFieldRequest extends FormRequest
     //         'head_group_email' => ['sometimes','email'],
     //         'active' => ['required'],
     //     ];
-        
+
     // }
 
     public function rules()
     {
         if ($this->isMethod('POST')) {
             return $this->createRules();
-        } else {
-            return $this->updateRules();
         }
-    }
 
+        return $this->updateRules();
+
+    }
 
     /**
      * Get the create validation rules that apply to the request.
@@ -55,12 +54,12 @@ class CustomFieldRequest extends FormRequest
     public function createRules()
     {
         return [
-            'type' => ['required','string'],
-            'label' => ['required','string'],
-            'name' => ['required','string'],
-            'class' => ['nullable','string'],
-            'default_value' => ['nullable','string'],
-            'related_table' => ['nullable','string'],
+            'type' => ['required', 'string'],
+            'label' => ['required', 'string'],
+            'name' => ['required', 'string'],
+            'class' => ['nullable', 'string'],
+            'default_value' => ['nullable', 'string'],
+            'related_table' => ['nullable', 'string'],
             'active' => ['required'],
         ];
     }
@@ -73,21 +72,21 @@ class CustomFieldRequest extends FormRequest
     public function updateRules()
     {
         return [
-            'type' => ['required','string'],
-            'label' => ['required','string'],
-            'name' => ['required','string'],
-            'class' => ['nullable','string'],
-            'default_value' => ['nullable','string'],
-            'related_table' => ['nullable','string'],
+            'type' => ['required', 'string'],
+            'label' => ['required', 'string'],
+            'name' => ['required', 'string'],
+            'class' => ['nullable', 'string'],
+            'default_value' => ['nullable', 'string'],
+            'related_table' => ['nullable', 'string'],
             'active' => ['required'],
         ];
     }
 
-
-    protected function failedValidation(Validator $validator) { 
+    protected function failedValidation(Validator $validator)
+    {
         throw new HttpResponseException(response()->json([
-            'message' => $validator->messages()
-          ], 422));
+            'message' => $validator->messages(),
+        ], 422));
     }
 
     /**

@@ -18,22 +18,16 @@ class Role extends Model
         'name',
         'active',
         'parent_id',
-        
-    ];
 
+    ];
 
     public function users()
     {
         return $this->hasMany(User::class);
     }
 
-
-    public function parent() 
+    public function parent()
     {
-        return $this->belongsTo(Role::class,'parent_id');
+        return $this->belongsTo(Role::class, 'parent_id');
     }
-
-    
-    
-
 }

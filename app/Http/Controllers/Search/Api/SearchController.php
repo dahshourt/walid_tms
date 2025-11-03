@@ -19,7 +19,9 @@ use App\Http\Resources\SearchRequestResource;
 class SearchController extends Controller
 {
     private $changerequest;
+
     private $changerequeststatus;
+
     private $workflow;
 
     public function __construct(ChangeRequestFactory $changerequest, ChangeRequestStatusFactory $changerequeststatus, NewWorkFlowFactory $workflow)
@@ -39,7 +41,7 @@ class SearchController extends Controller
         } else {
             $cr = null;
         }
-        //dd($cr);
+        // dd($cr);
 
         return response()->json(['data' => $cr], 200);
     }
@@ -49,6 +51,7 @@ class SearchController extends Controller
 
         $collection = $this->changerequest->AdvancedSearchResult();
         $collection = AdvancedSearchRequestResource::collection($collection);
+
         return response()->json(['data' => $collection], 200);
     }
 }

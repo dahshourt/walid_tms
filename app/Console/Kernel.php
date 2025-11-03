@@ -5,42 +5,39 @@ namespace App\Console;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
-
 class Kernel extends ConsoleKernel
 {
     /**
      * The Artisan commands provided by your application.
      *
-     * @var array 
+     * @var array
      */
     protected $commands = [
-           \App\Console\Commands\UpdateReleaseAndCrs::class,
-           \App\Console\Commands\UpdateToNextStatusAsCalendar::class, // Fixed class name
-           \App\Console\Commands\KickOffMeetingStatusUpdate::class,
-           \App\Console\Commands\Reject_business_approvals::class,
-         //  \App\Console\Commands\EwsListenerCommand::class,
+        \App\Console\Commands\UpdateReleaseAndCrs::class,
+        \App\Console\Commands\UpdateToNextStatusAsCalendar::class, // Fixed class name
+        \App\Console\Commands\KickOffMeetingStatusUpdate::class,
+        \App\Console\Commands\Reject_business_approvals::class,
+        //  \App\Console\Commands\EwsListenerCommand::class,
 
     ];
 
-    
     /**
      * Define the application's command schedule.
      *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
      * @return void
      */
     protected function schedule(Schedule $schedule)
     {
-         $schedule->command('update_releae_and_crs')->daily();
-         $schedule->command('CalendarUpdateStatus:run')->daily();
+        $schedule->command('update_releae_and_crs')->daily();
+        $schedule->command('CalendarUpdateStatus:run')->daily();
         // $schedule->command('email:process-approvals')->everyMinute();
-         $schedule->command('cab:approve-users')->daily();
-         $schedule->command('cr:update-kickoff-status')
-                 ->dailyAt('09:00')
-                 ->withoutOverlapping()
-                 ->runInBackground();
-         $schedule->command('cron:escalation')->everyFiveMinutes();
-         $schedule->command('auto:reject-cr')->dailyAt('00:00');
+        $schedule->command('cab:approve-users')->daily();
+        $schedule->command('cr:update-kickoff-status')
+            ->dailyAt('09:00')
+            ->withoutOverlapping()
+            ->runInBackground();
+        $schedule->command('cron:escalation')->everyFiveMinutes();
+        $schedule->command('auto:reject-cr')->dailyAt('00:00');
 
     }
 
@@ -51,7 +48,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands()
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }

@@ -2,13 +2,11 @@
 
 namespace App\Http\Requests\Stages;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
-use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Foundation\Http\FormRequest;
 
 class StageRequest extends FormRequest
 {
-
     /**
      * Determine if the supervisor is authorized to make this request.
      *
@@ -28,11 +26,11 @@ class StageRequest extends FormRequest
     {
         if ($this->isMethod('POST')) {
             return $this->createRules();
-        } else {
-            return $this->updateRules();
         }
-    }
 
+        return $this->updateRules();
+
+    }
 
     /**
      * Get the create validation rules that apply to the request.
@@ -42,9 +40,8 @@ class StageRequest extends FormRequest
     public function createRules()
     {
         return [
-            'name' => ['required','string', 'unique:stages'],
-        
-            
+            'name' => ['required', 'string', 'unique:stages'],
+
         ];
     }
 
@@ -56,14 +53,10 @@ class StageRequest extends FormRequest
     public function updateRules()
     {
         return [
-            'name' => ['required','string', 'unique:stages,name,' . request()->stage],
-           
+            'name' => ['required', 'string', 'unique:stages,name,' . request()->stage],
+
         ];
     }
-
-
-
-    
 
     /**
      * Get custom attributes for validator errors.

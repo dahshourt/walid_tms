@@ -8,8 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class Defect extends Model
 {
     use HasFactory;
+
     public $table = 'defects';
-	protected $fillable = [
+
+    protected $fillable = [
         'cr_id',
         'subject',
         'group_id',
@@ -19,26 +21,25 @@ class Defect extends Model
 
     public function change_request()
     {
-        return $this->belongsTo(Change_request::class,'cr_id');
+        return $this->belongsTo(Change_request::class, 'cr_id');
 
     }
 
     public function assigned_team()
     {
-        return $this->belongsTo(Group::class,'group_id');
+        return $this->belongsTo(Group::class, 'group_id');
 
     }
 
     public function current_status()
     {
-        return $this->belongsTo(Status::class,'status_id');
+        return $this->belongsTo(Status::class, 'status_id');
 
     }
 
-   
     public function User_created()
     {
-        return $this->belongsTo(User::class,'created_by');
+        return $this->belongsTo(User::class, 'created_by');
 
     }
 

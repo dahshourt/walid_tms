@@ -5,13 +5,14 @@ namespace App\Exports;
 use App\Models\Change_request;
 use App\Models\WorkFlowType;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 
-class UserCreatedCRsExport implements FromCollection, WithHeadings, WithMapping, ShouldAutoSize
+class UserCreatedCRsExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping
 {
     protected $user_id;
+
     protected $workflow_type;
 
     public function __construct($user_id, $workflow_type = null)
@@ -21,14 +22,14 @@ class UserCreatedCRsExport implements FromCollection, WithHeadings, WithMapping,
     }
 
     /**
-    * @return \Illuminate\Support\Collection
-    */
+     * @return \Illuminate\Support\Collection
+     */
     public function collection()
     {
         $query = Change_request::with([
             'release:id,name',
             'workflowType:id,name',
-            'CurrentRequestStatuses.status:id,status_name'
+            'CurrentRequestStatuses.status:id,status_name',
         ])
             ->where('requester_id', $this->user_id);
 
@@ -45,9 +46,6 @@ class UserCreatedCRsExport implements FromCollection, WithHeadings, WithMapping,
         return $query->get();
     }
 
-    /**
-     * @return array
-     */
     public function headings(): array
     {
         $baseHeadings = [
@@ -96,8 +94,7 @@ class UserCreatedCRsExport implements FromCollection, WithHeadings, WithMapping,
     }
 
     /**
-     * @param \App\Models\Change_request $change_request
-     * @return array
+     * @param  \App\Models\Change_request  $change_request
      */
     public function map($change_request): array
     {

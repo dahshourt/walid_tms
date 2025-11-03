@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use DB;
+use Illuminate\Database\Seeder;
 
 class StatusSeeder extends Seeder
 {
@@ -16,75 +16,75 @@ class StatusSeeder extends Seeder
     {
         //
         DB::table('statuses')->insert([
-            'status_name' => "Pending CAB",
+            'status_name' => 'Pending CAB',
             'stage_id' => 1,
             'active' => '1',
         ]);
         DB::table('statuses')->insert([
-            'status_name' => "Pending Analysis",
+            'status_name' => 'Pending Analysis',
             'stage_id' => 1,
             'active' => '1',
         ]);
         DB::table('statuses')->insert([
-            'status_name' => "Design estimation",
+            'status_name' => 'Design estimation',
             'stage_id' => 2,
             'active' => '1',
         ]);
         DB::table('statuses')->insert([
-            'status_name' => "Technical estimation",
+            'status_name' => 'Technical estimation',
             'stage_id' => 2,
             'active' => '1',
         ]);
         DB::table('statuses')->insert([
-            'status_name' => "Analysis Feedback",
+            'status_name' => 'Analysis Feedback',
             'stage_id' => 1,
             'active' => '1',
         ]);
         DB::table('statuses')->insert([
-            'status_name' => "Testing Estimation",
+            'status_name' => 'Testing Estimation',
             'stage_id' => 2,
             'active' => '1',
         ]);
         DB::table('statuses')->insert([
-            'status_name' => "Pending Design",
+            'status_name' => 'Pending Design',
             'stage_id' => 3,
             'active' => '1',
         ]);
         DB::table('statuses')->insert([
-            'status_name' => "Pending implementation",
+            'status_name' => 'Pending implementation',
             'stage_id' => 4,
             'active' => '1',
         ]);
         DB::table('statuses')->insert([
-            'status_name' => "Design feedback",
+            'status_name' => 'Design feedback',
             'stage_id' => 3,
             'active' => '1',
         ]);
         DB::table('statuses')->insert([
-            'status_name' => "Technical Implementation",
+            'status_name' => 'Technical Implementation',
             'stage_id' => 4,
             'active' => '1',
         ]);
         DB::table('statuses')->insert([
-            'status_name' => "Pending Testing",
+            'status_name' => 'Pending Testing',
             'stage_id' => 5,
             'active' => '1',
         ]);
         DB::table('statuses')->insert([
-            'status_name' => "Test Case approval",
+            'status_name' => 'Test Case approval',
             'stage_id' => 5,
             'active' => '1',
         ]);
         DB::table('statuses')->insert([
-            'status_name' => "Testing in progress",
+            'status_name' => 'Testing in progress',
             'stage_id' => 5,
             'active' => '1',
         ]);
         DB::table('statuses')->insert([
-            'status_name' => "Pending rework",
+            'status_name' => 'Pending rework',
             'stage_id' => 4,
             'active' => '1',
         ]);
-        
+
     }
 }

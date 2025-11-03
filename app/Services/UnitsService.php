@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 namespace App\Services;
+
 use App\Http\Repository\Units\UnitsRepository;
 use App\Models\Unit;
 
@@ -39,8 +40,8 @@ class UnitsService
     {
         $unit = $this->findUnit($id);
 
-        $new_status = (int) !$unit->status;
+        $new_status = (int) ! $unit->status;
 
-        return $this->unitsRepository->updateStatus((string)$new_status, $id);
+        return $this->unitsRepository->updateStatus((string) $new_status, $id);
     }
 }

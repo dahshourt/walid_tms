@@ -57,7 +57,6 @@ return [
     'asset_url' => env('ASSET_URL', null),
     'check_interval' => env('USER_CHECK_INTERVAL_ACTIVE', 20000),
 
-
     /*
     |--------------------------------------------------------------------------
     | Application Timezone
@@ -179,7 +178,7 @@ return [
         App\Providers\TelescopeServiceProvider::class,
         Maatwebsite\Excel\ExcelServiceProvider::class,
 
-        // Spatie 
+        // Spatie
 
         Spatie\Permission\PermissionServiceProvider::class,
 

@@ -7,9 +7,8 @@ use App\Http\Repository\Defect\DefectRepository;
 
 class DefectFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new DefectRepository();
     }
-
 }

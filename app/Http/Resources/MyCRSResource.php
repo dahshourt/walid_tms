@@ -9,8 +9,7 @@ class MyCRSResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param \Illuminate\Http\Request $request
-     *
+     * @param  \Illuminate\Http\Request  $request
      * @return array
      */
     public function toArray($request)
@@ -25,8 +24,8 @@ class MyCRSResource extends JsonResource
             'testable' => $this->testable,
             'application' => $this->application,
             'cr_no' => $this->cr_no,
-            'current_status' => $this->getCurrentStatus()->status->high_level?$this->getCurrentStatus()->status->high_level->name : "",
-            //'current_status' => new ChangeRequestStatusResource($current_status),
+            'current_status' => $this->getCurrentStatus()->status->high_level ? $this->getCurrentStatus()->status->high_level->name : '',
+            // 'current_status' => new ChangeRequestStatusResource($current_status),
         ];
     }
 }

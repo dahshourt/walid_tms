@@ -16,7 +16,7 @@ class AddStatusIdToCustomFieldsGroupsTypeTable extends Migration
         Schema::table('custom_fields_groups_type', function (Blueprint $table) {
             //
             $table->foreignId('status_id')->nullable();
-           $table->foreign('id')->references('id')->on('statuses')->onDelete('cascade');
+            $table->foreign('id')->references('id')->on('statuses')->onDelete('cascade');
 
         });
     }

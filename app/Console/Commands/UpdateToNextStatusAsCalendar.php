@@ -2,19 +2,11 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Factories\ChangeRequest\ChangeRequestFactory;
+use Illuminate\Console\Command;
 
-class UpdateToNextStatusAsCalendar   extends Command
+class UpdateToNextStatusAsCalendar extends Command
 {
-
-    private $changerequest;
-    public function __construct(ChangeRequestFactory $changerequest)
-    {
-        parent::__construct();
-        $this->changerequest = $changerequest::index();
-    }
-
     /**
      * The name and signature of the console command.
      *
@@ -29,12 +21,19 @@ class UpdateToNextStatusAsCalendar   extends Command
      */
     protected $description = 'Update the  promo CR to next status as per Calendar';
 
+    private $changerequest;
+
+    public function __construct(ChangeRequestFactory $changerequest)
+    {
+        parent::__construct();
+        $this->changerequest = $changerequest::index();
+    }
+
     /**
      * Create a new command instance.
      *
      * @return void
      */
-    
 
     /**
      * Execute the console command.

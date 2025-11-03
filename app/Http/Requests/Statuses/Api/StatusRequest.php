@@ -2,13 +2,12 @@
 
 namespace App\Http\Requests\Statuses\Api;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 
 class StatusRequest extends FormRequest
 {
-
     /**
      * Determine if the supervisor is authorized to make this request.
      *
@@ -28,11 +27,11 @@ class StatusRequest extends FormRequest
     {
         if ($this->isMethod('POST')) {
             return $this->createRules();
-        } else {
-            return $this->updateRules();
         }
-    }
 
+        return $this->updateRules();
+
+    }
 
     /**
      * Get the create validation rules that apply to the request.
@@ -42,14 +41,14 @@ class StatusRequest extends FormRequest
     public function createRules()
     {
         return [
-            'status_name' => ['required','string', 'unique:statuses'],
-            'stage_id' => ['required','integer'],
-            'active' => ['required','integer'],
-            'group_id'   => ['required','array'],
+            'status_name' => ['required', 'string', 'unique:statuses'],
+            'stage_id' => ['required', 'integer'],
+            'active' => ['required', 'integer'],
+            'group_id' => ['required', 'array'],
             'group_id.*' => ['integer', 'exists:groups,id'],
-            'view_group_id'   => ['sometimes','array'],
-            'view_group_id.*' => ['integer', 'exists:groups,id']
-            
+            'view_group_id' => ['sometimes', 'array'],
+            'view_group_id.*' => ['integer', 'exists:groups,id'],
+
         ];
     }
 
@@ -62,24 +61,22 @@ class StatusRequest extends FormRequest
     {
         return [
 
-            'status_name' => ['required','string', 'unique:statuses,status_name,' . request()->status],
-            'stage_id' => ['required','integer'],
-            'active' => ['required','integer'],
-            'group_id'   => ['sometimes','array'],
+            'status_name' => ['required', 'string', 'unique:statuses,status_name,' . request()->status],
+            'stage_id' => ['required', 'integer'],
+            'active' => ['required', 'integer'],
+            'group_id' => ['sometimes', 'array'],
             'group_id.*' => ['integer', 'exists:groups,id'],
-            'view_group_id'   => ['sometimes','array'],
-            'view_group_id.*' => ['integer', 'exists:groups,id']
+            'view_group_id' => ['sometimes', 'array'],
+            'view_group_id.*' => ['integer', 'exists:groups,id'],
         ];
     }
 
-
-    protected function failedValidation(Validator $validator) { 
+    protected function failedValidation(Validator $validator)
+    {
         throw new HttpResponseException(response()->json([
-            'message' => $validator->messages()
-          ], 422));
+            'message' => $validator->messages(),
+        ], 422));
     }
-
-    
 
     /**
      * Get custom attributes for validator errors.

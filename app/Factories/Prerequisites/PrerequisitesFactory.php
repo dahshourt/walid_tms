@@ -7,9 +7,8 @@ use App\Http\Repository\Prerequisites\PrerequisitesRepository;
 
 class PrerequisitesFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new PrerequisitesRepository();
     }
-
 }

@@ -23,9 +23,9 @@ class Release extends Model
         'release_status',
     ];
 
-    public function status() 
+    public function status()
     {
-        return $this->belongsTo(Status::class,'release_status');
+        return $this->belongsTo(Status::class, 'release_status');
     }
 
     public function releaseStatus()

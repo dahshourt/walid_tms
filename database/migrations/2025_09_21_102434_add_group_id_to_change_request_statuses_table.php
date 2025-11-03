@@ -15,11 +15,11 @@ class AddGroupIdToChangeRequestStatusesTable extends Migration
     {
         Schema::table('change_request_statuses', function (Blueprint $table) {
             //
-			$table->unsignedBigInteger('group_id')->nullable()->after('user_id');
-                $table->index('group_id', 'cr_statuses_group_id_idx');
-                $table->foreign('group_id', 'cr_statuses_group_id_fk')
-                      ->references('id')->on('groups')
-                      ->nullOnDelete();
+            $table->unsignedBigInteger('group_id')->nullable()->after('user_id');
+            $table->index('group_id', 'cr_statuses_group_id_idx');
+            $table->foreign('group_id', 'cr_statuses_group_id_fk')
+                ->references('id')->on('groups')
+                ->nullOnDelete();
         });
     }
 
@@ -32,7 +32,7 @@ class AddGroupIdToChangeRequestStatusesTable extends Migration
     {
         Schema::table('change_request_statuses', function (Blueprint $table) {
             //
-			$table->dropForeign(['group_id']);
+            $table->dropForeign(['group_id']);
             $table->dropColumn('group_id');
         });
     }

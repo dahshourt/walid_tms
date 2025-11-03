@@ -7,9 +7,8 @@ use App\Http\Repository\RejectionReasons\RejectionReasonsRepository;
 
 class RejectionReasonsFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new RejectionReasonsRepository();
     }
-
 }

@@ -21,7 +21,7 @@ class CreatePrerequisitesTable extends Migration
             $table->foreignId('created_by')->nullable();
             $table->string('requester_department')->nullable();
             $table->integer('requester_mobile')->nullable();
-            //$table->enum('status',['open','pending','closed'])->default('open');
+            // $table->enum('status',['open','pending','closed'])->default('open');
             $table->foreignId('status_id')->nullable();
             $table->foreign('promo_id')->references('id')->on('change_request')->onDelete('cascade');
             $table->foreign('group_id')->references('id')->on('groups')->onDelete('cascade');

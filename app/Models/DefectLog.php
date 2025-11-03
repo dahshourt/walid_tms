@@ -8,8 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 class DefectLog extends Model
 {
     use HasFactory;
+
     public $table = 'defect_logs';
-	protected $fillable = [
+
+    protected $fillable = [
         'defect_id',
         'user_id',
         'log_text',
@@ -17,13 +19,13 @@ class DefectLog extends Model
 
     public function defect()
     {
-        return $this->belongsTo(Defect::class,'defect_id');
+        return $this->belongsTo(Defect::class, 'defect_id');
 
     }
 
     public function user()
     {
-        return $this->belongsTo(User::class,'user_id');
+        return $this->belongsTo(User::class, 'user_id');
 
     }
 }

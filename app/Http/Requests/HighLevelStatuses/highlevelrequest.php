@@ -26,36 +26,35 @@ class highlevelrequest extends FormRequest
 
         if ($this->isMethod('POST')) {
             return $this->createRules();
-        } else {
-            return $this->updateRules();
         }
+
+        return $this->updateRules();
+
     }
+
     public function createRules()
     {
         return [
             'name' => ['required', 'string', 'unique:high_level_statuses'],
-            'status_id'=>'required'
+            'status_id' => 'required',
 
         ];
     }
-
 
     public function updateRules()
     {
         return [
             'name' => ['required', 'string', 'unique:high_level_statuses,name,' . $this->id],
-            'status_id'=>'required'
-
+            'status_id' => 'required',
 
         ];
     }
+
     public function messages()
     {
         return [
             'status_id.required' => 'the status is required.',
-            
+
         ];
     }
-
-
 }

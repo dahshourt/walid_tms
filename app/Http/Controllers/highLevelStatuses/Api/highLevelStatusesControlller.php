@@ -1,45 +1,46 @@
 <?php
 
 namespace App\Http\Controllers\highLevelStatuses\Api;
-use Illuminate\Foundation\Http\FormRequest;
+
 use App\Factories\HighLevelStatuses\HighLevelStatusesFactory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\HighLevelStatuses\highlevelrequest;
-use Illuminate\Foundation\Validation\ValidatesRequests;
-use App\Http\Requests\Statuses\Api\StatusRequest;
 use App\Http\Resources\HighLevelStatusResource;
-use App\Http\Resources\StatusResource;
-use GuzzleHttp\Psr7\Request;
-use Illuminate\Http\Request as HttpRequest;
+use Illuminate\Foundation\Validation\ValidatesRequests;
 
 class highLevelStatusesControlller extends Controller
 {
     use ValidatesRequests;
+
     private $highLevelStatuses;
 
-    function __construct(HighLevelStatusesFactory $highLevelStatuses){
-        
+    public function __construct(HighLevelStatusesFactory $highLevelStatuses)
+    {
+
         $this->highLevelStatuses = $highLevelStatuses::index();
-        
+
     }
 
     public function index()
     {
-      
+
         //  = $this->status->getAll();
         $highLevelStatuses = HighLevelStatusResource::collection($this->highLevelStatuses->getAll());
-        return response()->json(['data' => $highLevelStatuses],200);
+
+        return response()->json(['data' => $highLevelStatuses], 200);
     }
+
     /**
      * Send or resend the verification code.
      *
-     * @param \Illuminate\Http\Request $request
-     * @throws \Illuminate\Validation\ValidationException
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function store(highlevelrequest $request)
     {
-       
+
         $this->highLevelStatuses->create($request->all());
 
         return response()->json([
@@ -50,21 +51,22 @@ class highLevelStatusesControlller extends Controller
     /**
      * Send or resend the verification code.
      *
-     * @param \Illuminate\Http\Request $request
-     * @throws \Illuminate\Validation\ValidationException
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function update(highlevelrequest $request, $id)
     {
-		
+
         $highLevelStatuses = $this->highLevelStatuses->find($id);
-        if(!$highLevelStatuses)
-        {
+        if (! $highLevelStatuses) {
             return response()->json([
                 'message' => 'status Not Exists',
-            ],422);
+            ], 422);
         }
-        $this->highLevelStatuses->update($request,$id);
+        $this->highLevelStatuses->update($request, $id);
+
         return response()->json([
             'message' => 'Updated Successfully',
         ]);
@@ -73,31 +75,27 @@ class highLevelStatusesControlller extends Controller
     public function show($id)
     {
         $highLevelStatuses = $this->highLevelStatuses->find($id);
-        if(!$highLevelStatuses)
-        {
+        if (! $highLevelStatuses) {
             return response()->json([
                 'message' => 'status Not Exists',
-            ],422);
+            ], 422);
         }
         $highLevelStatuses = new HighLevelStatusResource($highLevelStatuses);
-        return response()->json(['data' => $highLevelStatuses],200);
+
+        return response()->json(['data' => $highLevelStatuses], 200);
     }
 
-    public function destroy()
+    public function destroy() {}
+
+    public function updateactive($id)
     {
-        
-    }
-	public function updateactive($id){
-		   $highLevelStatuses = $this->highLevelStatuses->find($id);
-		   
-		   $this->highLevelStatuses->updateactive($highLevelStatuses['active'],$id);
-		   
-		    return response()->json([
+        $highLevelStatuses = $this->highLevelStatuses->find($id);
+
+        $this->highLevelStatuses->updateactive($highLevelStatuses['active'], $id);
+
+        return response()->json([
             'message' => 'Updated Successfully',
         ]);
 
-		  
-		
-	}
-
+    }
 }

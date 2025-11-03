@@ -23,7 +23,7 @@ class CreateStatusWorkFlowTable extends Migration
 
             $table->foreign('from_status_id')->references('id')->on('statuses')->onDelete('cascade');
             $table->foreign('to_status_id')->references('id')->on('statuses')->onDelete('cascade');
-            
+
             $table->foreign('from_stage_id')->references('id')->on('stages')->onDelete('cascade');
             $table->foreign('to_stage_id')->references('id')->on('stages')->onDelete('cascade');
             $table->timestamps();

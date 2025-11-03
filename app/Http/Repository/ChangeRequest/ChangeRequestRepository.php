@@ -1,29 +1,33 @@
 <?php
+
 namespace App\Http\Repository\ChangeRequest;
 
 use App\Contracts\ChangeRequest\ChangeRequestRepositoryInterface;
 use App\Models\Change_request;
 use App\Models\Change_request_statuse;
-use App\Services\ChangeRequest\{
-    ChangeRequestCreationService,
-    ChangeRequestUpdateService,
-    ChangeRequestStatusService,
-    ChangeRequestSchedulingService,
-    ChangeRequestSearchService,
-    ChangeRequestValidationService
-};
-use Auth;
+use App\Services\ChangeRequest\ChangeRequestCreationService;
+use App\Services\ChangeRequest\ChangeRequestSchedulingService;
+use App\Services\ChangeRequest\ChangeRequestSearchService;
+use App\Services\ChangeRequest\ChangeRequestStatusService;
+use App\Services\ChangeRequest\ChangeRequestUpdateService;
+use App\Services\ChangeRequest\ChangeRequestValidationService;
 
 class ChangeRequestRepository implements ChangeRequestRepositoryInterface
 {
     protected $creationService;
+
     protected $updateService;
+
     protected $statusService;
+
     protected $schedulingService;
+
     protected $searchService;
+
     protected $validationService;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->creationService = new ChangeRequestCreationService();
         $this->updateService = new ChangeRequestUpdateService();
         $this->statusService = new ChangeRequestStatusService();
@@ -46,6 +50,7 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
     public function LastCRNo()
     {
         $ChangeRequest = Change_request::orderby('id', 'desc')->first();
+
         return isset($ChangeRequest) ? $ChangeRequest->cr_no + 1 : 1;
     }
 
@@ -95,15 +100,16 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
     {
         return $this->searchService->divisionManagerCr($group);
     }
+
     public function cr_pending_cap()
     {
         return $this->searchService->cr_pending_cap();
-    }//cr_hold_promo
+    }// cr_hold_promo
 
     public function cr_hold_promo()
     {
         return $this->searchService->cr_hold_promo();
-    }//cr_hold_promo
+    }// cr_hold_promo
 
     public function my_assignments_crs()
     {
@@ -152,12 +158,12 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
     {
         return $this->schedulingService->reorderTimes($crId);
     }
+
     public function holdPromo($crId)
     {
-       
+
         return $this->schedulingService->holdPromo($crId);
     }
-
 
     public function reorderChangeRequests($crId)
     {
@@ -193,6 +199,7 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
             ->selectRaw('count(*) as total, application_id')
             ->where('workflow_type_id', $workflow_type)
             ->get();
+
         return $collection;
     }
 
@@ -202,6 +209,7 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
             ->selectRaw('count(*) as total, new_status_id')
             ->where('active', '1')
             ->get();
+
         return $collection;
     }
 
@@ -210,10 +218,10 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
         $collection = Change_request_statuse::whereHas('ChangeRequest', function ($q) use ($workflow_type) {
             $q->where('workflow_type_id', $workflow_type);
         })
-        ->groupBy('new_status_id')
-        ->selectRaw('count(*) as total, new_status_id')
-        ->where('active', '1')
-        ->get();
+            ->groupBy('new_status_id')
+            ->selectRaw('count(*) as total, new_status_id')
+            ->where('active', '1')
+            ->get();
 
         return $collection;
     }
@@ -222,14 +230,15 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
     public function getWorkFollowDependOnApplication($id)
     {
         $app = Application::where('id', $id)->first();
+
         return $app->workflow_type_id;
     }
 
     public function get_change_request_by_release($release_id)
     {
-        return Change_request::with("CurrentRequestStatuses")
+        return Change_request::with('CurrentRequestStatuses')
             ->where('release_name', $release_id)
-            ->where("workflow_type_id", 5)
+            ->where('workflow_type_id', 5)
             ->get();
     }
 

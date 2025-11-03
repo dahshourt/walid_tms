@@ -14,7 +14,7 @@ class CrUpdateNotification extends Seeder
     public function run(): void
     {
         // Ensure priority column exists
-        if (!Schema::hasColumn('notification_rules', 'priority')) {
+        if (! Schema::hasColumn('notification_rules', 'priority')) {
             Schema::table('notification_rules', function ($table) {
                 $table->integer('priority')->default(0)->after('is_active');
             });
@@ -27,25 +27,25 @@ class CrUpdateNotification extends Seeder
                 'subject' => 'CR #{{cr_no}} status has been changed',
                 'body' => 'Dear {{first_name}}, <br><br>CR #{{cr_no}} status has been changed from <strong>{{old_status}}</strong> to <strong>{{new_status}}</strong>.<br><br>CR Title: {{cr_title}}<br><br>You can review it here: <a href="{{cr_link}}">CR: #{{cr_no}}</a><br><br><strong>Note:</strong> This is an automated message sent by the <strong>IT TMS System</strong>.<br><strong>Best regards,</strong><br><strong>TMS</strong>',
                 'available_placeholders' => json_encode([
-                    'cr_no', 'first_name', 'old_status', 'new_status', 
-                    'cr_title', 'cr_link'
+                    'cr_no', 'first_name', 'old_status', 'new_status',
+                    'cr_title', 'cr_link',
                 ]),
                 'is_active' => 1,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
             [
                 'name' => 'CR Status Updated - Notify Group',
                 'subject' => 'CR #{{cr_no}} status has been changed',
                 'body' => 'Dear {{group_name}},<br><br>CR #{{cr_no}} status has been changed from <strong>{{old_status}}</strong> to <strong>{{new_status}}</strong>.<br><br>CR Title: {{cr_title}}<br><br>You can review it here: <a href="{{cr_link}}">CR: #{{cr_no}}</a><br><br><strong>Note:</strong> This is an automated message sent by the <strong>IT TMS System</strong>.<br><strong>Best regards,</strong><br><strong>TMS</strong>',
                 'available_placeholders' => json_encode([
-                    'cr_no', 'group_name', 'old_status', 'new_status', 
-                    'cr_title', 'cr_link'
+                    'cr_no', 'group_name', 'old_status', 'new_status',
+                    'cr_title', 'cr_link',
                 ]),
                 'is_active' => 1,
                 'created_at' => now(),
-                'updated_at' => now()
-            ]
+                'updated_at' => now(),
+            ],
         ];
 
         foreach ($templates as $template) {
@@ -59,7 +59,7 @@ class CrUpdateNotification extends Seeder
         $requesterTemplateId = DB::table('notification_templates')
             ->where('name', 'CR Status Updated - Notify Requester')
             ->value('id');
-            
+
         $groupTemplateId = DB::table('notification_templates')
             ->where('name', 'CR Status Updated - Notify Group')
             ->value('id');
@@ -79,7 +79,7 @@ class CrUpdateNotification extends Seeder
                 'is_active' => 1,
                 'priority' => 90,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
             // Test Example
             [
@@ -92,8 +92,8 @@ class CrUpdateNotification extends Seeder
                 'is_active' => 1,
                 'priority' => 80,
                 'created_at' => now(),
-                'updated_at' => now()
-            ]
+                'updated_at' => now(),
+            ],
         ];
 
         foreach ($rules as $rule) {
@@ -107,7 +107,7 @@ class CrUpdateNotification extends Seeder
         $requesterRuleId = DB::table('notification_rules')
             ->where('name', 'CR Status Updated - Notify Requester')
             ->value('id');
-            
+
         $groupRuleId = DB::table('notification_rules')
             ->where('name', 'CR Status Updated - Notify Group')
             ->value('id');
@@ -117,11 +117,11 @@ class CrUpdateNotification extends Seeder
         $pendingCDAnalysisRuleId = DB::table('notification_rules')
             ->where('name', 'CR Status - Pending CD Analysis')
             ->value('id');
-            
+
         $devTeamRuleId = DB::table('notification_rules')
             ->where('name', 'CR Status - Notify Dev Team on Implementation')
             ->value('id');
-        
+
         $recipients = [
             // Example 1 Recipients: Notify cr_creator (requester)
 
@@ -131,7 +131,7 @@ class CrUpdateNotification extends Seeder
                 'channel' => 'to',
                 'recipient_identifier' => '',
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
             [
                 'notification_rule_id' => $pendingCDAnalysisRuleId,
@@ -139,7 +139,7 @@ class CrUpdateNotification extends Seeder
                 'channel' => 'to',
                 'recipient_identifier' => '',
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
             // Example 2 Recipients: Notify assigned_group (dev team)
             [
@@ -148,7 +148,7 @@ class CrUpdateNotification extends Seeder
                 'channel' => 'to',
                 'recipient_identifier' => '',
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ],
             // Example 2: Also notify developer if assigned
             [
@@ -157,8 +157,8 @@ class CrUpdateNotification extends Seeder
                 'channel' => 'to',
                 'recipient_identifier' => '',
                 'created_at' => now(),
-                'updated_at' => now()
-            ]
+                'updated_at' => now(),
+            ],
         ];
 
         foreach ($recipients as $recipient) {
@@ -166,7 +166,7 @@ class CrUpdateNotification extends Seeder
                 [
                     'notification_rule_id' => $recipient['notification_rule_id'],
                     'recipient_type' => $recipient['recipient_type'],
-                    'channel' => $recipient['channel']
+                    'channel' => $recipient['channel'],
                 ],
                 $recipient
             );

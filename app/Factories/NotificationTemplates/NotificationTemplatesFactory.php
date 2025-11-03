@@ -7,9 +7,8 @@ use App\Http\Repository\NotificationTemplates\NotificationTemplatesRepository;
 
 class NotificationTemplatesFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new NotificationTemplatesRepository();
     }
-
 }

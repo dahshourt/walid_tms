@@ -1,64 +1,54 @@
 <?php
+
 namespace App\Services\ChangeRequest;
 
-use App\Models\{
-    Change_request,
-    User,
-    CabCr,
-    CabCrUser,
-    TechnicalCr,
-    TechnicalCrTeam,
-    TechnicalCrTeamStatus,
-    NewWorkFlow,
-    CustomField,
-    ChangeRequestCustomField,
-    Change_request_statuse
-};
-use App\Http\Repository\{
-    Logs\LogRepository,
-    ChangeRequest\ChangeRequestStatusRepository,
-    ChangeRequest\ChangeRequestRepository
-};
-use App\Services\ChangeRequest\{
-    ChangeRequestEstimationService,
-    ChangeRequestStatusService,
-    ChangeRequestValidationService
-};
+use App\Http\Repository\ChangeRequest\ChangeRequestStatusRepository;
+use App\Http\Repository\Logs\LogRepository;
+use App\Models\CabCr;
+use App\Models\CabCrUser;
+use App\Models\Change_request;
+use App\Models\Change_request_statuse;
+use App\Models\ChangeRequestCustomField;
+use App\Models\CustomField;
+use App\Models\NewWorkFlow;
+use App\Models\TechnicalCr;
+use App\Models\TechnicalCrTeam;
+use App\Models\User;
+use App\Notifications\CreateTicket;
 use App\Traits\ChangeRequest\ChangeRequestConstants;
 use Auth;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Log;
-use App\Notifications\CreateTicket;
 
 class ChangeRequestUpdateService
 {
     use ChangeRequestConstants;
 
-    
     protected $logRepository;
+
     protected $statusRepository;
+
     protected $estimationService;
+
     protected $validationService;
+
     protected $statusService;
+
     private $changeRequest_old;
 
     public function __construct()
     {
-        $this->logRepository     = new LogRepository();
-        $this->statusRepository  = new ChangeRequestStatusRepository();
+        $this->logRepository = new LogRepository();
+        $this->statusRepository = new ChangeRequestStatusRepository();
         $this->estimationService = new ChangeRequestEstimationService();
         $this->validationService = new ChangeRequestValidationService();
-        $this->statusService     = new ChangeRequestStatusService();
+        $this->statusService = new ChangeRequestStatusService();
     }
 
     public function update($id, $request)
     {
-       
 
-        
         $this->changeRequest_old = Change_request::find($id);
-       
-        
+
         // Handle CAB CR validation
         if ($this->handleCabCrValidation($id, $request)) {
             return true;
@@ -78,101 +68,110 @@ class ChangeRequestUpdateService
         $this->handleTechnicalTeams($id, $request);
 
         // 6) Per-team technical statuses (non-blocking)
-        //$this->handleTechnicalStatuses($id, $request);
+        // $this->handleTechnicalStatuses($id, $request);
 
         // 7) Estimations
         $this->handleEstimations($id, $request);
-      
+
         // Update the change request data
         $this->updateCRData($id, $request);
-        //die("wwrrwalid");
+        // die("wwrrwalid");
         // Update assignments in status table
         $this->updateStatusAssignments($id, $request);
-      
+
         // Update status if needed
         if (isset($request->new_status_id)) {
 
-           if($request->new_status_id == config('change_request.status_ids.business_approval')) {
-            $users=User::all();
-            foreach ($users as $user) {
-                if($user->email==$request->division_manager){
-                    $user->notify(new CreateTicket($id,$user->email));
-    
-                }
-           
-               }
+            if ($request->new_status_id == config('change_request.status_ids.business_approval')) {
+                $users = User::all();
+                foreach ($users as $user) {
+                    if ($user->email == $request->division_manager) {
+                        $user->notify(new CreateTicket($id, $user->email));
 
-           }
-            //$this->statusRepository->updateChangeRequestStatus($id, $request);
+                    }
+
+                }
+
+            }
+            // $this->statusRepository->updateChangeRequestStatus($id, $request);
             $this->statusService->updateChangeRequestStatus($id, $request);
         }
 
-
-
-
-      //  if( $ticket->user_action_id!=$request->user_action_id){
-
+        //  if( $ticket->user_action_id!=$request->user_action_id){
 
         //     $this->markAsRead($id,$ticket->user_action_id);
-            
-       // }
-        
+
+        // }
 
         // 12) Audit
         $this->logRepository->logCreate($id, $request, $this->changeRequest_old, 'update');
 
         return true;
     }
-    public function markAsRead($ticketId,$user='')
 
+    public function markAsRead($ticketId, $user = '')
     {
-        if(!$user){
-     $user = Auth::user();
+        if (! $user) {
+            $user = Auth::user();
+        } else {
+
+            $user = User::find($user);
         }
-        else
-        {
-    
-            $user=User::find($user);
-        }
-       //echo $user->id; die;
-    
-        if (!$user) {
+        // echo $user->id; die;
+
+        if (! $user) {
             return response()->json('Unauthorized', 401);
         }
-    
+
         $unreadNotifications = $user->unreadNotifications;
-    
+
         $filteredNotifications = $unreadNotifications->filter(function ($notification) use ($user, $ticketId) {
-            $groupIdInNotification = $notification->data['user_action_id'] ?? null; 
-            $ticketIdInNotification = $notification->data['ticket_id'] ?? null; 
-    
+            $groupIdInNotification = $notification->data['user_action_id'] ?? null;
+            $ticketIdInNotification = $notification->data['ticket_id'] ?? null;
+
             if (isset($groupIdInNotification) && isset($ticketIdInNotification)) {
                 if (($groupIdInNotification == $user->id) && ($ticketIdInNotification == $ticketId)) {
                     return true;
                 }
             }
-    
+
             return false;
         });
-    
+
         // Check if filtered notifications are empty
         if ($filteredNotifications->isEmpty()) {
             // If empty, return a message indicating no notifications were found
             return response()->json('No matching notifications found', 404);
-        } else {
-            // Mark filtered notifications as read
-            $filteredNotifications->markAsRead();
-            return response()->json('Notifications marked as read successfully', 200);
         }
+        // Mark filtered notifications as read
+        $filteredNotifications->markAsRead();
+
+        return response()->json('Notifications marked as read successfully', 200);
+
     }
 
     public function updateTestableFlag($id, $request)
     {
-		//dd(request()->input('testable'));
+        // dd(request()->input('testable'));
         $this->changeRequest_old = Change_request::find($id);
         $this->updateCRData($id, $request);
         $this->logRepository->logCreate($id, $request, $this->changeRequest_old, 'update');
+
         return true;
+    }
+
+    /* ======================================================================
+     |                          CORE DATA UPDATE
+     * ====================================================================== */
+    public function updateCRData($id, $request)
+    {
+        $arr = Arr::only($request->all(), $this->getRequiredFields());
+        $fileFields = ['technical_attachments', 'business_attachments', 'cap_users', 'technical_teams'];
+        $data = Arr::except($request->all(), array_merge(['_method'], $fileFields));
+
+        $this->handleCustomFieldUpdates($id, $data);
+
+        return Change_request::where('id', $id)->update($arr);
     }
 
     /* ======================================================================
@@ -185,7 +184,7 @@ class ChangeRequestUpdateService
         }
 
         $user_id = $request->user_id ? $request->user_id : Auth::user()->id;
-        $cabCr = CabCr::where("cr_id", $id)->where('status', '0')->first();
+        $cabCr = CabCr::where('cr_id', $id)->where('status', '0')->first();
         $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
 
         unset($request['cab_cr_flag']);
@@ -197,16 +196,17 @@ class ChangeRequestUpdateService
         } else { // approve
             $cabCr->cab_cr_user()->where('user_id', $user_id)->update(['status' => '1']);
 
-            $countAllUsers      = $cabCr->cab_cr_user->count();
+            $countAllUsers = $cabCr->cab_cr_user->count();
             $countApprovedUsers = $cabCr->cab_cr_user->where('status', '1')->count();
 
             if ($countAllUsers > $countApprovedUsers) {
                 $this->updateCRData($id, $request);
+
                 return true;
-            } else {
-                $cabCr->status = '1';
-                $cabCr->save();
             }
+            $cabCr->status = '1';
+            $cabCr->save();
+
         }
 
         return false;
@@ -245,15 +245,15 @@ class ChangeRequestUpdateService
         }
 
         $record = CabCr::create([
-            'cr_id'  => $id,
-            'status' => "0",
+            'cr_id' => $id,
+            'status' => '0',
         ]);
 
         foreach ($request->cap_users as $userId) {
             CabCrUser::create([
-                'user_id'   => $userId,
+                'user_id' => $userId,
                 'cab_cr_id' => $record->id,
-                'status'    => "0",
+                'status' => '0',
             ]);
         }
     }
@@ -268,33 +268,33 @@ class ChangeRequestUpdateService
         }
 
         $newStatusId = $request->new_status_id ?? null;
-        $workflow    = $newStatusId ? NewWorkFlow::find($newStatusId) : null;
+        $workflow = $newStatusId ? NewWorkFlow::find($newStatusId) : null;
 
         $record = TechnicalCr::create([
-            'cr_id'  => $id,
-            'status' => "0",
+            'cr_id' => $id,
+            'status' => '0',
         ]);
 
         foreach ($request->technical_teams as $groupId) {
             TechnicalCrTeam::create([
-                'group_id'          => $groupId,
-                'technical_cr_id'   => $record->id,
+                'group_id' => $groupId,
+                'technical_cr_id' => $record->id,
                 'current_status_id' => $workflow && isset($workflow->workflowstatus[0])
                     ? $workflow->workflowstatus[0]->to_status_id
                     : null,
-                'status'            => "0",
+                'status' => '0',
             ]);
         }
-		
-		// 11) Auto-mirror CR status to tech stream(s) if no explicit tech params were sent
+
+        // 11) Auto-mirror CR status to tech stream(s) if no explicit tech params were sent
         if (isset($request->new_status_id)) {
             $new_status_id = $workflow && isset($workflow->workflowstatus[0])
-            ? $workflow->workflowstatus[0]->to_status_id: null;
+            ? $workflow->workflowstatus[0]->to_status_id : null;
             // Scope 'actor': mirror only to the logged-in user's team on this CR.
             // Change to 'all' to mirror to all streams.
             $this->mirrorCrStatusToTechStreams($id, (int) $new_status_id, $request->tech_note ?? null, 'all');
         }
-		
+
     }
 
     /* ======================================================================
@@ -319,58 +319,43 @@ class ChangeRequestUpdateService
                (isset($request['testing_estimation']) && $request['testing_estimation'] != '');
     }
 
-    /* ======================================================================
-     |                          CORE DATA UPDATE
-     * ====================================================================== */
-    public function updateCRData($id, $request)
-    {
-        $arr = Arr::only($request->all(), $this->getRequiredFields());
-        $fileFields = ['technical_attachments', 'business_attachments', 'cap_users', 'technical_teams'];
-        $data = Arr::except($request->all(), array_merge(['_method'], $fileFields));
-
-        $this->handleCustomFieldUpdates($id, $data);
-
-        return Change_request::where('id', $id)->update($arr);
-    }
-
     protected function handleCustomFieldUpdates($id, $data): void
     {
-		//dd($data,(string)request()->input('testable'));
-		$testable = 0;
-		if(request()->input('testable')){ $testable = (string)request()->input('testable') === '1' ? 1 : 0; }
-		foreach ($data as $key => $value) {
-			if($key === 'testable' && request()->input('testable'))
-			{
-					$customFieldId = CustomField::findId($key);
-					if ($customFieldId && $value !== null) {
-						$changeRequestCustomField = [
-							"cr_id" => $id,
-							"custom_field_id" => $customFieldId->id,
-							"custom_field_name" => $key,
-							"custom_field_value" => $testable,
-							"user_id" => auth()->id(),
-						];
-                        //dd($changeRequestCustomField);
-						$this->insertOrUpdateChangeRequestCustomField($changeRequestCustomField);
-					}
-			}
-			else
-			{
-				if (($key != "_token" && $key != 'testable') || $key === 'cr' ) {
-					$customFieldId = CustomField::findId($key);
-					if ($customFieldId && $value !== null) {
-						$changeRequestCustomField = [
-							"cr_id" => $id,
-							"custom_field_id" => $customFieldId->id,
-							"custom_field_name" => $key,
-							"custom_field_value" => $value,
-							"user_id" => auth()->id(),
-						];
-						$this->insertOrUpdateChangeRequestCustomField($changeRequestCustomField);
-					}
-				}	
-			}
-            
+        // dd($data,(string)request()->input('testable'));
+        $testable = 0;
+        if (request()->input('testable')) {
+            $testable = (string) request()->input('testable') === '1' ? 1 : 0;
+        }
+        foreach ($data as $key => $value) {
+            if ($key === 'testable' && request()->input('testable')) {
+                $customFieldId = CustomField::findId($key);
+                if ($customFieldId && $value !== null) {
+                    $changeRequestCustomField = [
+                        'cr_id' => $id,
+                        'custom_field_id' => $customFieldId->id,
+                        'custom_field_name' => $key,
+                        'custom_field_value' => $testable,
+                        'user_id' => auth()->id(),
+                    ];
+                    // dd($changeRequestCustomField);
+                    $this->insertOrUpdateChangeRequestCustomField($changeRequestCustomField);
+                }
+            } else {
+                if (($key != '_token' && $key != 'testable') || $key === 'cr') {
+                    $customFieldId = CustomField::findId($key);
+                    if ($customFieldId && $value !== null) {
+                        $changeRequestCustomField = [
+                            'cr_id' => $id,
+                            'custom_field_id' => $customFieldId->id,
+                            'custom_field_name' => $key,
+                            'custom_field_value' => $value,
+                            'user_id' => auth()->id(),
+                        ];
+                        $this->insertOrUpdateChangeRequestCustomField($changeRequestCustomField);
+                    }
+                }
+            }
+
         }
     }
 
@@ -378,22 +363,22 @@ class ChangeRequestUpdateService
     {
         if (in_array($data['custom_field_name'], ['technical_feedback', 'business_feedback'])) {
             ChangeRequestCustomField::create([
-                'cr_id'              => $data['cr_id'],
-                'custom_field_id'    => $data['custom_field_id'],
-                'custom_field_name'  => $data['custom_field_name'],
+                'cr_id' => $data['cr_id'],
+                'custom_field_id' => $data['custom_field_id'],
+                'custom_field_name' => $data['custom_field_name'],
                 'custom_field_value' => $data['custom_field_value'],
-                'user_id'            => $data['user_id']
+                'user_id' => $data['user_id'],
             ]);
         } else {
             ChangeRequestCustomField::updateOrCreate(
                 [
-                    'cr_id'             => $data['cr_id'],
-                    'custom_field_id'   => $data['custom_field_id'],
-                    'custom_field_name' => $data['custom_field_name']
+                    'cr_id' => $data['cr_id'],
+                    'custom_field_id' => $data['custom_field_id'],
+                    'custom_field_name' => $data['custom_field_name'],
                 ],
                 [
-                    'custom_field_value'=> $data['custom_field_value'],
-                    'user_id'           => $data['user_id']
+                    'custom_field_value' => $data['custom_field_value'],
+                    'user_id' => $data['user_id'],
                 ]
             );
         }

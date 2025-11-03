@@ -1,35 +1,30 @@
 <?php
 
 namespace App\Http\Repository\Workflow;
-use App\Contracts\Workflow\WorkflowDependRepositoryInterface;
 
+use App\Contracts\Workflow\WorkflowDependRepositoryInterface;
 // declare Entities
 use App\Models\DependWorkflow;
 
 class WorkflowDependRepository implements WorkflowDependRepositoryInterface
 {
-
-    
     public function getAll()
     {
-        return DependWorkflow::with('depend_workflow_from_status','depend_workflow_depend_status')->get();
+        return DependWorkflow::with('depend_workflow_from_status', 'depend_workflow_depend_status')->get();
     }
 
     public function create($request)
     {
-       
-       
-foreach($request['depend_status_id']  as $key=>$value)
-{
-   DependWorkflow::create([
-    'to_status_id' => $request['to_status_id'],
-    'depend_status_id'=>$request['depend_status_id'][$key]
-    
-    ]);
 
-}   
-}
-   
+        foreach ($request['depend_status_id'] as $key => $value) {
+            DependWorkflow::create([
+                'to_status_id' => $request['to_status_id'],
+                'depend_status_id' => $request['depend_status_id'][$key],
+
+            ]);
+
+        }
+    }
 
     public function delete($id)
     {
@@ -43,8 +38,6 @@ foreach($request['depend_status_id']  as $key=>$value)
 
     public function find($id)
     {
-        return DependWorkflow::with('depend_workflow_from_status','depend_workflow_depend_status')->find($id);
+        return DependWorkflow::with('depend_workflow_from_status', 'depend_workflow_depend_status')->find($id);
     }
-
-
 }

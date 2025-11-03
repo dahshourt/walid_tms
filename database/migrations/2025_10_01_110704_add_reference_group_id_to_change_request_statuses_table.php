@@ -18,11 +18,11 @@ class AddReferenceGroupIdToChangeRequestStatusesTable extends Migration
             $table->foreignId('reference_group_id')->nullable(); // just for technical teams
             $table->foreignId('previous_group_id')->nullable();
             $table->foreignId('current_group_id')->nullable();
-           
+
             $table->foreign('reference_group_id')->references('id')->on('groups');
             $table->foreign('previous_group_id')->references('id')->on('groups');
             $table->foreign('current_group_id')->references('id')->on('groups');
-           
+
         });
     }
 

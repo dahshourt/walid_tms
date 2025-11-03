@@ -17,6 +17,7 @@ class AddSizeToAttachmentsCrsTable extends Migration
             $table->bigInteger('size')->nullable()->after('file'); // Adding the 'size' column
         });
     }
+
     /**
      * Reverse the migrations.
      *

@@ -87,14 +87,14 @@ class ModuleSeeder extends Seeder
             'description' => '',
             'active' => '1',
         ]);
-        DB::table('modules')->insert([//RejectionReasons
+        DB::table('modules')->insert([// RejectionReasons
             'name' => 'parent crs',
             'slug' => 'parent_crs',
             'description' => '',
             'active' => '1',
         ]);
 
-        DB::table('modules')->insert([//RejectionReasons
+        DB::table('modules')->insert([// RejectionReasons
             'name' => 'Rejection Reasons',
             'slug' => 'RejectionReasons',
             'description' => '',

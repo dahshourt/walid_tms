@@ -9,11 +9,10 @@ class TechnicalCrTeam extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'group_id','technical_cr_id', 'status','current_status_id'
-    ];
     const INACTIVE = '0';
+
     const APPROVED = '1';
+
     const REJECTED = '2';
 
     public static $statuses = [
@@ -22,19 +21,25 @@ class TechnicalCrTeam extends Model
         self::REJECTED => 'Rejected',
     ];
 
-    public function isApproved ()
+    protected $fillable = [
+        'group_id', 'technical_cr_id', 'status', 'current_status_id',
+    ];
+
+    public function isApproved()
     {
         return $this->status == self::APPROVED;
     }
-    public function isRejected ()
+
+    public function isRejected()
     {
         return $this->status == self::REJECTED;
     }
 
-    public function isInactive ()
+    public function isInactive()
     {
         return $this->status == self::INACTIVE;
     }
+
     public function group()
     {
         return $this->belongsTo(Group::class);
@@ -49,15 +54,15 @@ class TechnicalCrTeam extends Model
     {
         return $this->belongsTo(TechnicalCr::class);
     }
-	
-	public function statuses() {
-		return $this->hasMany(TechnicalCrTeamStatus::class, 'technical_cr_team_id');
-	}
-	
-	public function latestStatus() {
-		return $this->hasOne(TechnicalCrTeamStatus::class, 'technical_cr_team_id')
-                ->latestOfMany('id'); // or 'created_at'
-	}
-    
-	
+
+    public function statuses()
+    {
+        return $this->hasMany(TechnicalCrTeamStatus::class, 'technical_cr_team_id');
+    }
+
+    public function latestStatus()
+    {
+        return $this->hasOne(TechnicalCrTeamStatus::class, 'technical_cr_team_id')
+            ->latestOfMany('id'); // or 'created_at'
+    }
 }

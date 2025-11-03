@@ -7,9 +7,8 @@ use App\Http\Repository\CustomField\CustomFieldGroupTypeRepository;
 
 class CustomFieldGroupTypeFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new CustomFieldGroupTypeRepository();
     }
-
 }

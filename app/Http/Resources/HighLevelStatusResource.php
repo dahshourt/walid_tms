@@ -15,13 +15,13 @@ class HighLevelStatusResource extends JsonResource
     public function toArray($request)
     {
         return [
-            'id'                    => $this->id,
-            'name'                  => $this-> name,
-          'status'                  => StatusResource::collection($this->status),
-            'active'                => $this->active,
-            'created_at'            => $this->created_at,
-            'updated_at'            => $this->updated_at,
-          
+            'id' => $this->id,
+            'name' => $this->name,
+            'status' => StatusResource::collection($this->status),
+            'active' => $this->active,
+            'created_at' => $this->created_at,
+            'updated_at' => $this->updated_at,
+
         ];
     }
 }

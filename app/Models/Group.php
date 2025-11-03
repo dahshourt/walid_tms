@@ -22,11 +22,12 @@ class Group extends Model
         'head_group_name',
         'head_group_email',
         'man_power',
-		'active',
-		'technical_team',
+        'active',
+        'technical_team',
         'recieve_notification',
     ];
-    protected $appends = array('name');
+
+    protected $appends = ['name'];
 
     public function user_groups()
     {
@@ -37,26 +38,24 @@ class Group extends Model
     {
         return $this->hasMany(GroupStatuses::class);
     }
-    
+
     public function group_applications()
     {
         return $this->hasMany(GroupApplications::class);
     }
 
-
-    public function children() 
+    public function children()
     {
-        return $this->hasMany(Group::class,'parent_id');
-    }
-    public function parent() 
-    {
-        return $this->belongsTo(Group::class,'parent_id');
+        return $this->hasMany(Group::class, 'parent_id');
     }
 
-    
+    public function parent()
+    {
+        return $this->belongsTo(Group::class, 'parent_id');
+    }
+
     public function getNameAttribute()
     {
-        return $this->title;  
+        return $this->title;
     }
-
 }

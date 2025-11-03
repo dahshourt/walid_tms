@@ -2,8 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use DB;
+use Illuminate\Database\Seeder;
+
 class UserGroupsSeeder extends Seeder
 {
     /**
@@ -16,45 +17,44 @@ class UserGroupsSeeder extends Seeder
         //
         DB::table('user_groups')->insert([
             'user_id' => 1,
-            'group_id' => 9
+            'group_id' => 9,
         ]);
         DB::table('user_groups')->insert([
             'user_id' => 1,
-            'group_id' => 1
+            'group_id' => 1,
         ]);
         DB::table('user_groups')->insert([
             'user_id' => 2,
-            'group_id' => 9
+            'group_id' => 9,
         ]);
         DB::table('user_groups')->insert([
             'user_id' => 2,
-            'group_id' => 10
+            'group_id' => 10,
         ]);
         DB::table('user_groups')->insert([
             'user_id' => 3,
-            'group_id' => 9
+            'group_id' => 9,
         ]);
         DB::table('user_groups')->insert([
             'user_id' => 3,
-            'group_id' => 10
+            'group_id' => 10,
         ]);
         DB::table('user_groups')->insert([
             'user_id' => 4,
-            'group_id' => 9
+            'group_id' => 9,
         ]);
         DB::table('user_groups')->insert([
             'user_id' => 4,
-            'group_id' => 10
+            'group_id' => 10,
         ]);
         DB::table('user_groups')->insert([
             'user_id' => 5,
-            'group_id' => 9
+            'group_id' => 9,
         ]);
         DB::table('user_groups')->insert([
             'user_id' => 5,
-            'group_id' => 10
+            'group_id' => 10,
         ]);
-        
-        
+
     }
 }

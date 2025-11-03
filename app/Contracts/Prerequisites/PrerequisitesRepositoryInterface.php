@@ -1,10 +1,10 @@
 <?php
+
 namespace App\Contracts\Prerequisites;
 
 interface PrerequisitesRepositoryInterface
 {
-
-	public function getAll();
+    public function getAll();
 
     public function find($id);
 
@@ -13,6 +13,4 @@ interface PrerequisitesRepositoryInterface
     public function update($request, $model);
 
     public function delete($id);
-	
-
 }

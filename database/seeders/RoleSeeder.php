@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use DB;
+use Illuminate\Database\Seeder;
 
 class RoleSeeder extends Seeder
 {
@@ -17,30 +17,29 @@ class RoleSeeder extends Seeder
         //
         DB::table('roles')->insert([
 
-            'name' => "User",
+            'name' => 'User',
         ]);
         DB::table('roles')->insert([
-            'name' => "Developer",
+            'name' => 'Developer',
         ]);
         DB::table('roles')->insert([
-            'name' => "Tester",
+            'name' => 'Tester',
         ]);
         DB::table('roles')->insert([
-            'name' => "Designer",
+            'name' => 'Designer',
         ]);
         DB::table('roles')->insert([
-            'name' => "SuperVisor",
+            'name' => 'SuperVisor',
         ]);
         DB::table('roles')->insert([
-            'name' => "Division Manager",
+            'name' => 'Division Manager',
         ]);
         DB::table('roles')->insert([
-            'name' => "Manager",
+            'name' => 'Manager',
         ]);
         DB::table('roles')->insert([
-            'name' => "Administrator",
+            'name' => 'Administrator',
         ]);
-        
-        
+
     }
 }

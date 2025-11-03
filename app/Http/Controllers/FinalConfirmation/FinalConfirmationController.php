@@ -3,18 +3,22 @@
 namespace App\Http\Controllers\FinalConfirmation;
 
 use App\Http\Controllers\Controller;
-use App\Services\FinalConfirmation\FinalConfirmationService;
 use App\Http\Repository\FinalConfirmation\FinalConfirmationRepository;
+use App\Services\FinalConfirmation\FinalConfirmationService;
+use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Auth\Access\AuthorizationException;
+use Throwable;
 
 class FinalConfirmationController extends Controller
 {
     private $finalConfirmationService;
+
     private $finalConfirmationRepository;
+
     private $view = 'final-confirmation';
 
     public function __construct(
@@ -25,19 +29,6 @@ class FinalConfirmationController extends Controller
         $this->finalConfirmationRepository = $finalConfirmationRepository;
 
         $this->shareViewData();
-    }
-
-    /**
-     * Share common view data across all views
-     */
-    private function shareViewData(): void
-    {
-        view()->share([
-            'view' => $this->view,
-            'route' => 'final_confirmation',
-            'title' => 'Final Confirmation',
-            'form_title' => 'Final CR Confirmation'
-        ]);
     }
 
     /**
@@ -53,43 +44,44 @@ class FinalConfirmationController extends Controller
             $searchCrNumber = null;
 
             // Check if cr_no is provided in query parameters
-            if ($request->has('cr_no') && !empty($request->query('cr_no'))) {
+            if ($request->has('cr_no') && ! empty($request->query('cr_no'))) {
                 $searchCrNumber = $request->query('cr_no');
 
                 // Search for the CR
                 $crDetails = $this->finalConfirmationRepository->findCRByNumber($searchCrNumber);
 
-
-                if (!$crDetails) {
+                if (! $crDetails) {
                     $message = "Change Request #{$searchCrNumber} not found.";
+
                     return view("{$this->view}.index", [
                         'searchCrNumber' => $searchCrNumber,
-                        'searchError' => $message
+                        'searchError' => $message,
                     ]);
                 }
             }
 
             return view("{$this->view}.index", [
                 'searchCrNumber' => $searchCrNumber,
-                'crDetails' => $crDetails ?? null
+                'crDetails' => $crDetails ?? null,
             ]);
 
         } catch (AuthorizationException $e) {
             Log::warning('Unauthorized access attempt to final confirmation', [
                 'user_id' => auth()->id(),
-                'ip' => request()->ip()
+                'ip' => request()->ip(),
             ]);
+
             return redirect('/')->with('error', 'You do not have permission to access this page.');
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             Log::error('Error in final confirmation index', [
                 'cr_number' => $request->query('cr_no'),
                 'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             return view("{$this->view}.index", [
                 'searchCrNumber' => $request->query('cr_no'),
-                'searchError' => 'An error occurred while loading the Change Request.'
+                'searchError' => 'An error occurred while loading the Change Request.',
             ]);
         }
     }
@@ -126,36 +118,49 @@ class FinalConfirmationController extends Controller
                 Log::info('Final confirmation processed successfully', [
                     'cr_number' => $request->cr_number,
                     'action' => $request->action,
-                    'user_id' => auth()->id()
+                    'user_id' => auth()->id(),
                 ]);
 
                 return redirect()->back()->with('success', $result['message']);
-            } else {
-                DB::rollBack();
-                return redirect()->back()->with('error', $result['message'])->withInput();
             }
+            DB::rollBack();
+
+            return redirect()->back()->with('error', $result['message'])->withInput();
 
         } catch (AuthorizationException $e) {
             Log::warning('Unauthorized final confirmation attempt', [
                 'user_id' => auth()->id(),
-                'cr_number' => $request->cr_number ?? 'unknown'
+                'cr_number' => $request->cr_number ?? 'unknown',
             ]);
+
             return redirect('/')->with('error', 'You do not have permission to perform this action.');
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
 
             Log::error('Failed to process final confirmation', [
                 'cr_number' => $request->cr_number ?? 'unknown',
                 'action' => $request->action ?? 'unknown',
                 'error' => $e->getMessage(),
-                'user_id' => auth()->id()
+                'user_id' => auth()->id(),
             ]);
 
             return redirect()->back()->with('error', 'Failed to process final confirmation. Please try again.');
         }
     }
 
+    /**
+     * Share common view data across all views
+     */
+    private function shareViewData(): void
+    {
+        view()->share([
+            'view' => $this->view,
+            'route' => 'final_confirmation',
+            'title' => 'Final Confirmation',
+            'form_title' => 'Final CR Confirmation',
+        ]);
+    }
 
     /**
      * Validate the final confirmation request
@@ -168,15 +173,14 @@ class FinalConfirmationController extends Controller
         return Validator::make($request->all(), [
             'cr_number' => 'required|string',
             'action' => "required|integer|in:{$rejectStatusId},{$cancelStatusId}",
-            'technical_feedback' => 'required|string'
+            'technical_feedback' => 'required|string',
         ], [
             'cr_number.required' => 'CR number is required',
             'action.required' => 'Action is required',
             'action.integer' => 'Action must be a valid status ID',
             'action.in' => 'Invalid status ID provided',
             'technical_feedback.required' => 'Technical feedback is required',
-            'technical_feedback.string' => 'Technical feedback must be a valid text'
+            'technical_feedback.string' => 'Technical feedback must be a valid text',
         ]);
     }
-
 }

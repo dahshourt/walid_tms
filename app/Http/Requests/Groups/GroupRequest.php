@@ -2,13 +2,12 @@
 
 namespace App\Http\Requests\Groups;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Validation\Rule;
+
 class GroupRequest extends FormRequest
 {
-
     /**
      * Determine if the supervisor is authorized to make this request.
      *
@@ -34,18 +33,18 @@ class GroupRequest extends FormRequest
     //         'head_group_email' => ['sometimes','email'],
     //         'active' => ['required'],
     //     ];
-        
+
     // }
 
     public function rules()
     {
         if ($this->isMethod('POST')) {
             return $this->createRules();
-        } else {
-            return $this->updateRules();
         }
-    }
 
+        return $this->updateRules();
+
+    }
 
     /**
      * Get the create validation rules that apply to the request.
@@ -55,13 +54,13 @@ class GroupRequest extends FormRequest
     public function createRules()
     {
         return [
-            'title' => ['required','string', 'unique:groups'],
-            'description' => ['required','string'],
-            'man_power' => ['required','integer'],
-            'parent_id' => ['nullable','integer', 'exists:groups,id'],
-            'head_group_name' => ['nullable','string'],
-            'head_group_email' => ['nullable','email'],
-            //'application_id' => ['required'],
+            'title' => ['required', 'string', 'unique:groups'],
+            'description' => ['required', 'string'],
+            'man_power' => ['required', 'integer'],
+            'parent_id' => ['nullable', 'integer', 'exists:groups,id'],
+            'head_group_name' => ['nullable', 'string'],
+            'head_group_email' => ['nullable', 'email'],
+            // 'application_id' => ['required'],
         ];
     }
 
@@ -74,24 +73,24 @@ class GroupRequest extends FormRequest
     {
         $groupId = $this->route('group'); // assuming the route parameter is named 'id'
 
-       
-        //dd($groupId); 
+        // dd($groupId);
         return [
             'title' => [
                 'required',
                 'string',
-              
-                'unique:groups,title,'.$groupId
+
+                'unique:groups,title,' . $groupId,
             ],
             'description' => ['required', 'string'],
-            'man_power' => ['required','integer'],
+            'man_power' => ['required', 'integer'],
             'parent_id' => ['nullable', 'integer', 'exists:groups,id'],
             'head_group_name' => ['nullable', 'string'],
             'head_group_email' => ['nullable', 'email'],
-            //'application_id' => ['required'],
-           
+            // 'application_id' => ['required'],
+
         ];
     }
+
     protected function prepareForValidation()
     {
         // Set 'active' to 1 if not present in the request
@@ -100,7 +99,7 @@ class GroupRequest extends FormRequest
         ]);
     }
 
-    /*protected function failedValidation(Validator $validator) { 
+    /*protected function failedValidation(Validator $validator) {
         throw new HttpResponseException(response()->json([
             'message' => $validator->messages()
           ], 422));

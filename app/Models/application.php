@@ -4,26 +4,29 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\{BelongsTo, HasMany};
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use InvalidArgumentException;
 
 class Application extends Model
 {
     use HasFactory;
 
-
     protected $fillable = [
-       'id', 'name','active','workflow_type_id','file','parent_id'
+        'id', 'name', 'active', 'workflow_type_id', 'file', 'parent_id',
     ];
+
     public function workflow_type()
     {
         return $this->belongsTo(WorkFlowType::class);
     }
+
     public function group_applications()
     {
         return $this->hasMany(GroupApplications::class);
     }
-	
-	public function parent(): BelongsTo
+
+    public function parent(): BelongsTo
     {
         return $this->belongsTo(self::class, 'parent_id');
     }
@@ -45,13 +48,8 @@ class Application extends Model
     {
         static::saving(function (self $model) {
             if ($model->id && $model->parent_id === $model->id) {
-                throw new \InvalidArgumentException('A record cannot be its own parent.');
+                throw new InvalidArgumentException('A record cannot be its own parent.');
             }
         });
     }
-	
-	
 }
-
-
-

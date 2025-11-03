@@ -12,12 +12,12 @@ class PivotUsersRoles extends Migration
      * @return void
      */
     public function up()
-    { 
+    {
         Schema::create('PivotUsersRoles', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->foreignId('report_to');
             $table->foreign('report_to')->references('id')->on('users')->onDelete('cascade');
- 
+
             $table->foreignId('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();

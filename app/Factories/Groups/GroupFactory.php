@@ -7,9 +7,8 @@ use App\Http\Repository\Groups\GroupRepository;
 
 class GroupFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new GroupRepository();
     }
-
 }

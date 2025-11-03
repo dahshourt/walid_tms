@@ -10,13 +10,13 @@ class NotificationTemplate extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'code', 'description', 'subject', 'body', 
-        'available_placeholders', 'is_active'
+        'name', 'code', 'description', 'subject', 'body',
+        'available_placeholders', 'is_active',
     ];
 
     protected $casts = [
         'available_placeholders' => 'array',
-        'is_active' => 'boolean'
+        'is_active' => 'boolean',
     ];
 
     public function rules()

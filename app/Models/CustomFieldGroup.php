@@ -16,29 +16,30 @@ class CustomFieldGroup extends Model
      */
     protected $hidden = [
         'updated_at',
-        'created_at'
+        'created_at',
     ];
+
     protected $table = 'custom_fields_groups_type';
-    protected $fillable = [ 'form_type','active','group_id','wf_type_id','custom_field_id','sort','validation_type_id','enable','status_id' ];
-    
+
+    protected $fillable = ['form_type', 'active', 'group_id', 'wf_type_id', 'custom_field_id', 'sort', 'validation_type_id', 'enable', 'status_id'];
+
     public function group()
     {
         return $this->belongsTo(Group::class);
     }
-     
+
     public function WorkFlowType()
     {
-        return $this->belongsTo(WorkFlowType::class,'wf_type_id');
-    } 
+        return $this->belongsTo(WorkFlowType::class, 'wf_type_id');
+    }
 
     public function CustomField()
     {
-        return $this->belongsTo(CustomField::class,'custom_field_id');
+        return $this->belongsTo(CustomField::class, 'custom_field_id');
     }
 
     public function ValidationType()
     {
-        return $this->belongsTo(ValidationType::class,'validation_type_id');
+        return $this->belongsTo(ValidationType::class, 'validation_type_id');
     }
-    
 }

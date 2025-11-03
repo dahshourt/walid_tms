@@ -2,46 +2,40 @@
 
 namespace App\Http\Controllers\Roles;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Foundation\Validation\ValidatesRequests;
-use App\Http\Requests\RolesRequest\RolesRequest;
 use App\Factories\Roles\RolesFactory;
-
-use App\Http\Repository\Departments\DepartmentRepository;
-use App\Http\Repository\Groups\GroupRepository;
-use App\Http\Repository\Units\UnitRepository;
-use App\Http\Repository\Roles\RolesRepository;
-
+use App\Http\Controllers\Controller;
+use App\Http\Requests\RolesRequest\RolesRequest;
+use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
-
 
 class RolesController extends Controller
 {
     use ValidatesRequests;
+
     private $role;
 
-    function __construct(RolesFactory $role){
-        
+    public function __construct(RolesFactory $role)
+    {
+
         $this->role = $role::index();
         $this->view = 'roles';
         $view = 'roles';
         $route = 'roles';
         $OtherRoute = 'role';
-        
+
         $title = 'roles';
         $form_title = 'role';
-        view()->share(compact('view','route','title','form_title','OtherRoute'));
-        
+        view()->share(compact('view', 'route', 'title', 'form_title', 'OtherRoute'));
+
     }
 
     public function index()
     {
-        
-        $collection = $this->role->paginateAll();
-        
-        return view("$this->view.index",compact('collection'));
-    }
 
+        $collection = $this->role->paginateAll();
+
+        return view("$this->view.index", compact('collection'));
+    }
 
     /**
      * Show the form for creating a new resource.
@@ -51,83 +45,79 @@ class RolesController extends Controller
     public function create()
     {
         //
-       
-        $roles =  $this->role->list();
 
-        return view("$this->view.create",compact('roles'));
+        $roles = $this->role->list();
+
+        return view("$this->view.create", compact('roles'));
     }
 
     /**
      * Send or resend the verification code.
      *
-     * @param \Illuminate\Http\Request $request
-     * @throws \Illuminate\Validation\ValidationException
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function store(RolesRequest $request)
     {
         $this->role->create($request->all());
 
-        return redirect()->route("roles.index")->with('status' , 'Added Successfully' );
+        return redirect()->route('roles.index')->with('status', 'Added Successfully');
     }
-
 
     public function edit($id)
     {
         $row = $this->role->find($id);
-    
-        $roles =  $this->role->list();
-        return view("$this->view.edit",compact('row','roles'));
+
+        $roles = $this->role->list();
+
+        return view("$this->view.edit", compact('row', 'roles'));
 
     }
 
     /**
      * Send or resend the verification code.
      *
-     * @param \Illuminate\Http\Request $request
-     * @throws \Illuminate\Validation\ValidationException
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function update(RolesRequest $request, $id)
     {
-        
-        $this->role->update($request->except(['_token', '_method']),$id);
-        return redirect()->back()->with('status' , 'Updated Successfully' );
+
+        $this->role->update($request->except(['_token', '_method']), $id);
+
+        return redirect()->back()->with('status', 'Updated Successfully');
     }
 
     public function show($id)
     {
         $role = $this->role->find($id);
-        if(!$role)
-        {
+        if (! $role) {
             return response()->json([
                 'message' => 'User Not Exists',
-            ],422);
+            ], 422);
         }
         $role = new UsersResource($role);
-        return response()->json(['data' => $role],200);
+
+        return response()->json(['data' => $role], 200);
     }
 
-    public function destroy()
+    public function destroy() {}
+
+    public function updateactive(Request $request)
     {
-        
-    }
-	public function updateactive(Request $request){
-		   
+
         $data = $this->role->find($request->id);
-		
-		$this->role->updateactive($data->active,$request->id);
-		   
-		    return response()->json([
+
+        $this->role->updateactive($data->active, $request->id);
+
+        return response()->json([
             'message' => 'Updated Successfully',
-            'status' => 'success'
+            'status' => 'success',
         ]);
 
-		  
-		
-	}
-
-
-   
-
+    }
 }

@@ -7,9 +7,8 @@ use App\Http\Repository\divisionManager\DivisionManagerRepository;
 
 class DivisionManagerFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new DivisionManagerRepository();
     }
-
 }

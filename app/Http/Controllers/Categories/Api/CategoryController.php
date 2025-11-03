@@ -9,6 +9,7 @@ use Illuminate\Foundation\Validation\ValidatesRequests;
 class CategoryController extends Controller
 {
     use ValidatesRequests;
+
     private $Category;
 
     public function __construct(CategoryFactory $Category)

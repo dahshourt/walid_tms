@@ -2,24 +2,17 @@
 
 namespace App\Services\FinalConfirmation;
 
-use App\Http\Repository\FinalConfirmation\FinalConfirmationRepository;
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
-use Illuminate\Support\Facades\Log;
+use App\Http\Repository\FinalConfirmation\FinalConfirmationRepository;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class FinalConfirmationService
 {
     private $finalConfirmationRepository;
-    private $changeRequestRepository;
-    private function getRejectStatusId(): int
-    {
-        return config('change_request.status_ids.Reject');
-    }
 
-    private function getCancelStatusId(): int
-    {
-        return config('change_request.status_ids.Cancel');
-    }
+    private $changeRequestRepository;
 
     public function __construct(
         FinalConfirmationRepository $finalConfirmationRepository,
@@ -31,11 +24,6 @@ class FinalConfirmationService
 
     /**
      * Process final confirmation action (reject/cancel)
-     *
-     * @param string $crNumber
-     * @param int $statusId
-     * @param int $userId
-     * @return array
      */
     public function processFinalConfirmation(string $crNumber, int $statusId, int $userId, string $technical_feedback): array
     {
@@ -43,34 +31,34 @@ class FinalConfirmationService
             // Find the change request by number
             $changeRequest = $this->finalConfirmationRepository->findCRByNumber($crNumber);
 
-            if (!$changeRequest) {
+            if (! $changeRequest) {
                 return [
                     'success' => false,
-                    'message' => "Change Request #{$crNumber} not found."
+                    'message' => "Change Request #{$crNumber} not found.",
                 ];
             }
 
             // Get current status
             $currentStatus = $this->finalConfirmationRepository->getCurrentStatus($changeRequest->id);
 
-            if (!$currentStatus) {
+            if (! $currentStatus) {
                 return [
                     'success' => false,
-                    'message' => "Unable to determine current status for CR #{$crNumber}."
+                    'message' => "Unable to determine current status for CR #{$crNumber}.",
                 ];
             }
 
             if ($changeRequest->inFinalState()) {
                 return [
                     'success' => false,
-                    'message' => "CR #{$crNumber} is already in a final state and cannot be modified."
+                    'message' => "CR #{$crNumber} is already in a final state and cannot be modified.",
                 ];
             }
 
             if ($changeRequest->isAlreadyCancelledOrRejected()) {
                 return [
                     'success' => false,
-                    'message' => "CR #{$crNumber} is already Cancelled or Rejected and cannot be modified."
+                    'message' => "CR #{$crNumber} is already Cancelled or Rejected and cannot be modified.",
                 ];
             }
 
@@ -89,38 +77,42 @@ class FinalConfirmationService
 
                 return [
                     'success' => true,
-                    'message' => "CR #{$crNumber} has been successfully {$actionText}."
+                    'message' => "CR #{$crNumber} has been successfully {$actionText}.",
                 ];
             }
 
             return [
                 'success' => false,
-                'message' => "Failed to update CR #{$crNumber} status. Please try again."
+                'message' => "Failed to update CR #{$crNumber} status. Please try again.",
             ];
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error in processFinalConfirmation', [
                 'cr_number' => $crNumber,
                 'action' => $statusId,
                 'user_id' => $userId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return [
                 'success' => false,
-                'message' => 'An unexpected error occurred while processing the final confirmation.'
+                'message' => 'An unexpected error occurred while processing the final confirmation.',
             ];
         }
     }
 
+    private function getRejectStatusId(): int
+    {
+        return config('change_request.status_ids.Reject');
+    }
+
+    private function getCancelStatusId(): int
+    {
+        return config('change_request.status_ids.Cancel');
+    }
+
     /**
      * Update change request status using the existing repository pattern
-     *
-     * @param int $crId
-     * @param int $oldStatusId
-     * @param int $newStatusId
-     * @param int $userId
-     * @return bool
      */
     private function updateChangeRequestStatus(int $crId, int $oldStatusId, int $newStatusId, int $userId, string $technical_feedback): bool
     {
@@ -129,22 +121,21 @@ class FinalConfirmationService
             $updateRequest = new Request([
                 'old_status_id' => $oldStatusId,
                 'new_status_id' => $newStatusId,
-                'user_id' => $userId
+                'user_id' => $userId,
             ]);
 
             // Use the new final confirmation method
             $result = $this->changeRequestRepository->updateChangeRequestStatusForFinalConfirmation($crId, $updateRequest, $technical_feedback);
 
-
             return $result !== false;
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error updating change request status in final confirmation', [
                 'cr_id' => $crId,
                 'old_status_id' => $oldStatusId,
                 'new_status_id' => $newStatusId,
                 'user_id' => $userId,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return false;

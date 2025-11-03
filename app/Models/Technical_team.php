@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Technical_team extends Model
 {
     use HasFactory;
+
     public $table = 'technical_teams';
 
     public function changeRequests()

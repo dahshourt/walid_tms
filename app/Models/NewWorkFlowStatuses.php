@@ -16,28 +16,30 @@ class NewWorkFlowStatuses extends Model
      */
     protected $hidden = [
         'updated_at',
-        'created_at'
+        'created_at',
     ];
+
     protected $table = 'new_workflow_statuses';
-    protected $fillable = [ 'new_workflow_id','to_status_id','default_to_status','dependency_ids' ];
+
+    protected $fillable = ['new_workflow_id', 'to_status_id', 'default_to_status', 'dependency_ids'];
 
     protected $casts = [
-        'dependency_ids' => 'array'
+        'dependency_ids' => 'array',
     ];
 
     public function to_status()
     {
-        //echo "walid";
-        return $this->belongsTo(Status::class,'to_status_id');
+        // echo "walid";
+        return $this->belongsTo(Status::class, 'to_status_id');
     }
 
-   public function workflow()
+    public function workflow()
     {
-        return $this->belongsTo(NewWorkFlow::class,'new_workflow_id');
+        return $this->belongsTo(NewWorkFlow::class, 'new_workflow_id');
     }
 
-   /*public function newworkflow()
-    {
-        return $this->belongsTo(NewWorkFlow::class, 'new_workflow_id', 'id');
-    }*/
+    /*public function newworkflow()
+     {
+         return $this->belongsTo(NewWorkFlow::class, 'new_workflow_id', 'id');
+     }*/
 }

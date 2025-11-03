@@ -2,43 +2,49 @@
 
 namespace App\Http\Controllers\Permissions\Api;
 
+use App\Factories\Permissions\ModuleRoulesFactory;
 use App\Http\Controllers\Controller;
 use Illuminate\Foundation\Validation\ValidatesRequests;
-use App\Factories\Permissions\ModuleRoulesFactory;
 use Illuminate\Http\Request;
-use Auth;
+
 class Module_RulesController extends Controller
 {
     use ValidatesRequests;
+
     private $group;
 
-    function __construct(ModuleRoulesFactory $m_role){
-        
+    public function __construct(ModuleRoulesFactory $m_role)
+    {
+
         $this->m_role = $m_role::index();
-        
+
     }
 
     public function index(Request $request)
     {
-      //  dd("l");
-   
-        $module_roles=$this->m_role->getAll();
-        return response()->json(['data' => $module_roles],200);
+        //  dd("l");
+
+        $module_roles = $this->m_role->getAll();
+
+        return response()->json(['data' => $module_roles], 200);
 
     }
 
     public function all()
     {
-        
+
         $groups = $this->group->getAll();
-        return response()->json(['data' => $groups],200);
+
+        return response()->json(['data' => $groups], 200);
     }
+
     /**
      * Send or resend the verification code.
      *
-     * @param \Illuminate\Http\Request $request
-     * @throws \Illuminate\Validation\ValidationException
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function store(GroupRequest $request)
     {
@@ -52,26 +58,29 @@ class Module_RulesController extends Controller
     /**
      * Send or resend the verification code.
      *
-     * @param \Illuminate\Http\Request $request
-     * @throws \Illuminate\Validation\ValidationException
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
+     *
+     * @throws \Illuminate\Validation\ValidationException
      */
     public function getpath($path)
     {
-       // dd($path);
+        // dd($path);
         $pathh = $this->permission->get_path($path);
-        return response()->json(['data' => $pathh],200);
+
+        return response()->json(['data' => $pathh], 200);
     }
-    public function update(GroupRequest $request,$id)
+
+    public function update(GroupRequest $request, $id)
     {
         $group = $this->group->find($id);
-        if(!$group)
-        {
+        if (! $group) {
             return response()->json([
                 'message' => 'Group Not Exists',
-            ],422);
+            ], 422);
         }
-        $this->group->update($request,$id);
+        $this->group->update($request, $id);
+
         return response()->json([
             'message' => 'Updated Successfully',
         ]);
@@ -80,24 +89,21 @@ class Module_RulesController extends Controller
     public function show($id)
     {
         $group = $this->group->find($id);
-        return response()->json(['data' => $group],200);
+
+        return response()->json(['data' => $group], 200);
     }
 
-    public function destroy()
+    public function destroy() {}
+
+    public function updateactive($id)
     {
-        
-    }
-	public function updateactive($id){
-		   $group = $this->group->find($id);
-		   
-		   $this->group->updateactive($group['active'],$id);
-		   
-		    return response()->json([
+        $group = $this->group->find($id);
+
+        $this->group->updateactive($group['active'], $id);
+
+        return response()->json([
             'message' => 'Updated Successfully',
         ]);
 
-		  
-		
-	}
-
+    }
 }

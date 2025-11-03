@@ -4,8 +4,12 @@ namespace App\Services\CustomField;
 
 use App\Http\Repository\CustomField\CustomFieldRepository;
 use App\Models\CustomField;
-use Illuminate\Pagination\LengthAwarePaginator;
+use DB;
+use Exception;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Log;
+use Schema;
 
 class CustomFieldService
 {
@@ -19,7 +23,6 @@ class CustomFieldService
     /**
      * Get all custom fields
      *
-     * @param bool $paginate
      * @return LengthAwarePaginator|Collection
      */
     public function getAllCustomFields(bool $paginate = false)
@@ -29,9 +32,6 @@ class CustomFieldService
 
     /**
      * Find custom field by ID
-     *
-     * @param int $id
-     * @return CustomField|null
      */
     public function findCustomField(int $id): ?CustomField
     {
@@ -40,9 +40,6 @@ class CustomFieldService
 
     /**
      * Create new custom field
-     *
-     * @param array $data
-     * @return CustomField
      */
     public function createCustomField(array $data): CustomField
     {
@@ -57,10 +54,6 @@ class CustomFieldService
 
     /**
      * Update custom field
-     *
-     * @param array $data
-     * @param int $id
-     * @return bool
      */
     public function updateCustomField(array $data, int $id): bool
     {
@@ -72,9 +65,6 @@ class CustomFieldService
 
     /**
      * Toggle custom field status
-     *
-     * @param int $id
-     * @return bool
      */
     public function updateCustomFieldStatus(int $id): bool
     {
@@ -83,8 +73,6 @@ class CustomFieldService
 
     /**
      * Get input types from config
-     *
-     * @return array
      */
     public function getInputTypes(): array
     {
@@ -92,10 +80,55 @@ class CustomFieldService
     }
 
     /**
+     * Validate custom field name uniqueness
+     */
+    public function isNameUnique(string $name, ?int $excludeId = null): bool
+    {
+        $query = CustomField::where('name', $name);
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        return $query->doesntExist();
+    }
+
+    /**
+     * Get options from a database table
+     */
+    public function getTableOptions(string $tableName): array
+    {
+        try {
+            // Check if table exists
+            if (! Schema::hasTable($tableName)) {
+                return [];
+            }
+
+            // Get table data - limit to 100 records for performance
+            $data = DB::table($tableName)->limit(100)->get();
+
+            if ($data->isEmpty()) {
+                return [];
+            }
+
+            // Convert to array format
+            $options = [];
+            foreach ($data as $row) {
+                $rowArray = (array) $row;
+                $options[] = $rowArray;
+            }
+
+            return $options;
+
+        } catch (Exception $e) {
+            Log::error('Error getting table options: ' . $e->getMessage());
+
+            return [];
+        }
+    }
+
+    /**
      * Prepare and clean custom field data
-     *
-     * @param array $data
-     * @return array
      */
     private function prepareCustomFieldData(array $data): array
     {
@@ -113,59 +146,5 @@ class CustomFieldService
         $data['related_table'] = isset($data['related_table']) ? trim($data['related_table']) : null;
 
         return $data;
-    }
-
-    /**
-     * Validate custom field name uniqueness
-     *
-     * @param string $name
-     * @param int|null $excludeId
-     * @return bool
-     */
-    public function isNameUnique(string $name, ?int $excludeId = null): bool
-    {
-        $query = CustomField::where('name', $name);
-        
-        if ($excludeId) {
-            $query->where('id', '!=', $excludeId);
-        }
-        
-        return $query->doesntExist();
-    }
-
-    /**
-     * Get options from a database table
-     *
-     * @param string $tableName
-     * @return array
-     */
-    public function getTableOptions(string $tableName): array
-    {
-        try {
-            // Check if table exists
-            if (!\Schema::hasTable($tableName)) {
-                return [];
-            }
-
-            // Get table data - limit to 100 records for performance
-            $data = \DB::table($tableName)->limit(100)->get();
-
-            if ($data->isEmpty()) {
-                return [];
-            }
-
-            // Convert to array format
-            $options = [];
-            foreach ($data as $row) {
-                $rowArray = (array) $row;
-                $options[] = $rowArray;
-            }
-
-            return $options;
-
-        } catch (\Exception $e) {
-            \Log::error('Error getting table options: ' . $e->getMessage());
-            return [];
-        }
     }
 }

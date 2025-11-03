@@ -1,17 +1,13 @@
 <?php
 
 namespace App\Http\Repository\Categories;
-use App\Contracts\Categories\CategoryRepositoryInterface;
 
+use App\Contracts\Categories\CategoryRepositoryInterface;
 // declare Entities
 use App\Models\Category;
 
-
-
 class CategoreyRepository implements CategoryRepositoryInterface
 {
-
-    
     public function getAll()
     {
         return Category::all();
@@ -36,15 +32,14 @@ class CategoreyRepository implements CategoryRepositoryInterface
     {
         return Category::find($id);
     }
-public function updateactive($active,$id){
-		if($active){
-		return 	$this->update(['active'=>'0'],$id);
-		} else{
-			
-					return 	$this->update(['active'=>'1'],$id);
 
-		}
-		
-	}
+    public function updateactive($active, $id)
+    {
+        if ($active) {
+            return $this->update(['active' => '0'], $id);
+        }
 
+        return $this->update(['active' => '1'], $id);
+
+    }
 }

@@ -8,7 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class HighLevelStatuses extends Model
 {
     use HasFactory;
+
     protected $table = 'high_level_statuses';
+
     protected $fillable = [
         'name',
         'active',
@@ -17,7 +19,6 @@ class HighLevelStatuses extends Model
 
     public function status()
     {
-        return $this->hasMany(Status::class,'high_level_status_id');
+        return $this->hasMany(Status::class, 'high_level_status_id');
     }
-
 }

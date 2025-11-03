@@ -8,11 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class CabCr extends Model
 {
     use HasFactory;
-    protected $fillable = [
-        'cr_id', 'status'
-    ];
+
     const INACTIVE = '0';
+
     const APPROVED = '1';
+
     const REJECTED = '2';
 
     public static $statuses = [
@@ -21,41 +21,46 @@ class CabCr extends Model
         self::REJECTED => 'Rejected',
     ];
 
-    public function isApproved ()
+    protected $fillable = [
+        'cr_id', 'status',
+    ];
+
+    public function isApproved()
     {
         return $this->status == self::APPROVED;
     }
-    public function isRejected ()
+
+    public function isRejected()
     {
         return $this->status == self::REJECTED;
     }
 
-    public function isInactive ()
+    public function isInactive()
     {
         return $this->status == self::INACTIVE;
     }
 
     public function change_request()
     {
-        return $this->belongsTo(Change_request::class,'cr_id');// how is it work "belongs_to" ? the right is "belongsTo"
+        return $this->belongsTo(Change_request::class, 'cr_id'); // how is it work "belongs_to" ? the right is "belongsTo"
     }
 
     public function cab_cr_user()
     {
         return $this->hasMany(CabCrUser::class, 'cab_cr_id', 'id');
     }
+
     public function cabCrUsers()
     {
         return $this->hasMany(CabCrUser::class, 'cab_cr_id', 'id');
     }
-    
+
     /**
      * Get only active (status = 0) cab_cr_users
      */
     public function activeCabCrUsers()
     {
         return $this->hasMany(CabCrUser::class, 'cab_cr_id', 'id')
-                    ->where('status', '0');
+            ->where('status', '0');
     }
-    
 }

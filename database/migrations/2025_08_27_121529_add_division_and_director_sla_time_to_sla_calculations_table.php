@@ -14,9 +14,9 @@ class AddDivisionAndDirectorSlaTimeToSlaCalculationsTable extends Migration
     public function up()
     {
         Schema::table('sla_calculations', function (Blueprint $table) {
-        $table->integer('division_sla_time')->after('unit_sla_time');
-        $table->integer('director_sla_time')->after('division_sla_time');
-    });
+            $table->integer('division_sla_time')->after('unit_sla_time');
+            $table->integer('director_sla_time')->after('division_sla_time');
+        });
     }
 
     /**
@@ -27,7 +27,7 @@ class AddDivisionAndDirectorSlaTimeToSlaCalculationsTable extends Migration
     public function down()
     {
         Schema::table('sla_calculations', function (Blueprint $table) {
-        $table->dropColumn(['division_sla_time', 'director_sla_time']);
-    });
+            $table->dropColumn(['division_sla_time', 'director_sla_time']);
+        });
     }
 }

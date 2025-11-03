@@ -15,7 +15,7 @@ class CreateGroupStatusesTable extends Migration
     {
         Schema::create('group_statuses', function (Blueprint $table) {
             $table->id();
-            
+
             $table->foreignId('status_id');
             $table->foreignId('group_id');
 

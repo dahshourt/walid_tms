@@ -1,4 +1,5 @@
-<?php 
+<?php
+
 namespace App\Http\Controllers\Search;
 
 use Maatwebsite\Excel\Concerns\FromCollection;
@@ -37,7 +38,7 @@ class TableExport implements FromCollection, WithHeadings, WithMapping
             'Requesting Department',
             'Targeted System',
             'Last Action Date',
-          
+
         ];
     }
 
@@ -46,20 +47,18 @@ class TableExport implements FromCollection, WithHeadings, WithMapping
         return [
             $item['cr_no'],
             $item['title'],
-            $item['category']['name']??"",
-            $item['application']['name']??"",
-            $item->getCurrentStatus()->status->status_name??"",
-            $item['requester_name']??"",
-            $item['requester_email']??"",
-            $item['design_duration']??"",
-            $item['develop_duration']??"",
-            $item['test_duration']??"",
-            $item['created_at']??"",
-            $item['department']??"",
-            $item['application']['name']??"",
-            $item['updated_at']??"",
+            $item['category']['name'] ?? '',
+            $item['application']['name'] ?? '',
+            $item->getCurrentStatus()->status->status_name ?? '',
+            $item['requester_name'] ?? '',
+            $item['requester_email'] ?? '',
+            $item['design_duration'] ?? '',
+            $item['develop_duration'] ?? '',
+            $item['test_duration'] ?? '',
+            $item['created_at'] ?? '',
+            $item['department'] ?? '',
+            $item['application']['name'] ?? '',
+            $item['updated_at'] ?? '',
         ];
     }
 }
-
-                                    

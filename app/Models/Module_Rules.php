@@ -11,12 +11,9 @@ class Module_Rules extends Model
 
     protected $table = 'module_rules';
 
-
-
-
     public function permission()
-{
-    return $this->hasMany(permission::class, 'module_rule_id');
+    {
+        return $this->hasMany(permission::class, 'module_rule_id');
 
-}
+    }
 }

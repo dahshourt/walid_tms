@@ -15,7 +15,7 @@ class AddFlagToUsersTable extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             //
-			$table->enum('flag', ['0', '1'])->nullable();
+            $table->enum('flag', ['0', '1'])->nullable();
         });
     }
 
@@ -28,7 +28,7 @@ class AddFlagToUsersTable extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             //
-			$table->dropColumn('flag');
+            $table->dropColumn('flag');
         });
     }
 }

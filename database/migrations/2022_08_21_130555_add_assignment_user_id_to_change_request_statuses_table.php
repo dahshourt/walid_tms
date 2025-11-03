@@ -16,7 +16,7 @@ class AddAssignmentUserIdToChangeRequestStatusesTable extends Migration
         Schema::table('change_request_statuses', function (Blueprint $table) {
             //
 
-			$table->foreignId('assignment_user_id')->nullable();
+            $table->foreignId('assignment_user_id')->nullable();
             $table->foreign('assignment_user_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
@@ -30,7 +30,7 @@ class AddAssignmentUserIdToChangeRequestStatusesTable extends Migration
     {
         Schema::table('change_request_statuses', function (Blueprint $table) {
             //
-			$table->dropForeign('change_request_statuses_assignment_user_id_foreign');
+            $table->dropForeign('change_request_statuses_assignment_user_id_foreign');
             $table->dropColumn('assignment_user_id');
         });
     }

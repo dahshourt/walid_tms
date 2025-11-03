@@ -18,7 +18,7 @@ class CreateStatusesTable extends Migration
             $table->string('status_name');
             $table->foreignId('stage_id');
             $table->enum('active', ['0', '1'])->default(1);
-            $table->enum('type', ['1', '2'])->default(1);// normal | 2- Estimation status
+            $table->enum('type', ['1', '2'])->default(1); // normal | 2- Estimation status
             $table->foreign('stage_id')->references('id')->on('stages')->onDelete('cascade');
             $table->timestamps();
         });

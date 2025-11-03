@@ -10,12 +10,13 @@ class RejectionReasons extends Model
     use HasFactory;
 
     public $table = 'rejection_reasons';
+
     protected $fillable = [
-       'id', 'name','active','workflow_type_id',
+        'id', 'name', 'active', 'workflow_type_id',
     ];
+
     public function workflowType()
     {
         return $this->belongsTo(WorkflowType::class, 'workflow_type_id');
     }
-   
 }

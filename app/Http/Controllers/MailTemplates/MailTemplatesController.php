@@ -2,10 +2,9 @@
 
 namespace App\Http\Controllers\MailTemplates;
 
+use App\Factories\MailTemplates\MailTemplatesFactory;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Factories\MailTemplates\MailTemplatesFactory;
-
 
 class MailTemplatesController extends Controller
 {
@@ -14,27 +13,28 @@ class MailTemplatesController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-
     private $MailTemplates;
 
-    function __construct(MailTemplatesFactory $MailTemplates){
+    public function __construct(MailTemplatesFactory $MailTemplates)
+    {
 
         $this->MailTemplates = $MailTemplates::index();
         $this->view = 'mail_templates';
         $view = 'mail_templates';
         $route = 'mail_templates';
         $OtherRoute = 'mail_templates';
-        
+
         $title = 'Mail Templates';
         $form_title = 'Mail Templates';
-        view()->share(compact('view','route','title','form_title','OtherRoute'));
-        
+        view()->share(compact('view', 'route', 'title', 'form_title', 'OtherRoute'));
+
     }
 
     public function index()
     {
         $collection = $this->MailTemplates->getAll();
-        return view("$this->view.index",compact('collection'));
+
+        return view("$this->view.index", compact('collection'));
     }
 
     /**
@@ -50,13 +50,13 @@ class MailTemplatesController extends Controller
     /**
      * Store a newly created resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
-        $store= $this->MailTemplates->create($request->all());
-        return redirect()->back()->with('status' , 'Template Added Successfully' );
+        $store = $this->MailTemplates->create($request->all());
+
+        return redirect()->back()->with('status', 'Template Added Successfully');
 
     }
 
@@ -69,7 +69,8 @@ class MailTemplatesController extends Controller
     public function show($id)
     {
         $row = $this->MailTemplates->find($id);
-        return view("$this->view.show",compact('row'));
+
+        return view("$this->view.show", compact('row'));
     }
 
     /**
@@ -81,20 +82,21 @@ class MailTemplatesController extends Controller
     public function edit($id)
     {
         $row = $this->MailTemplates->find($id);
-        return view("$this->view.edit",compact('row'));
+
+        return view("$this->view.edit", compact('row'));
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, $id)
     {
-        $this->MailTemplates->update($request->all() , $id);
-        return redirect()->back()->with('status' , 'Template Updated Successfully' );
+        $this->MailTemplates->update($request->all(), $id);
+
+        return redirect()->back()->with('status', 'Template Updated Successfully');
     }
 
     /**
@@ -106,6 +108,7 @@ class MailTemplatesController extends Controller
     public function destroy($id)
     {
         $this->MailTemplates->delete($id);
+
         return redirect()->back()->with('success', 'Template deleted successfully!');
     }
 }

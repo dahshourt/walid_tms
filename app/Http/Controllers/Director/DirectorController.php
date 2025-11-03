@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Director;
 
 use App\Http\Controllers\Controller;
-use App\Services\DirectorService;
 use App\Http\Requests\Director\DirectorRequest;
+use App\Services\DirectorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,7 +23,7 @@ class DirectorController extends Controller
         $title = 'Directors';
         $form_title = 'Director';
         $OtherRoute = 'directors';
-        view()->share(compact('view','route','title','form_title', 'OtherRoute'));
+        view()->share(compact('view', 'route', 'title', 'form_title', 'OtherRoute'));
     }
 
     public function index(): View
@@ -71,13 +71,13 @@ class DirectorController extends Controller
 
     public function updateStatus(Request $request): JsonResponse
     {
-         $this->authorize('Edit Director');
+        $this->authorize('Edit Director');
 
         $this->directorService->updateDirectorStatus($request->post('id'));
 
         return response()->json([
             'message' => 'Updated Successfully',
-            'status' => 'success'
+            'status' => 'success',
         ]);
     }
 }

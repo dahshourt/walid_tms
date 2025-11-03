@@ -1,18 +1,17 @@
 <?php
+
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use App\Services\ChangeRequest\{
-    ChangeRequestCreationService,
-    ChangeRequestUpdateService,
-    ChangeRequestStatusService,
-    ChangeRequestSchedulingService,
-    ChangeRequestSearchService,
-    ChangeRequestValidationService,
-    ChangeRequestEstimationService
-};
-use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use App\Contracts\ChangeRequest\ChangeRequestRepositoryInterface;
+use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
+use App\Services\ChangeRequest\ChangeRequestCreationService;
+use App\Services\ChangeRequest\ChangeRequestEstimationService;
+use App\Services\ChangeRequest\ChangeRequestSchedulingService;
+use App\Services\ChangeRequest\ChangeRequestSearchService;
+use App\Services\ChangeRequest\ChangeRequestStatusService;
+use App\Services\ChangeRequest\ChangeRequestUpdateService;
+use App\Services\ChangeRequest\ChangeRequestValidationService;
+use Illuminate\Support\ServiceProvider;
 
 class ChangeRequestServiceProvider extends ServiceProvider
 {
@@ -53,11 +52,11 @@ class ChangeRequestServiceProvider extends ServiceProvider
     {
         // Publish configuration file
         $this->publishes([
-            __DIR__.'/../../config/change_request.php' => config_path('change_request.php'),
+            __DIR__ . '/../../config/change_request.php' => config_path('change_request.php'),
         ], 'change-request-config');
 
         // Load migrations if needed
-        $this->loadMigrationsFrom(__DIR__.'/../../database/migrations');
+        $this->loadMigrationsFrom(__DIR__ . '/../../database/migrations');
 
         // Register event listeners
         $this->registerEventListeners();
@@ -74,12 +73,12 @@ class ChangeRequestServiceProvider extends ServiceProvider
             \App\Events\ChangeRequest\ChangeRequestCreated::class,
             \App\Listeners\ChangeRequest\SendCreationNotification::class
         );
-        
+
         Event::listen(
             \App\Events\ChangeRequest\ChangeRequestStatusUpdated::class,
             \App\Listeners\ChangeRequest\SendStatusUpdateNotification::class
         );
-        
+
         Event::listen(
             \App\Events\ChangeRequest\ChangeRequestAssigned::class,
             \App\Listeners\ChangeRequest\SendAssignmentNotification::class

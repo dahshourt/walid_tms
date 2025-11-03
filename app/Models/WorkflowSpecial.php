@@ -16,13 +16,12 @@ class WorkflowSpecial extends Model
      */
     protected $hidden = [
         'updated_at',
-        'created_at'
+        'created_at',
     ];
+
     protected $table = 'workflow_special';
+
     protected $fillable = [
-        'no_need_desgin','not_testable','workflow_type_id','from_status_id','to_workflow_id'
+        'no_need_desgin', 'not_testable', 'workflow_type_id', 'from_status_id', 'to_workflow_id',
     ];
-
-    
-
 }

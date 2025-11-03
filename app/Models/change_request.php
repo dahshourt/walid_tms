@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Exception;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
 
 class Change_request extends Model
@@ -27,7 +28,7 @@ class Change_request extends Model
         'name',
         'is_overdue',
         'duration_summary',
-        'completion_percentage'
+        'completion_percentage',
     ];
 
     /**
@@ -72,10 +73,15 @@ class Change_request extends Model
         'man_days' => 'decimal:2',
     ];
 
+    public static function getHoldRequests()
+    {
+        return self::where('hold', 1)->get();
+    }
+
     public function scopeNotInFinalState(Builder $query): Builder
     {
         return $query->whereHas('CurrentRequestStatuses', function ($query) {
-            return $query->whereNotIn('new_status_id', [config('change_request.status_ids.Reject'), config('change_request.status_ids.Cancel'), config('change_request.parked_status_ids.promo_closure')]);;
+            return $query->whereNotIn('new_status_id', [config('change_request.status_ids.Reject'), config('change_request.status_ids.Cancel'), config('change_request.parked_status_ids.promo_closure')]);
         });
     }
 
@@ -98,19 +104,21 @@ class Change_request extends Model
     {
         return $this->hasMany(Log::class, 'cr_id', 'id');
     }
+
     public function cabCrs()
     {
         return $this->hasMany(CabCr::class, 'cr_id', 'id');
     }
-    
+
     /**
      * Get only active (status = 0) cab_crs records
      */
     public function activeCabCrs()
     {
         return $this->hasMany(CabCr::class, 'cr_id', 'id')
-                    ->where('status', '0');
+            ->where('status', '0');
     }
+
     /**
      * Get the custom fields for this change request.
      */
@@ -330,7 +338,8 @@ class Change_request extends Model
     public function getIsOverdueAttribute(): bool
     {
         $releaseDate = $this->release_delivery_date;
-        return $releaseDate && $releaseDate->isPast() && !$this->isCompleted();
+
+        return $releaseDate && $releaseDate->isPast() && ! $this->isCompleted();
     }
 
     /**
@@ -439,8 +448,9 @@ class Change_request extends Model
                 ->first();
 
             return $status;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             \Log::error("Error getting list current status for CR {$this->id}: " . $e->getMessage());
+
             return null;
         }
     }
@@ -472,12 +482,13 @@ class Change_request extends Model
                     ->first();
 
                 $status->same_time = $workflow->same_time ?? 0;
-                $status->to_status_label = $workflow->to_status_label ?? "";
+                $status->to_status_label = $workflow->to_status_label ?? '';
             }
 
             return $status;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             \Log::error("Error getting current status for CR {$this->id}: " . $e->getMessage());
+
             return null;
         }
     }
@@ -491,7 +502,7 @@ class Change_request extends Model
             $group = $this->getCurrentGroupId();
             $technical_cr_team_status = null;
 
-            $TechnicalCr = TechnicalCr::where("cr_id", $this->id)
+            $TechnicalCr = TechnicalCr::where('cr_id', $this->id)
                 ->where('status', '0')
                 ->first();
 
@@ -503,8 +514,9 @@ class Change_request extends Model
             }
 
             return $technical_cr_team_status;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             \Log::error("Error getting technical team status for CR {$this->id}: " . $e->getMessage());
+
             return null;
         }
     }
@@ -562,8 +574,9 @@ class Change_request extends Model
             }
 
             return $status;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             \Log::error("Error getting current status for CR {$this->id}: " . $e->getMessage());
+
             return null;
         }
     }
@@ -571,75 +584,8 @@ class Change_request extends Model
     public function getallCurrentStatus()
     {
         $statuses = Change_request_statuse::where('cr_id', $this->id)->where('active', '1')->get();
+
         return $statuses;
-    }
-
-    // ===================================
-    // HELPER METHODS
-    // ===================================
-
-    /**
-     * Get current group ID from session or user default.
-     */
-    private function getCurrentGroupId(): int
-    {
-        if (session('default_group')) {
-            return session('default_group');
-        }
-
-        return auth()->user()->default_group ?? 1;
-    }
-
-    /**
-     * Attach workflow information to status object.
-     */
-    private function attachWorkflowInfo($status)
-    {
-        if (!$status) {
-            return null;
-        }
-
-        try {
-            $workflow = NewWorkFlow::where('from_status_id', $status->old_status_id)
-                ->where('type_id', $this->workflow_type_id)
-                ->first();
-
-            $status->same_time = $workflow->same_time ?? 0;
-            $status->to_status_label = $workflow->to_status_label ?? "";
-
-            return $status;
-        } catch (\Exception $e) {
-            \Log::error("Error attaching workflow info for CR {$this->id}: " . $e->getMessage());
-            $status->same_time = 0;
-            $status->to_status_label = "";
-            return $status;
-        }
-    }
-    public static function getHoldRequests()
-    {
-        return self::where('hold', 1)->get();
-    }
-    private function attachWorkflowInfoById($status)
-    {
-        if (!$status) {
-            return null;
-        }
-
-        try {
-            $workflow = NewWorkFlow::where('from_status_id', $status->new_status_id)
-                ->where('type_id', $this->workflow_type_id)
-                ->first();
-
-            $status->same_time = $workflow->same_time ?? 0;
-            $status->to_status_label = $workflow->to_status_label ?? "";
-
-            return $status;
-        } catch (\Exception $e) {
-            \Log::error("Error attaching workflow info for CR {$this->id}: " . $e->getMessage());
-            $status->same_time = 0;
-            $status->to_status_label = "";
-            return $status;
-        }
     }
 
     /**
@@ -649,7 +595,7 @@ class Change_request extends Model
     {
         $currentStatus = $this->getCurrentStatus();
 
-        if (!$currentStatus) {
+        if (! $currentStatus) {
             return false;
         }
 
@@ -686,24 +632,7 @@ class Change_request extends Model
      */
     public function needsApproval(): bool
     {
-        return !$this->approval && $this->isInApprovalPhase();
-    }
-
-    /**
-     * Check if change request is in approval phase.
-     */
-    private function isInApprovalPhase(): bool
-    {
-        $currentStatus = $this->getCurrentStatus();
-
-        if (!$currentStatus) {
-            return false;
-        }
-
-        // Add your approval status IDs here
-        $approvalStatusIds = [/* Add your approval status IDs */];
-
-        return in_array($currentStatus->new_status_id, $approvalStatusIds);
+        return ! $this->approval && $this->isInApprovalPhase();
     }
 
     /**
@@ -721,13 +650,13 @@ class Change_request extends Model
      */
     public function hasUncompletedDependencies(): bool
     {
-        if (!$this->depend_cr_id) {
+        if (! $this->depend_cr_id) {
             return false;
         }
 
         $dependentCr = self::find($this->depend_cr_id);
 
-        return $dependentCr && !$dependentCr->isCompleted();
+        return $dependentCr && ! $dependentCr->isCompleted();
     }
 
     /**
@@ -748,7 +677,6 @@ class Change_request extends Model
         return now()->addDays($remainingDays);
     }
 
-
     /**
      * Get current status for division page with better error handling.
      */
@@ -765,12 +693,13 @@ class Change_request extends Model
                     ->first();
 
                 $status->same_time = $workflow->same_time ?? 0;
-                $status->to_status_label = $workflow->to_status_label ?? "";
+                $status->to_status_label = $workflow->to_status_label ?? '';
             }
 
             return $status;
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             \Log::error("Error getting current status for CR {$this->id}: " . $e->getMessage());
+
             return null;
         }
     }
@@ -807,5 +736,89 @@ class Change_request extends Model
     public function resCrMember()
     {
         return $this->hasOne(CrAssignee::class, 'cr_id', 'id')->where('role', 'cr_member')->latest();
+    }
+
+    // ===================================
+    // HELPER METHODS
+    // ===================================
+
+    /**
+     * Get current group ID from session or user default.
+     */
+    private function getCurrentGroupId(): int
+    {
+        if (session('default_group')) {
+            return session('default_group');
+        }
+
+        return auth()->user()->default_group ?? 1;
+    }
+
+    /**
+     * Attach workflow information to status object.
+     */
+    private function attachWorkflowInfo($status)
+    {
+        if (! $status) {
+            return null;
+        }
+
+        try {
+            $workflow = NewWorkFlow::where('from_status_id', $status->old_status_id)
+                ->where('type_id', $this->workflow_type_id)
+                ->first();
+
+            $status->same_time = $workflow->same_time ?? 0;
+            $status->to_status_label = $workflow->to_status_label ?? '';
+
+            return $status;
+        } catch (Exception $e) {
+            \Log::error("Error attaching workflow info for CR {$this->id}: " . $e->getMessage());
+            $status->same_time = 0;
+            $status->to_status_label = '';
+
+            return $status;
+        }
+    }
+
+    private function attachWorkflowInfoById($status)
+    {
+        if (! $status) {
+            return null;
+        }
+
+        try {
+            $workflow = NewWorkFlow::where('from_status_id', $status->new_status_id)
+                ->where('type_id', $this->workflow_type_id)
+                ->first();
+
+            $status->same_time = $workflow->same_time ?? 0;
+            $status->to_status_label = $workflow->to_status_label ?? '';
+
+            return $status;
+        } catch (Exception $e) {
+            \Log::error("Error attaching workflow info for CR {$this->id}: " . $e->getMessage());
+            $status->same_time = 0;
+            $status->to_status_label = '';
+
+            return $status;
+        }
+    }
+
+    /**
+     * Check if change request is in approval phase.
+     */
+    private function isInApprovalPhase(): bool
+    {
+        $currentStatus = $this->getCurrentStatus();
+
+        if (! $currentStatus) {
+            return false;
+        }
+
+        // Add your approval status IDs here
+        $approvalStatusIds = [/* Add your approval status IDs */];
+
+        return in_array($currentStatus->new_status_id, $approvalStatusIds);
     }
 }

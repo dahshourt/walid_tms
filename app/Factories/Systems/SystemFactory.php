@@ -7,9 +7,8 @@ use App\Http\Repository\Systems\SystemRepository;
 
 class SystemFactory implements FactoryInterface
 {
-
-	static public function index() {
+    public static function index()
+    {
         return new SystemRepository();
     }
-
 }
