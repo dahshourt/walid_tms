@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
-
+use App\Models\Configuration;
 
 class Reject_business_approvals extends Command
 {
@@ -29,8 +29,9 @@ class Reject_business_approvals extends Command
     public function handle(ChangeRequestRepository $repo)
     {
         Log::info('=== Auto Reject CR job started ===');
-
-        $sevenDaysAgo = Carbon::now()->subDays(7);
+       $configuration = Configuration::where('configuration_name', 'Division Manager Approval')->first();
+        $configurationValue = (int) ($configuration->configuration_value ?? 0);
+        $sevenDaysAgo = Carbon::now()->subDays($configurationValue);
 
         // Fetch eligible records
         $records = DB::table('change_request_statuses') 
