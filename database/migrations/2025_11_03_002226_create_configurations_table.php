@@ -13,7 +13,7 @@ class CreateConfigurationsTable extends Migration
      */
     public function up()
     {
-       Schema::create('configurations', function (Blueprint $table) {
+        Schema::create('configurations', function (Blueprint $table) {
             $table->id(); // Auto increment + primary key + indexed
             $table->string('configuration_name')->index();
             $table->string('configuration_value');

@@ -43,7 +43,7 @@ return new class extends Migration
         Permission::whereIn('name', [
             'Edit cr pending cap',
             'Show cr pending cap',
-           
+
         ])->delete();
     }
 };

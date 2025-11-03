@@ -1,54 +1,58 @@
 <?php
+
 namespace App\Services\ChangeRequest;
 
-use App\Models\{
-    Change_request, 
-    Group, 
-    GroupStatuses, 
-    Change_request_statuse, 
-    User, 
-    TechnicalCr,
-    NewWorkFlow
-};
-use Carbon\Carbon;
+use App\Models\Change_request;
+use App\Models\Change_request_statuse;
+use App\Models\Group;
+use App\Models\GroupStatuses;
+use App\Models\NewWorkFlow;
+use App\Models\TechnicalCr;
+use App\Models\User;
 use Auth;
+use Carbon\Carbon;
+use DB;
+use Log;
 
 class ChangeRequestSearchService
 {
-    
-	private const ACTIVE_STATUS = '1';
+    private const ACTIVE_STATUS = '1';
+
     private const INACTIVE_STATUS = '0';
+
     private const COMPLETED_STATUS = '2';
-	
-	public static array $ACTIVE_STATUS_ARRAY = [self::ACTIVE_STATUS,1];
-	public static array $INACTIVE_STATUS_ARRAY = [self::INACTIVE_STATUS,0];
-    public static array $COMPLETED_STATUS_ARRAY = [self::COMPLETED_STATUS,2];
+
+    public static array $ACTIVE_STATUS_ARRAY = [self::ACTIVE_STATUS, 1];
+
+    public static array $INACTIVE_STATUS_ARRAY = [self::INACTIVE_STATUS, 0];
+
+    public static array $COMPLETED_STATUS_ARRAY = [self::COMPLETED_STATUS, 2];
+
     public function getAll($group = null)
     {
         $group = $this->resolveGroup($group);
         $groupData = Group::find($group);
         $groupApplications = $groupData->group_applications->pluck('application_id')->toArray();
         $viewStatuses = $this->getViewStatuses($group);
-		
 
         $changeRequests = Change_request::with('RequestStatuses.status');
-        
+
         if ($groupApplications) {
-            //$changeRequests = $changeRequests->whereIn('application_id', $groupApplications);
-			$changeRequests = $changeRequests->whereHas('change_request_custom_fields', function($q) use($groupApplications) {
-				$q->whereIn('change_request_custom_fields.custom_field_name', ['application_id', 'sub_application_id'])->whereIn('change_request_custom_fields.custom_field_value', $groupApplications);
-			});
+            // $changeRequests = $changeRequests->whereIn('application_id', $groupApplications);
+            $changeRequests = $changeRequests->whereHas('change_request_custom_fields', function ($q) use ($groupApplications) {
+                $q->whereIn('change_request_custom_fields.custom_field_name', ['application_id', 'sub_application_id'])->whereIn('change_request_custom_fields.custom_field_value', $groupApplications);
+            });
         }
-        
+
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
             $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($group) {
                 $qq->where('group_id', $group)->orWhereNull('group_id');
             })
-				->whereIn('new_status_id', $viewStatuses)
-                  ->whereHas('status.group_statuses', function ($query) use ($group) {
-                      $query->where('group_id', $group)
-                            ->where('type', 2);
-                  });
+                ->whereIn('new_status_id', $viewStatuses)
+                ->whereHas('status.group_statuses', function ($query) use ($group) {
+                    $query->where('group_id', $group)
+                        ->where('type', 2);
+                });
         })->orderBy('id', 'DESC')->paginate(20);
 
         return $changeRequests;
@@ -58,57 +62,60 @@ class ChangeRequestSearchService
     {
         $group = $this->resolveGroup($group);
         $groupData = Group::find($group);
-		$groupApplications = $groupData->group_applications->pluck('application_id')->toArray();
+        $groupApplications = $groupData->group_applications->pluck('application_id')->toArray();
         $viewStatuses = $this->getViewStatuses($group);
 
         $changeRequests = Change_request::with('RequestStatuses.status');
-        
+
         if ($groupApplications) {
-            $changeRequests = $changeRequests->whereHas('change_request_custom_fields', function($q) use($groupApplications) {
-				$q->whereIn('change_request_custom_fields.custom_field_name', ['application_id', 'sub_application_id'])->whereIn('change_request_custom_fields.custom_field_value', $groupApplications);
-			});
+            $changeRequests = $changeRequests->whereHas('change_request_custom_fields', function ($q) use ($groupApplications) {
+                $q->whereIn('change_request_custom_fields.custom_field_name', ['application_id', 'sub_application_id'])->whereIn('change_request_custom_fields.custom_field_value', $groupApplications);
+            });
         }
-        
+
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
             $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($group) {
-                    $qq->where('group_id', $group)->orWhereNull('group_id');
-                })
-                  ->whereIn('new_status_id', $viewStatuses)
-                  ->whereHas('status.group_statuses', function ($query) use ($group) {
-                      $query->where('group_id', $group)
-                            ->where('type', 2);
-                  });
+                $qq->where('group_id', $group)->orWhereNull('group_id');
+            })
+                ->whereIn('new_status_id', $viewStatuses)
+                ->whereHas('status.group_statuses', function ($query) use ($group) {
+                    $query->where('group_id', $group)
+                        ->where('type', 2);
+                });
         })->orderBy('id', 'DESC')->get();
 
         return $changeRequests;
     }
-public function cr_pending_cap($group = null){
- 
+
+    public function cr_pending_cap($group = null)
+    {
+
         $userId = auth()->user()->id;
         $userEmail = auth()->user()->email;
-        
+
         // Get all requests with relationships
         $allRequests = Change_request::with(['RequestStatuses.status'])
-            ->whereHas('activeCabCrs', function($query) use ($userId) {
-                $query->whereHas('activeCabCrUsers', function($subQuery) use ($userId) {
+            ->whereHas('activeCabCrs', function ($query) use ($userId) {
+                $query->whereHas('activeCabCrUsers', function ($subQuery) use ($userId) {
                     $subQuery->where('user_id', $userId);
                 });
             })
-            
+
             ->orderBy('id', 'DESC')
             ->limit(50)
             ->get();
-           // die("dd");
+        // die("dd");
         // Filter by status using getCurrentStatusForDivision()
         $filtered = $allRequests->filter(function ($item) {
             $status = $item->getCurrentStatusForDivision();
+
             return $status && $status->status && $status->status->id == config('change_request.status_ids.pending_cab');
         });
-    
+
         // Manual pagination
         $perPage = request()->get('per_page', 10);
         $page = request()->get('page', 1);
-        
+
         $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
             $filtered->forPage($page, $perPage),
             $filtered->count(),
@@ -116,30 +123,24 @@ public function cr_pending_cap($group = null){
             $page,
             ['path' => request()->url(), 'query' => request()->query()]
         );
-    
+
         return $paginated;
-    
 
-   
-}
+    }
 
+    public function cr_hold_promo($group = null)
+    {
 
-public function cr_hold_promo($group = null)
-{
-  
+        // Get all hold requests with relationships
+        $allRequests = Change_request::with(['RequestStatuses.status'])
+            ->where('hold', 1)
 
-    // Get all hold requests with relationships
-    $allRequests = Change_request::with(['RequestStatuses.status'])
-        ->where('hold', 1) 
-        
-        ->orderBy('id', 'DESC')
-       
-        ->get();
+            ->orderBy('id', 'DESC')
 
-  
+            ->get();
 
-    return $allRequests;
-}
+        return $allRequests;
+    }
 
     public function divisionManagerCr($group = null)
     {
@@ -155,15 +156,16 @@ public function cr_hold_promo($group = null)
 
         // Use full PHP-based filtering with getCurrentStatus()
         $filtered = $allRequests->filter(function ($item) {
-            //$status = $item->getCurrentStatus();
+            // $status = $item->getCurrentStatus();
             $status = $item->getCurrentStatusForDivision();
+
             return $status && $status->status && $status->status->id == config('change_request.status_ids.business_approval');
         });
 
         // Manual pagination
         $perPage = request()->get('per_page', 10);
         $page = request()->get('page', 1);
-        
+
         $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
             $filtered->forPage($page, $perPage),
             $filtered->count(),
@@ -178,35 +180,33 @@ public function cr_hold_promo($group = null)
     public function myAssignmentsCrs()
     {
         $userId = Auth::user()->id;
-        //dd($userId);
+        // dd($userId);
         $group = $this->resolveGroup();
         $viewStatuses = $this->getViewStatuses();
         $viewStatuses[] = config('change_request.status_ids.cr_manager_review');
-        //dd($viewStatuses);
+        // dd($viewStatuses);
         if ($group == config('change_request.group_ids.promo')) {
-            //dd('promo');
+            // dd('promo');
             $crs = Change_request::with('Req_status.status')
-            ->whereHas('Req_status', function ($query) use ($viewStatuses) {
-                $query->whereIn('new_status_id', $viewStatuses)
-                      ->whereRaw('CAST(active AS CHAR) = ?', ['1']);
-            })->paginate(50);
-            //dd($crs);
-        }
-        
-        else {
-        $crs = Change_request::with('Req_status.status')
-            ->whereHas('Req_status', function ($query) use ($userId, $viewStatuses) {
-                $query->where('assignment_user_id', $userId)
-						->whereRaw('CAST(active AS CHAR) = ?', ['1'])
-                      ->whereIn('new_status_id', $viewStatuses);
-            })
-            /* ->orWhere(function ($query) use ($userId) {
-                $query->whereHas('CurrentRequestStatuses', function ($q) {
-                    $q->where('new_status_id', config('change_request.status_ids.cr_manager_review'))
-                      ->whereRaw('CAST(active AS CHAR) = ?', ['1']);
-                })->orWhere('change_request.requester_id', $userId);
-            }) */
-            ->paginate(50);
+                ->whereHas('Req_status', function ($query) use ($viewStatuses) {
+                    $query->whereIn('new_status_id', $viewStatuses)
+                        ->whereRaw('CAST(active AS CHAR) = ?', ['1']);
+                })->paginate(50);
+            // dd($crs);
+        } else {
+            $crs = Change_request::with('Req_status.status')
+                ->whereHas('Req_status', function ($query) use ($userId, $viewStatuses) {
+                    $query->where('assignment_user_id', $userId)
+                        ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+                        ->whereIn('new_status_id', $viewStatuses);
+                })
+                /* ->orWhere(function ($query) use ($userId) {
+                    $query->whereHas('CurrentRequestStatuses', function ($q) {
+                        $q->where('new_status_id', config('change_request.status_ids.cr_manager_review'))
+                          ->whereRaw('CAST(active AS CHAR) = ?', ['1']);
+                    })->orWhere('change_request.requester_id', $userId);
+                }) */
+                ->paginate(50);
         }
 
         return $crs;
@@ -215,34 +215,31 @@ public function cr_hold_promo($group = null)
     public function myCrs()
     {
         $userId = Auth::user()->id;
+
         return Change_request::where('requester_id', $userId)->get();
     }
 
     public function find($id)
     {
-		$groupApplications  = null;
-		$userEmail = strtolower(auth()->user()->email);
+        $groupApplications = null;
+        $userEmail = strtolower(auth()->user()->email);
         $divisionManager = strtolower(Change_request::where('id', $id)->value('division_manager'));
 
-        $groups = ($userEmail === $divisionManager && request()->has('check_dm')) 
+        $groups = ($userEmail === $divisionManager && request()->has('check_dm'))
             ? Group::pluck('id')->toArray()
-            : array($this->resolveGroup());
-            //: auth()->user()->user_groups->pluck('group_id')->toArray();
-		if($userEmail == $divisionManager &&  (request()->has('check_dm') || request()->has('cab_cr_flag')))
-		{
-			$groupApplications  = null;
-		}
-		else
-		{
-			$groupData = Group::find($groups);
-			$groupApplications = $groupData[0]->group_applications->pluck('application_id');
-			if($groupApplications)
-			{
-				
-				$groupApplications = $groupApplications->toArray();
-			}
-		}			
-		
+            : [$this->resolveGroup()];
+        // : auth()->user()->user_groups->pluck('group_id')->toArray();
+        if ($userEmail == $divisionManager && (request()->has('check_dm') || request()->has('cab_cr_flag'))) {
+            $groupApplications = null;
+        } else {
+            $groupData = Group::find($groups);
+            $groupApplications = $groupData[0]->group_applications->pluck('application_id');
+            if ($groupApplications) {
+
+                $groupApplications = $groupApplications->toArray();
+            }
+        }
+
         $promoGroups = [50];
         $groups = array_merge($groups, $promoGroups);
 
@@ -252,19 +249,18 @@ public function cr_hold_promo($group = null)
         $viewStatuses = $this->getViewStatuses($groups, $id);
         $viewStatuses = $statusPromoView->merge($viewStatuses)->unique();
         $viewStatuses->push(config('change_request.status_ids.cr_manager_review'));
-		if(request()->has('check_business'))
-		{
-			$viewStatuses->push(config('change_request.status_ids.business_test_case_approval'));
-			$viewStatuses->push(config('change_request.status_ids.business_uat_sign_off'));
-			$viewStatuses->push(config('change_request.status_ids.pending_business'));
-			$viewStatuses->push(config('change_request.status_ids.pending_business_feedback'));
-			//dd($viewStatuses);
-		}
+        if (request()->has('check_business')) {
+            $viewStatuses->push(config('change_request.status_ids.business_test_case_approval'));
+            $viewStatuses->push(config('change_request.status_ids.business_uat_sign_off'));
+            $viewStatuses->push(config('change_request.status_ids.pending_business'));
+            $viewStatuses->push(config('change_request.status_ids.pending_business_feedback'));
+            // dd($viewStatuses);
+        }
 
         $changeRequest = Change_request::with('category')
             ->with('attachments', function ($q) use ($groups) {
                 $q->with('user');
-                if (!in_array(8, $groups)) {
+                if (! in_array(8, $groups)) {
                     $q->whereHas('user', function ($q) {
                         if (Auth::user()->flag == '0') {
                             $q->where('flag', Auth::user()->flag);
@@ -277,37 +273,37 @@ public function cr_hold_promo($group = null)
                 $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($groups) {
                     $qq->whereIn('group_id', $groups)->orWhereNull('group_id');
                 })
-                      ->whereIn('new_status_id', $viewStatuses);
-						if(!request()->has('check_business')){
-							$query->whereHas('status.group_statuses', function ($query) use ($groups) {
-								if (!in_array(19, $groups) && !in_array(8, $groups)) {
-									$query->whereIn('group_id', $groups);
-								}
-								$query->where('type', 2);
-							});
-						}
+                    ->whereIn('new_status_id', $viewStatuses);
+                if (! request()->has('check_business')) {
+                    $query->whereHas('status.group_statuses', function ($query) use ($groups) {
+                        if (! in_array(19, $groups) && ! in_array(8, $groups)) {
+                            $query->whereIn('group_id', $groups);
+                        }
+                        $query->where('type', 2);
+                    });
+                }
             });
-            $changeRequest = $changeRequest->where('id', $id);
-			if($groupApplications && !request()->has('check_business'))
-			{
-				//$changeRequest = $changeRequest->whereIn('application_id', $groupApplications);
-				$changeRequest = $changeRequest->whereHas('change_request_custom_fields', function($q) use($groupApplications) {
-					$q->whereIn('change_request_custom_fields.custom_field_name', ['application_id', 'sub_application_id'])->whereIn('change_request_custom_fields.custom_field_value', $groupApplications);
-				});
-			}
-            $changeRequest = $changeRequest->first();
+        $changeRequest = $changeRequest->where('id', $id);
+        if ($groupApplications && ! request()->has('check_business')) {
+            // $changeRequest = $changeRequest->whereIn('application_id', $groupApplications);
+            $changeRequest = $changeRequest->whereHas('change_request_custom_fields', function ($q) use ($groupApplications) {
+                $q->whereIn('change_request_custom_fields.custom_field_name', ['application_id', 'sub_application_id'])->whereIn('change_request_custom_fields.custom_field_value', $groupApplications);
+            });
+        }
+        $changeRequest = $changeRequest->first();
 
         if ($changeRequest) {
             $currentStatus = $this->getCurrentStatus($changeRequest, $viewStatuses);
-			//dd(,$currentStatus);
+            // dd(,$currentStatus);
             $changeRequest->current_status = $currentStatus;
             $changeRequest->set_status = $this->getSetStatus($currentStatus, $changeRequest->workflow_type_id);
-            
+
             if ($assignedUser = $this->getAssignToUsers()) {
                 $changeRequest->assign_to = $assignedUser;
             }
         }
-        //dd($changeRequest);
+
+        // dd($changeRequest);
         return $changeRequest;
     }
 
@@ -315,11 +311,11 @@ public function cr_hold_promo($group = null)
     {
         $groups = auth()->user()->user_groups->pluck('group_id')->toArray();
         $viewStatuses = $this->getViewStatuses($groups);
-        
+
         $changeRequest = Change_request::with(['category', 'defects'])
             ->with('attachments', function ($q) use ($groups) {
                 $q->with('user');
-                if (!in_array(8, $groups)) {
+                if (! in_array(8, $groups)) {
                     $q->whereHas('user', function ($q) {
                         if (Auth::user()->flag == '0') {
                             $q->where('flag', Auth::user()->flag);
@@ -350,16 +346,16 @@ public function cr_hold_promo($group = null)
         $crs = new Change_request();
 
         foreach ($requestQuery as $key => $fieldValue) {
-            if (!empty($fieldValue)) {
+            if (! empty($fieldValue)) {
                 $crs = $this->applySearchFilter($crs, $key, $fieldValue);
             }
         }
 
-        \DB::enableQueryLog();
+        DB::enableQueryLog();
         $results = $getAll == 0 ? $crs->paginate(10) : $crs->get();
-        $queries = \DB::getQueryLog();
+        $queries = DB::getQueryLog();
         $lastQuery = end($queries);
-        \Log::info('Last Query: ', $lastQuery);
+        Log::info('Last Query: ', $lastQuery);
 
         return $results;
     }
@@ -367,6 +363,7 @@ public function cr_hold_promo($group = null)
     public function searchChangeRequest($id)
     {
         $userFlag = Auth::user()->flag;
+
         return Change_request::with('Release')
             ->where('id', $id)
             ->orWhere('cr_no', $id)
@@ -385,11 +382,19 @@ public function cr_hold_promo($group = null)
         return Change_request::with('release')->find($id);
     }
 
+    public function getCurrentStatusForDivision($changeRequest)
+    {
+        $status = Change_request_statuse::where('cr_id', $changeRequest->id)->whereRaw('CAST(active AS CHAR) = ?', ['1'])->first();
+
+        return $status;
+
+    }
+
     protected function applySearchFilter($query, $key, $value)
     {
         switch ($key) {
             case 'id':
-                return $query->where(function($q) use ($value) {
+                return $query->where(function ($q) use ($value) {
                     $q->where('id', $value)->orWhere('cr_no', $value);
                 });
             case 'title':
@@ -421,7 +426,7 @@ public function cr_hold_promo($group = null)
 
     protected function resolveGroup($group = null)
     {
-        if (!empty($group)) {
+        if (! empty($group)) {
             return $group;
         }
 
@@ -450,14 +455,14 @@ public function cr_hold_promo($group = null)
         }
 
         $viewStatuses = $viewStatuses->groupBy('status_id')->get()->pluck('status_id')->toArray();
-        
+
         // Handle technical team status
         if ($id) {
             $technicalCrTeamStatus = $this->getTechnicalTeamCurrentStatus($id);
-            //dd($technicalCrTeamStatus, $viewStatuses);
+            // dd($technicalCrTeamStatus, $viewStatuses);
             if ($technicalCrTeamStatus && in_array($technicalCrTeamStatus->current_status_id, $viewStatuses)) {
                 $viewStatuses = [$technicalCrTeamStatus->current_status_id];
-                //dd($viewStatuses);
+                // dd($viewStatuses);
             }
         }
 
@@ -467,14 +472,14 @@ public function cr_hold_promo($group = null)
     protected function getTechnicalTeamCurrentStatus($id)
     {
         $group = $this->resolveGroup();
-        $technicalCr = TechnicalCr::where("cr_id", $id)->whereRaw('CAST(status AS CHAR) = ?', ['0'])->first();
-        //dd($technicalCr);
-        
+        $technicalCr = TechnicalCr::where('cr_id', $id)->whereRaw('CAST(status AS CHAR) = ?', ['0'])->first();
+        // dd($technicalCr);
+
         if ($technicalCr) {
             return $technicalCr->technical_cr_team()
                 ->where('group_id', $group)
-                //->where('status', '0')
-				->whereRaw('CAST(status AS CHAR) = ?', ['0'])
+                // ->where('status', '0')
+                ->whereRaw('CAST(status AS CHAR) = ?', ['0'])
                 ->first();
         }
 
@@ -483,59 +488,49 @@ public function cr_hold_promo($group = null)
 
     protected function getCurrentStatus($changeRequest, $viewStatuses)
     {
-		if(request()->reference_status)		
-		{
-                return Change_request_statuse::find(request()->reference_status);
-		}
-		else
-		{
-			return Change_request_statuse::where('cr_id', $changeRequest->id)
+        if (request()->reference_status) {
+            return Change_request_statuse::find(request()->reference_status);
+        }
+
+        return Change_request_statuse::where('cr_id', $changeRequest->id)
             ->whereIn('new_status_id', $viewStatuses)
-            //->where('active', '1')
-			//->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-			->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+        // ->where('active', '1')
+        // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->first();
-		}
-        
-    }
-	
-	public function getCurrentStatusForDivision($changeRequest)
-    {
-        $status = Change_request_statuse::where('cr_id', $changeRequest->id)->whereRaw('CAST(active AS CHAR) = ?', ['1'])->first();
-        return $status;
-        
+
     }
 
     protected function getCurrentStatusCab($changeRequest, $viewStatuses)
     {
         return Change_request_statuse::where('cr_id', $changeRequest->id)
-            //->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-			->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->first();
     }
 
     protected function getSetStatus($currentStatus, $typeId)
     {
-        if (!$currentStatus) {
+        if (! $currentStatus) {
             return collect();
         }
 
         $statusId = $currentStatus->new_status_id;
         $previousStatusId = $currentStatus->old_status_id;
-        
+
         return NewWorkFlow::where('from_status_id', $statusId)
-            ->where(function($query) use ($previousStatusId) {
+            ->where(function ($query) use ($previousStatusId) {
                 $query->whereNull('previous_status_id')
-                      ->orWhere('previous_status_id', 0)
-                      ->orWhere('previous_status_id', $previousStatusId);
+                    ->orWhere('previous_status_id', 0)
+                    ->orWhere('previous_status_id', $previousStatusId);
             })
             ->whereHas('workflowstatus', function ($q) {
                 $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
             })
             ->where('type_id', $typeId)
-            //->where('active', '1')
-			//->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-			->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            // ->where('active', '1')
+            // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->orderBy('id', 'DESC')
             ->get();
     }
@@ -546,7 +541,7 @@ public function cr_hold_promo($group = null)
         $assignTo = User::whereHas('user_report_to', function ($q) use ($userId) {
             $q->where('report_to', $userId)->where('user_id', '!=', $userId);
         })->get();
-        
+
         return count($assignTo) > 0 ? $assignTo : null;
     }
 }
