@@ -21,9 +21,9 @@ class NotificationTemplatesController extends Controller
         $this->NotificationTemplates = $NotificationTemplates::index();
         $this->view = 'NotificationTemplates';
         $view = 'NotificationTemplates';
-        $route = 'NotificationTemplates';
-        $OtherRoute = 'NotificationTemplates';
-
+        $route = 'notification_templates';
+        $OtherRoute = 'notification_templates';
+        
         $title = 'Notification Templates';
         $form_title = 'Notification Templates';
         view()->share(compact('view', 'route', 'title', 'form_title', 'OtherRoute'));
