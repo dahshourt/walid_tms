@@ -17,7 +17,13 @@ class SlaCalculation extends Model
         'director_sla_time',
         'type',
         'status_id',
-        'group_id',
+        'unit_id',
+        'unit_notification',
+        'division_notification',
+        'director_notification',
+        'sla_type_unit',
+        'sla_type_division',
+        'sla_type_director'
     ];
 
     /**
@@ -31,8 +37,9 @@ class SlaCalculation extends Model
     /**
      * Relationship with Group.
      */
-    public function group()
+    public function unit()
     {
-        return $this->belongsTo(Group::class, 'group_id');
+        return $this->belongsTo(Unit::class, 'unit_id');
     }
+
 }

@@ -69,7 +69,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 <script>
-$(document).ready(function () {
+/*$(document).ready(function () {
     $('#status_id').on('change', function () {
 	 
         var statusId = $(this).val();
@@ -94,5 +94,5 @@ $(document).ready(function () {
             });
         }
     });
-});
+});*/
 </script>

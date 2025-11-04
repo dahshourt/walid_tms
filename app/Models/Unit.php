@@ -14,4 +14,19 @@ class Unit extends Model
         'manager_name',
         'status',
     ];
+
+
+     public function group()
+    {
+        return $this->belongsTo(Group::class, 'id');
+    }
+
+    /**
+     * Relationship with SLA Calculations.
+     * (Each unit may have many SLA rules)
+     */
+    public function slaCalculations()
+    {
+        return $this->hasMany(SlaCalculation::class, 'unit_id');
+    }
 }
