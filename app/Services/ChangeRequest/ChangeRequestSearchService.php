@@ -10,7 +10,6 @@ use App\Models\NewWorkFlow;
 use App\Models\TechnicalCr;
 use App\Models\User;
 use Auth;
-use Carbon\Carbon;
 
 class ChangeRequestSearchService
 {
@@ -373,41 +372,6 @@ class ChangeRequestSearchService
 
         return $status;
 
-    }
-
-    protected function applySearchFilter($query, $key, $value)
-    {
-        dump($key, $value);
-        switch ($key) {
-            case 'id':
-                return $query->where(function ($q) use ($value) {
-                    $q->where('id', $value)->orWhere('cr_no', $value);
-                });
-            case 'title':
-                return $query->where($key, 'LIKE', "%$value%");
-            case 'created_at':
-            case 'updated_at':
-            case 'uat_date':
-            case 'release_delivery_date':
-            case 'release_receiving_date':
-            case 'te_testing_date':
-                return $query->whereDate($key, '=', Carbon::createFromTimestamp($value / 1000)->format('Y-m-d'));
-            case 'greater_than_date':
-                return $query->whereDate('updated_at', '>=', Carbon::createFromTimestamp($value / 1000)->format('Y-m-d'));
-            case 'less_than_date':
-                return $query->whereDate('updated_at', '<=', Carbon::createFromTimestamp($value / 1000)->format('Y-m-d'));
-            case 'status_id':
-            case 'new_status_id':
-                return $query->whereHas('CurrentRequestStatuses', function ($q) use ($value) {
-                    $q->where('new_status_id', $value);
-                });
-            case 'assignment_user_id':
-                return $query->whereHas('CurrentRequestStatuses', function ($q) use ($value) {
-                    $q->where('assignment_user_id', $value)->where('active', 1);
-                });
-            default:
-                return $query->where($key, $value);
-        }
     }
 
     protected function resolveGroup($group = null)
