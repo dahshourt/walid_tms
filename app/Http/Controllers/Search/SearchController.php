@@ -10,6 +10,7 @@ use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use App\Http\Resources\AdvancedSearchRequestResource;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 // use App\Models\User;
 // use App\Models\change_request;
@@ -119,7 +120,7 @@ class SearchController extends Controller
         return view("$this->view.AdvancedSearchResult", ['totalCount' => $totalCount, 'items' => $collection, 'crs_in_queues' => $crs_in_queues]);
     }
 
-    public function AdvancedSearchResultExport(Request $request)
+    public function AdvancedSearchResultExport(): BinaryFileResponse
     {
         $this->authorize('Access Advanced Search');
 
