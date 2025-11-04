@@ -146,14 +146,14 @@ class CustomFieldGroupTypeController extends Controller
         }
         $CustomFields = $this->custom_field_group_type->getAllCustomFieldsWithSelectedByformType($column, $value);
         $fields = json_decode($CustomFields);
-        $statuses = (new StatusRepository)->getAll();
-        $priorities = (new priorityRepository)->getAll();
-        $applications = (new ApplicationRepository)->getAll();
-        $parents = (new ParentRepository)->getAll();
-        $categories = (new CategoreyRepository)->getAll();
+        $statuses = app(StatusRepository::class)->getAll();
+        $priorities = app(priorityRepository::class)->getAll();
+        $applications = app(ApplicationRepository::class)->getAll();
+        $parents = app(ParentRepository::class)->getAll();
+        $categories = app(CategoreyRepository::class)->getAll();
         // Ensure $CustomFields is not an array of arrays if not expected
-        $units = (new UnitRepository)->getAll();
-        $workflows = (new Workflow_type_repository)->get_all_active_workflow();
+        $units = app(UnitRepository::class)->getAll();
+        $workflows = app(Workflow_type_repository::class)->get_all_active_workflow();
 
         return view('search.advanced_search', compact('fields', 'statuses', 'priorities', 'applications', 'parents', 'categories', 'units', 'workflows'));
 

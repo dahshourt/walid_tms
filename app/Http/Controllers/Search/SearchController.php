@@ -8,7 +8,6 @@ use App\Factories\NewWorkFlow\NewWorkFlowFactory;
 use App\Http\Controllers\Controller;
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use App\Http\Resources\AdvancedSearchRequestResource;
-use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -97,7 +96,6 @@ class SearchController extends Controller
     public function AdvancedSearchResult()
     {
         $this->authorize('Access Advanced Search'); // permission check
-        $alldata = $this->changerequest->AdvancedSearchResult(1);
 
         // Retrieve the paginated collection from the model
         $collection = $this->changerequest->AdvancedSearchResult()->appends(request()->query());
@@ -106,17 +104,14 @@ class SearchController extends Controller
         if (! ($collection instanceof \Illuminate\Pagination\LengthAwarePaginator)) {
             abort(500, 'Expected paginated collection from AdvancedSearchResult.');
         }
+
         $totalCount = $collection->total();
         // Transform the collection into resource format
         $collection = AdvancedSearchRequestResource::collection($collection);
-        //  $collection = $collection->toArray(request());
 
         $r = new ChangeRequestRepository();
         $crs_in_queues = $r->getAll()->pluck('id');
 
-        // Pass the transformed data to the view
-        // session(['advanced_search_items' => $alldata]);
-        // session()->put('advanced_search_items', $alldata);
         return view("$this->view.AdvancedSearchResult", ['totalCount' => $totalCount, 'items' => $collection, 'crs_in_queues' => $crs_in_queues]);
     }
 
