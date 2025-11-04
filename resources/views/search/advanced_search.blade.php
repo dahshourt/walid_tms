@@ -56,10 +56,18 @@
                                                     if ($customField->name === 'updated_at') { $updatedField = $field; }
                                                     continue;
                                                 }
+                                                // Defaults for rendering
+                                                $renderName = $customField->name;
+                                                $renderLabel = $customField->label;
+                                                // Remap CR ID -> CR No. with input name cr_no
+                                                if ($labelLower === 'cr id' || strtolower($customField->name) === 'cr_id') {
+                                                    $renderName = 'cr_no';
+                                                    $renderLabel = 'CR No.';
+                                                }
                                             @endphp
 
                                             <div class="{{ 'form-group ' . $fieldClasses . (in_array($customField->name, ['created_at','updated_at']) ? ' p-3 border rounded shadow-sm' : '') }}">
-                                                <label class="{{ in_array($customField->name, ['created_at','updated_at']) ? 'w-100 text-center' : '' }}" for="{{ $customField->name }}">{{ $customField->label }}</label>
+                                                <label class="{{ in_array($customField->name, ['created_at','updated_at']) ? 'w-100 text-center' : '' }}" for="{{ $renderName }}">{{ $renderLabel }}</label>
 
                                                 @if (in_array($customField->name, ['created_at', 'updated_at']))
                                                     <div class="d-flex flex-nowrap align-items-center">
@@ -84,8 +92,8 @@
                                                 @elseif ($customField->type == 'select')
                                                     <select
                                                         class="form-control form-control-solid advanced_search_field {{ in_array($customField->name, ['new_status_id','application_id']) ? 'select2' : '' }}"
-                                                        id="{{ $customField->name }}"
-                                                        name="{{ $customField->name }}"
+                                                        id="{{ $renderName }}"
+                                                        name="{{ $renderName }}"
                                                         {{ $customField->name === 'new_status_id' ? 'data-placeholder=\'Select CR status\'' : '' }}
                                                         {{ $customField->name === 'application_id' ? 'data-placeholder=\'Select Target System\'' : '' }}
                                                         style="width:100%;"
@@ -145,21 +153,21 @@
                                                 @elseif ($customField->type == 'textArea')
                                                     <textarea
                                                         class="form-control form-control-solid advanced_search_field"
-                                                        id="{{ $customField->name }}"
-                                                        name="{{ $customField->name }}"
-                                                        placeholder="{{ $customField->label }}"
+                                                        id="{{ $renderName }}"
+                                                        name="{{ $renderName }}"
+                                                        placeholder="{{ $renderLabel }}"
                                                         rows="4"
-                                                    >{{ old($customField->name) }}</textarea>
+                                                    >{{ old($renderName) }}</textarea>
                                                 @elseif ($customField->type == 'text' || $customField->type == 'input')
                                                            
                                                                 @php $isCrIdField = in_array(strtolower($customField->name), ['cr_id','id']) || ($labelLower === 'cr id'); @endphp
                                                                 <input
                                                                     type="{{ $isCrIdField ? 'number' : 'text' }}"
                                                                     class="form-control form-control-solid advanced_search_field"
-                                                                    id="{{ $customField->name }}"
-                                                                    name="{{ $customField->name }}"
-                                                                    placeholder="{{ $customField->label }}"
-                                                                    value="{{ old($customField->name) }}"
+                                                                    id="{{ $renderName }}"
+                                                                    name="{{ $renderName }}"
+                                                                    placeholder="{{ $renderLabel }}"
+                                                                    value="{{ old($renderName) }}"
                                                                 >
                                                          
                                                     
@@ -167,10 +175,10 @@
                                                     <input
                                                         type="number"
                                                         class="form-control form-control-solid advanced_search_field"
-                                                        id="{{ $customField->name }}"
-                                                        name="{{ $customField->name }}"
-                                                        placeholder="{{ $customField->label }}"
-                                                        value="{{ old($customField->name) }}"
+                                                        id="{{ $renderName }}"
+                                                        name="{{ $renderName }}"
+                                                        placeholder="{{ $renderLabel }}"
+                                                        value="{{ old($renderName) }}"
                                                     >
                                                 @elseif ($customField->type == 'date')
                                                     <input
