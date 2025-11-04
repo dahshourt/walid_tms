@@ -121,18 +121,9 @@ class SearchController extends Controller
 
     public function AdvancedSearchResultExport(Request $request)
     {
-        // dd($request->all());
-        $this->authorize('Access Advanced Search'); // permission check
-
-        $alldata = $this->changerequest->AdvancedSearchResult(1);
-        $items = $alldata;
-        // dd($items);
-        // $items = \Session::get('advanced_search_items');
-
-        // If you want to return the view with items (for debugging purposes):
-        // return view("$this->view.AdvancedSearchResult", ['items' => $collection]);
+        $this->authorize('Access Advanced Search');
 
         // Export the filtered results as Excel
-        return Excel::download(new TableExport($items), 'advanced_search_results.xlsx');
+        return Excel::download(new TableExport, 'advanced_search_results.xlsx');
     }
 }
