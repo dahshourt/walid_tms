@@ -91,18 +91,14 @@
                                                     </div>
                                                 @elseif ($customField->type == 'select')
                                                     <select
-                                                        class="form-control form-control-solid advanced_search_field {{ in_array($customField->name, ['new_status_id','application_id']) ? 'select2' : '' }}"
+                                                        class="form-control form-control-solid advanced_search_field select2"
                                                         id="{{ $renderName }}"
-                                                        name="{{ $renderName }}{{ in_array($customField->name, ['new_status_id','application_id']) ? '[]' : '' }}"
-                                                        {{ in_array($customField->name, ['new_status_id','application_id']) ? 'multiple' : '' }}
-                                                        {{ $customField->name === 'new_status_id' ? 'data-placeholder=\'Select CR status\'' : '' }}
-                                                        {{ $customField->name === 'application_id' ? 'data-placeholder=\'Select Target System\'' : '' }}
+                                                        name="{{ $renderName }}[]"
+                                                        multiple
+                                                        data-placeholder="Select {{ $renderLabel }}"
                                                         style="width:100%;"
                                                     >
-                                                        @if(!in_array($customField->name, ['new_status_id','application_id']))
-                                                            <option value="">Select {{ $customField->label }}</option>
-                                                        @endif
-                                                        <!-- Fetch options from related table or predefined options -->
+                                                        <!-- options generated below -->
                                                         @if($customField->name=="new_status_id")
                                                         
                                                         @foreach ($statuses as $value)
@@ -328,7 +324,7 @@
 <script>
     // Avoid horizontal scrollbars when Select2 opens
     (function(){
-        var css = '.select2-container{max-width:100%} .select2-dropdown{max-width:100vw}';
+        var css = 'html,body{overflow-x:hidden} .select2-container{max-width:100%} .select2-dropdown{max-width:100vw;overflow-x:hidden}';
         var style = document.createElement('style');
         style.type = 'text/css';
         style.appendChild(document.createTextNode(css));
@@ -336,34 +332,15 @@
     })();
     $(function(){
         if ($.fn.select2) {
-            var $status = $('#new_status_id');
-            if ($status.length) {
-                $status.select2({
-                    placeholder: 'Select CR status',
+            $('.select2').each(function(){
+                var $el = $(this);
+                $el.select2({
+                    placeholder: $el.data('placeholder') || 'Select',
                     allowClear: true,
                     width: '100%',
-                    dropdownParent: $('#advanced_search'),
-                    multiple: true
+                    dropdownParent: $('#advanced_search')
                 });
-                // Set old values if any
-                @if(old('new_status_id'))
-                    $status.val(@json(old('new_status_id'))).trigger('change');
-                @endif
-            }
-            var $application = $('#application_id');
-            if ($application.length) {
-                $application.select2({
-                    placeholder: 'Select Target System',
-                    allowClear: true,
-                    width: '100%',
-                    dropdownParent: $('#advanced_search'),
-                    multiple: true
-                });
-                // Set old values if any
-                @if(old('application_id'))
-                    $application.val(@json(old('application_id'))).trigger('change');
-                @endif
-            }
+            });
         }
         $('#reset_advanced_search').on('click', function(){
             var $form = $('#advanced_search');
