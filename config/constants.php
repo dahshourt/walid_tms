@@ -40,6 +40,12 @@ return [
 			'pmo_team' => 'IT.PMO@te.eg',
 			
 		],
+	'group_names' =>
+	    [
+			'cr_team' => 'CR Team Admin',
+			'sa_team' => 'Design team',
+			'qc_team' => 'QC team',
+		],	
 	'division_managers_mails' =>
 		[
 			//'anan.latif@te.eg', 
@@ -53,4 +59,8 @@ return [
 			'notify_division_manager_default' => 'CR Created - Notify Division Manager (Regular)',
 			'notify_division_manager_promo' => 'CR Created - Notify Division Manager (Promo)',
 		]
+
+
 ];
+
+

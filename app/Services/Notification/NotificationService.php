@@ -2,12 +2,12 @@
 
 namespace App\Services\Notification;
 
-use App\Mail\DynamicNotification;
-use App\Models\NotificationLog;
 use App\Models\NotificationRule;
-use Exception;
+use App\Models\NotificationLog;
 use Illuminate\Support\Facades\Mail;
+use App\Mail\DynamicNotification;
 use App\Models\User;
+use App\Models\Group;
 
 class NotificationService
 {
@@ -16,8 +16,8 @@ class NotificationService
     public function handleEvent($event)
     {
         $eventClass = get_class($event);
-        // dd($event, $event->request->all());
-
+        //dd($event, $event->request->all());
+        
         // Get all active rules for this event
         $rules = NotificationRule::with(['template', 'recipients'])
             ->where('event_class', $eventClass)
@@ -29,7 +29,7 @@ class NotificationService
         foreach ($rules as $rule) {
             // Check if conditions match
             if ($this->evaluateConditions($rule, $event)) {
-                // dd($rule);
+                //dd($rule);
                 $this->processNotification($rule, $event);
             }
         }
@@ -37,34 +37,34 @@ class NotificationService
 
     protected function evaluateConditions($rule, $event)
     {
-
+        
         if (empty($rule->conditions)) {
             return true; // No conditions = always execute
         }
 
         $conditions = $rule->conditions;
-
+        
         // Check workflow_type condition
         if (isset($conditions['workflow_type'])) {
             if ($event->changeRequest->workflow_type_id != $conditions['workflow_type']) {
                 return false;
             }
         }
-
+        
         // Check workflow_type_not condition
         if (isset($conditions['workflow_type_not'])) {
             if ($event->changeRequest->workflow_type_id == $conditions['workflow_type_not']) {
                 return false;
             }
         }
-
+    
         // Check new_status_id (for status update events)
         if (isset($conditions['new_status_id'])) {
-            if (! isset($event->newStatusIds) || ! in_array($conditions['new_status_id'], $event->newStatusIds)) {
+            if (!isset($event->newStatusIds) || !in_array($conditions['new_status_id'], $event->newStatusIds)) {
                 return false;
             }
         }
-
+        
         return true;
     }
 
@@ -74,11 +74,11 @@ class NotificationService
         if (isset($event->active_flag) && $event->active_flag != '1') {
             return; // Skip notification if status is not active
         }
-
+        
         // Resolve recipients (get the recipients that will receive the notification)
         $recipients = $this->resolveRecipients($rule, $event);
-        // dd($recipients);
-
+        //dd($recipients);
+        
         if (empty($recipients['to'])) {
             return; // No recipients no notification will be sent
         }
@@ -97,10 +97,10 @@ class NotificationService
                 ->queue(new DynamicNotification($rendered['subject'], $rendered['body']));
 
             $log->update(['status' => 'queued']);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $log->update([
                 'status' => 'failed',
-                'error_message' => $e->getMessage(),
+                'error_message' => $e->getMessage()
             ]);
         }
     }
@@ -112,14 +112,14 @@ class NotificationService
         foreach ($rule->recipients as $recipient) {
             $emails = $this->getRecipientEmails($recipient, $event);
             $resolved[$recipient->channel] = array_merge(
-                $resolved[$recipient->channel],
+                $resolved[$recipient->channel], 
                 $emails
             );
         }
 
         return $resolved;
     }
-
+    
     // the recipients emails
     protected function getRecipientEmails($recipient, $event)
     {
@@ -127,7 +127,7 @@ class NotificationService
             case 'cr_creator':
                 $this->toMailUser = $event->creator->email ?? $event->changeRequest->requester_email;
                 return [$event->creator->email ?? $event->changeRequest->requester_email];
-
+            
             case 'division_manager':
                 // Get division manager from statusData or from CR model
                 if (isset($event->statusData['division_manager'])) {
@@ -137,16 +137,14 @@ class NotificationService
                 // get it from the model
                 if (isset($event->changeRequest->division_manager_id)) {
                     $dm = $event->changeRequest->division_manager;
-
                     return $dm ? [$dm->email] : [];
                 }
-
                 return [];
-                // in case sent to specific email
+            // in case sent to specific email
             case 'static_email':
                 $this->toMailUser = $recipient->recipient_identifier;
                 return [$recipient->recipient_identifier];
-
+            
             case 'user':
                 $user = User::find($recipient->recipient_identifier);
                 $this->toMailUser = $user->email;
@@ -156,7 +154,7 @@ class NotificationService
                 $group = Group::find($recipient->recipient_identifier);
                 $this->toMailUser = $group->head_group_email;
                 return $group ? [$group->head_group_email] : [];
-
+            
             case 'developer':
                 if (isset($event->request->developer_id)) {
                     $dev = User::find($event->request->developer_id);
@@ -169,7 +167,7 @@ class NotificationService
                     return $dev ? [$dev] : [];
                 }
                 return [];
-
+            
             case 'tester':
                 if (isset($event->request->tester_id)) {
                     $tester = User::find($event->request->tester_id);
@@ -210,14 +208,18 @@ class NotificationService
                 return [];
 
             case 'cr_team':
-                //dd(config('constants.mails.cr_team'));
-                return [config('constants.mails.cr_team')];
+                //return [config('constants.mails.cr_team')];
+				$group = Group::where('title',config('constants.group_names.cr_team'))->first();
+                return $group ? [$group->head_group_email] : [config('constants.mails.cr_team')];
             
             case 'qc_team':
-                return [config('constants.mails.qc_team')];
-            
+                //return [config('constants.mails.qc_team')];
+				$group = Group::where('title',config('constants.group_names.qc_team'))->first();
+                return $group ? [$group->head_group_email] : [config('constants.mails.qc_team')];
             case 'sa_team':
-                return [config('constants.mails.sa_team')];
+                //return [config('constants.mails.sa_team')];
+				$group = Group::where('title',config('constants.group_names.sa_team'))->first();
+                return $group ? [$group->head_group_email] : [config('constants.mails.sa_team')];
             
             case 'qa_team':
                 return [config('constants.mails.qa_team')];
@@ -235,8 +237,8 @@ class NotificationService
                     $group = Group::find($group_id);
                     return $group ? [$group->head_group_email] : [];
                 }
-
                 return [];
+
             // Add more types as needed
             default:
                 return [];
@@ -246,7 +248,7 @@ class NotificationService
     protected function renderTemplate($template, $event, $rule)
     {
         $placeholders = $this->extractPlaceholders($event, $rule);
-
+        
         $subject = $this->replacePlaceholders($template->subject, $placeholders);
         $body = $this->replacePlaceholders($template->body, $placeholders);
 
@@ -258,7 +260,7 @@ class NotificationService
         // Extract data from event
         $cr = $event->changeRequest;
         $statusData = $event->statusData ?? [];
-
+        
         // Get creator/requester name
         $creatorName = 'User';
         if ($event->creator && isset($event->creator->user_name)) {
@@ -268,7 +270,7 @@ class NotificationService
         } elseif (isset($cr->requester_name)) {
             $creatorName = $cr->requester_name;
         }
-
+        
         // Extract first name from email if available
         $firstName = $this->toMailUser;
         $email_parts = explode('.', explode('@', $this->toMailUser)[0]);
@@ -296,32 +298,32 @@ class NotificationService
             $email_parts = explode('.', explode('@', $divisionManagerEmail)[0]);
             $divisionManagerName = ucfirst($email_parts[0]);
         }
-
+        
         // CR link based on workflow type
         $crLink = route('show.cr', $cr->id);
-        // if the rule is notify devision manager
+        // if the rule is notify devision manager 
         if ($rule->name == config('constants.rules.notify_division_manager_default')) {
             $crLink = route('edit.cr', ['id' => $cr->id, 'check_dm' => 1]);
         }
-
+        
         // Get QC email (RPA) and ticketing dev from config
         $qcEmail = config('constants.mails.qc_mail', '');
         $ticketingDev = config('constants.mails.ticketing_dev_mail', '');
         $replyToEmail = config('mail.from.address', '');
         $subject = "Re: CR #{$cr->cr_no} - Awaiting Your Approval";
-
+        
         $approveLink = "mailto:{$qcEmail}?subject=" . rawurlencode($subject) . "&cc={$replyToEmail};{$ticketingDev}&body=approved";
         $rejectLink = "mailto:{$qcEmail}?subject=" . rawurlencode($subject) . "&cc={$replyToEmail};{$ticketingDev}&body=rejected";
-
+        
         // Get old and new status names for status update events
         $oldStatus = '';
         $newStatus = '';
-
+        
         if (isset($statusData['old_status_id'])) {
             $oldStatusModel = \App\Models\Status::find($statusData['old_status_id']);
             $oldStatus = $oldStatusModel->status_name ?? '';
         }
-
+        
         // For new status, use the specific status from the rule condition (not all statuses)
         // This shows only the relevant status that triggered this notification
         $conditions = $rule->conditions ?? [];
@@ -329,12 +331,12 @@ class NotificationService
             // Use the specific status from the condition
             $newStatusModel = \App\Models\Status::find($conditions['new_status_id']);
             $newStatus = $newStatusModel->status_name ?? '';
-        } elseif (isset($event->newStatusIds) && ! empty($event->newStatusIds)) {
+        } elseif (isset($event->newStatusIds) && !empty($event->newStatusIds)) {
             // Fallback: use first status from workflow if no condition specified
             $newStatusModel = \App\Models\Status::whereIn('id', $event->newStatusIds)->first();
             $newStatus = $newStatusModel->status_name ?? '';
         }
-
+        
         // Get group name for group notifications
         $groupName = '';
         if (isset($cr->application_id)) {
@@ -344,7 +346,7 @@ class NotificationService
                 $groupName = $group ? $group->title : '';
             }
         }
-
+        
         return [
             'cr_no' => $cr->cr_no,
             'cr_id' => $cr->id,
@@ -362,7 +364,7 @@ class NotificationService
             'approve_link' => $approveLink,
             'reject_link' => $rejectLink,
             'workflow_type_id' => $cr->workflow_type_id ?? '',
-
+            
         ];
     }
 
@@ -371,7 +373,6 @@ class NotificationService
         foreach ($placeholders as $key => $value) {
             $text = str_replace('{{' . $key . '}}', $value, $text);
         }
-
         return $text;
     }
 
@@ -395,3 +396,4 @@ class NotificationService
         ]);
     }
 }
+
