@@ -392,7 +392,7 @@ class Change_request extends Model
                 $query->where('title', 'like', "%{$value}%");
             })
             ->when(request()->query('application_id'), function (Builder $query, $value) {
-                $query->where('application_id', $value);
+                $query->whereIn('application_id', (array) $value);
             })
             ->when(request()->query('category_id'), function (Builder $query, $value) {
                 $query->where('category_id', $value);
@@ -425,7 +425,7 @@ class Change_request extends Model
             })
             ->when(request()->query('new_status_id'), function (Builder $query, $value) {
                 $query->whereHas('CurrentRequestStatuses', function (Builder $query) use ($value) {
-                    $query->where('new_status_id', $value);
+                    $query->whereIn('new_status_id', (array) $value);
                 });
             });
     }

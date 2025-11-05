@@ -93,12 +93,15 @@
                                                     <select
                                                         class="form-control form-control-solid advanced_search_field {{ in_array($customField->name, ['new_status_id','application_id']) ? 'select2' : '' }}"
                                                         id="{{ $renderName }}"
-                                                        name="{{ $renderName }}"
+                                                        name="{{ $renderName }}{{ in_array($customField->name, ['new_status_id','application_id']) ? '[]' : '' }}"
+                                                        {{ in_array($customField->name, ['new_status_id','application_id']) ? 'multiple' : '' }}
                                                         {{ $customField->name === 'new_status_id' ? 'data-placeholder=\'Select CR status\'' : '' }}
                                                         {{ $customField->name === 'application_id' ? 'data-placeholder=\'Select Target System\'' : '' }}
                                                         style="width:100%;"
                                                     >
-                                                        <option value="">Select {{ $customField->label }}</option>
+                                                        @if(!in_array($customField->name, ['new_status_id','application_id']))
+                                                            <option value="">Select {{ $customField->label }}</option>
+                                                        @endif
                                                         <!-- Fetch options from related table or predefined options -->
                                                         @if($customField->name=="new_status_id")
                                                         
@@ -339,8 +342,13 @@
                     placeholder: 'Select CR status',
                     allowClear: true,
                     width: '100%',
-                    dropdownParent: $('#advanced_search')
+                    dropdownParent: $('#advanced_search'),
+                    multiple: true
                 });
+                // Set old values if any
+                @if(old('new_status_id'))
+                    $status.val(@json(old('new_status_id'))).trigger('change');
+                @endif
             }
             var $application = $('#application_id');
             if ($application.length) {
@@ -348,8 +356,13 @@
                     placeholder: 'Select Target System',
                     allowClear: true,
                     width: '100%',
-                    dropdownParent: $('#advanced_search')
+                    dropdownParent: $('#advanced_search'),
+                    multiple: true
                 });
+                // Set old values if any
+                @if(old('application_id'))
+                    $application.val(@json(old('application_id'))).trigger('change');
+                @endif
             }
         }
         $('#reset_advanced_search').on('click', function(){
