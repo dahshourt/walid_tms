@@ -17,7 +17,7 @@ License: You must have a valid license purchased only from themeforest(the above
 	<head><base href="../../../">
 		<meta charset="utf-8" />
 		<title>TMS</title>
-		
+
 		<meta name="description" content="Scrollable datatables examples" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 		<link rel="canonical" href="https://keenthemes.com/metronic" />
@@ -37,7 +37,7 @@ License: You must have a valid license purchased only from themeforest(the above
 		<!--end::Global Theme Styles-->
 		<!--begin::Layout Themes(used by all pages)-->
 		<!--end::Layout Themes-->
-		
+
 
 		<link rel="shortcut icon" href="{{asset('public/logo-icon.png')}}" />
 		<style>
@@ -75,8 +75,8 @@ License: You must have a valid license purchased only from themeforest(the above
 			{
 				margin-bottom: 1.75rem;
 			}
-			
-			
+
+
 /* === Notification Wrapper (position control) === */
 .notification-wrapper {
     position: absolute;
@@ -133,7 +133,9 @@ License: You must have a valid license purchased only from themeforest(the above
 }
 
 		</style>
-		  
+
+        @stack('css')
+
 	</head>
 	<!--end::Head-->
 	<!--begin::Body-->

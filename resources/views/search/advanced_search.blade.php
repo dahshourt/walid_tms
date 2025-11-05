@@ -292,6 +292,14 @@
 <!--end::Content-->
 
 @endsection
+@push('css')
+    {{--Avoid horizontal scrollbars when Select2 opens--}}
+    <style>
+        html,body{overflow-x:hidden}
+        .select2-container{max-width:100%}
+        .select2-dropdown{max-width:100vw;overflow-x:hidden}
+    </style>
+@endpush
 @push('script')
 <script>
     function checkFields(form) {
@@ -299,57 +307,11 @@
         var filled = inputs.filter(function(){
             return $(this).val()  !== "";
         });
-        if(filled.length === 0) {
-            return false;
-        }
-        return true;
+        return filled.length !== 0;
     }
-    /*$(function(){
-        $('#advanced_search').on('submit',function(e){
-            var oneFilled = checkFields($(this));
-            if(oneFilled) {
-                $(this).submit();
-            } else {
-                e.preventDefault();
-                toastr.error('NO FIELDS FILLED OUT!');
-            }
-        });
-    }); */
-/* var hasInput=false;
-    $("#advanced_search").on("submit", function(){
-        if(!hasInput){
-    //Code: Action (like ajax...)return false;
-            event.preventDefault();
-
-            $('.advanced_search_field').each(function () {
-                    if($(this).val()  !== ""){
-                        hasInput=true;
-                    }
-                });
-            if(!hasInput){
-                alert("Please fill out or select at least one field before submitting.");
-            }
-            else{
-            $("#advanced_search").submit();
-            }
-        }
-        else{
-            $("#advanced_search").submit();
-        }
- });*/
-
 </script>
-@endpush
-@push('script')
 <script>
     // Avoid horizontal scrollbars when Select2 opens
-    (function(){
-        var css = 'html,body{overflow-x:hidden} .select2-container{max-width:100%} .select2-dropdown{max-width:100vw;overflow-x:hidden}';
-        var style = document.createElement('style');
-        style.type = 'text/css';
-        style.appendChild(document.createTextNode(css));
-        document.head.appendChild(style);
-    })();
     $(function(){
         if ($.fn.select2) {
             $('.select2').each(function(){
