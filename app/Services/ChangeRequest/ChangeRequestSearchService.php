@@ -32,17 +32,30 @@ class ChangeRequestSearchService
     {
         $group = $this->resolveGroup($group);
         $groupData = Group::find($group);
+		//dd(auth()->user(),$groupData->unit_id,$groupData);
         $groupApplications = $groupData->group_applications->pluck('application_id')->toArray();
         $viewStatuses = $this->getViewStatuses($group);
 
         $changeRequests = Change_request::with('RequestStatuses.status');
 
         if ($groupApplications) {
-            // $changeRequests = $changeRequests->whereIn('application_id', $groupApplications);
-            $changeRequests = $changeRequests->whereHas('change_request_custom_fields', function ($q) use ($groupApplications) {
+            $changeRequests = $changeRequests->whereIn('application_id', $groupApplications);
+            /* $changeRequests = $changeRequests->whereHas('change_request_custom_fields', function ($q) use ($groupApplications) {
                 $q->whereIn('change_request_custom_fields.custom_field_name', ['application_id', 'sub_application_id'])->whereIn('change_request_custom_fields.custom_field_value', $groupApplications);
-            });
+            }); */
         }
+		$changeRequests = $changeRequests->where(function ($query) use ($groupData) {
+			// Case 1: Where unit_id matches in custom fields
+			$query->whereHas('change_request_custom_fields', function ($q) use ($groupData) {
+				$q->where('custom_field_name', 'unit_id')
+				  ->where('custom_field_value', $groupData->unit_id);
+			})
+			// Case 2: OR unit_id does NOT exist in custom fields
+			->orWhereDoesntHave('change_request_custom_fields', function ($q) {
+				$q->where('custom_field_name', 'unit_id');
+			});
+		});
+		
 
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
             $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($group) {
@@ -68,10 +81,24 @@ class ChangeRequestSearchService
         $changeRequests = Change_request::with('RequestStatuses.status');
 
         if ($groupApplications) {
-            $changeRequests = $changeRequests->whereHas('change_request_custom_fields', function ($q) use ($groupApplications) {
+            /* $changeRequests = $changeRequests->whereHas('change_request_custom_fields', function ($q) use ($groupApplications) {
                 $q->whereIn('change_request_custom_fields.custom_field_name', ['application_id', 'sub_application_id'])->whereIn('change_request_custom_fields.custom_field_value', $groupApplications);
-            });
+            }); */
+			$changeRequests = $changeRequests->whereIn('application_id', $groupApplications);
         }
+		
+		$changeRequests = $changeRequests->where(function ($query) use ($groupData) {
+			// Case 1: Where unit_id matches in custom fields
+			$query->whereHas('change_request_custom_fields', function ($q) use ($groupData) {
+				$q->where('custom_field_name', 'unit_id')
+				  ->where('custom_field_value', $groupData->unit_id);
+			})
+			// Case 2: OR unit_id does NOT exist in custom fields
+			->orWhereDoesntHave('change_request_custom_fields', function ($q) {
+				$q->where('custom_field_name', 'unit_id');
+			});
+		});
+		
 
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
             $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($group) {
@@ -222,6 +249,7 @@ class ChangeRequestSearchService
     public function find($id)
     {
         $groupApplications = null;
+        $groupData = null;
         $userEmail = strtolower(auth()->user()->email);
         $divisionManager = strtolower(Change_request::where('id', $id)->value('division_manager'));
 
@@ -233,7 +261,7 @@ class ChangeRequestSearchService
             $groupApplications = null;
         } else {
             $groupData = Group::find($groups);
-            $groupApplications = $groupData[0]->group_applications->pluck('application_id');
+			$groupApplications = $groupData[0]->group_applications->pluck('application_id');
             if ($groupApplications) {
 
                 $groupApplications = $groupApplications->toArray();
@@ -285,11 +313,24 @@ class ChangeRequestSearchService
             });
         $changeRequest = $changeRequest->where('id', $id);
         if ($groupApplications && ! request()->has('check_business')) {
-            // $changeRequest = $changeRequest->whereIn('application_id', $groupApplications);
-            $changeRequest = $changeRequest->whereHas('change_request_custom_fields', function ($q) use ($groupApplications) {
-                $q->whereIn('change_request_custom_fields.custom_field_name', ['application_id', 'sub_application_id'])->whereIn('change_request_custom_fields.custom_field_value', $groupApplications);
-            });
+            $changeRequest = $changeRequest->whereIn('application_id', $groupApplications);
         }
+		
+		if($groupData)
+		{
+			$changeRequest = $changeRequest->where(function ($query) use ($groupData) {
+				// Case 1: Where unit_id matches in custom fields
+				$query->whereHas('change_request_custom_fields', function ($q) use ($groupData) {
+					$q->where('custom_field_name', 'unit_id')
+					  ->where('custom_field_value', $groupData[0]->unit_id);
+				})
+				// Case 2: OR unit_id does NOT exist in custom fields
+				->orWhereDoesntHave('change_request_custom_fields', function ($q) {
+					$q->where('custom_field_name', 'unit_id');
+				});
+			});	
+		}
+		
         $changeRequest = $changeRequest->first();
 
         if ($changeRequest) {
