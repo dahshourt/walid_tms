@@ -407,6 +407,14 @@
             return true;
         }
 
+        function syncBounds(startId, endId){
+            var s = $('#'+startId).val();
+            var e = $('#'+endId).val();
+            // Set native constraints
+            if (s){ $('#'+endId).attr('min', s); } else { $('#'+endId).removeAttr('min'); }
+            if (e){ $('#'+startId).attr('max', e); } else { $('#'+startId).removeAttr('max'); }
+        }
+
         $('#advanced_search').on('submit', function(e){
             var ok1 = validateRange('created_at_start','created_at_end','Creation Date','created_at_error');
             var ok2 = validateRange('updated_at_start','updated_at_end','Updated Date','updated_at_error');
@@ -417,11 +425,17 @@
 
         // Real-time validation on input
         $('#created_at_start, #created_at_end').on('change input', function(){
+            syncBounds('created_at_start','created_at_end');
             validateRange('created_at_start','created_at_end','Creation Date','created_at_error');
         });
         $('#updated_at_start, #updated_at_end').on('change input', function(){
+            syncBounds('updated_at_start','updated_at_end');
             validateRange('updated_at_start','updated_at_end','Updated Date','updated_at_error');
         });
+
+        // Hydrate constraints on load
+        syncBounds('created_at_start','created_at_end');
+        syncBounds('updated_at_start','updated_at_end');
 
         $('#reset_advanced_search').on('click', function(){
             var $form = $('#advanced_search');
@@ -434,6 +448,8 @@
             setError('created_at_error','');
             setError('updated_at_error','');
             clearDateValidation(['created_at_start','created_at_end','updated_at_start','updated_at_end']);
+            // Clear constraints
+            $('#created_at_start, #created_at_end, #updated_at_start, #updated_at_end').removeAttr('min').removeAttr('max');
         });
     });
 </script>
