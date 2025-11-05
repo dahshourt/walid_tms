@@ -60,4 +60,5 @@ return [
 			'notify_division_manager_promo' => 'CR Created - Notify Division Manager (Promo)',
 		]
 
+		
 ];
