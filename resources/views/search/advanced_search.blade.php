@@ -38,21 +38,65 @@
 
                             @if (count($fields) > 0)
                                 <div class="form-group row p-3">
+                                    @php $createdField = null; $updatedField = null; @endphp
                                     @foreach ($fields as $field)
                                         @if (isset($field->custom_field))
                                             @php
                                                 $customField = $field->custom_field;
                                                 $fieldClasses = isset($field->styleClasses) ? $field->styleClasses : 'col-sm-3 field-select';
+                                                $labelLower = isset($customField->label) ? strtolower(trim($customField->label)) : '';
+                                                // Skip deprecated standalone date filters
+                                                if (in_array($labelLower, ['less than date','greater than date'])) {
+                                                    continue;
+                                                }
+                                                // Widen date range groups to allow two inputs inline
+                                                if (in_array($customField->name, ['created_at', 'updated_at'])) {
+                                                    // Capture these to render later with desired order and labels
+                                                    if ($customField->name === 'created_at') { $createdField = $field; }
+                                                    if ($customField->name === 'updated_at') { $updatedField = $field; }
+                                                    continue;
+                                                }
+                                                // Defaults for rendering
+                                                $renderName = $customField->name;
+                                                $renderLabel = $customField->label;
+                                                // Remap CR ID -> CR No. with input name cr_no
+                                                if ($labelLower === 'cr id' || strtolower($customField->name) === 'cr_id') {
+                                                    $renderName = 'cr_no';
+                                                    $renderLabel = 'CR No.';
+                                                }
                                             @endphp
 
-                                            <div class="form-group {{ $fieldClasses }}">
-                                                <label for="{{ $customField->name }}">{{ $customField->label }}</label>
+                                            <div class="{{ 'form-group ' . $fieldClasses . (in_array($customField->name, ['created_at','updated_at']) ? ' p-3 border rounded shadow-sm' : '') }}">
+                                                <label class="{{ in_array($customField->name, ['created_at','updated_at']) ? 'w-100 text-center' : '' }}" for="{{ $renderName }}">{{ $renderLabel }}</label>
 
-                                                @if ($customField->type == 'select')
+                                                @if (in_array($customField->name, ['created_at', 'updated_at']))
+                                                    <div class="d-flex flex-nowrap align-items-center">
+                                                        <input
+                                                            type="date"
+                                                            class="form-control form-control-solid advanced_search_field w-50"
+                                                            id="{{ $customField->name }}_start"
+                                                            name="{{ $customField->name }}_start"
+                                                            placeholder="Start date"
+                                                            value="{{ old($customField->name . '_start') }}"
+                                                        >
+                                                        <span class="mx-2 text-muted">to</span>
+                                                        <input
+                                                            type="date"
+                                                            class="form-control form-control-solid advanced_search_field w-50"
+                                                            id="{{ $customField->name }}_end"
+                                                            name="{{ $customField->name }}_end"
+                                                            placeholder="End date"
+                                                            value="{{ old($customField->name . '_end') }}"
+                                                        >
+                                                    </div>
+                                                @elseif ($customField->type == 'select')
                                                     <select
-                                                        class="form-control advanced_search_field"
-                                                        id="{{ $customField->name }}"
-                                                        name="{{ $customField->name }}"
+                                                        class="form-control form-control-solid advanced_search_field {{ in_array($customField->name, ['new_status_id','application_id']) ? 'select2' : '' }}"
+                                                        id="{{ $renderName }}"
+                                                        name="{{ $renderName }}"
+                                                        {{ $customField->name === 'new_status_id' ? 'data-placeholder=\'Select CR status\'' : '' }}
+                                                        {{ $customField->name === 'application_id' ? 'data-placeholder=\'Select Target System\'' : '' }}
+                                                        style="width:100%;"
                                                     >
                                                         <option value="">Select {{ $customField->label }}</option>
                                                         <!-- Fetch options from related table or predefined options -->
@@ -108,37 +152,38 @@
                                                     </select>
                                                 @elseif ($customField->type == 'textArea')
                                                     <textarea
-                                                        class="form-control advanced_search_field"
-                                                        id="{{ $customField->name }}"
-                                                        name="{{ $customField->name }}"
-                                                        placeholder="{{ $customField->label }}"
+                                                        class="form-control form-control-solid advanced_search_field"
+                                                        id="{{ $renderName }}"
+                                                        name="{{ $renderName }}"
+                                                        placeholder="{{ $renderLabel }}"
                                                         rows="4"
-                                                    >{{ old($customField->name) }}</textarea>
+                                                    >{{ old($renderName) }}</textarea>
                                                 @elseif ($customField->type == 'text' || $customField->type == 'input')
                                                            
+                                                                @php $isCrIdField = in_array(strtolower($customField->name), ['cr_id','id']) || ($labelLower === 'cr id'); @endphp
                                                                 <input
-                                                                    type="text"
-                                                                    class="form-control advanced_search_field"
-                                                                    id="{{ $customField->name }}"
-                                                                    name="{{ $customField->name }}"
-                                                                    placeholder="{{ $customField->label }}"
-                                                                    value="{{ old($customField->name) }}"
+                                                                    type="{{ $isCrIdField ? 'number' : 'text' }}"
+                                                                    class="form-control form-control-solid advanced_search_field"
+                                                                    id="{{ $renderName }}"
+                                                                    name="{{ $renderName }}"
+                                                                    placeholder="{{ $renderLabel }}"
+                                                                    value="{{ old($renderName) }}"
                                                                 >
                                                          
                                                     
                                                 @elseif ($customField->type == 'number')
                                                     <input
                                                         type="number"
-                                                        class="form-control advanced_search_field"
-                                                        id="{{ $customField->name }}"
-                                                        name="{{ $customField->name }}"
-                                                        placeholder="{{ $customField->label }}"
-                                                        value="{{ old($customField->name) }}"
+                                                        class="form-control form-control-solid advanced_search_field"
+                                                        id="{{ $renderName }}"
+                                                        name="{{ $renderName }}"
+                                                        placeholder="{{ $renderLabel }}"
+                                                        value="{{ old($renderName) }}"
                                                     >
                                                 @elseif ($customField->type == 'date')
                                                     <input
                                                         type="date"
-                                                        class="form-control advanced_search_field"
+                                                        class="form-control form-control-solid advanced_search_field"
                                                         id="{{ $customField->name }}"
                                                         name="{{ $customField->name }}"
                                                         value="{{ old($customField->name) }}"
@@ -155,9 +200,62 @@
                                             <p>Custom field data is not available.</p>
                                         @endif
                                     @endforeach
+                                    @if ($createdField)
+                                        @php $customField = $createdField->custom_field; @endphp
+                                        <div class="form-group col-sm-6 field-select p-3 border rounded shadow-sm">
+                                            <label class="w-100 text-center" for="{{ $customField->name }}">Creation Date</label>
+                                            <div class="d-flex flex-nowrap align-items-center">
+                                                <input
+                                                    type="date"
+                                                    class="form-control form-control-solid advanced_search_field w-50"
+                                                    id="{{ $customField->name }}_start"
+                                                    name="{{ $customField->name }}_start"
+                                                    placeholder="Start date"
+                                                    value="{{ old($customField->name . '_start') }}"
+                                                >
+                                                <span class="mx-2 text-muted">to</span>
+                                                <input
+                                                    type="date"
+                                                    class="form-control form-control-solid advanced_search_field w-50"
+                                                    id="{{ $customField->name }}_end"
+                                                    name="{{ $customField->name }}_end"
+                                                    placeholder="End date"
+                                                    value="{{ old($customField->name . '_end') }}"
+                                                >
+                                            </div>
+                                        </div>
+                                    @endif
+                                    @if ($updatedField)
+                                        @php $customField = $updatedField->custom_field; @endphp
+                                        <div class="form-group col-sm-6 field-select p-3 border rounded shadow-sm">
+                                            <label class="w-100 text-center" for="{{ $customField->name }}">Updated Date</label>
+                                            <div class="d-flex flex-nowrap align-items-center">
+                                                <input
+                                                    type="date"
+                                                    class="form-control form-control-solid advanced_search_field w-50"
+                                                    id="{{ $customField->name }}_start"
+                                                    name="{{ $customField->name }}_start"
+                                                    placeholder="Start date"
+                                                    value="{{ old($customField->name . '_start') }}"
+                                                >
+                                                <span class="mx-2 text-muted">to</span>
+                                                <input
+                                                    type="date"
+                                                    class="form-control form-control-solid advanced_search_field w-50"
+                                                    id="{{ $customField->name }}_end"
+                                                    name="{{ $customField->name }}_end"
+                                                    placeholder="End date"
+                                                    value="{{ old($customField->name . '_end') }}"
+                                                >
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
 
-                                <button type="submit" class="btn btn-primary">Search</button>
+                                <div class="px-3 pb-3 w-100 d-flex justify-content-end">
+                                    <button type="button" id="reset_advanced_search" class="btn btn-secondary mr-3">Clear</button>
+                                    <button type="submit" class="btn btn-primary px-6">Search</button>
+                                </div>
                             @else
                                 <p>No fields available for search.</p>
                             @endif
@@ -221,5 +319,47 @@
         }        
  });*/
 
+</script>
+@endpush
+@push('script')
+<script>
+    // Avoid horizontal scrollbars when Select2 opens
+    (function(){
+        var css = '.select2-container{max-width:100%} .select2-dropdown{max-width:100vw}';
+        var style = document.createElement('style');
+        style.type = 'text/css';
+        style.appendChild(document.createTextNode(css));
+        document.head.appendChild(style);
+    })();
+    $(function(){
+        if ($.fn.select2) {
+            var $status = $('#new_status_id');
+            if ($status.length) {
+                $status.select2({
+                    placeholder: 'Select CR status',
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: $('#advanced_search')
+                });
+            }
+            var $application = $('#application_id');
+            if ($application.length) {
+                $application.select2({
+                    placeholder: 'Select Target System',
+                    allowClear: true,
+                    width: '100%',
+                    dropdownParent: $('#advanced_search')
+                });
+            }
+        }
+        $('#reset_advanced_search').on('click', function(){
+            var $form = $('#advanced_search');
+            if ($form.length && $form[0]) {
+                $form[0].reset();
+            }
+            // Reset Select2 fields explicitly
+            $form.find('select.select2').val(null).trigger('change');
+        });
+    });
 </script>
 @endpush

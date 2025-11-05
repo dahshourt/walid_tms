@@ -8,8 +8,8 @@ use App\Factories\NewWorkFlow\NewWorkFlowFactory;
 use App\Http\Controllers\Controller;
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use App\Http\Resources\AdvancedSearchRequestResource;
-use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 // use App\Models\User;
 // use App\Models\change_request;
@@ -96,7 +96,6 @@ class SearchController extends Controller
     public function AdvancedSearchResult()
     {
         $this->authorize('Access Advanced Search'); // permission check
-        $alldata = $this->changerequest->AdvancedSearchResult(1);
 
         // Retrieve the paginated collection from the model
         $collection = $this->changerequest->AdvancedSearchResult()->appends(request()->query());
@@ -105,34 +104,22 @@ class SearchController extends Controller
         if (! ($collection instanceof \Illuminate\Pagination\LengthAwarePaginator)) {
             abort(500, 'Expected paginated collection from AdvancedSearchResult.');
         }
+
         $totalCount = $collection->total();
         // Transform the collection into resource format
         $collection = AdvancedSearchRequestResource::collection($collection);
-        //  $collection = $collection->toArray(request());
 
         $r = new ChangeRequestRepository();
         $crs_in_queues = $r->getAll()->pluck('id');
 
-        // Pass the transformed data to the view
-        // session(['advanced_search_items' => $alldata]);
-        // session()->put('advanced_search_items', $alldata);
         return view("$this->view.AdvancedSearchResult", ['totalCount' => $totalCount, 'items' => $collection, 'crs_in_queues' => $crs_in_queues]);
     }
 
-    public function AdvancedSearchResultExport(Request $request)
+    public function AdvancedSearchResultExport(): BinaryFileResponse
     {
-        // dd($request->all());
-        $this->authorize('Access Advanced Search'); // permission check
-
-        $alldata = $this->changerequest->AdvancedSearchResult(1);
-        $items = $alldata;
-        // dd($items);
-        // $items = \Session::get('advanced_search_items');
-
-        // If you want to return the view with items (for debugging purposes):
-        // return view("$this->view.AdvancedSearchResult", ['items' => $collection]);
+        $this->authorize('Access Advanced Search');
 
         // Export the filtered results as Excel
-        return Excel::download(new TableExport($items), 'advanced_search_results.xlsx');
+        return Excel::download(new TableExport, 'advanced_search_results.xlsx');
     }
 }

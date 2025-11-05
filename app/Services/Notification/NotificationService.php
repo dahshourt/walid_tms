@@ -238,6 +238,7 @@ class NotificationService
                     return $group ? [$group->head_group_email] : [];
                 }
                 return [];
+
             // Add more types as needed
             default:
                 return [];

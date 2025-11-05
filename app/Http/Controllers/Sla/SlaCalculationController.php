@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Sla;
 
 use App\Http\Controllers\Controller;
-use App\Models\Group;
+use App\Models\Unit;
 use App\Models\GroupStatuses;
 use App\Models\SlaCalculation;
 use App\Models\Status;
@@ -31,9 +31,8 @@ class SlaCalculationController extends Controller
         view()->share('form_title', 'SLA');
         view()->share('route', 'sla-calculations');
         $statuses = Status::all();
-
-        // $groups = Group::all();
-        return view('sla.calculations.create', compact('statuses'));
+        $units = Unit::all();
+        return view('sla.calculations.create', compact('statuses', 'units'));
     }
 
     public function getGroups($status_id)
@@ -80,9 +79,12 @@ class SlaCalculationController extends Controller
             'sla_type_division' => 'nullable|in:day,hour',
             'sla_type_director' => 'nullable|in:day,hour',
             'status_id' => 'required|exists:statuses,id',
-            'group_id' => 'required|exists:groups,id',
+            'unit_id' => 'required|exists:units,id', 
+            'unit_notification' => 'nullable|boolean',
+            'division_notification' => 'nullable|boolean',
+            'director_notification' => 'nullable|boolean',
         ]);
-
+       // dd($request);
         // ✅ Ensure at least one SLA level is provided
         if (
             empty($validated['unit_sla_time']) &&
@@ -109,16 +111,17 @@ class SlaCalculationController extends Controller
         }
 
         // ✅ Check for duplicate (same group_id + status_id)
-        $exists = SlaCalculation::where('group_id', $validated['group_id'])
+        
+        $exists = SlaCalculation::where('unit_id', $validated['unit_id'])
             ->where('status_id', $validated['status_id'])
             ->exists();
 
         if ($exists) {
             return redirect()->back()
                 ->withInput()
-                ->withErrors(['duplicate' => 'This SLA Calculation already exists for the selected group and status.']);
+                ->withErrors(['duplicate' => 'This SLA Calculation already exists for the selected Unit and status.']);
         }
-
+      //  dd($validated);
         // ✅ Create new record
         SlaCalculation::create($validated);
 
@@ -138,10 +141,10 @@ class SlaCalculationController extends Controller
         view()->share('form_title', 'Edit SLA');
         view()->share('route', 'sla-calculations');
         $statuses = Status::all();
-        $groups = Group::all();
+        $units = Unit::all();
         $row = SlaCalculation::with('status')->find($slaCalculation->id);
 
-        return view('sla.calculations.edit', compact('slaCalculation', 'row', 'statuses', 'groups'));
+        return view('sla.calculations.edit', compact('slaCalculation', 'row', 'statuses', 'units'));
     }
 
     public function update(Request $request, SlaCalculation $slaCalculation)
@@ -154,7 +157,7 @@ class SlaCalculationController extends Controller
             'sla_type_division' => 'required|in:day,hour',
             'sla_type_director' => 'required|in:day,hour',
             'status_id' => 'required|exists:statuses,id',
-            'group_id' => 'required|exists:groups,id',
+            'unit_id' => 'required|exists:units,id',
         ]);
 
         $slaCalculation->update($validated);
