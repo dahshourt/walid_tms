@@ -25,6 +25,7 @@ class ChangeRequestSearchService
 
     public static array $COMPLETED_STATUS_ARRAY = [self::COMPLETED_STATUS, 2];
 
+
     public function getAll($group = null)
     {
         $group = $this->resolveGroup($group);
