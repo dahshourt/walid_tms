@@ -10,9 +10,6 @@ use App\Models\NewWorkFlow;
 use App\Models\TechnicalCr;
 use App\Models\User;
 use Auth;
-use Carbon\Carbon;
-use DB;
-use Log;
 
 class ChangeRequestSearchService
 {
@@ -342,22 +339,9 @@ class ChangeRequestSearchService
 
     public function advancedSearch($getAll = 0)
     {
-        $requestQuery = request()->except('_token', 'page');
-        $crs = new Change_request();
+        $crs = Change_request::filters();
 
-        foreach ($requestQuery as $key => $fieldValue) {
-            if (! empty($fieldValue)) {
-                $crs = $this->applySearchFilter($crs, $key, $fieldValue);
-            }
-        }
-
-        DB::enableQueryLog();
-        $results = $getAll == 0 ? $crs->paginate(10) : $crs->get();
-        $queries = DB::getQueryLog();
-        $lastQuery = end($queries);
-        Log::info('Last Query: ', $lastQuery);
-
-        return $results;
+        return $getAll == 0 ? $crs->paginate(10) : $crs->get();
     }
 
     public function searchChangeRequest($id)
@@ -388,40 +372,6 @@ class ChangeRequestSearchService
 
         return $status;
 
-    }
-
-    protected function applySearchFilter($query, $key, $value)
-    {
-        switch ($key) {
-            case 'id':
-                return $query->where(function ($q) use ($value) {
-                    $q->where('id', $value)->orWhere('cr_no', $value);
-                });
-            case 'title':
-                return $query->where($key, 'LIKE', "%$value%");
-            case 'created_at':
-            case 'updated_at':
-            case 'uat_date':
-            case 'release_delivery_date':
-            case 'release_receiving_date':
-            case 'te_testing_date':
-                return $query->whereDate($key, '=', Carbon::createFromTimestamp($value / 1000)->format('Y-m-d'));
-            case 'greater_than_date':
-                return $query->whereDate('updated_at', '>=', Carbon::createFromTimestamp($value / 1000)->format('Y-m-d'));
-            case 'less_than_date':
-                return $query->whereDate('updated_at', '<=', Carbon::createFromTimestamp($value / 1000)->format('Y-m-d'));
-            case 'status_id':
-            case 'new_status_id':
-                return $query->whereHas('CurrentRequestStatuses', function ($q) use ($value) {
-                    $q->where('new_status_id', $value);
-                });
-            case 'assignment_user_id':
-                return $query->whereHas('CurrentRequestStatuses', function ($q) use ($value) {
-                    $q->where('assignment_user_id', $value)->where('active', 1);
-                });
-            default:
-                return $query->where($key, $value);
-        }
     }
 
     protected function resolveGroup($group = null)

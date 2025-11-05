@@ -2,23 +2,17 @@
 
 namespace App\Http\Controllers\Search;
 
+use App\Models\Change_request;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
 
-class TableExport implements FromCollection, WithHeadings, WithMapping
+class TableExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping
 {
-    protected $items;
-
-    public function __construct($items)
-    {
-        $this->items = $items;
-    }
-
     public function collection()
     {
-        // Return the collection of items to be exported
-        return collect($this->items);
+        return Change_request::filters()->get();
     }
 
     public function headings(): array
