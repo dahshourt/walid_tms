@@ -4,7 +4,6 @@ namespace App\Http\Controllers\CustomFields;
 
 use App\Factories\ChangeRequest\ChangeRequestFactory;
 use App\Factories\CustomField\CustomFieldGroupTypeFactory;
-use App\Factories\Users\UserFactory;
 use App\Http\Controllers\Controller;
 use App\Http\Repository\Applications\ApplicationRepository;
 use App\Http\Repository\Categories\CategoreyRepository;
@@ -12,6 +11,7 @@ use App\Http\Repository\Parents\ParentRepository;
 use App\Http\Repository\Priorities\priorityRepository;
 use App\Http\Repository\Statuses\StatusRepository; // ParentRepository
 use App\Http\Repository\Units\UnitRepository; // CategoreyRepository
+use App\Http\Repository\Users\UserRepository;
 use App\Http\Repository\Workflow\Workflow_type_repository; // CategoreyRepository
 use App\Http\Requests\CustomFields\Api\CustomFieldGroupTypeRequest;
 use App\Http\Resources\CustomFieldResource;
@@ -155,9 +155,11 @@ class CustomFieldGroupTypeController extends Controller
         // Ensure $CustomFields is not an array of arrays if not expected
         $units = app(UnitRepository::class)->getAll();
         $workflows = app(Workflow_type_repository::class)->get_all_active_workflow();
-        $sa_users = UserFactory::index()->get_user_by_department_id(6);
-        $testing_users = UserFactory::index()->get_user_by_department_id(3);
-        $developer_users = UserFactory::index()->get_user_by_department_ids([1, 2]);
+
+        $user_repo = app(UserRepository::class);
+        $sa_users = $user_repo->get_user_by_department_id(6);
+        $testing_users = $user_repo->get_user_by_department_id(3);
+        $developer_users = $user_repo->get_user_by_department_ids([1, 2]);
 
         return view('search.advanced_search', compact('fields', 'statuses', 'priorities', 'applications', 'parents', 'categories', 'units', 'workflows', 'testing_users', 'sa_users', 'developer_users'));
     }
