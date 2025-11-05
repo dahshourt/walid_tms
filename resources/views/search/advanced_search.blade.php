@@ -34,7 +34,7 @@
                         </div>
                         <!--begin::Form-->
                         <form  id="advanced_search" action="{{ route('advanced.search.result') }}">
-                          
+
 
                             @if (count($fields) > 0)
                                 <div class="form-group row p-3">
@@ -100,14 +100,14 @@
                                                     >
                                                         <!-- options generated below -->
                                                         @if($customField->name=="new_status_id")
-                                                        
+
                                                         @foreach ($statuses as $value)
                                                             <option value="{{ $value->id }}">{{ $value->status_name }}</option>
                                                         @endforeach
                                                         @endif
 
                                                         @if($customField->name=="priority_id")
-                                                        
+
                                                         @foreach ($priorities as $value)
                                                             <option value="{{ $value->id }}">{{ $value->name }}</option>
                                                         @endforeach
@@ -115,7 +115,7 @@
 
 
                                                         @if($customField->name=="application_id")
-                                                        
+
                                                         @foreach ($applications as $value)
                                                             <option value="{{ $value->id }}">{{ $value->name }}</option>
                                                         @endforeach
@@ -123,29 +123,47 @@
 
 
                                                         @if($customField->name=="parent_id")
-                                                        
+
                                                         @foreach ($parents as $value)
                                                             <option value="{{ $value->id }}">{{ $value->name }}</option>
                                                         @endforeach
                                                         @endif
 
                                                         @if($customField->name=="category_id")
-                                                        
+
                                                         @foreach ($categories as $value)
                                                             <option value="{{ $value->id }}">{{ $value->name }}</option>
                                                         @endforeach
                                                         @endif
                                                         @if($customField->name=="unit_id")
-                                                        
+
                                                         @foreach ($units as $value)
                                                             <option value="{{ $value->id }}">{{ $value->name }}</option>
                                                         @endforeach
                                                         @endif
                                                         @if($customField->name=="workflow_type_id")
-                                                        
+
                                                         @foreach ($workflows as $value)
                                                             <option value="{{ $value->id }}">{{ $value->name }}</option>
                                                         @endforeach
+                                                        @endif
+
+                                                        @if($customField->name === 'tester_id')
+                                                            @foreach ($testing_users as $testing_user)
+                                                                <option value="{{ $testing_user->id }}">{{ $testing_user->user_name }}</option>
+                                                            @endforeach
+                                                        @endif
+
+                                                        @if($customField->name === 'designer_id')
+                                                            @foreach ($sa_users as $sa_user)
+                                                                <option value="{{ $sa_user->id }}">{{ $sa_user->user_name }}</option>
+                                                            @endforeach
+                                                        @endif
+
+                                                        @if($customField->name === 'developer_id')
+                                                            @foreach ($developer_users as $developer_user)
+                                                                <option value="{{ $developer_user->id }}">{{ $developer_user->user_name }}</option>
+                                                            @endforeach
                                                         @endif
 
                                                     </select>
@@ -158,7 +176,7 @@
                                                         rows="4"
                                                     >{{ old($renderName) }}</textarea>
                                                 @elseif ($customField->type == 'text' || $customField->type == 'input')
-                                                           
+
                                                                 @php $isCrIdField = in_array(strtolower($customField->name), ['cr_id','id']) || ($labelLower === 'cr id'); @endphp
                                                                 <input
                                                                     type="{{ $isCrIdField ? 'number' : 'text' }}"
@@ -168,8 +186,8 @@
                                                                     placeholder="{{ $renderLabel }}"
                                                                     value="{{ old($renderName) }}"
                                                                 >
-                                                         
-                                                    
+
+
                                                 @elseif ($customField->type == 'number')
                                                     <input
                                                         type="number"
@@ -188,7 +206,7 @@
                                                         value="{{ old($customField->name) }}"
                                                     >
                                                 @endif
-                                               
+
 
 
                                                 @if(isset($customField->required) && $customField->required)
@@ -275,7 +293,7 @@
 @push('script')
 <script>
     function checkFields(form) {
-        var  inputs = $('.advanced_search_field'); 
+        var  inputs = $('.advanced_search_field');
         var filled = inputs.filter(function(){
             return $(this).val()  !== "";
         });
@@ -300,7 +318,7 @@
         if(!hasInput){
     //Code: Action (like ajax...)return false;
             event.preventDefault();
-            
+
             $('.advanced_search_field').each(function () {
                     if($(this).val()  !== ""){
                         hasInput=true;
@@ -311,11 +329,11 @@
             }
             else{
             $("#advanced_search").submit();
-            } 
+            }
         }
         else{
             $("#advanced_search").submit();
-        }        
+        }
  });*/
 
 </script>

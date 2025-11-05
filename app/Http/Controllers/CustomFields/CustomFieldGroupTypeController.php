@@ -4,6 +4,7 @@ namespace App\Http\Controllers\CustomFields;
 
 use App\Factories\ChangeRequest\ChangeRequestFactory;
 use App\Factories\CustomField\CustomFieldGroupTypeFactory;
+use App\Factories\Users\UserFactory;
 use App\Http\Controllers\Controller;
 use App\Http\Repository\Applications\ApplicationRepository;
 use App\Http\Repository\Categories\CategoreyRepository;
@@ -154,9 +155,11 @@ class CustomFieldGroupTypeController extends Controller
         // Ensure $CustomFields is not an array of arrays if not expected
         $units = app(UnitRepository::class)->getAll();
         $workflows = app(Workflow_type_repository::class)->get_all_active_workflow();
+        $sa_users = UserFactory::index()->get_user_by_department_id(6);
+        $testing_users = UserFactory::index()->get_user_by_department_id(3);
+        $developer_users = UserFactory::index()->get_user_by_department_ids([1, 2]);
 
-        return view('search.advanced_search', compact('fields', 'statuses', 'priorities', 'applications', 'parents', 'categories', 'units', 'workflows'));
-
+        return view('search.advanced_search', compact('fields', 'statuses', 'priorities', 'applications', 'parents', 'categories', 'units', 'workflows', 'testing_users', 'sa_users', 'developer_users'));
     }
 
     public function AllCustomFieldsSelected()

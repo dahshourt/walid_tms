@@ -394,6 +394,15 @@ class Change_request extends Model
             ->when(request()->query('application_id'), function (Builder $query, $value) {
                 $query->whereIn('application_id', (array) $value);
             })
+            ->when(request()->query('tester_id'), function (Builder $query, $value) {
+                $query->whereIn('tester_id', (array) $value);
+            })
+            ->when(request()->query('developer_id'), function (Builder $query, $value) {
+                $query->whereIn('developer_id', (array) $value);
+            })
+            ->when(request()->query('designer_id'), function (Builder $query, $value) {
+                $query->whereIn('designer_id', (array) $value);
+            })
             ->when(request()->query('category_id'), function (Builder $query, $value) {
                 $query->whereIn('category_id', (array) $value);
             })
