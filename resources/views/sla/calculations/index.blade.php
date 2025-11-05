@@ -68,7 +68,7 @@
                                     <th>SLA For Director</th>
                                     <th>SLA Type Director</th>
                                     <th>Status</th>
-                                    <th>Group</th>
+                                    <th>Unit</th>
                                     <th>Actions</th>
                                     <th>Actions</th>
                                 </tr>
@@ -84,7 +84,7 @@
                                         <td>{{ $slaCalculation->director_sla_time }}</td>
                                         <td>{{ ucfirst($slaCalculation->sla_type_director) }}</td>
                                         <td>{{ $slaCalculation->status->name ?? '-' }}</td>
-                                        <td>{{ $slaCalculation->group->name ?? '-' }}</td>
+                                        <td>{{ $slaCalculation->Unit->name ?? '-' }}</td>
                                         <td>
                                             <a href="{{ route('sla-calculations.edit', $slaCalculation->id) }}"
                                                 class="btn btn-sm btn-primary">Edit</a>

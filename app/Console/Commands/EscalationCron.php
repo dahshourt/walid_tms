@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Console\Commands;
-
+use App\Models\Unit;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Console\Command;
@@ -77,19 +77,19 @@ class EscalationCron extends Command
 
                 if ($unitViolated || $divisionViolated || $directorViolated) {
                     // Step 4: Get group and manager details
-                    $group = DB::table('groups')
-                        ->where('id', $sla->group_id)
-                        ->first();
+                    $unit = Unit::with('group')->first();
 
-                    if ($group) {
-                        $director = DB::table('directors')->where('id', $group->director_id)->first();
-                        $divisionManager = DB::table('division_managers')->where('id', $group->division_manager_id)->first();
-                        $unit = DB::table('units')->where('id', $group->unit_id)->first();
+                     
+                    if ($unit) {
+                       
+                        $director = DB::table('directors')->where('id', $unit->group->director_id)->first();
+                        $divisionManager = DB::table('division_managers')->where('id', $unit->group->division_manager_id)->first();
+                        $unit = DB::table('units')->where('id', $unit->group->unit_id)->first();
 
                         // Step 5: Send escalation emails based on violation level
                         $this->sendEscalationMails(
                             $changeRequest,
-                            $group,
+                            $unit,
                             $director,
                             $divisionManager,
                             $unit,
