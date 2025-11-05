@@ -240,6 +240,7 @@
                                                     value="{{ old($customField->name . '_end') }}"
                                                 >
                                             </div>
+                                            <div id="created_at_error" class="invalid-feedback d-none"></div>
                                         </div>
                                     @endif
                                     @if ($updatedField)
@@ -265,6 +266,7 @@
                                                     value="{{ old($customField->name . '_end') }}"
                                                 >
                                             </div>
+                                            <div id="updated_at_error" class="invalid-feedback d-none"></div>
                                         </div>
                                     @endif
                                 </div>
@@ -360,6 +362,67 @@
                 });
             });
         }
+
+        function clearDateValidation(ids){
+            ids.forEach(function(id){
+                var $i = $('#'+id);
+                $i.removeClass('is-invalid');
+            });
+        }
+
+        function setError(elId, message){
+            var $el = $('#'+elId);
+            if(!$el.length) return;
+            if(message){
+                $el.text(message).removeClass('d-none');
+            } else {
+                $el.text('').addClass('d-none');
+            }
+        }
+
+        function markInvalid(ids){
+            ids.forEach(function(id){
+                var $i = $('#'+id);
+                $i.addClass('is-invalid');
+            });
+        }
+
+        function validateRange(startId, endId, label, errorElId){
+            var s = $('#'+startId).val();
+            var e = $('#'+endId).val();
+            clearDateValidation([startId, endId]);
+            setError(errorElId, '');
+            if (!s || !e) return true; // only validate when both filled
+            var sd = new Date(s);
+            var ed = new Date(e);
+            if (isNaN(sd.getTime()) || isNaN(ed.getTime())) return true;
+            if (sd.getTime() > ed.getTime()){
+                var msg = label + ' range is invalid: start must be before or equal to end.';
+                if (window.toastr && toastr.error){ toastr.error(msg); }
+                else { alert(msg); }
+                markInvalid([startId, endId]);
+                setError(errorElId, msg);
+                return false;
+            }
+            return true;
+        }
+
+        $('#advanced_search').on('submit', function(e){
+            var ok1 = validateRange('created_at_start','created_at_end','Creation Date','created_at_error');
+            var ok2 = validateRange('updated_at_start','updated_at_end','Updated Date','updated_at_error');
+            if (!(ok1 && ok2)){
+                e.preventDefault();
+            }
+        });
+
+        // Real-time validation on input
+        $('#created_at_start, #created_at_end').on('change input', function(){
+            validateRange('created_at_start','created_at_end','Creation Date','created_at_error');
+        });
+        $('#updated_at_start, #updated_at_end').on('change input', function(){
+            validateRange('updated_at_start','updated_at_end','Updated Date','updated_at_error');
+        });
+
         $('#reset_advanced_search').on('click', function(){
             var $form = $('#advanced_search');
             if ($form.length && $form[0]) {
@@ -367,6 +430,10 @@
             }
             // Reset Select2 fields explicitly
             $form.find('select.select2').val(null).trigger('change');
+            // Clear date errors
+            setError('created_at_error','');
+            setError('updated_at_error','');
+            clearDateValidation(['created_at_start','created_at_end','updated_at_start','updated_at_end']);
         });
     });
 </script>
