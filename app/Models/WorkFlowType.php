@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -22,8 +23,15 @@ class WorkFlowType extends Model
     protected $table = 'workflow_type';
 
     protected $fillable = [
-        'name', 'parent_id', 'active',
+        'name',
+        'parent_id',
+        'active',
     ];
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('active', '1');
+    }
 
     public function children()
     {

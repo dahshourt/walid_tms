@@ -208,7 +208,7 @@ class UserRepository implements UserRepositoryInterface
 
     public function get_user_by_department_ids(array $id)
     {
-        return User::whereIn('department_id', $id)->where('active', '1')->get();
+        return User::active()->whereIn('department_id', $id)->get();
     }
 
     public function get_user_by_group_id($id)
