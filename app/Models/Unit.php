@@ -21,7 +21,7 @@ class Unit extends Model
         return $query->where('status', '1');
     }
 
-     public function group()
+    public function group()
     {
         return $this->belongsTo(Group::class, 'id');
     }
