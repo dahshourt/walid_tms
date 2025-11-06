@@ -2,9 +2,13 @@
 
 @foreach ($collection as $item)
                                 <tr>
-                                    <th scope="row">{{ $item->id }}</th>
                                     <td>{{ $item->name }}</td>  
-                                    
+                                    <td>{{ $item->subject }}</td>
+                                    <td>
+                                        <span class="label label-{{ $item->is_active ? 'success' : 'danger' }} label-inline font-weight-bold">
+                                            {{ $item->is_active ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </td>
                                     <td>
                                         <div class="d-inline-flex">
 

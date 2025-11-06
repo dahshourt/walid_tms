@@ -20,4 +20,18 @@ class Unit extends Model
     {
         return $query->where('status', '1');
     }
+
+     public function group()
+    {
+        return $this->belongsTo(Group::class, 'id');
+    }
+
+    /**
+     * Relationship with SLA Calculations.
+     * (Each unit may have many SLA rules)
+     */
+    public function slaCalculations()
+    {
+        return $this->hasMany(SlaCalculation::class, 'unit_id');
+    }
 }

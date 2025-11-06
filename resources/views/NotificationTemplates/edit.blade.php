@@ -50,7 +50,7 @@
                                                 @include("$view.form")
 												<div class="card-footer">
 													<button type="submit" class="btn btn-success mr-2">Submit</button>
-													<a href="{{ route('mail_templates.index') }}" class="btn btn-primary">cancel</a>
+													<a href="{{ route('notification_templates.index') }}" class="btn btn-primary">cancel</a>
 												</div>
 											</form>
 											<!--end::Form-->

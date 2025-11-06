@@ -29,9 +29,7 @@ class UserCreatedCRsExport implements FromCollection, ShouldAutoSize, WithHeadin
         $query = Change_request::with([
             'release:id,name',
             'workflowType:id,name',
-            'CurrentRequestStatuses.status:id,status_name',
-        ])
-            ->where('requester_id', $this->user_id);
+        ])->where('requester_id', $this->user_id);
 
         if ($this->workflow_type) {
             $workflow_type_id = WorkFlowType::where('name', $this->workflow_type)
@@ -99,8 +97,9 @@ class UserCreatedCRsExport implements FromCollection, ShouldAutoSize, WithHeadin
     public function map($change_request): array
     {
         $statusName = '';
-        if ($change_request->CurrentRequestStatuses && $change_request->CurrentRequestStatuses->status) {
-            $statusName = $change_request->CurrentRequestStatuses->status->status_name;
+        $currentStatus = $change_request->getCurrentStatus();
+        if ($currentStatus) {
+            $statusName = $currentStatus->status?->status_name;
         }
 
         $baseData = [
