@@ -34,7 +34,7 @@
                         </div>
                         <!--begin::Form-->
                         <form  id="advanced_search" action="{{ route('advanced.search.result') }}">
-                          
+
 
                             @if (count($fields) > 0)
                                 <div class="form-group row p-3">
@@ -91,24 +91,23 @@
                                                     </div>
                                                 @elseif ($customField->type == 'select')
                                                     <select
-                                                        class="form-control form-control-solid advanced_search_field {{ in_array($customField->name, ['new_status_id','application_id']) ? 'select2' : '' }}"
+                                                        class="form-control form-control-solid advanced_search_field select2"
                                                         id="{{ $renderName }}"
-                                                        name="{{ $renderName }}"
-                                                        {{ $customField->name === 'new_status_id' ? 'data-placeholder=\'Select CR status\'' : '' }}
-                                                        {{ $customField->name === 'application_id' ? 'data-placeholder=\'Select Target System\'' : '' }}
+                                                        name="{{ $renderName }}[]"
+                                                        multiple
+                                                        data-placeholder="Select {{ $renderLabel }}"
                                                         style="width:100%;"
                                                     >
-                                                        <option value="">Select {{ $customField->label }}</option>
-                                                        <!-- Fetch options from related table or predefined options -->
+                                                        <!-- options generated below -->
                                                         @if($customField->name=="new_status_id")
-                                                        
+
                                                         @foreach ($statuses as $value)
                                                             <option value="{{ $value->id }}">{{ $value->status_name }}</option>
                                                         @endforeach
                                                         @endif
 
                                                         @if($customField->name=="priority_id")
-                                                        
+
                                                         @foreach ($priorities as $value)
                                                             <option value="{{ $value->id }}">{{ $value->name }}</option>
                                                         @endforeach
@@ -116,7 +115,7 @@
 
 
                                                         @if($customField->name=="application_id")
-                                                        
+
                                                         @foreach ($applications as $value)
                                                             <option value="{{ $value->id }}">{{ $value->name }}</option>
                                                         @endforeach
@@ -124,29 +123,47 @@
 
 
                                                         @if($customField->name=="parent_id")
-                                                        
+
                                                         @foreach ($parents as $value)
                                                             <option value="{{ $value->id }}">{{ $value->name }}</option>
                                                         @endforeach
                                                         @endif
 
                                                         @if($customField->name=="category_id")
-                                                        
+
                                                         @foreach ($categories as $value)
                                                             <option value="{{ $value->id }}">{{ $value->name }}</option>
                                                         @endforeach
                                                         @endif
                                                         @if($customField->name=="unit_id")
-                                                        
+
                                                         @foreach ($units as $value)
                                                             <option value="{{ $value->id }}">{{ $value->name }}</option>
                                                         @endforeach
                                                         @endif
                                                         @if($customField->name=="workflow_type_id")
-                                                        
+
                                                         @foreach ($workflows as $value)
                                                             <option value="{{ $value->id }}">{{ $value->name }}</option>
                                                         @endforeach
+                                                        @endif
+
+                                                        @if($customField->name === 'tester_id')
+                                                            @foreach ($testing_users as $testing_user)
+                                                                <option value="{{ $testing_user->id }}">{{ $testing_user->user_name }}</option>
+                                                            @endforeach
+                                                        @endif
+
+                                                        @if($customField->name === 'designer_id')
+                                                            @foreach ($sa_users as $sa_user)
+                                                                <option value="{{ $sa_user->id }}">{{ $sa_user->user_name }}</option>
+                                                            @endforeach
+                                                        @endif
+
+                                                        @if($customField->name === 'developer_id')
+                                                            @foreach ($developer_users as $developer_user)
+                                                                <option value="{{ $developer_user->id }}">{{ $developer_user->user_name }}</option>
+                                                            @endforeach
                                                         @endif
 
                                                     </select>
@@ -159,7 +176,7 @@
                                                         rows="4"
                                                     >{{ old($renderName) }}</textarea>
                                                 @elseif ($customField->type == 'text' || $customField->type == 'input')
-                                                           
+
                                                                 @php $isCrIdField = in_array(strtolower($customField->name), ['cr_id','id']) || ($labelLower === 'cr id'); @endphp
                                                                 <input
                                                                     type="{{ $isCrIdField ? 'number' : 'text' }}"
@@ -169,8 +186,8 @@
                                                                     placeholder="{{ $renderLabel }}"
                                                                     value="{{ old($renderName) }}"
                                                                 >
-                                                         
-                                                    
+
+
                                                 @elseif ($customField->type == 'number')
                                                     <input
                                                         type="number"
@@ -189,7 +206,7 @@
                                                         value="{{ old($customField->name) }}"
                                                     >
                                                 @endif
-                                               
+
 
 
                                                 @if(isset($customField->required) && $customField->required)
@@ -223,6 +240,7 @@
                                                     value="{{ old($customField->name . '_end') }}"
                                                 >
                                             </div>
+                                            <div id="created_at_error" class="invalid-feedback d-none"></div>
                                         </div>
                                     @endif
                                     @if ($updatedField)
@@ -248,6 +266,7 @@
                                                     value="{{ old($customField->name . '_end') }}"
                                                 >
                                             </div>
+                                            <div id="updated_at_error" class="invalid-feedback d-none"></div>
                                         </div>
                                     @endif
                                 </div>
@@ -273,85 +292,113 @@
 <!--end::Content-->
 
 @endsection
-@push('script')
-<script>
-    function checkFields(form) {
-        var  inputs = $('.advanced_search_field'); 
-        var filled = inputs.filter(function(){
-            return $(this).val()  !== "";
-        });
-        if(filled.length === 0) {
-            return false;
-        }
-        return true;
-    }
-    /*$(function(){
-        $('#advanced_search').on('submit',function(e){
-            var oneFilled = checkFields($(this));
-            if(oneFilled) {
-                $(this).submit();
-            } else {
-                e.preventDefault();
-                toastr.error('NO FIELDS FILLED OUT!');
-            }
-        });
-    }); */
-/* var hasInput=false;
-    $("#advanced_search").on("submit", function(){
-        if(!hasInput){
-    //Code: Action (like ajax...)return false;
-            event.preventDefault();
-            
-            $('.advanced_search_field').each(function () {
-                    if($(this).val()  !== ""){
-                        hasInput=true;
-                    }
-                });
-            if(!hasInput){
-                alert("Please fill out or select at least one field before submitting.");
-            }
-            else{
-            $("#advanced_search").submit();
-            } 
-        }
-        else{
-            $("#advanced_search").submit();
-        }        
- });*/
-
-</script>
+@push('css')
+    {{--Avoid horizontal scrollbars when Select2 opens--}}
+    <style>
+        html,body{overflow-x:hidden}
+        .select2-container{max-width:100%}
+        .select2-dropdown{max-width:100vw;overflow-x:hidden}
+    </style>
 @endpush
 @push('script')
 <script>
+    function checkFields(form) {
+        var  inputs = $('.advanced_search_field');
+        var filled = inputs.filter(function(){
+            return $(this).val()  !== "";
+        });
+        return filled.length !== 0;
+    }
+</script>
+<script>
     // Avoid horizontal scrollbars when Select2 opens
-    (function(){
-        var css = '.select2-container{max-width:100%} .select2-dropdown{max-width:100vw}';
-        var style = document.createElement('style');
-        style.type = 'text/css';
-        style.appendChild(document.createTextNode(css));
-        document.head.appendChild(style);
-    })();
     $(function(){
         if ($.fn.select2) {
-            var $status = $('#new_status_id');
-            if ($status.length) {
-                $status.select2({
-                    placeholder: 'Select CR status',
+            $('.select2').each(function(){
+                var $el = $(this);
+                $el.select2({
+                    placeholder: $el.data('placeholder') || 'Select',
                     allowClear: true,
                     width: '100%',
                     dropdownParent: $('#advanced_search')
                 });
-            }
-            var $application = $('#application_id');
-            if ($application.length) {
-                $application.select2({
-                    placeholder: 'Select Target System',
-                    allowClear: true,
-                    width: '100%',
-                    dropdownParent: $('#advanced_search')
-                });
+            });
+        }
+
+        function clearDateValidation(ids){
+            ids.forEach(function(id){
+                var $i = $('#'+id);
+                $i.removeClass('is-invalid');
+            });
+        }
+
+        function setError(elId, message){
+            var $el = $('#'+elId);
+            if(!$el.length) return;
+            if(message){
+                $el.text(message).removeClass('d-none');
+            } else {
+                $el.text('').addClass('d-none');
             }
         }
+
+        function markInvalid(ids){
+            ids.forEach(function(id){
+                var $i = $('#'+id);
+                $i.addClass('is-invalid');
+            });
+        }
+
+        function validateRange(startId, endId, label, errorElId){
+            var s = $('#'+startId).val();
+            var e = $('#'+endId).val();
+            clearDateValidation([startId, endId]);
+            setError(errorElId, '');
+            if (!s || !e) return true; // only validate when both filled
+            var sd = new Date(s);
+            var ed = new Date(e);
+            if (isNaN(sd.getTime()) || isNaN(ed.getTime())) return true;
+            if (sd.getTime() > ed.getTime()){
+                var msg = label + ' range is invalid: start must be before or equal to end.';
+                if (window.toastr && toastr.error){ toastr.error(msg); }
+                else { alert(msg); }
+                markInvalid([startId, endId]);
+                setError(errorElId, msg);
+                return false;
+            }
+            return true;
+        }
+
+        function syncBounds(startId, endId){
+            var s = $('#'+startId).val();
+            var e = $('#'+endId).val();
+            // Set native constraints
+            if (s){ $('#'+endId).attr('min', s); } else { $('#'+endId).removeAttr('min'); }
+            if (e){ $('#'+startId).attr('max', e); } else { $('#'+startId).removeAttr('max'); }
+        }
+
+        $('#advanced_search').on('submit', function(e){
+            var ok1 = validateRange('created_at_start','created_at_end','Creation Date','created_at_error');
+            var ok2 = validateRange('updated_at_start','updated_at_end','Updated Date','updated_at_error');
+            if (!(ok1 && ok2)){
+                e.preventDefault();
+            }
+        });
+
+        // Real-time validation on input
+        $('#created_at_start, #created_at_end').on('change input', function(){
+            syncBounds('created_at_start','created_at_end');
+            validateRange('created_at_start','created_at_end','Creation Date','created_at_error');
+        });
+        $('#updated_at_start, #updated_at_end').on('change input', function(){
+            syncBounds('updated_at_start','updated_at_end');
+            validateRange('updated_at_start','updated_at_end','Updated Date','updated_at_error');
+        });
+
+        // Hydrate constraints on load
+        syncBounds('created_at_start','created_at_end');
+        syncBounds('updated_at_start','updated_at_end');
+
         $('#reset_advanced_search').on('click', function(){
             var $form = $('#advanced_search');
             if ($form.length && $form[0]) {
@@ -359,6 +406,12 @@
             }
             // Reset Select2 fields explicitly
             $form.find('select.select2').val(null).trigger('change');
+            // Clear date errors
+            setError('created_at_error','');
+            setError('updated_at_error','');
+            clearDateValidation(['created_at_start','created_at_end','updated_at_start','updated_at_end']);
+            // Clear constraints
+            $('#created_at_start, #created_at_end, #updated_at_start, #updated_at_end').removeAttr('min').removeAttr('max');
         });
     });
 </script>

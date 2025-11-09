@@ -5,12 +5,18 @@ namespace App\Http\Repository\Units;
 use App\Contracts\Units\UnitRepositoryInterface;
 // declare Entities
 use App\Models\Unit;
+use Illuminate\Support\Collection;
 
 class UnitRepository implements UnitRepositoryInterface
 {
     public function getAll()
     {
         return Unit::all();
+    }
+
+    public function getAllActive(): Collection
+    {
+        return Unit::active()->get();
     }
 
     public function create($request)

@@ -6,6 +6,7 @@ use App\Contracts\Statuses\StatusRepositoryInterface;
 use App\Models\GroupStatuses;
 // declare Entities
 use App\Models\Status;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class StatusRepository implements StatusRepositoryInterface
@@ -13,6 +14,11 @@ class StatusRepository implements StatusRepositoryInterface
     public static function getAll()
     {
         return Status::with('group_statuses', 'stage', 'group_statuses.group')->get();
+    }
+
+    public static function getAllActive(): Collection
+    {
+        return Status::active()->with('group_statuses', 'stage', 'group_statuses.group')->get();
     }
 
     public function paginateAll(array $relations = [])
@@ -68,7 +74,8 @@ class StatusRepository implements StatusRepositoryInterface
     public function update($request, $id)
     {
 
-        $status = Status::where('id', $id)->update($request->except('set_group_id', 'view_group_id', '_method', '_token'));
+        $status = Status::where('id', $id)->update($request->except('set_group_id', 'view_group_id', '_method',
+            '_token'));
 
         $this->StoreStatusGroup($id, $request);
 
@@ -105,13 +112,13 @@ class StatusRepository implements StatusRepositoryInterface
         $new_sta = trim(json_encode($status_req), '[]');
 
         return DB::select("
-            SELECT 
+            SELECT
             COUNT(cr.id) 'CRs_Count', (select st.status_name from  statuses st where st.id in(cr_status.new_status_id))  'Status_Name'
         FROM
             change_request AS cr
-            
+
             left join change_request_statuses as cr_status on cr.id = cr_status.cr_id
-            
+
             where cr_status.active = 1
             AND cr_status.new_status_id IN($new_sta)
             AND cr.workflow_type_id = \"$workflow_type_req\"
@@ -125,13 +132,13 @@ class StatusRepository implements StatusRepositoryInterface
         $new_sta = trim(json_encode($status_req), '[]');
 
         return DB::select("
-            SELECT 
+            SELECT
             COUNT(cr.id) 'CRs_Count', (select st.status_name from  statuses st where st.id in(cr_status.new_status_id))  'Status_Name'
         FROM
             change_request AS cr
-            
+
             left join change_request_statuses as cr_status on cr.id = cr_status.cr_id
-            
+
             where cr_status.active = 1
             AND cr_status.new_status_id IN($new_sta)
             AND cr.workflow_type_id = \"$workflow_type_req\"

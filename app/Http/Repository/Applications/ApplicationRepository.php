@@ -5,6 +5,7 @@ namespace App\Http\Repository\Applications;
 use App\Contracts\Applications\ApplicationRepositoryInterface;
 // declare Entities
 use App\Models\Application;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class ApplicationRepository implements ApplicationRepositoryInterface
@@ -24,9 +25,9 @@ class ApplicationRepository implements ApplicationRepositoryInterface
         return Application::all();
     }
 
-    public function getAllActive()
+    public function getAllActive(): Collection
     {
-        return Application::where('active', '1')->get();
+        return Application::active()->get();
     }
 
     public function paginateAll()
@@ -117,10 +118,10 @@ class ApplicationRepository implements ApplicationRepositoryInterface
         }
 
         return DB::select("
-                SELECT 
+                SELECT
                     COUNT(cr.id) 'CRs_Count',
                       (select `name` from applications where applications.id = cr.application_id) `application_name`
-                    
+
                 FROM
                     change_request AS cr
                     where  cr.workflow_type_id = \"$workflow_type_req\"

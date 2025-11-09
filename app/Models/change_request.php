@@ -392,22 +392,31 @@ class Change_request extends Model
                 $query->where('title', 'like', "%{$value}%");
             })
             ->when(request()->query('application_id'), function (Builder $query, $value) {
-                $query->where('application_id', $value);
+                $query->whereIn('application_id', (array) $value);
+            })
+            ->when(request()->query('tester_id'), function (Builder $query, $value) {
+                $query->whereIn('tester_id', (array) $value);
+            })
+            ->when(request()->query('developer_id'), function (Builder $query, $value) {
+                $query->whereIn('developer_id', (array) $value);
+            })
+            ->when(request()->query('designer_id'), function (Builder $query, $value) {
+                $query->whereIn('designer_id', (array) $value);
             })
             ->when(request()->query('category_id'), function (Builder $query, $value) {
-                $query->where('category_id', $value);
+                $query->whereIn('category_id', (array) $value);
             })
             ->when(request()->query('priority_id'), function (Builder $query, $value) {
-                $query->where('priority_id', $value);
+                $query->whereIn('priority_id', (array) $value);
             })
             ->when(request()->query('unit_id'), function (Builder $query, $value) {
-                $query->where('unit_id', $value);
+                $query->whereIn('unit_id', (array) $value);
             })
             ->when(request()->query('division_manager'), function (Builder $query, $value) {
                 $query->where('division_manager', $value);
             })
             ->when(request()->query('workflow_type_id'), function (Builder $query, $value) {
-                $query->where('workflow_type_id', $value);
+                $query->whereIn('workflow_type_id', (array) $value);
             })
             ->when(request()->query('requester_name'), function (Builder $query, $value) {
                 $query->where('requester_name', 'like', "%{$value}%");
@@ -425,7 +434,7 @@ class Change_request extends Model
             })
             ->when(request()->query('new_status_id'), function (Builder $query, $value) {
                 $query->whereHas('CurrentRequestStatuses', function (Builder $query) use ($value) {
-                    $query->where('new_status_id', $value);
+                    $query->whereIn('new_status_id', (array) $value);
                 });
             });
     }
