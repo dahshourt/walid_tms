@@ -96,73 +96,83 @@
                                                         data-placeholder="Select {{ $renderLabel }}"
                                                         style="width:100%;"
                                                     >
-                                                        <!-- options generated below -->
-                                                        @if($customField->name=="new_status_id")
-
+                                                    @php
+                                                        $selectedValuesRaw = request()->query($renderName, []);
+                                                        if (! is_array($selectedValuesRaw)) {
+                                                            $selectedValuesRaw = strlen((string) $selectedValuesRaw) ? explode(',', (string) $selectedValuesRaw) : [];
+                                                        }
+                                                        $selectedValues = array_map('strval', $selectedValuesRaw);
+                                                    @endphp
+                                                    <!-- options generated below -->
+                                                    @if($customField->name=="new_status_id")
                                                         @foreach ($statuses as $value)
-                                                            <option value="{{ $value->id }}">{{ $value->status_name }}</option>
+                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->status_name }}</option>
                                                         @endforeach
-                                                        @endif
+                                                    @endif
 
-                                                        @if($customField->name=="priority_id")
-
+                                                    @if($customField->name=="priority_id")
                                                         @foreach ($priorities as $value)
-                                                            <option value="{{ $value->id }}">{{ $value->name }}</option>
+                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
                                                         @endforeach
-                                                        @endif
+                                                    @endif
 
 
-                                                        @if($customField->name=="application_id")
-
+                                                    @if($customField->name=="application_id")
                                                         @foreach ($applications as $value)
-                                                            <option value="{{ $value->id }}">{{ $value->name }}</option>
+                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
                                                         @endforeach
-                                                        @endif
+                                                    @endif
 
 
-                                                        @if($customField->name=="parent_id")
-
+                                                    @if($customField->name=="parent_id")
                                                         @foreach ($parents as $value)
-                                                            <option value="{{ $value->id }}">{{ $value->name }}</option>
+                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
                                                         @endforeach
-                                                        @endif
+                                                    @endif
 
-                                                        @if($customField->name=="category_id")
-
+                                                    @if($customField->name=="category_id")
                                                         @foreach ($categories as $value)
-                                                            <option value="{{ $value->id }}">{{ $value->name }}</option>
+                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
                                                         @endforeach
-                                                        @endif
-                                                        @if($customField->name=="unit_id")
-
+                                                    @endif
+                                                    @if($customField->name=="unit_id")
                                                         @foreach ($units as $value)
-                                                            <option value="{{ $value->id }}">{{ $value->name }}</option>
+                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
                                                         @endforeach
-                                                        @endif
-                                                        @if($customField->name=="workflow_type_id")
-
+                                                    @endif
+                                                    @if($customField->name=="workflow_type_id")
                                                         @foreach ($workflows as $value)
-                                                            <option value="{{ $value->id }}">{{ $value->name }}</option>
+                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
                                                         @endforeach
-                                                        @endif
+                                                    @endif
 
-                                                        @if($customField->name === 'tester_id')
-                                                            @foreach ($testing_users as $testing_user)
-                                                                <option value="{{ $testing_user->id }}">{{ $testing_user->user_name }}</option>
-                                                            @endforeach
-                                                        @endif
+                                                    @if($customField->name === 'tester_id')
+                                                        @foreach ($testing_users as $testing_user)
+                                                            @php $isSelected = in_array((string) $testing_user->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $testing_user->id }}" @if($isSelected) selected @endif>{{ $testing_user->user_name }}</option>
+                                                        @endforeach
+                                                    @endif
 
-                                                        @if($customField->name === 'designer_id')
-                                                            @foreach ($sa_users as $sa_user)
-                                                                <option value="{{ $sa_user->id }}">{{ $sa_user->user_name }}</option>
-                                                            @endforeach
-                                                        @endif
+                                                    @if($customField->name === 'designer_id')
+                                                        @foreach ($sa_users as $sa_user)
+                                                            @php $isSelected = in_array((string) $sa_user->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $sa_user->id }}" @if($isSelected) selected @endif>{{ $sa_user->user_name }}</option>
+                                                        @endforeach
+                                                    @endif
 
-                                                        @if($customField->name === 'developer_id')
-                                                            @foreach ($developer_users as $developer_user)
-                                                                <option value="{{ $developer_user->id }}">{{ $developer_user->user_name }}</option>
-                                                            @endforeach
-                                                        @endif
+                                                    @if($customField->name === 'developer_id')
+                                                        @foreach ($developer_users as $developer_user)
+                                                            @php $isSelected = in_array((string) $developer_user->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $developer_user->id }}" @if($isSelected) selected @endif>{{ $developer_user->user_name }}</option>
+                                                        @endforeach
+                                                    @endif
 
                                                     </select>
                                                 @elseif ($customField->type == 'textArea')
@@ -172,7 +182,7 @@
                                                         name="{{ $renderName }}"
                                                         placeholder="{{ $renderLabel }}"
                                                         rows="4"
-                                                    >{{ old($renderName) }}</textarea>
+                                                    >{{ request()->query($renderName) }}</textarea>
                                                 @elseif ($customField->type == 'text' || $customField->type == 'input')
 
                                                                 @php $isCrIdField = in_array(strtolower($customField->name), ['cr_id','id']) || ($labelLower === 'cr id'); @endphp
@@ -182,7 +192,7 @@
                                                                     id="{{ $renderName }}"
                                                                     name="{{ $renderName }}"
                                                                     placeholder="{{ $renderLabel }}"
-                                                                    value="{{ old($renderName) }}"
+                                                                    value="{{ request()->query($renderName) }}"
                                                                 >
 
 
@@ -193,7 +203,7 @@
                                                         id="{{ $renderName }}"
                                                         name="{{ $renderName }}"
                                                         placeholder="{{ $renderLabel }}"
-                                                        value="{{ old($renderName) }}"
+                                                        value="{{ request()->query($renderName) }}"
                                                     >
                                                 @elseif ($customField->type == 'date')
                                                     <input
@@ -201,7 +211,7 @@
                                                         class="form-control form-control-solid advanced_search_field"
                                                         id="{{ $customField->name }}"
                                                         name="{{ $customField->name }}"
-                                                        value="{{ old($customField->name) }}"
+                                                        value="{{ request()->query($customField->name) }}"
                                                     >
                                                 @endif
 
@@ -226,7 +236,7 @@
                                                     id="{{ $customField->name }}_start"
                                                     name="{{ $customField->name }}_start"
                                                     placeholder="Start date"
-                                                    value="{{ old($customField->name . '_start') }}"
+                                                    value="{{ request()->query($customField->name . '_start') }}"
                                                 >
                                                 <span class="mx-2 text-muted">to</span>
                                                 <input
@@ -235,7 +245,7 @@
                                                     id="{{ $customField->name }}_end"
                                                     name="{{ $customField->name }}_end"
                                                     placeholder="End date"
-                                                    value="{{ old($customField->name . '_end') }}"
+                                                    value="{{ request()->query($customField->name . '_end') }}"
                                                 >
                                             </div>
                                             <div id="created_at_error" class="invalid-feedback d-none"></div>
@@ -252,7 +262,7 @@
                                                     id="{{ $customField->name }}_start"
                                                     name="{{ $customField->name }}_start"
                                                     placeholder="Start date"
-                                                    value="{{ old($customField->name . '_start') }}"
+                                                    value="{{ request()->query($customField->name . '_start') }}"
                                                 >
                                                 <span class="mx-2 text-muted">to</span>
                                                 <input
@@ -261,7 +271,7 @@
                                                     id="{{ $customField->name }}_end"
                                                     name="{{ $customField->name }}_end"
                                                     placeholder="End date"
-                                                    value="{{ old($customField->name . '_end') }}"
+                                                    value="{{ request()->query($customField->name . '_end') }}"
                                                 >
                                             </div>
                                             <div id="updated_at_error" class="invalid-feedback d-none"></div>
