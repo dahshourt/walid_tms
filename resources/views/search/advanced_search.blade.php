@@ -525,6 +525,7 @@
             if ($form.length && $form[0]) {
                 $form[0].reset();
             }
+            $form.find('input[type="text"], input[type="number"], input[type="date"], input[type="email"], input[type="search"], textarea').val('').trigger('change');
             // Reset Select2 fields explicitly
             $form.find('select.select2').val(null).trigger('change');
             // Clear date errors
