@@ -325,6 +325,7 @@
                             </button>
                         </form>
                     </div>
+                    <p class="mb-4 text-primary fw-bold">Total Results: {{ $totalCount }}</p>
                     <div class="table-responsive">
                         <table class="table table-bordered">
                             <thead>
@@ -404,7 +405,7 @@
                         </table>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded shadow-sm">
-                        <p class="mb-0 text-primary fw-bold">Total Results: {{ $totalCount }}</p>
+                        <p class="mb-0 text-primary fw-bold"></p>
                         <div>{{ $collection->links() }}</div>
                     </div>
                 </div>
