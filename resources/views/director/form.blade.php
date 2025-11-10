@@ -48,6 +48,7 @@ $(document).ready(function() {
     const emailFeedback = $('#email_feedback');
     const emailLoader = $('#email-loader');
     const directorEmailInput = $("#director_email");
+    const directorForm = directorEmailInput.closest('form');
     let currentRequest = null; // To track ongoing AJAX request
 
     // Initial check on page load
@@ -55,15 +56,12 @@ $(document).ready(function() {
 
     // Check email on input change with debouncing
     let emailTimeout;
-    directorEmailInput.on('paste input', function(){
+    directorEmailInput.on('paste blur', function(){
         // Clear previous timeout
         clearTimeout(emailTimeout);
 
         // Cancel previous request if still pending
-        if (currentRequest) {
-            currentRequest.abort();
-            currentRequest = null;
-        }
+        abortCurrentRequest();
 
         // Reset UI state immediately
         resetEmailState();
@@ -73,6 +71,39 @@ $(document).ready(function() {
             check_director_email();
         }, 500);
     });
+
+    if (directorForm.length) {
+        directorForm.on('submit', function(event) {
+            clearTimeout(emailTimeout);
+            abortCurrentRequest();
+            resetEmailState();
+
+            event.preventDefault();
+
+            const request = check_director_email({ requireEmail: true });
+
+            if (!request || typeof request.done !== 'function') {
+                return;
+            }
+
+            request.done(function(data) {
+                if (data && data.valid) {
+                    event.currentTarget.submit();
+                }
+            });
+
+            request.fail(function() {
+                submitButton.prop("disabled", true);
+            });
+        });
+    }
+
+    function abortCurrentRequest() {
+        if (currentRequest) {
+            currentRequest.abort();
+            currentRequest = null;
+        }
+    }
 
     function resetEmailState() {
         // Hide loader and enable input
@@ -88,12 +119,18 @@ $(document).ready(function() {
         submitButton.prop("disabled", true);
     }
 
-    function check_director_email() {
+    function check_director_email(options = {}) {
+        const { requireEmail = false } = options;
         const email = directorEmailInput.val().trim();
 
         if (!email) {
             // If email is empty, just disable submit button
             resetEmailState();
+            if (requireEmail) {
+                directorEmailInput.removeClass('is-valid').addClass('is-invalid');
+                emailFeedback.text('Director email is required');
+                emailFeedback.removeClass('text-success').addClass('text-danger');
+            }
             return;
         }
 
@@ -156,6 +193,7 @@ $(document).ready(function() {
                 }
             }
         });
+        return currentRequest;
     }
 
     function startValidation() {
