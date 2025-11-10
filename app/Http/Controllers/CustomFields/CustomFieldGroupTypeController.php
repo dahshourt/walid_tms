@@ -7,6 +7,7 @@ use App\Factories\CustomField\CustomFieldGroupTypeFactory;
 use App\Http\Controllers\Controller;
 use App\Http\Repository\Applications\ApplicationRepository;
 use App\Http\Repository\Categories\CategoreyRepository;
+use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use App\Http\Repository\Parents\ParentRepository;
 use App\Http\Repository\Priorities\priorityRepository;
 use App\Http\Repository\Statuses\StatusRepository; // ParentRepository
@@ -14,6 +15,7 @@ use App\Http\Repository\Units\UnitRepository; // CategoreyRepository
 use App\Http\Repository\Users\UserRepository;
 use App\Http\Repository\Workflow\Workflow_type_repository; // CategoreyRepository
 use App\Http\Requests\CustomFields\Api\CustomFieldGroupTypeRequest;
+use App\Http\Resources\AdvancedSearchRequestResource;
 use App\Http\Resources\CustomFieldResource;
 use App\Http\Resources\CustomFieldSelectedGroupResource;
 use Auth;
@@ -161,7 +163,22 @@ class CustomFieldGroupTypeController extends Controller
         $testing_users = $user_repo->get_user_by_department_id(3);
         $developer_users = $user_repo->get_user_by_department_ids([1, 2]);
 
-        return view('search.advanced_search', compact('fields', 'statuses', 'priorities', 'applications', 'parents', 'categories', 'units', 'workflows', 'testing_users', 'sa_users', 'developer_users'));
+        // Retrieve the paginated collection from the model
+        $collection = $this->changerequest->AdvancedSearchResult()->appends(request()->query());
+
+        // Ensure $collection is an instance of Illuminate\Pagination\LengthAwarePaginator
+        if (! ($collection instanceof \Illuminate\Pagination\LengthAwarePaginator)) {
+            abort(500, 'Expected paginated collection from AdvancedSearchResult.');
+        }
+
+        $totalCount = $collection->total();
+        // Transform the collection into resource format
+        $collection = AdvancedSearchRequestResource::collection($collection);
+
+        $r = new ChangeRequestRepository();
+        $crs_in_queues = $r->getAll()->pluck('id');
+
+        return view('search.advanced_search', compact('fields', 'statuses', 'priorities', 'applications', 'parents', 'categories', 'units', 'workflows', 'testing_users', 'sa_users', 'developer_users', 'totalCount', 'collection', 'crs_in_queues'));
     }
 
     public function AllCustomFieldsSelected()
