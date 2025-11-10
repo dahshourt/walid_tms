@@ -79,7 +79,7 @@ class SlaCalculationController extends Controller
             'sla_type_division' => 'nullable|in:day,hour',
             'sla_type_director' => 'nullable|in:day,hour',
             'status_id' => 'required|exists:statuses,id',
-            'unit_id' => 'required|exists:units,id', 
+           // 'unit_id' => 'required|exists:units,id', 
             'unit_notification' => 'nullable|boolean',
             'division_notification' => 'nullable|boolean',
             'director_notification' => 'nullable|boolean',
@@ -112,15 +112,15 @@ class SlaCalculationController extends Controller
 
         // ✅ Check for duplicate (same group_id + status_id)
         
-        $exists = SlaCalculation::where('unit_id', $validated['unit_id'])
-            ->where('status_id', $validated['status_id'])
-            ->exists();
+        // $exists = SlaCalculation::where('unit_id', $validated['unit_id'])
+        //     ->where('status_id', $validated['status_id'])
+        //     ->exists();
 
-        if ($exists) {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['duplicate' => 'This SLA Calculation already exists for the selected Unit and status.']);
-        }
+        // if ($exists) {
+        //     return redirect()->back()
+        //         ->withInput()
+        //         ->withErrors(['duplicate' => 'This SLA Calculation already exists for the selected Unit and status.']);
+        // }
       //  dd($validated);
         // ✅ Create new record
         SlaCalculation::create($validated);
@@ -157,7 +157,7 @@ class SlaCalculationController extends Controller
             'sla_type_division' => 'required|in:day,hour',
             'sla_type_director' => 'required|in:day,hour',
             'status_id' => 'required|exists:statuses,id',
-            'unit_id' => 'required|exists:units,id',
+            //'unit_id' => 'required|exists:units,id',
         ]);
 
         $slaCalculation->update($validated);
