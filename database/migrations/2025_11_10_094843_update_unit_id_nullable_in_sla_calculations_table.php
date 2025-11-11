@@ -13,13 +13,16 @@ class UpdateUnitIdNullableInSlaCalculationsTable extends Migration
      */
     public function up()
     {
+		DB::statement('SET FOREIGN_KEY_CHECKS=0;');
          Schema::table('sla_calculations', function (Blueprint $table) {
+			 
             // First, drop the foreign key if it exists
             $table->dropForeign(['unit_id']);
 
             // Then, make the column nullable
             $table->unsignedBigInteger('unit_id')->nullable()->change();
         });
+		DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 
     /**

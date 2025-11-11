@@ -337,7 +337,6 @@ class ChangeRequestController extends Controller
         ));
     }
 
-    
     /**
      * Store a newly created resource in storage.
      */
@@ -985,8 +984,18 @@ class ChangeRequestController extends Controller
                 ? UserFactory::index()->get_user_by_group($res->id)
                 : UserFactory::index()->get_user_by_group($cr->application_id);
         }
-
-        return UserFactory::index()->get_user_by_group($cr->application_id);
+		$tech_group = $cr->change_request_custom_fields->where('custom_field_name','tech_group_id')->first();
+		$tech_group_id = $tech_group ? $tech_group->custom_field_value : null;
+		if($tech_group_id)
+		{
+			return UserFactory::index()->get_user_by_group_id($tech_group_id);
+		}
+		else
+		{
+			
+			return UserFactory::index()->get_user_by_group($cr->application_id);
+		}
+        
     }
 	
 	/**
