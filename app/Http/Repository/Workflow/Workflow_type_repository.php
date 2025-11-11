@@ -5,6 +5,7 @@ namespace App\Http\Repository\Workflow;
 use App\Contracts\Workflow\workflow_type_contracts;
 // declare Entities
 use App\Models\WorkFlowType;
+use Illuminate\Support\Collection;
 
 class Workflow_type_repository implements workflow_type_contracts
 {
@@ -32,8 +33,8 @@ class Workflow_type_repository implements workflow_type_contracts
         return WorkFlowType::select('id', 'name', 'parent_id')->WhereNotNull('parent_id')->where('id', '<', 6)->get();
     }
 
-    public function get_all_active_workflow()
+    public function get_all_active_workflow(): Collection
     {
-        return WorkFlowType::select('id', 'name', 'parent_id')->WhereNotNull('parent_id')->where('active', '1')->get();
+        return WorkFlowType::active()->select('id', 'name', 'parent_id')->WhereNotNull('parent_id')->get();
     }
 }

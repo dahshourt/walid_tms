@@ -2,6 +2,9 @@
 
 namespace App\Console\Commands;
 use App\Models\Unit;
+use App\Models\Director;
+use App\Models\DivisionManagers;
+use App\Models\GroupStatuses;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Console\Command;
@@ -77,14 +80,21 @@ class EscalationCron extends Command
 
                 if ($unitViolated || $divisionViolated || $directorViolated) {
                     // Step 4: Get group and manager details
-                    $unit = Unit::with('group')->first();
-
+                    //$unit = Unit::with('group')->first();
+                    //work
                      
-                    if ($unit) {
+                    //if ($unit) {
                        
-                        $director = DB::table('directors')->where('id', $unit->group->director_id)->first();
-                        $divisionManager = DB::table('division_managers')->where('id', $unit->group->division_manager_id)->first();
-                        $unit = DB::table('units')->where('id', $unit->group->unit_id)->first();
+                        //$director = DB::table('directors')->where('id', $unit->group->director_id)->first();
+                        //$divisionManager = DB::table('division_managers')->where('id', $unit->group->division_manager_id)->first();
+                        $mail = \App\Models\GroupStatuses::with('group')->where('status_id', $sla->status_id)->first(); 
+                        $unit =   Unit::where('id', $mail->group->unit_id)->first();
+                        $director =   Director::where('id', $mail->group->director_id)->first();
+                        $divisionManager =   DivisionManagers::where('id', $mail->group->division_manager_id)->first();
+                       
+                        
+                        // $director = $mail->group->director_id; 
+                        // $divisionManager  = $mail->group->unitdivision_manager_id_id;        
 
                         // Step 5: Send escalation emails based on violation level
                         $this->sendEscalationMails(
@@ -104,7 +114,7 @@ class EscalationCron extends Command
                                 'status_set_time' => $statusSetTime,
                             ]
                         );
-                    }
+                    //}
                 }
             }
         }

@@ -17,7 +17,7 @@
 @endif
 
 													<div class="form-group form-group-last">
-														
+
 													</div>
 
 													<div class="form-group">
@@ -51,6 +51,7 @@ $(document).ready(function() {
     const emailFeedback = $('#email_feedback');
     const emailLoader = $('#email-loader');
     const divisionManagerEmailInput = $("#division_manager_email");
+    const divisionManagerForm = divisionManagerEmailInput.closest('form');
     let currentRequest = null; // To track ongoing AJAX request
 
     // Initial check on page load
@@ -58,15 +59,12 @@ $(document).ready(function() {
 
     // Check email on input change with debouncing
     let emailTimeout;
-    divisionManagerEmailInput.on('paste input', function(){
+    divisionManagerEmailInput.on('paste blur', function(){
         // Clear previous timeout
         clearTimeout(emailTimeout);
 
         // Cancel previous request if still pending
-        if (currentRequest) {
-            currentRequest.abort();
-            currentRequest = null;
-        }
+        abortCurrentRequest();
 
         // Reset UI state immediately
         resetEmailState();
@@ -76,6 +74,39 @@ $(document).ready(function() {
             check_division_manager_email();
         }, 500);
     });
+
+    if (divisionManagerForm.length) {
+        divisionManagerForm.on('submit', function(event) {
+            clearTimeout(emailTimeout);
+            abortCurrentRequest();
+            resetEmailState();
+
+            event.preventDefault();
+
+            const request = check_division_manager_email({ requireEmail: true });
+
+            if (!request || typeof request.done !== 'function') {
+                return;
+            }
+
+            request.done(function(data) {
+                if (data && data.valid) {
+                    event.currentTarget.submit();
+                }
+            });
+
+            request.fail(function() {
+                submitButton.prop("disabled", true);
+            });
+        });
+    }
+
+    function abortCurrentRequest() {
+        if (currentRequest) {
+            currentRequest.abort();
+            currentRequest = null;
+        }
+    }
 
     function resetEmailState() {
         // Hide loader and enable input
@@ -91,12 +122,18 @@ $(document).ready(function() {
         submitButton.prop("disabled", true);
     }
 
-    function check_division_manager_email() {
+    function check_division_manager_email(options = {}) {
+        const { requireEmail = false } = options;
         const email = divisionManagerEmailInput.val().trim();
 
         if (!email) {
             // If email is empty, just disable submit button
             resetEmailState();
+            if (requireEmail) {
+                divisionManagerEmailInput.removeClass('is-valid').addClass('is-invalid');
+                emailFeedback.text('Division manager email is required');
+                emailFeedback.removeClass('text-success').addClass('text-danger');
+            }
             return;
         }
 
@@ -159,6 +196,7 @@ $(document).ready(function() {
                 }
             }
         });
+        return currentRequest;
     }
 
     function startValidation() {

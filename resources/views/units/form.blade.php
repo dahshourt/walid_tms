@@ -58,6 +58,7 @@ $(document).ready(function() {
     const emailFeedback = $('#email_feedback');
     const emailLoader = $('#email-loader');
     const managerEmailInput = $("#manager_email");
+    const unitForm = managerEmailInput.closest('form');
     let currentRequest = null; // To track ongoing AJAX request
 
     // Initial check on page load
@@ -66,15 +67,12 @@ $(document).ready(function() {
     // Check email on input change with debouncing
     let emailTimeout;
 
-    managerEmailInput.on('paste input', function(){
+    managerEmailInput.on('paste blur', function(){
         // Clear previous timeout
         clearTimeout(emailTimeout);
 
         // Cancel previous request if still pending
-        if (currentRequest) {
-            currentRequest.abort();
-            currentRequest = null;
-        }
+        abortCurrentRequest();
 
         // Reset UI state immediately
         resetEmailState();
@@ -84,6 +82,40 @@ $(document).ready(function() {
             check_manager_email();
         }, 500);
     });
+
+    if (unitForm.length) {
+        unitForm.on('submit', function(event) {
+            clearTimeout(emailTimeout);
+            abortCurrentRequest();
+            resetEmailState();
+
+            event.preventDefault();
+
+            const request = check_manager_email({ requireEmail: true });
+
+            // If validation failed immediately (e.g. empty or invalid format), do not submit
+            if (!request || typeof request.done !== 'function') {
+                return;
+            }
+
+            request.done(function(data) {
+                if (data && data.valid) {
+                    // Native submit bypasses jQuery handlers, avoiding recursion
+                    event.currentTarget.submit();
+                }
+            });
+            request.fail(function() {
+                submitButton.prop("disabled", true);
+            });
+        });
+    }
+
+    function abortCurrentRequest() {
+        if (currentRequest) {
+            currentRequest.abort();
+            currentRequest = null;
+        }
+    }
 
     function resetEmailState() {
         // Hide loader and enable input
@@ -99,12 +131,18 @@ $(document).ready(function() {
         submitButton.prop("disabled", true);
     }
 
-    function check_manager_email() {
+    function check_manager_email(options = {}) {
+        const { requireEmail = false } = options;
         const email = managerEmailInput.val().trim();
 
         if (!email) {
             // If email is empty, just disable submit button
             resetEmailState();
+            if (requireEmail) {
+                managerEmailInput.removeClass('is-valid').addClass('is-invalid');
+                emailFeedback.text('Manager email is required');
+                emailFeedback.removeClass('text-success').addClass('text-danger');
+            }
             return;
         }
 
@@ -167,6 +205,7 @@ $(document).ready(function() {
                 }
             }
         });
+        return currentRequest;
     }
 
     function startValidation() {

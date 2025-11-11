@@ -7,6 +7,7 @@ use App\Contracts\Parents\ParentRepositoryInterface;
 use App\Models\Application;
 use App\Models\Change_request;
 use App\Models\Parents_crs;
+use Illuminate\Support\Collection;
 
 class ParentRepository implements ParentRepositoryInterface
 {
@@ -26,6 +27,11 @@ class ParentRepository implements ParentRepositoryInterface
     public function getAll()
     {
         return Parents_crs::all();
+    }
+
+    public function getAllActive(): Collection
+    {
+        return Parents_crs::active()->get();
     }
 
     public function parent_systems($system)

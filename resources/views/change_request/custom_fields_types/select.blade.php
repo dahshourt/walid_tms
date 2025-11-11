@@ -33,6 +33,7 @@
             ])
         </div>
 
+        
         @include('change_request.custom_fields_types.partials.select-fields.scripts', [
             'cr' => $cr ?? null,
             'def1' => isset($cr) ? $cr->defects()->count() : 0,

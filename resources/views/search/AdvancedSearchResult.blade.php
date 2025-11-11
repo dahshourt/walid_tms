@@ -54,12 +54,17 @@
                                         <td>
                                         @can('Edit ChangeRequest')
                                             <a href='{{ url("$route") }}/{{ $item["id"] }}/edit'>{{ $item['cr_no'] }}</a>
-                                        @endcan    
+                                        @endcan
                                         </td>
                                         <td>{{ $item['title'] ?? "" }}</td>
                                         <td>{{ $item['category']['name'] ?? "" }}</td>
                                         <td>{{ $item['release']['name'] ?? "" }}</td>
-                                        <td>{{ $item->getCurrentStatus()->status->status_name ?? "" }}</td>
+                                        <td>
+                                            @php
+                                                $statuses_names = $item->RequestStatuses->pluck('status.name');
+                                            @endphp
+                                            {{ $statuses_names->implode(', ') }}
+                                        </td>
                                         <td>{{ $item['requester_name'] ?? "" }}</td>
                                         <td>{{ $item['requester_email'] ?? "" }}</td>
                                         <td>{{ $item['design_duration'] ?? "" }}</td>

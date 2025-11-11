@@ -104,6 +104,7 @@ class EmailApprovalController extends Controller
             'assign_to'     => null,
         ]);
 
+        
         try {
 			
             $repo->UpateChangeRequestStatus($cr->id, $req);

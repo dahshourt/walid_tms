@@ -12,7 +12,14 @@ class TableExport implements FromCollection, ShouldAutoSize, WithHeadings, WithM
 {
     public function collection()
     {
-        return Change_request::filters()->get();
+        return Change_request::with(['RequestStatuses' => function ($q) {
+            $q->with('status');
+
+            $selected_statuses = (array) request()->query('new_status_id', []);
+            if (count($selected_statuses) > 0) {
+                $q->whereIn('new_status_id', $selected_statuses);
+            }
+        }])->filters()->get();
     }
 
     public function headings(): array
@@ -38,12 +45,14 @@ class TableExport implements FromCollection, ShouldAutoSize, WithHeadings, WithM
 
     public function map($item): array
     {
+        $statuses_names = $item->RequestStatuses->pluck('status.name');
+
         return [
             $item['cr_no'],
             $item['title'],
             $item['category']['name'] ?? '',
             $item['application']['name'] ?? '',
-            $item->getCurrentStatus()->status->status_name ?? '',
+            $statuses_names->implode(', ') ?? '',
             $item['requester_name'] ?? '',
             $item['requester_email'] ?? '',
             $item['design_duration'] ?? '',

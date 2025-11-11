@@ -9,6 +9,7 @@ class NotificationSeeder extends Seeder
 {
     public function run()
     {
+        
         DB::transaction(function () {
             // Helpful when reseeding on a DB that already has rows:
             DB::statement('SET FOREIGN_KEY_CHECKS=0');

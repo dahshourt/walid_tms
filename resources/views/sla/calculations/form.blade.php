@@ -43,7 +43,7 @@
         {!! $errors->first('status_id', '<span class="form-control-feedback">:message</span>') !!}
     </div>
     {{-- Groups Dropdown --}}
-    <div class="form-group mt-3">
+    {{-- <div class="form-group mt-3">
         <label for="group_id">Units:</label>
         <select name="unit_id" id="unit_id" class="form-control">
             <option value="">-- Select Units --</option>
@@ -57,7 +57,7 @@
             @endif
         </select>
         {!! $errors->first('unit_id', '<span class="form-control-feedback text-danger">:message</span>') !!}
-    </div>
+    </div> --}}
 
     {{-- SLA For Unit Section --}}
     <div class="row">

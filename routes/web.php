@@ -253,3 +253,5 @@ Route::middleware(['auth','role:user|admin'])->group(
        Route::get('/search/advanced_search', 'CustomFields\CustomFieldGroupTypeController@AllCustomFieldsWithSelectedByformType')->name('advanced.search');
 
 });*/
+
+

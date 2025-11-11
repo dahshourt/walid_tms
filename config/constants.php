@@ -48,9 +48,9 @@ return [
 		],	
 	'division_managers_mails' =>
 		[
-			//'anan.latif@te.eg', 
-			//'reem.mahrous@te.eg', 
-			//'adel.atef@te.eg', 
+			//'ahmed.o.hasan@te.eg', 
+			//'mahmoud.bastawisy@te.eg', 
+			//'sara.mostafa@te.eg', 
 			//'yousry.mostafa@te.eg', 
 			//'it.qa@te.eg'
 		],
