@@ -47,13 +47,6 @@
                                                 if (in_array($labelLower, ['less than date','greater than date'])) {
                                                     continue;
                                                 }
-                                                // Widen date range groups to allow two inputs inline
-                                                if (in_array($customField->name, ['created_at', 'updated_at'])) {
-                                                    // Capture these to render later with desired order and labels
-                                                    if ($customField->name === 'created_at') { $createdField = $field; }
-                                                    if ($customField->name === 'updated_at') { $updatedField = $field; }
-                                                    continue;
-                                                }
                                                 // Defaults for rendering
                                                 $renderName = $customField->name;
                                                 $renderLabel = $customField->label;
@@ -62,12 +55,24 @@
                                                     $renderName = 'cr_no';
                                                     $renderLabel = 'CR No.';
                                                 }
+
+                                                if (in_array($customField->name, ['created_at', 'updated_at'])) {
+                                                    $renderLabel = $customField->name === 'created_at' ? 'Creation Date' :'Updated Date';
+                                                }
+
                                             @endphp
 
-                                            <div class="{{ 'form-group ' . $fieldClasses . (in_array($customField->name, ['created_at','updated_at']) ? ' p-3 border rounded shadow-sm' : '') }}">
+                                            <div
+                                                @class([
+                                                           'form-group',
+                                                           $fieldClasses,
+                                                           'p-3 border rounded shadow-sm col-sm-6' => in_array($customField->name, ['created_at', 'updated_at']),
+                                                       ])
+                                            >
                                                 <label class="{{ in_array($customField->name, ['created_at','updated_at']) ? 'w-100 text-center' : '' }}" for="{{ $renderName }}">{{ $renderLabel }}</label>
 
                                                 @if (in_array($customField->name, ['created_at', 'updated_at']))
+
                                                     <div class="d-flex flex-nowrap align-items-center">
                                                         <input
                                                             type="date"
@@ -75,7 +80,7 @@
                                                             id="{{ $customField->name }}_start"
                                                             name="{{ $customField->name }}_start"
                                                             placeholder="Start date"
-                                                            value="{{ old($customField->name . '_start') }}"
+                                                            value="{{ request()->query($customField->name . '_start') }}"
                                                         >
                                                         <span class="mx-2 text-muted">to</span>
                                                         <input
@@ -84,9 +89,12 @@
                                                             id="{{ $customField->name }}_end"
                                                             name="{{ $customField->name }}_end"
                                                             placeholder="End date"
-                                                            value="{{ old($customField->name . '_end') }}"
+                                                            value="{{ request()->query($customField->name . '_end') }}"
                                                         >
                                                     </div>
+                                                    <div id="updated_at_error" class="invalid-feedback d-none"></div>
+
+
                                                 @elseif ($customField->type == 'select')
                                                     <select
                                                         class="form-control form-control-solid advanced_search_field select2"
@@ -225,58 +233,6 @@
                                             <p>Custom field data is not available.</p>
                                         @endif
                                     @endforeach
-                                    @if ($createdField)
-                                        @php $customField = $createdField->custom_field; @endphp
-                                        <div class="form-group col-sm-6 field-select p-3 border rounded shadow-sm">
-                                            <label class="w-100 text-center" for="{{ $customField->name }}">Creation Date</label>
-                                            <div class="d-flex flex-nowrap align-items-center">
-                                                <input
-                                                    type="date"
-                                                    class="form-control form-control-solid advanced_search_field w-50"
-                                                    id="{{ $customField->name }}_start"
-                                                    name="{{ $customField->name }}_start"
-                                                    placeholder="Start date"
-                                                    value="{{ request()->query($customField->name . '_start') }}"
-                                                >
-                                                <span class="mx-2 text-muted">to</span>
-                                                <input
-                                                    type="date"
-                                                    class="form-control form-control-solid advanced_search_field w-50"
-                                                    id="{{ $customField->name }}_end"
-                                                    name="{{ $customField->name }}_end"
-                                                    placeholder="End date"
-                                                    value="{{ request()->query($customField->name . '_end') }}"
-                                                >
-                                            </div>
-                                            <div id="created_at_error" class="invalid-feedback d-none"></div>
-                                        </div>
-                                    @endif
-                                    @if ($updatedField)
-                                        @php $customField = $updatedField->custom_field; @endphp
-                                        <div class="form-group col-sm-6 field-select p-3 border rounded shadow-sm">
-                                            <label class="w-100 text-center" for="{{ $customField->name }}">Updated Date</label>
-                                            <div class="d-flex flex-nowrap align-items-center">
-                                                <input
-                                                    type="date"
-                                                    class="form-control form-control-solid advanced_search_field w-50"
-                                                    id="{{ $customField->name }}_start"
-                                                    name="{{ $customField->name }}_start"
-                                                    placeholder="Start date"
-                                                    value="{{ request()->query($customField->name . '_start') }}"
-                                                >
-                                                <span class="mx-2 text-muted">to</span>
-                                                <input
-                                                    type="date"
-                                                    class="form-control form-control-solid advanced_search_field w-50"
-                                                    id="{{ $customField->name }}_end"
-                                                    name="{{ $customField->name }}_end"
-                                                    placeholder="End date"
-                                                    value="{{ request()->query($customField->name . '_end') }}"
-                                                >
-                                            </div>
-                                            <div id="updated_at_error" class="invalid-feedback d-none"></div>
-                                        </div>
-                                    @endif
                                 </div>
 
                                 <div class="px-3 pb-3 w-100 d-flex justify-content-end">
