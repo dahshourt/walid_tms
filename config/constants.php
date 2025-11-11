@@ -59,8 +59,4 @@ return [
 			'notify_division_manager_default' => 'CR Created - Notify Division Manager (Regular)',
 			'notify_division_manager_promo' => 'CR Created - Notify Division Manager (Promo)',
 		]
-
-
 ];
-
-
