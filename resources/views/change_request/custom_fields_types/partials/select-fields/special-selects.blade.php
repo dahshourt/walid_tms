@@ -5,6 +5,9 @@
 
 @elseif($item->CustomField->name == "sub_application_id")
     @include('change_request.custom_fields_types.partials.select-fields.sub-application-select', compact('item', 'sub_applications', 'custom_field_value'))
+	
+@elseif($item->CustomField->name == "tech_group_id")
+    @include('change_request.custom_fields_types.partials.select-fields.tech-groups-select', compact('item', 'technical_groups', 'custom_field_value'))	
 
 @elseif($item->CustomField->name == "cr_member")
     @include('change_request.custom_fields_types.partials.select-fields.cr-member-select', compact('item', 'custom_field_value'))

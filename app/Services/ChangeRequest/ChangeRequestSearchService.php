@@ -45,12 +45,12 @@ class ChangeRequestSearchService
 		$changeRequests = $changeRequests->where(function ($query) use ($groupData) {
 			// Case 1: Where unit_id matches in custom fields
 			$query->whereHas('change_request_custom_fields', function ($q) use ($groupData) {
-				$q->where('custom_field_name', 'unit_id')
-				  ->where('custom_field_value', $groupData->unit_id);
+				$q->where('custom_field_name', 'tech_group_id')
+				  ->where('custom_field_value', $groupData->id);
 			})
 			// Case 2: OR unit_id does NOT exist in custom fields
 			->orWhereDoesntHave('change_request_custom_fields', function ($q) {
-				$q->where('custom_field_name', 'unit_id');
+				$q->where('custom_field_name', 'tech_group_id');
 			});
 		});
 		
@@ -88,12 +88,12 @@ class ChangeRequestSearchService
 		$changeRequests = $changeRequests->where(function ($query) use ($groupData) {
 			// Case 1: Where unit_id matches in custom fields
 			$query->whereHas('change_request_custom_fields', function ($q) use ($groupData) {
-				$q->where('custom_field_name', 'unit_id')
-				  ->where('custom_field_value', $groupData->unit_id);
+				$q->where('custom_field_name', 'tech_group_id')
+				  ->where('custom_field_value', $groupData->id);
 			})
 			// Case 2: OR unit_id does NOT exist in custom fields
 			->orWhereDoesntHave('change_request_custom_fields', function ($q) {
-				$q->where('custom_field_name', 'unit_id');
+				$q->where('custom_field_name', 'tech_group_id');
 			});
 		});
 		
@@ -319,12 +319,12 @@ class ChangeRequestSearchService
 			$changeRequest = $changeRequest->where(function ($query) use ($groupData) {
 				// Case 1: Where unit_id matches in custom fields
 				$query->whereHas('change_request_custom_fields', function ($q) use ($groupData) {
-					$q->where('custom_field_name', 'unit_id')
-					  ->where('custom_field_value', $groupData[0]->unit_id);
+					$q->where('custom_field_name', 'tech_group_id')
+					  ->where('custom_field_value', $groupData[0]->id);
 				})
 				// Case 2: OR unit_id does NOT exist in custom fields
 				->orWhereDoesntHave('change_request_custom_fields', function ($q) {
-					$q->where('custom_field_name', 'unit_id');
+					$q->where('custom_field_name', 'tech_group_id');
 				});
 			});	
 		}
