@@ -153,13 +153,19 @@
 									<div class="col-md-12">
 										<!--begin::Card-->
 										<div class="card card-custom gutter-b example example-compact">
-											<div class="card-header">
-												<h3 class="card-title">{{ $form_title.' #  '.$cr->cr_no }}</h3>
-												
-											</div>
+											
 											<!--begin::Form-->
 									
-												
+												<div class="card-header d-flex justify-content-between align-items-center">
+                                                    <h3 class="card-title m-0">{{ $form_title.' #  '.$cr->cr_no }}</h3>
+                                                    <div class="d-flex">
+                                                        
+														@can('Show CR Logs')
+										    			<button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
+														@endcan	
+                                                    
+                                                    </div>
+                                                </div>
 												<div class="card-body">
 													@foreach($CustomFields as $item)
 													@php 
@@ -352,9 +358,7 @@
 											<!--end::Form-->
 										</div>
 										<!-- Button to trigger the modal -->
-										@can('Show CR Logs')
-										    <button id="openModal" class="btn btn-primary">View History Logs</button>
-										@endcan	
+										
 
 										@include("$view.cr_logs")
 										

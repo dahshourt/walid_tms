@@ -129,20 +129,7 @@
                                                 <div class="card-header d-flex justify-content-between align-items-center">
                                                     <h3 class="card-title m-0">{{ $form_title.' #  '.$cr->cr_no }}</h3>
                                                     <div class="d-flex">
-                                                        @if(count($cr->set_status) > 0)
-                                                            @if($cr->getCurrentStatus()?->status?->id == 68 && $workflow_type_id == 9 && count($reminder_promo_tech_teams) > 0)
-																{{--<button type="button" id="submit_button" class="btn btn-success mr-2" id="show_error_message">
-                                                                        Submit
-																</button>--}}
-																<button type="submit" id="submit_button" class="btn btn-success mr-2">
-                                                                        Submit
-                                                                    </button>
-                                                            @else
-                                                                <button type="submit" id="submit_button" class="btn btn-success mr-2">
-                                                                    Submit
-                                                                </button>
-                                                            @endif
-                                                        @endif
+                                                        
 														@can('Show CR Logs')
 										    			<button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
 														@endcan	
@@ -178,6 +165,25 @@
                                                         @endif
                                                     @endif
 													
+												</div>
+
+                                                <div class="card-footer" style="width: 100%;float: right;">
+                                                    @if(count($cr->set_status) > 0)
+                                                        @if($cr->getCurrentStatus()?->status?->id == 68 && $workflow_type_id == 9 && count($reminder_promo_tech_teams) > 0)
+														{{--<button type="button" id="submit_button" class="btn btn-success mr-2" id="show_error_message">
+                                                                Submit
+														</button>--}}
+														<button type="submit" id="submit_button" class="btn btn-success mr-2">
+                                                                Submit
+                                                            </button>
+                                                        @else
+                                                            <button type="submit" id="submit_button" class="btn btn-success mr-2">
+                                                                Submit
+                                                            </button>
+                                                        @endif
+                                                    @endif
+													
+												
 												</div>
                                                 
 												
