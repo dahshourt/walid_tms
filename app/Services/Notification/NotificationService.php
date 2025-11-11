@@ -140,7 +140,12 @@ class NotificationService
                     return $dm ? [$dm->email] : [];
                 }
                 return [];
-            // in case sent to specific email
+                // in case sent to specific email
+
+            case 'dm_bcc':
+                //$this->toMailUser = $recipient->recipient_identifier;
+                return config('constants.division_managers_mails');
+
             case 'static_email':
                 $this->toMailUser = $recipient->recipient_identifier;
                 return [$recipient->recipient_identifier];
@@ -301,6 +306,7 @@ class NotificationService
         
         // CR link based on workflow type
         $crLink = route('show.cr', $cr->id);
+        $systemLink = url('/');
         // if the rule is notify devision manager 
         if ($rule->name == config('constants.rules.notify_division_manager_default')) {
             $crLink = route('edit.cr', ['id' => $cr->id, 'check_dm' => 1]);
@@ -364,6 +370,7 @@ class NotificationService
             'approve_link' => $approveLink,
             'reject_link' => $rejectLink,
             'workflow_type_id' => $cr->workflow_type_id ?? '',
+            'system_link' => $systemLink,
             
         ];
     }
