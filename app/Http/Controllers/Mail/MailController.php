@@ -271,27 +271,19 @@ class MailController extends Controller
 
             $templateContent = [
                 'subject' => "CR #$cr_no - Awaiting Your Approval",
-                'body' => "Dear $first_name,<br><br>"
-
-                    . "A Change Request (CR) with ID <strong>#<a href='$cr_link'>$cr_no</a></strong> has been created and is currently "
-                    . "<strong>awaiting your approval or rejection</strong> as the requester's Division Manager.<br><br>"
-
-                    . '<ul>'
-                    . "<li><strong>CR Subject:</strong> $title</li>"
-                    . "<li><strong>CR Description:</strong> $description</li>"
-                    . "<li><strong>Requester:</strong> $requester_name</li>"
-                    . "<li><strong>Reference:</strong> CR ID #$cr_no</li>"
-                    . '</ul><br>'
-                    . "<div style='margin: 25px 0;'>"
-                    . "<a href='$approve_link' style='background-color: #4CAF50; color: white; padding: 10px 20px; margin-right: 10px; text-decoration: none; border-radius: 4px;'>Approve </a>"
-                    . " <a href='$reject_link' style='background-color: #f44336; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;'>Reject</a>"
-                    . '</div><br>'
-
-                    . 'Thank you in advance for your prompt action.<br><br>'
-
-                    . '<strong>Note:</strong> This is an automated message sent by the <strong>IT TMS System</strong>.<br>'
-                    . '<strong>Best regards,</strong><br>'
-                    . '<strong>TMS</strong>',
+                'body' => "
+                Dear Division,<br><br>
+                Please take action with below Buttons to 
+                <a href='$approve_link' style='background-color:#00cc00; color:white; padding:4px 10px; border-radius:3px; text-decoration:none;'>Approve</a>
+                or 
+                <a href='$reject_link' style='background-color:#ff0000; color:white; padding:4px 10px; border-radius:3px; text-decoration:none;'>Reject</a>
+                the change or through the <strong>TMS system only</strong> via link 
+                <a href='$cr_link'>TMS URL</a> and select <strong>CR Waiting Approval</strong>.<br><br>
+            
+                <strong>Disclaimer:</strong> -<br>
+                Kindly <strong>avoid using \"Reply All\" or forwarding this email</strong>, as doing so may result in the 
+                <strong><u>loss of your action or approval</u></strong>.
+                "
             ];
         }
 
