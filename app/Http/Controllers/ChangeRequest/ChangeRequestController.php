@@ -47,7 +47,7 @@ class ChangeRequestController extends Controller
     // Constants for better maintainability
     private const FORM_TYPE_CREATE = 1;
     private const FORM_TYPE_EDIT = 2;
-    private const FORM_TYPE_VIEW = 2;
+    private const FORM_TYPE_VIEW = 3;
     private const ATTACHMENT_TYPE_TECHNICAL = 1;
     private const ATTACHMENT_TYPE_BUSINESS = 2;
     private const MAX_FILE_SIZE = 51200; // 50MB in KB
