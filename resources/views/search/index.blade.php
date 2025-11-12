@@ -5,6 +5,9 @@
 @php
 	$user_group = session()->has('current_group') ? session('current_group') : auth()->user()->defualt_group->id;
 	$user_group =\App\Models\Group::find($user_group);
+
+    $user_roles_names = auth()->user()->roles->pluck('name');
+    $current_user_is_just_a_viewer = count($user_roles_names) === 1 && $user_roles_names[0] === 'Viewer';
 @endphp
 
 
@@ -20,7 +23,7 @@
 										<!--begin::Title-->
 										<h2 class="text-white font-weight-bold my-2 mr-5">{{ $title }}</h2>
 										<!--end::Title-->
-										
+
 									</div>
 									<!--end::Heading-->
 								</div>
@@ -32,7 +35,7 @@
 						<div class="d-flex flex-column-fluid">
 							<!--begin::Container-->
 							<div class="container">
-								
+
 								<!--begin::Card-->
 								<div class="card">
 									<div class="card-header flex-wrap border-0 pt-6 pb-0">
@@ -106,7 +109,7 @@
 											</div>
 											<!--end::Dropdown-->
 											<!--begin::Button-->
-											
+
 											<!--end::Button-->
 										</div>
 									</div>
@@ -124,13 +127,13 @@
 														<th>App</th>
 														<th>Release Name</th>
 														<th>Go Live Planned Date</th>
-														<th> planned_start_iot_date</th>            	 
+														<th> planned_start_iot_date</th>
 														<th> planned_end_iot_date</th>
 														<th> planned_start_e2e_date</th>
 														<th> planned_end_e2e_date</th>
 														<th> planned_start_uat_date</th>
 														<th> planned_end_uat_date</th>
-														<th> planned_start_smoke_test_date</th> 
+														<th> planned_start_smoke_test_date</th>
 														<th> planned_end_smoke_test_date</th>
 														{{--<th>#</th>--}}
 													@else
@@ -142,10 +145,10 @@
 														<th>Design Duration</th>
 														<th>Start Design Time</th>
 														<th>End Design Time</th>
-														<th>Development Duration</th> 
+														<th>Development Duration</th>
 														<th>Start Development Time</th>
 														<th>End Development Time</th>
-														<th>Test Duration</th> 
+														<th>Test Duration</th>
 														<th>Start Test Time</th>
 														<th>End Test Time</th>
 														<th>Creation Date</th>
@@ -158,14 +161,14 @@
 											@include("$view.loop")
 											</tbody>
 										</table>
-										 
+
 								<!--end::Card-->
 							</div>
 							                            <!--end::Container-->
                         <!--end::Entry-->
 					</div>
 					<!--end::Content-->
-					
+
 
 @endsection
 @push('script')
