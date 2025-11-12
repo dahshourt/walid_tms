@@ -33,9 +33,7 @@
                             <h3 class="card-title">Add {{ $form_title }}</h3>
                         </div>
                         <!--begin::Form-->
-                        <form  id="advanced_search" action="{{ route('advanced.search.result') }}">
-
-
+                        <form  id="advanced_search">
                             @if (count($fields) > 0)
                                 <div class="form-group row p-3">
                                     @php $createdField = null; $updatedField = null; @endphp
@@ -49,13 +47,6 @@
                                                 if (in_array($labelLower, ['less than date','greater than date'])) {
                                                     continue;
                                                 }
-                                                // Widen date range groups to allow two inputs inline
-                                                if (in_array($customField->name, ['created_at', 'updated_at'])) {
-                                                    // Capture these to render later with desired order and labels
-                                                    if ($customField->name === 'created_at') { $createdField = $field; }
-                                                    if ($customField->name === 'updated_at') { $updatedField = $field; }
-                                                    continue;
-                                                }
                                                 // Defaults for rendering
                                                 $renderName = $customField->name;
                                                 $renderLabel = $customField->label;
@@ -64,12 +55,24 @@
                                                     $renderName = 'cr_no';
                                                     $renderLabel = 'CR No.';
                                                 }
+
+                                                if (in_array($customField->name, ['created_at', 'updated_at'])) {
+                                                    $renderLabel = $customField->name === 'created_at' ? 'Creation Date' :'Updated Date';
+                                                }
+
                                             @endphp
 
-                                            <div class="{{ 'form-group ' . $fieldClasses . (in_array($customField->name, ['created_at','updated_at']) ? ' p-3 border rounded shadow-sm' : '') }}">
+                                            <div
+                                                @class([
+                                                           'form-group',
+                                                           $fieldClasses,
+                                                           'p-3 border rounded shadow-sm col-sm-6' => in_array($customField->name, ['created_at', 'updated_at']),
+                                                       ])
+                                            >
                                                 <label class="{{ in_array($customField->name, ['created_at','updated_at']) ? 'w-100 text-center' : '' }}" for="{{ $renderName }}">{{ $renderLabel }}</label>
 
                                                 @if (in_array($customField->name, ['created_at', 'updated_at']))
+
                                                     <div class="d-flex flex-nowrap align-items-center">
                                                         <input
                                                             type="date"
@@ -77,7 +80,7 @@
                                                             id="{{ $customField->name }}_start"
                                                             name="{{ $customField->name }}_start"
                                                             placeholder="Start date"
-                                                            value="{{ old($customField->name . '_start') }}"
+                                                            value="{{ request()->query($customField->name . '_start') }}"
                                                         >
                                                         <span class="mx-2 text-muted">to</span>
                                                         <input
@@ -86,9 +89,12 @@
                                                             id="{{ $customField->name }}_end"
                                                             name="{{ $customField->name }}_end"
                                                             placeholder="End date"
-                                                            value="{{ old($customField->name . '_end') }}"
+                                                            value="{{ request()->query($customField->name . '_end') }}"
                                                         >
                                                     </div>
+                                                    <div id="updated_at_error" class="invalid-feedback d-none"></div>
+
+
                                                 @elseif ($customField->type == 'select')
                                                     <select
                                                         class="form-control form-control-solid advanced_search_field select2"
@@ -98,73 +104,83 @@
                                                         data-placeholder="Select {{ $renderLabel }}"
                                                         style="width:100%;"
                                                     >
-                                                        <!-- options generated below -->
-                                                        @if($customField->name=="new_status_id")
-
+                                                    @php
+                                                        $selectedValuesRaw = request()->query($renderName, []);
+                                                        if (! is_array($selectedValuesRaw)) {
+                                                            $selectedValuesRaw = strlen((string) $selectedValuesRaw) ? explode(',', (string) $selectedValuesRaw) : [];
+                                                        }
+                                                        $selectedValues = array_map('strval', $selectedValuesRaw);
+                                                    @endphp
+                                                    <!-- options generated below -->
+                                                    @if($customField->name=="new_status_id")
                                                         @foreach ($statuses as $value)
-                                                            <option value="{{ $value->id }}">{{ $value->status_name }}</option>
+                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->status_name }}</option>
                                                         @endforeach
-                                                        @endif
+                                                    @endif
 
-                                                        @if($customField->name=="priority_id")
-
+                                                    @if($customField->name=="priority_id")
                                                         @foreach ($priorities as $value)
-                                                            <option value="{{ $value->id }}">{{ $value->name }}</option>
+                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
                                                         @endforeach
-                                                        @endif
+                                                    @endif
 
 
-                                                        @if($customField->name=="application_id")
-
+                                                    @if($customField->name=="application_id")
                                                         @foreach ($applications as $value)
-                                                            <option value="{{ $value->id }}">{{ $value->name }}</option>
+                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
                                                         @endforeach
-                                                        @endif
+                                                    @endif
 
 
-                                                        @if($customField->name=="parent_id")
-
+                                                    @if($customField->name=="parent_id")
                                                         @foreach ($parents as $value)
-                                                            <option value="{{ $value->id }}">{{ $value->name }}</option>
+                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
                                                         @endforeach
-                                                        @endif
+                                                    @endif
 
-                                                        @if($customField->name=="category_id")
-
+                                                    @if($customField->name=="category_id")
                                                         @foreach ($categories as $value)
-                                                            <option value="{{ $value->id }}">{{ $value->name }}</option>
+                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
                                                         @endforeach
-                                                        @endif
-                                                        @if($customField->name=="unit_id")
-
+                                                    @endif
+                                                    @if($customField->name=="unit_id")
                                                         @foreach ($units as $value)
-                                                            <option value="{{ $value->id }}">{{ $value->name }}</option>
+                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
                                                         @endforeach
-                                                        @endif
-                                                        @if($customField->name=="workflow_type_id")
-
+                                                    @endif
+                                                    @if($customField->name=="workflow_type_id")
                                                         @foreach ($workflows as $value)
-                                                            <option value="{{ $value->id }}">{{ $value->name }}</option>
+                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
                                                         @endforeach
-                                                        @endif
+                                                    @endif
 
-                                                        @if($customField->name === 'tester_id')
-                                                            @foreach ($testing_users as $testing_user)
-                                                                <option value="{{ $testing_user->id }}">{{ $testing_user->user_name }}</option>
-                                                            @endforeach
-                                                        @endif
+                                                    @if($customField->name === 'tester_id')
+                                                        @foreach ($testing_users as $testing_user)
+                                                            @php $isSelected = in_array((string) $testing_user->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $testing_user->id }}" @if($isSelected) selected @endif>{{ $testing_user->user_name }}</option>
+                                                        @endforeach
+                                                    @endif
 
-                                                        @if($customField->name === 'designer_id')
-                                                            @foreach ($sa_users as $sa_user)
-                                                                <option value="{{ $sa_user->id }}">{{ $sa_user->user_name }}</option>
-                                                            @endforeach
-                                                        @endif
+                                                    @if($customField->name === 'designer_id')
+                                                        @foreach ($sa_users as $sa_user)
+                                                            @php $isSelected = in_array((string) $sa_user->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $sa_user->id }}" @if($isSelected) selected @endif>{{ $sa_user->user_name }}</option>
+                                                        @endforeach
+                                                    @endif
 
-                                                        @if($customField->name === 'developer_id')
-                                                            @foreach ($developer_users as $developer_user)
-                                                                <option value="{{ $developer_user->id }}">{{ $developer_user->user_name }}</option>
-                                                            @endforeach
-                                                        @endif
+                                                    @if($customField->name === 'developer_id')
+                                                        @foreach ($developer_users as $developer_user)
+                                                            @php $isSelected = in_array((string) $developer_user->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $developer_user->id }}" @if($isSelected) selected @endif>{{ $developer_user->user_name }}</option>
+                                                        @endforeach
+                                                    @endif
 
                                                     </select>
                                                 @elseif ($customField->type == 'textArea')
@@ -174,7 +190,7 @@
                                                         name="{{ $renderName }}"
                                                         placeholder="{{ $renderLabel }}"
                                                         rows="4"
-                                                    >{{ old($renderName) }}</textarea>
+                                                    >{{ request()->query($renderName) }}</textarea>
                                                 @elseif ($customField->type == 'text' || $customField->type == 'input')
 
                                                                 @php $isCrIdField = in_array(strtolower($customField->name), ['cr_id','id']) || ($labelLower === 'cr id'); @endphp
@@ -184,7 +200,7 @@
                                                                     id="{{ $renderName }}"
                                                                     name="{{ $renderName }}"
                                                                     placeholder="{{ $renderLabel }}"
-                                                                    value="{{ old($renderName) }}"
+                                                                    value="{{ request()->query($renderName) }}"
                                                                 >
 
 
@@ -195,7 +211,7 @@
                                                         id="{{ $renderName }}"
                                                         name="{{ $renderName }}"
                                                         placeholder="{{ $renderLabel }}"
-                                                        value="{{ old($renderName) }}"
+                                                        value="{{ request()->query($renderName) }}"
                                                     >
                                                 @elseif ($customField->type == 'date')
                                                     <input
@@ -203,7 +219,7 @@
                                                         class="form-control form-control-solid advanced_search_field"
                                                         id="{{ $customField->name }}"
                                                         name="{{ $customField->name }}"
-                                                        value="{{ old($customField->name) }}"
+                                                        value="{{ request()->query($customField->name) }}"
                                                     >
                                                 @endif
 
@@ -217,58 +233,6 @@
                                             <p>Custom field data is not available.</p>
                                         @endif
                                     @endforeach
-                                    @if ($createdField)
-                                        @php $customField = $createdField->custom_field; @endphp
-                                        <div class="form-group col-sm-6 field-select p-3 border rounded shadow-sm">
-                                            <label class="w-100 text-center" for="{{ $customField->name }}">Creation Date</label>
-                                            <div class="d-flex flex-nowrap align-items-center">
-                                                <input
-                                                    type="date"
-                                                    class="form-control form-control-solid advanced_search_field w-50"
-                                                    id="{{ $customField->name }}_start"
-                                                    name="{{ $customField->name }}_start"
-                                                    placeholder="Start date"
-                                                    value="{{ old($customField->name . '_start') }}"
-                                                >
-                                                <span class="mx-2 text-muted">to</span>
-                                                <input
-                                                    type="date"
-                                                    class="form-control form-control-solid advanced_search_field w-50"
-                                                    id="{{ $customField->name }}_end"
-                                                    name="{{ $customField->name }}_end"
-                                                    placeholder="End date"
-                                                    value="{{ old($customField->name . '_end') }}"
-                                                >
-                                            </div>
-                                            <div id="created_at_error" class="invalid-feedback d-none"></div>
-                                        </div>
-                                    @endif
-                                    @if ($updatedField)
-                                        @php $customField = $updatedField->custom_field; @endphp
-                                        <div class="form-group col-sm-6 field-select p-3 border rounded shadow-sm">
-                                            <label class="w-100 text-center" for="{{ $customField->name }}">Updated Date</label>
-                                            <div class="d-flex flex-nowrap align-items-center">
-                                                <input
-                                                    type="date"
-                                                    class="form-control form-control-solid advanced_search_field w-50"
-                                                    id="{{ $customField->name }}_start"
-                                                    name="{{ $customField->name }}_start"
-                                                    placeholder="Start date"
-                                                    value="{{ old($customField->name . '_start') }}"
-                                                >
-                                                <span class="mx-2 text-muted">to</span>
-                                                <input
-                                                    type="date"
-                                                    class="form-control form-control-solid advanced_search_field w-50"
-                                                    id="{{ $customField->name }}_end"
-                                                    name="{{ $customField->name }}_end"
-                                                    placeholder="End date"
-                                                    value="{{ old($customField->name . '_end') }}"
-                                                >
-                                            </div>
-                                            <div id="updated_at_error" class="invalid-feedback d-none"></div>
-                                        </div>
-                                    @endif
                                 </div>
 
                                 <div class="px-3 pb-3 w-100 d-flex justify-content-end">
@@ -291,6 +255,120 @@
 </div>
 <!--end::Content-->
 
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Advanced Search Results</h3>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <h2 class="mb-0 mr-4">Search Result</h2>
+                        <form action="{{ route('advanced.search.export', request()->query()) }}" method="POST" style="display: inline;">
+                            @csrf
+                            <button type="submit" class="btn btn-success font-weight-bolder">
+                                <span class="svg-icon svg-icon-md">
+                                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                            <rect x="0" y="0" width="24" height="24"/>
+                                            <path d="M7,18 L17,18 C18.1045695,18 19,18.8954305 19,20 C19,21.1045695 18.1045695,22 17,22 L7,22 C5.8954305,22 5,21.1045695 5,20 C5,18.8954305 5.8954305,18 7,18 Z M7,20 L17,20 C17.5522847,20 18,20.4477153 18,21 C18,21.5522847 17.5522847,22 17,22 L7,22 C6.44771525,22 6,21.5522847 6,21 C6,20.4477153 6.44771525,20 7,20 Z" fill="#000000" fill-rule="nonzero"/>
+                                            <path d="M12,2 C12.5522847,2 13,2.44771525 13,3 L13,13.5857864 L15.2928932,11.2928932 C15.6834175,10.9023689 16.3165825,10.9023689 16.7071068,11.2928932 C17.0976311,11.6834175 17.0976311,12.3165825 16.7071068,12.7071068 L12.7071068,16.7071068 C12.3165825,17.0976311 11.6834175,17.0976311 11.2928932,16.7071068 L7.29289322,12.7071068 C6.90236893,12.3165825 6.90236893,11.6834175 7.29289322,11.2928932 C7.68341751,10.9023689 8.31658249,10.9023689 8.70710678,11.2928932 L11,13.5857864 L11,3 C11,2.44771525 11.4477153,2 12,2 Z" fill="#000000"/>
+                                        </g>
+                                    </svg>
+                                </span>
+                                Export Table
+                            </button>
+                        </form>
+                    </div>
+                    <p class="mb-4 text-primary fw-bold">Total Results: {{ $totalCount }}</p>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                            <tr>
+                                <th>CR ID</th>
+                                <th>Title</th>
+                                <th>Category</th>
+                                <th>Release</th>
+                                <th>Current Status</th>
+                                <th>Requester</th>
+                                <th>Requester Email</th>
+                                <th>Design Duration</th>
+                                <th>Dev Duration</th>
+                                <th>Test Duration</th>
+                                <th>Creation Date</th>
+                                <th>Requesting Department</th>
+                                <th>Targeted System</th>
+                                <th>Last Action Date</th>
+                                <th>Action</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach ($collection as $item)
+                                <tr>
+                                    <td>
+                                        @can('Edit ChangeRequest')
+                                            <a href='{{ route('change_request.edit', $item->id) }}'>{{ $item['cr_no'] }}</a>
+                                        @endcan
+                                    </td>
+                                    <td>{{ $item['title'] ?? "" }}</td>
+                                    <td>{{ $item['category']['name'] ?? "" }}</td>
+                                    <td>{{ $item['release']['name'] ?? "" }}</td>
+                                    <td>
+                                        @php
+                                            $statuses_names = $item->RequestStatuses->pluck('status.name');
+                                        @endphp
+                                        {{ $statuses_names->implode(', ') }}
+                                    </td>
+                                    <td>{{ $item['requester_name'] ?? "" }}</td>
+                                    <td>{{ $item['requester_email'] ?? "" }}</td>
+                                    <td>{{ $item['design_duration'] ?? "" }}</td>
+                                    <td>{{ $item['develop_duration'] ?? "" }}</td>
+                                    <td>{{ $item['test_duration'] ?? "" }}</td>
+                                    <td>{{ $item['created_at'] ?? "" }}</td>
+                                    <td>{{ $item['department'] ?? "" }}</td>
+                                    <td>{{ $item['application']['name'] ?? "" }}</td>
+                                    <td>{{ $item['updated_at'] ?? "" }}</td>
+                                    <td>
+                                        <div class="d-inline-flex">
+                                            <a href='{{ route('change_request.show', $item->id) }}' class="btn btn-sm btn-clean btn-icon mr-2" title="Show details">
+                                                    <span class="svg-icon svg-icon-md">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                                                            <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                                                <rect x="0" y="0" width="24" height="24"></rect>
+                                                                <path d="M12,2 C6.477,2 2,6.477 2,12 C2,17.523 6.477,22 12,22 C17.523,22 22,17.523 22,12 C22,6.477 17.523,2 12,2 Z M12,19.5 C7.805,19.5 4.5,16.195 4.5,12 C4.5,7.805 7.805,4.5 12,4.5 C16.195,4.5 19.5,7.805 19.5,12 C19.5,16.195 16.195,19.5 12,19.5 Z M11,16 L13,16 L13,13 L11,13 L11,16 Z M11,11 L13,11 L13,8 L11,8 L11,11 Z" fill="#000000"></path>
+                                                            </g>
+                                                        </svg>
+                                                    </span>
+                                            </a>
+                                            @if(in_array($item["id"], $crs_in_queues->toArray()) && !(($item["workflow_type_id"] == 5) && in_array($item["new_status_id"], [66, 67, 68, 69])))
+                                                <a href='{{ route('change_request.show', $item->id) }}/edit' class="btn btn-sm btn-clean btn-icon mr-2" title="Edit details">
+                                                        <span class="svg-icon svg-icon-md">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                                                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                                                    <rect x="0" y="0" width="24" height="24"></rect>
+                                                                    <path d="M8,17.9148182 L8,5.96685884 C8,5.56391781 8.16211443,5.17792052 8.44982609,4.89581508 L10.965708,2.42895648 C11.5426798,1.86322723 12.4640974,1.85620921 13.0496196,2.41308426 L15.5337377,4.77566479 C15.8314604,5.0588212 16,5.45170806 16,5.86258077 L16,17.9148182 C16,18.7432453 15.3284271,19.4148182 14.5,19.4148182 L9.5,19.4148182 C8.67157288,19.4148182 8,18.7432453 8,17.9148182 Z" fill="#000000" fill-rule="nonzero"></path>
+                                                                </g>
+                                                            </svg>
+                                                        </span>
+                                                </a>
+                                            @endif
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded shadow-sm">
+                        <p class="mb-0 text-primary fw-bold"></p>
+                        <div>{{ $collection->links() }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 @push('css')
     {{--Avoid horizontal scrollbars when Select2 opens--}}
@@ -404,6 +482,7 @@
             if ($form.length && $form[0]) {
                 $form[0].reset();
             }
+            $form.find('input[type="text"], input[type="number"], input[type="date"], input[type="email"], input[type="search"], textarea').val('').trigger('change');
             // Reset Select2 fields explicitly
             $form.find('select.select2').val(null).trigger('change');
             // Clear date errors

@@ -110,14 +110,7 @@
 									<div class="col-md-12">
 										<!--begin::Card-->
 										<div class="card card-custom gutter-b example example-compact">
-											<div class="card-header">
-												<h3 class="card-title">{{ $form_title.' #  '.$cr->cr_no }}
-
-                                               
-                                                </h3>
-                                                
-												
-											</div>
+											
 											<!--begin::Form-->
 											 @php
                                              foreach ($cr->change_request_custom_fields as $key => $value) {
@@ -132,6 +125,19 @@
 
                                                 {{ csrf_field() }}
                                                 {{ method_field('PATCH') }}
+
+                                                <div class="card-header d-flex justify-content-between align-items-center">
+                                                    <h3 class="card-title m-0">{{ $form_title.' #  '.$cr->cr_no }}</h3>
+                                                    <div class="d-flex">
+                                                        
+														@can('Show CR Logs')
+										    			<button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
+														@endcan	
+                                                    
+                                                    </div>
+                                                </div>
+
+                                                
 												<input type="hidden" name="testable_flag" value="@if(!empty($testable)){{$testable}}@else{{0}}@endif" />
 												<input type="hidden" name="workflow_type_id" value="{{$workflow_type_id}}">
 												<input type="hidden" name="old_status_id" value="{{$cr->current_status->new_status_id}}">
@@ -160,8 +166,8 @@
                                                     @endif
 													
 												</div>
-                                                
-												<div class="card-footer" style="width: 100%;float: right;">
+
+                                                <div class="card-footer" style="width: 100%;float: right;">
                                                     @if(count($cr->set_status) > 0)
                                                         @if($cr->getCurrentStatus()?->status?->id == 68 && $workflow_type_id == 9 && count($reminder_promo_tech_teams) > 0)
 														{{--<button type="button" id="submit_button" class="btn btn-success mr-2" id="show_error_message">
@@ -176,11 +182,11 @@
                                                             </button>
                                                         @endif
                                                     @endif
-													@can('Show CR Logs')
-										    			<button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
-													@endcan	
-                                                    
+													
+												
 												</div>
+                                                
+												
 											</form>
 											<!--end::Form-->
 
@@ -240,6 +246,7 @@
 											@if(count($cr['attachments'])  > 0  )
 													<div class="form-group col-md-12" style="float:left">
                                                     @can('View Technichal Attachments')
+                                                    @if(count($cr['attachments']->where('flag', 1))  > 0  )
                                                     <h5>Technichal Attachments</h5>
 													<table class="table table-bordered">
                                                         <thead>
@@ -282,8 +289,10 @@
                                                             @endforeach
                                                         </tbody>
                                                     </table>
+                                                    @endif
                                                     @endcan
                                                     @can('View Business Attachments')
+                                                    @if(count($cr['attachments']->where('flag', 2))  > 0  )
                                                     <h5>Business Attachments</h5>
                                                     <table class="table table-bordered">
                                                         <thead>
@@ -326,6 +335,7 @@
                                                             @endforeach
                                                         </tbody>
                                                     </table>
+                                                    @endif
                                                     @endcan
 
 													</div>
