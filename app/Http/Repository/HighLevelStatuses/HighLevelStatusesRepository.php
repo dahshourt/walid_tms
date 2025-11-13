@@ -17,7 +17,7 @@ class HighLevelStatusesRepository implements HighLevelStatusesRepositoryInterfac
 
     public function paginateAll()
     {
-        return HighLevelStatuses::latest()->paginate(10);
+        return HighLevelStatuses::latest()->with('statuses')->paginate(10);
     }
 
     public function create($request)
