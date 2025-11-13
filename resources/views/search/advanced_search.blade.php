@@ -34,7 +34,6 @@
                         </div>
                         <!--begin::Form-->
                         <form  id="advanced_search">
-                            <input type="hidden" name="has_filters">
                             @if (count($fields) > 0)
                                 <div class="form-group row p-3">
                                     @php $createdField = null; $updatedField = null; @endphp
@@ -378,10 +377,10 @@
 @endpush
 @push('script')
 <script>
-    @if(request()->has('has_filters'))
-    $('html, body').animate({
-        scrollTop: $('#results').offset().top - 200
-    }, 800);
+    @if(count(request()->query()))
+        $('html, body').animate({
+            scrollTop: $('#results').offset().top - 200
+        }, 800);
     @endif
     function checkFields(form) {
         var  inputs = $('.advanced_search_field');
