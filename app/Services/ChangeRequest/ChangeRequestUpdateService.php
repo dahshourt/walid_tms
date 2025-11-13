@@ -19,6 +19,7 @@ use App\Models\User;
 use App\Traits\ChangeRequest\ChangeRequestConstants;
 use Auth;
 use Illuminate\Support\Arr;
+use App\Events\ChangeRequestUserAssignment;
 
 class ChangeRequestUpdateService
 {
@@ -102,6 +103,9 @@ class ChangeRequestUpdateService
         // 10) CR-level status move (main workflow)
         if (isset($request->new_status_id)) {
             $this->statusService->updateChangeRequestStatus($id, $request);
+        }
+        if (!isset($request->new_status_id)) {
+            event(new ChangeRequestUserAssignment($this->changeRequest_old, $request));
         }
 
         // 12) Audit

@@ -16,15 +16,14 @@ class NotificationService
     public function handleEvent($event)
     {
         $eventClass = get_class($event);
-        //dd($event, $event->request->all());
-        
+
         // Get all active rules for this event
         $rules = NotificationRule::with(['template', 'recipients'])
             ->where('event_class', $eventClass)
             ->where('is_active', true)
             ->orderBy('priority', 'desc')
             ->get();
-        //dd($rules);
+        
         //dd($event->changeRequest->application->group_applications->last()->group_id);
         foreach ($rules as $rule) {
             // Check if conditions match
@@ -61,6 +60,11 @@ class NotificationService
         // Check new_status_id (for status update events)
         if (isset($conditions['new_status_id'])) {
             if (!isset($event->newStatusIds) || !in_array($conditions['new_status_id'], $event->newStatusIds)) {
+                return false;
+            }
+        }
+        if (isset($conditions['old_status_id'])) {
+            if ($event->request->old_status_id != $conditions['old_status_id']) {
                 return false;
             }
         }
@@ -213,27 +217,36 @@ class NotificationService
                 return [];
 
             case 'cr_team':
-                //return [config('constants.mails.cr_team')];
 				$group = Group::where('title',config('constants.group_names.cr_team'))->first();
                 return $group ? [$group->head_group_email] : [config('constants.mails.cr_team')];
-            
+
             case 'qc_team':
-                //return [config('constants.mails.qc_team')];
 				$group = Group::where('title',config('constants.group_names.qc_team'))->first();
                 return $group ? [$group->head_group_email] : [config('constants.mails.qc_team')];
+
             case 'sa_team':
-                //return [config('constants.mails.sa_team')];
 				$group = Group::where('title',config('constants.group_names.sa_team'))->first();
                 return $group ? [$group->head_group_email] : [config('constants.mails.sa_team')];
+
+            case 'as_team':
+				$group = Group::where('title',config('constants.group_names.as_team'))->first();
+                return $group ? [$group->head_group_email] : [config('constants.mails.as_team')];
+    
+            case 'bo_team':
+				$group = Group::where('title',config('constants.group_names.bo_team'))->first();
+                return $group ? [$group->head_group_email] : [config('constants.mails.bo_team')];
             
             case 'qa_team':
-                return [config('constants.mails.qa_team')];
+                $group = Group::where('title',config('constants.group_names.qa_team'))->first();
+                return $group ? [$group->head_group_email] : [config('constants.mails.qa_team')];
             
             case 'uat_team':
-                return [config('constants.mails.uat_team')];
+                $group = Group::where('title',config('constants.group_names.uat_team'))->first();
+                return $group ? [$group->head_group_email] : [config('constants.mails.uat_team')];
             
             case 'pmo_team':
-                return [config('constants.mails.pmo_team')];
+                $group = Group::where('title',config('constants.group_names.pmo_team'))->first();
+                return $group ? [$group->head_group_email] : [config('constants.mails.pmo_team')];
             
             case 'assigned_dev_team':
                 // Get the group assigned to handle the CR
@@ -323,11 +336,18 @@ class NotificationService
         // Get old and new status names for status update events
         $oldStatus = '';
         $newStatus = '';
+        $currentStatus = '';
         
         if (isset($statusData['old_status_id'])) {
             $oldStatusModel = \App\Models\Status::find($statusData['old_status_id']);
             $oldStatus = $oldStatusModel->status_name ?? '';
         }
+        else{
+            $oldStatusModel = \App\Models\Status::find($event->request->old_status_id);
+            $oldStatus = $oldStatusModel->status_name ?? '';
+        }
+
+        $currentStatus = $oldStatus;
         
         // For new status, use the specific status from the rule condition (not all statuses)
         // This shows only the relevant status that triggered this notification
@@ -361,7 +381,7 @@ class NotificationService
             'requester_name' => $creatorName,
             'first_name' => $firstName,
             'division_manager_name' => $divisionManagerName,
-            'current_status' => $cr->currentStatusRel->status->status_name ?? 'N/A',
+            'current_status' => $currentStatus,
             'old_status' => $oldStatus,
             'new_status' => $newStatus,
             'group_name' => $groupName,

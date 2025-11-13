@@ -38,7 +38,7 @@
                                         </a>
                                         @endcan
 
-                                        @can('Delete Permission')
+                                       {{-- @can('Delete Permission') 
 
                                         <form action='{{ url("$route") }}/{{ $item->id }}' method="POST" onsubmit="return confirm('Are you sure you want to delete this item?');">
                                             {{ csrf_field() }}
@@ -55,7 +55,7 @@
                                             </button>
                                         </form>
 
-                                        @endcan
+                                        @endcan --}}
                                     
                                         
                                     </td>
