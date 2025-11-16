@@ -3,6 +3,7 @@
 @section('content')
 
 
+
 					<!--begin::Content-->
 					<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
 						<!--begin::Subheader-->
@@ -161,6 +162,7 @@
 													<th>#</th>
 													<th>Staus Name</th>
 													<th>Stage</th>
+													<th>Workflow Type</th>
 													<th>Set By Group</th>
 													<th>View By Group</th>
 													@can('Active Status')
