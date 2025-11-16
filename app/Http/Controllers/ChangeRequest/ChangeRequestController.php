@@ -1430,17 +1430,27 @@ $cr->update(['hold' => 0]);
             ->where('active', '1')
             ->value('new_status_id');
 
-        if ($current_status !=  config('change_request.status_ids.pending_cab')) {
-            $message = $current_status == config('change_request.status_ids.pending_cab_proceed')
-                ? 'You already rejected this CR.' 
+        // if ($current_status != config('change_request.status_ids.pending_cab')) {
+        //     $message = $current_status == config('change_request.status_ids.pending_cab_proceed')
+        //         ? 'You already rejected this CR.'
+        //         : 'You already approved this CR.';
+
+        //     return response()->json([
+        //         'isSuccess' => false,
+        //         'message' => $message,
+        //     ], 400);
+        // }
+
+        if (!status_matches($current_status, 'pending_cab')) {
+            $message = status_matches($current_status, 'pending_cab_proceed')
+                ? 'You already rejected this CR.'
                 : 'You already approved this CR.';
+
             return response()->json([
                 'isSuccess' => false,
                 'message' => $message,
             ], 400);
         }
-
-      
 
         try {
            
@@ -1664,15 +1674,16 @@ $repo = new ChangeRequestRepository();
 
             $status_id = $status->new_status_id ?? null;
             if ($changeRequest->workflow_type_id == 3) {
-                if (!in_array($status_id, [
+                if (! in_array($status_id, [
                     config('change_request.status_ids.pending_production_deployment_in_house'),
-                    config('change_request.status_ids.pending_stage_deployment_in_house')
+                    config('change_request.status_ids.pending_stage_deployment_in_house'),
                 ])) {
                     return redirect()->back()
                         ->with('error', 'Change request is not in pending production deployment or pending stage deployment status.')
                         ->withInput();
                 }
             }
+            
         }
 
         DB::beginTransaction();

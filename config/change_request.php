@@ -75,6 +75,7 @@ return [
         'production_deployment' => 128,
         'business_approval' => 22,
         'pending_cab' => 38,
+        'pending_cab_kam' => 309,
         'pending_cab_proceed' => 160,
         'pending_cab_review' => 37,
         'set_kickoff' => 110,
