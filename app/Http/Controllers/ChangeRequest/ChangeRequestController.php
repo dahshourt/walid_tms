@@ -23,6 +23,7 @@ use App\Factories\Users\UserFactory;
 use App\Factories\Defect\DefectFactory;
 use App\Models\Application;
 use App\Models\Group;
+use App\Models\ManDaysLog;
 use App\Models\Change_request;
 use App\Http\Repository\RejectionReasons\RejectionReasonsRepository;
 use App\Models\Attachements_crs;
@@ -440,9 +441,8 @@ class ChangeRequestController extends Controller
     public function edit(int $id, bool $cab_cr_flag = false)
     {
         $this->authorize('Edit ChangeRequest');
-
-
-		if($cab_cr_flag) request()->request->add(['cab_cr_flag' => true]);
+        
+ 		if($cab_cr_flag) request()->request->add(['cab_cr_flag' => true]);
         // Validate division manager access if requested
         if (request()->has('check_dm')) {
             $validation = $this->validateDivisionManagerAccess($id);
@@ -520,7 +520,15 @@ class ChangeRequestController extends Controller
     {
         //dd($request->all());
         $this->authorize('Edit ChangeRequest');
-
+        if($request->man_days AND !empty($request->man_days))
+        {
+            $group_name = Group::where('id',auth()->user()->default_group )->first();
+            ManDaysLog::create([
+                'group_id' => auth()->user()->default_group,
+                'cr_id'    => $id,
+                'man_day'  => $request->man_days,
+            ]);
+        }
         DB::beginTransaction();
         try {
             // Handle technical teams assignment
@@ -550,6 +558,8 @@ class ChangeRequestController extends Controller
                 'cr_id' => $id,
                 'user_id' => auth()->id()
             ]);
+
+            
 
 			$previousUrl = url()->previous();
 			$cr = Change_request::find($id);
@@ -952,6 +962,7 @@ class ChangeRequestController extends Controller
         $title = (!empty($workflow_type_id) && $workflow_type_id == 9)
             ? "List Promo"
             : view()->shared('title');
+        $man_days = ManDaysLog::where('cr_id', $id)->get();
 
 
         //  echo "<pre>";
@@ -962,7 +973,7 @@ class ChangeRequestController extends Controller
             'ApplicationImpact', 'cap_users', 'CustomFields', 'cr', 'workflow_type_id',
             'logs_ers', 'developer_users', 'sa_users', 'testing_users', 'technical_teams',
             'all_defects', 'reminder_promo_tech_teams', 'rtm_members', 'assignment_users',
-            'reminder_promo_tech_teams_text','technical_groups'
+            'reminder_promo_tech_teams_text','technical_groups','man_days'
         );
     }
 
