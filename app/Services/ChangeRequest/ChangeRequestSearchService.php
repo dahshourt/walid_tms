@@ -134,9 +134,8 @@ class ChangeRequestSearchService
         // Filter by status using getCurrentStatusForDivision()
         $filtered = $allRequests->filter(function ($item) {
             $status = $item->getCurrentStatusForDivision();
-            return $status && $status->status && status_matches($status->status->id, 'pending_cab');
 
-           // return $status && $status->status && $status->status->id == config('change_request.status_ids.pending_cab');
+            return $status && $status->status && $status->status->id == config('change_request.status_ids.pending_cab');
         });
 
         // Manual pagination
@@ -185,9 +184,8 @@ class ChangeRequestSearchService
         $filtered = $allRequests->filter(function ($item) {
             // $status = $item->getCurrentStatus();
             $status = $item->getCurrentStatusForDivision();
-            return $status && $status->status && status_matches($status->status->id, 'business_approval');
 
-           // return $status && $status->status && $status->status->id == config('change_request.status_ids.business_approval');
+            return $status && $status->status && $status->status->id == config('change_request.status_ids.business_approval');
         });
 
         // Manual pagination
@@ -211,12 +209,7 @@ class ChangeRequestSearchService
         // dd($userId);
         $group = $this->resolveGroup();
         $viewStatuses = $this->getViewStatuses();
-       // $viewStatuses[] = config('change_request.status_ids.cr_manager_review');
-       $viewStatuses[] = config('change_request.status_ids.cr_manager_review');
-if (config('change_request.status_ids.cr_manager_review_kam')) {
-    $viewStatuses[] = config('change_request.status_ids.cr_manager_review_kam');
-}
-
+        $viewStatuses[] = config('change_request.status_ids.cr_manager_review');
         // dd($viewStatuses);
         if ($group == config('change_request.group_ids.promo')) {
             // dd('promo');
