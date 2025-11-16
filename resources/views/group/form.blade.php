@@ -35,7 +35,7 @@
 						@elseif(old('unit_id') == $item->id)
 							selected 
 						@endif>
-						{{ $item->manager_name }}
+						{{ $item->name }} - {{ $item->manager_name }}
 					</option>
 				@endforeach
 			</select>

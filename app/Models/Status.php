@@ -24,6 +24,7 @@ class Status extends Model
      */
     protected $fillable = [
         'id',
+        'workflow_type_id',
         'status_name',
         'stage_id',
         'sla',
@@ -86,5 +87,10 @@ class Status extends Model
     public function getNameAttribute()
     {
         return $this->status_name;
+    }
+	
+	public function workflow_type()
+    {
+        return $this->belongsTo(WorkFlowType::class, 'workflow_type_id');
     }
 }

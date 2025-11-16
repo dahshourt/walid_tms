@@ -1,7 +1,7 @@
 {{-- partials/select-fields/status-option-item.blade.php --}}
 
 <option value="{{ $status->id }}" 
-    {{ $custom_field_value == $status->id ? 'selected' : '' }}
+    
     data-status-name="{{ $status->workflowstatus[0]->to_status->status_name }}"
     data-defect="{{ $status->workflowstatus[0]->to_status->defect }}">
     @if($status->workflowstatus[0]->to_status->high_level)

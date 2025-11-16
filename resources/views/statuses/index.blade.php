@@ -161,6 +161,7 @@
 													<th>#</th>
 													<th>Staus Name</th>
 													<th>Stage</th>
+													<th>Workflow Type</th>
 													<th>Set By Group</th>
 													<th>View By Group</th>
 													@can('Active Status')

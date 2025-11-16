@@ -5,6 +5,7 @@
                                     <th scope="row">{{ $item->id }}</th>
                                     <td>{{ $item->name }}</td>
                                     <td>{{ $item->stage->name }}</td>
+                                    <td>{{ $item->workflow_type?->name }}</td>
                                     <td>
                                         @if($item->setByGroupStatuses)
                                             {{ $item->setByGroupStatuses->pluck('group.title')->implode(', ') }}
