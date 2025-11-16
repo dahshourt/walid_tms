@@ -17,6 +17,7 @@ use App\Models\Rejection_reason;
 use App\Models\Unit;
 use App\Models\User;
 use Auth;
+use Illuminate\Support\Str;
 
 class LogRepository implements LogRepositoryInterface
 {
@@ -112,7 +113,7 @@ class LogRepository implements LogRepositoryInterface
 
         // fetch custom fields you want to append
         $customFields = CustomField::query()
-            ->whereIn('type', ['input', 'textArea'])
+            ->whereIn('type', ['input', 'textArea', 'multiselect'])
             ->whereNotIn('name', $excludeNames)
             ->get();
 
