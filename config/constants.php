@@ -36,8 +36,8 @@ return [
 			'qc_team' => 'IT.QC@te.eg',
 			'sa_team' => 'IT.SA@te.eg',
 			'qa_team' => 'IT.QA@te.eg',
-			'uat_team' => 'IT.UAT@te.eg',
-			'pmo_team' => 'IT.PMO@te.eg',
+			'as_team' => 'int.app.support@te.eg',
+			'bo_team' => 'it.billing.ops@te.eg',
 			
 		],
 	'group_names' =>
@@ -45,6 +45,9 @@ return [
 			'cr_team' => 'CR Team Admin',
 			'sa_team' => 'Design team',
 			'qc_team' => 'QC team',
+			'qa_team' => 'QA',
+			'as_team' => 'int.app.support',
+			'bo_team' => 'IT Billing Ops',
 		],	
 	'division_managers_mails' =>
 		[

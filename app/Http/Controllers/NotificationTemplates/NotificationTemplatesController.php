@@ -32,6 +32,7 @@ class NotificationTemplatesController extends Controller
 
     public function index()
     {
+        $this->authorize('List Notification Templates');
         $collection = $this->NotificationTemplates->getAll();
 
         return view("$this->view.index", compact('collection'));
@@ -44,6 +45,7 @@ class NotificationTemplatesController extends Controller
      */
     public function create()
     {
+        $this->authorize('Create Notification Templates');
         return view("$this->view.create");
     }
 
@@ -54,6 +56,7 @@ class NotificationTemplatesController extends Controller
      */
     public function store(Request $request)
     {
+        $this->authorize('Create Notification Templates');
         $store = $this->NotificationTemplates->create($request->all());
 
         return redirect()->back()->with('status', 'Template Added Successfully');
@@ -68,6 +71,7 @@ class NotificationTemplatesController extends Controller
      */
     public function show($id)
     {
+        $this->authorize('Show Notification Templates');
         $row = $this->NotificationTemplates->find($id);
 
         return view("$this->view.show", compact('row'));
@@ -81,6 +85,7 @@ class NotificationTemplatesController extends Controller
      */
     public function edit($id)
     {
+        $this->authorize('Edit Notification Templates');
         $row = $this->NotificationTemplates->find($id);
 
         return view("$this->view.edit", compact('row'));
@@ -94,6 +99,7 @@ class NotificationTemplatesController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $this->authorize('Edit Notification Templates');
         $this->NotificationTemplates->update($request->all(), $id);
 
         return redirect()->back()->with('status', 'Template Updated Successfully');
@@ -107,6 +113,7 @@ class NotificationTemplatesController extends Controller
      */
     public function destroy($id)
     {
+        $this->authorize('Delete Notification Templates');
         $this->NotificationTemplates->delete($id);
 
         return redirect()->back()->with('success', 'Template deleted successfully!');

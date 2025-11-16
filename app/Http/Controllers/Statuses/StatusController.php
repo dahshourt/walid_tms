@@ -17,6 +17,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class StatusController extends Controller
 {
+    
     use ValidatesRequests;
     private $status;
 

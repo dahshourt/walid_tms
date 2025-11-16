@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class TechCustomFieldTableSeeder extends Seeder
 {
+    
     public function run()
     {
         DB::table('custom_fields')->insert([

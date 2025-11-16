@@ -37,6 +37,7 @@ class Status extends Model
         'created_at',
     ];
 
+    
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('active', '1');

@@ -157,6 +157,7 @@
 			</div>
 		</div>
 
+		
 		<div class="form-group">
 			<label>Active</label>
 			<div class="checkbox-inline">
