@@ -20,6 +20,7 @@
 @include("$view.custom_fields_types.button")     
 @include("$view.custom_fields_types.radio")   
 @include("$view.custom_fields_types.date")                                                 
+@include("$view.custom_fields_types.datetime")                                                 
 @endforeach
 <!-- <script>
     document.addEventListener('DOMContentLoaded', function () {

@@ -932,7 +932,7 @@ class ChangeRequestController extends Controller
             self::FORM_TYPE_EDIT,
             $status_id
         );
-
+		
         $logs_ers = $cr->logs;
         $all_defects = $this->defects->all_defects($id);
         $ApplicationImpact = ApplicationImpact::where('application_id', $cr->application_id)

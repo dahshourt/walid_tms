@@ -8,6 +8,7 @@
 	
 @elseif($item->CustomField->name == "tech_group_id")
     @include('change_request.custom_fields_types.partials.select-fields.tech-groups-select', compact('item', 'technical_groups', 'custom_field_value'))	
+	
 
 @elseif($item->CustomField->name == "cr_member")
     @include('change_request.custom_fields_types.partials.select-fields.cr-member-select', compact('item', 'custom_field_value'))
@@ -24,4 +25,3 @@
 @else
     @include('change_request.custom_fields_types.partials.select-fields.default-select', compact('item', 'custom_field_value', 'cr', 'rtm_members', 'developer_users', 'testing_users', 'sa_users'))
 @endif
-

@@ -251,11 +251,11 @@ class ChangeRequestSearchService
         $groupData = null;
         $userEmail = strtolower(auth()->user()->email);
         $divisionManager = strtolower(Change_request::where('id', $id)->value('division_manager'));
-
-        $groups = ($userEmail === $divisionManager && request()->has('check_dm'))
+		
+		$groups = ($userEmail === $divisionManager && request()->has('check_dm'))
             ? Group::pluck('id')->toArray()
             : [$this->resolveGroup()];
-        // : auth()->user()->user_groups->pluck('group_id')->toArray();
+		// : auth()->user()->user_groups->pluck('group_id')->toArray();
         if ($userEmail == $divisionManager && (request()->has('check_dm') || request()->has('cab_cr_flag'))) {
             $groupApplications = null;
         } else {
@@ -269,21 +269,21 @@ class ChangeRequestSearchService
 
         $promoGroups = [50];
         $groups = array_merge($groups, $promoGroups);
-
+		
         $groupPromo = Group::with('group_statuses')->find(50);
         $statusPromoView = $groupPromo->group_statuses->where('type', \App\Models\GroupStatuses::VIEWBY)->pluck('status.id');
-
-        $viewStatuses = $this->getViewStatuses($groups, $id);
-        $viewStatuses = $statusPromoView->merge($viewStatuses)->unique();
+		$viewStatuses = $this->getViewStatuses($groups, $id);
+		$viewStatuses = $statusPromoView->merge($viewStatuses)->unique();
+		
         $viewStatuses->push(config('change_request.status_ids.cr_manager_review'));
         if (request()->has('check_business')) {
             $viewStatuses->push(config('change_request.status_ids.business_test_case_approval'));
             $viewStatuses->push(config('change_request.status_ids.business_uat_sign_off'));
             $viewStatuses->push(config('change_request.status_ids.pending_business'));
             $viewStatuses->push(config('change_request.status_ids.pending_business_feedback'));
-            // dd($viewStatuses);
+            
         }
-
+		
         $changeRequest = Change_request::with('category')
             ->with('attachments', function ($q) use ($groups) {
                 $q->with('user');
@@ -459,17 +459,18 @@ class ChangeRequestSearchService
         }
 
         $viewStatuses = $viewStatuses->groupBy('status_id')->get()->pluck('status_id')->toArray();
-
+		//dd($id);
         // Handle technical team status
-        if ($id) {
+		
+        /* if ($id) {
             $technicalCrTeamStatus = $this->getTechnicalTeamCurrentStatus($id);
-            // dd($technicalCrTeamStatus, $viewStatuses);
+            //dd($technicalCrTeamStatus, $viewStatuses);
             if ($technicalCrTeamStatus && in_array($technicalCrTeamStatus->current_status_id, $viewStatuses)) {
                 $viewStatuses = [$technicalCrTeamStatus->current_status_id];
                 // dd($viewStatuses);
             }
-        }
-
+        } */
+		
         return $viewStatuses;
     }
 
