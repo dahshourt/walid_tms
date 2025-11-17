@@ -196,7 +196,31 @@ class KamWorkflowSeeder extends Seeder
                 ->distinct()
                 ->get();
             
-            $this->command->info("Found " . $inHouseGroups->count() . " In-house groups to duplicate");
+            // Add specific groups by title
+            $specificGroupTitles = [
+                'CR Team Admin',
+                'Design team',
+                'Development team',
+                'QC team',
+                'MISOPS',
+                'Application support',
+                'Capacity',
+                'Capacity Team',
+                'CR Manager',
+                'Business Group',
+                'CR Analyst',
+                'CR',
+                'UAT'
+            ];
+            
+            $additionalGroups = DB::table('groups')
+                ->whereIn('title', $specificGroupTitles)
+                ->get();
+            
+            // Merge the collections and remove duplicates
+            $inHouseGroups = $inHouseGroups->merge($additionalGroups)->unique('id');
+            
+            $this->command->info("Found " . $inHouseGroups->count() . " groups to duplicate (including specific groups)");
             
             foreach ($inHouseGroups as $group) {
                 $this->command->info("Duplicating group: {$group->title}");
@@ -293,34 +317,6 @@ class KamWorkflowSeeder extends Seeder
                         'status_id' => $newStatusIdForField,
                     ]);
                 }
-                
-                // Duplicate SLA calculations
-                // if (DB::getSchemaBuilder()->hasTable('sla_calculations')) {
-                //     $slaCalcs = DB::table('sla_calculations')
-                //         ->where('group_id', $group->id)
-                //         ->get();
-                    
-                //     foreach ($slaCalcs as $sla) {
-                //         $slaStatusId = $statusMapping[$sla->status_id] ?? $sla->status_id;
-                        
-                //         try {
-                //             DB::table('sla_calculations')->insert([
-                //                 'unit_sla_time' => $sla->unit_sla_time,
-                //                 'sla_type_unit' => $sla->sla_type_unit,
-                //                 'division_sla_time' => $sla->division_sla_time,
-                //                 'sla_type_division' => $sla->sla_type_division,
-                //                 'director_sla_time' => $sla->director_sla_time,
-                //                 'sla_type_director' => $sla->sla_type_director,
-                //                 'status_id' => $slaStatusId,
-                //                 'group_id' => $newGroupId,
-                //                 'created_at' => now(),
-                //                 'updated_at' => now(),
-                //             ]);
-                //         } catch (\Exception $e) {
-                //             $this->command->warn("Could not duplicate SLA calculation: {$e->getMessage()}");
-                //         }
-                //     }
-                // }
                 
                 $this->command->info("Created new group: {$group->title} kam (ID: {$newGroupId})");
             }
