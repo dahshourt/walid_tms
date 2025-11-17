@@ -113,16 +113,31 @@ class LogRepository implements LogRepositoryInterface
 
         // fetch custom fields you want to append
         $customFields = CustomField::query()
-            ->whereIn('type', ['input', 'textArea', 'multiselect'])
             ->whereNotIn('name', $excludeNames)
             ->get();
 
-        $customFieldMap = $customFields->mapWithKeys(function ($cf) {
+        $customFieldMap = $customFields->mapWithKeys(function ($cf) use ($request) {
             // Fallback message if label is null
             $label = $cf->label ?: Str::of($cf->name)->replace('_', ' ')->title();
-            $base = [
-                'message' => "{$label} Changed To",
-            ];
+
+            $message = "$label Changed To";
+            $base = [];
+
+            if ($cf->type === 'multiselect') {
+
+                if ($cf->name === 'cap_users') {
+                    $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name}, 'user_id')?->load('user');
+                    $rest_of_message = $data?->pluck('user.name')?->implode(', ');
+                } else {
+                    $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name});
+                    $rest_of_message = $data?->implode(', ');
+                }
+
+                $message .= " '$rest_of_message'";
+                $base['already_has_message'] = true;
+            }
+
+            $base['message'] = $message;
 
             // If the custom field is linked to another table, include that hint
             // (adjust 'field' if your related table uses another display column)
@@ -147,12 +162,13 @@ class LogRepository implements LogRepositoryInterface
                             $fieldName = $info['field'];
                             $valueName = $modelName::find($newValue)?->$fieldName;
                             $message = $info['message'] . " \"$valueName\"";
+                        } elseif (array_key_exists('already_has_message', $info)) {
+                            $message = $info['message'];
                         } else {
                             $message = $info['message'] . " \"$newValue\"";
                         }
 
-                    } else {
-
+                    }  else {
                         if ($info['message']) {
                             $message = $info['message'] . " \"$newValue\"";
                         } else {
