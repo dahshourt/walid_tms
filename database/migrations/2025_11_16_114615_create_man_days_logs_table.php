@@ -30,7 +30,7 @@ class CreateManDaysLogsTable extends Migration
 
             $table->foreign('cr_id')
                   ->references('id')
-                  ->on('change_requests')
+                  ->on('change_request')
                   ->onDelete('cascade');
         });
     }

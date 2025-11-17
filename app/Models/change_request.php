@@ -231,6 +231,7 @@ class Change_request extends Model
     {
         return $this->hasOne(TechnicalCr::class, 'cr_id', 'id')->orderBy('id', 'DESC');
     }
+	
 
     /**
      * Get current group statuses through status relationship.
