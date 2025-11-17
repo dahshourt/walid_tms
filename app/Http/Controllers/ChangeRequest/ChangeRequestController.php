@@ -203,10 +203,10 @@ class ChangeRequestController extends Controller
     {
         try {
             $this->authorize('Show cr pending cap');
-            
+
             $title = 'CR Pending Cap';
             $collection = $this->changerequest->cr_pending_cap();
-            
+
             return view("{$this->view}.cr_pending_cap", compact('collection', 'title'));
         } catch (AuthorizationException $e) {
             Log::warning('Unauthorized access attempt to division manager CRs', [
@@ -220,10 +220,10 @@ class ChangeRequestController extends Controller
     {
         try {
             $this->authorize('show hold cr');
-            
+
             $title = 'CR Hold Promo';
             $collection = $this->changerequest->cr_hold_promo();
-            
+
             return view("{$this->view}.cr_hold_promo", compact('collection', 'title'));
         } catch (AuthorizationException $e) {
             Log::warning('Unauthorized access attempt to division manager CRs', [
@@ -686,10 +686,13 @@ class ChangeRequestController extends Controller
         $user = auth()->user();
         $workflow_type = $request->input('workflow_type', 'In House');
 
+        $roles_name = auth()->user()->roles->pluck('name');
+        $current_user_is_just_a_viewer = count($roles_name) === 1 && $roles_name[0] === 'Viewer';
+
         // Generate filename with user name and workflow type
         $filename = 'user_created_crs_' . $user->user_name . '_' . str_replace(' ', '_', $workflow_type) . '_' . now()->format('Y_m_d_H_i_s') . '.xlsx';
 
-        return Excel::download(new \App\Exports\UserCreatedCRsExport($user->id, $workflow_type), $filename);
+        return Excel::download(new \App\Exports\UserCreatedCRsExport($user->id, $current_user_is_just_a_viewer, $workflow_type), $filename);
     }
 
     /**
@@ -1003,19 +1006,19 @@ class ChangeRequestController extends Controller
 		}
 		else
 		{
-			
+
 			return UserFactory::index()->get_user_by_group($cr->application_id);
 		}
-        
+
     }
-	
+
 	/**
      * Get technical groups based on application
      */
 	private function getTechnicalGroups($cr)
     {
 		return GroupFactory::index()->get_tech_groups_by_application($cr->application_id);
-        
+
     }
 
     /**
@@ -1298,7 +1301,7 @@ class ChangeRequestController extends Controller
                 'action' => $action,
                 'error' => $e->getMessage()
             ]);
-            
+
             return response()->json([
                 'isSuccess' => false,
                 'message' => 'Failed to process action. Please try again.',
@@ -1309,7 +1312,7 @@ class ChangeRequestController extends Controller
 
     public function approved_continue(Request $request)
     {
-       
+
         $cr_id = $request->query('crId');
         $action = $request->query('action');
         $token = $request->query('token');
@@ -1341,18 +1344,18 @@ class ChangeRequestController extends Controller
             ], 403);
         }
 
-    
-      
+
+
 
         try {
-           
-          
+
+
 if($action=='approve'){
     Change_request_statuse::where('cr_id', $cr->id)
         ->where('active', '3')
         ->update(['active' => '1']);
 
-   
+
 
 }
 else {
@@ -1374,27 +1377,27 @@ if ($firstStatus) {
 }
 $cr->update(['hold' => 0]);
 
-            $message = $action === 'approve' 
+            $message = $action === 'approve'
                 ? "CR #{$cr_id} has been successfully re hold."
                 : "CR #{$cr_id} has been successfully rejected.";
                 $response = [
                     'isSuccess' => true,
                     'message' => $message,
                 ];
-              
+
             return response()->json([
                 'status' => 200,
                 'isSuccess' => true,
                 'message' => $message,
             ], 200);
-            
+
         } catch (\Exception $e) {
             Log::error('Failed to process division manager action (JSON)', [
                 'cr_id' => $cr_id,
                 'action' => $action,
                 'error' => $e->getMessage()
             ]);
-            
+
             return response()->json([
                 'isSuccess' => false,
                 'message' => 'Failed to process action. Please try again.',
@@ -1443,7 +1446,7 @@ $cr->update(['hold' => 0]);
 
         if ($current_status !=  config('change_request.status_ids.pending_cab')) {
             $message = $current_status == config('change_request.status_ids.pending_cab_proceed')
-                ? 'You already rejected this CR.' 
+                ? 'You already rejected this CR.'
                 : 'You already approved this CR.';
             return response()->json([
                 'isSuccess' => false,
@@ -1451,10 +1454,10 @@ $cr->update(['hold' => 0]);
             ], 400);
         }
 
-      
+
 
         try {
-           
+
             // $updateRequest = new Request([
             //     'old_status_id' => $current_status,
             //     'new_status_id' => $workflowIdForAction,
@@ -1466,7 +1469,7 @@ if($action=='approve'){
         'new_status_id' => config('change_request.status_ids.pending_cab_proceed'),
         'cab_cr_flag' => '1',
         'user_id' => auth()->user()->id,
-    ]); 
+    ]);
 
 }
 else {
@@ -1476,35 +1479,35 @@ else {
         'new_status_id' => config('change_request.status_ids.pending_cab_review'),
         'cab_cr_flag' => '1',
         'user_id' => auth()->user()->id,
-    ]); 
+    ]);
 
 }
 $repo = new ChangeRequestRepository();
           //print_r($requestData); die;
-               
+
                 $repo->update($cr_id, $requestData);
 
-            $message = $action === 'approve' 
+            $message = $action === 'approve'
                 ? "CR #{$cr_id} has been successfully approved."
                 : "CR #{$cr_id} has been successfully rejected.";
                 $response = [
                     'isSuccess' => true,
                     'message' => $message,
                 ];
-              
+
             return response()->json([
                 'status' => 200,
                 'isSuccess' => true,
                 'message' => $message,
             ], 200);
-            
+
         } catch (\Exception $e) {
             Log::error('Failed to process division manager action (JSON)', [
                 'cr_id' => $cr_id,
                 'action' => $action,
                 'error' => $e->getMessage()
             ]);
-            
+
             return response()->json([
                 'isSuccess' => false,
                 'message' => 'Failed to process action. Please try again.',

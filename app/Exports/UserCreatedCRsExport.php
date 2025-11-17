@@ -11,15 +11,8 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class UserCreatedCRsExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMapping
 {
-    protected $user_id;
-
-    protected $workflow_type;
-
-    public function __construct($user_id, $workflow_type = null)
-    {
-        $this->user_id = $user_id;
-        $this->workflow_type = $workflow_type;
-    }
+    public function __construct(protected int $user_id, protected bool $current_user_is_just_a_viewer, protected string $workflow_type)
+    {}
 
     /**
      * @return \Illuminate\Support\Collection
@@ -96,10 +89,12 @@ class UserCreatedCRsExport implements FromCollection, ShouldAutoSize, WithHeadin
      */
     public function map($change_request): array
     {
-        $statusName = '';
-        $currentStatus = $change_request->getCurrentStatus();
-        if ($currentStatus) {
-            $statusName = $currentStatus->status?->status_name;
+        $cr_status = $change_request->getCurrentStatus()?->status;
+        $statusName = $cr_status?->status_name;
+
+        if ($this->current_user_is_just_a_viewer) {
+            $high_level_status_name = $cr_status?->high_level?->name;
+            $statusName = $high_level_status_name ?? $statusName;
         }
 
         $baseData = [
