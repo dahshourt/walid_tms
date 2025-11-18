@@ -243,7 +243,7 @@
                                             @endif
                                             @endcan 
 
-                                            @if($man_days)
+                                            @if($man_days && count($man_days) > 0)
                                                     <h5>Man Days Logs</h5>
                                                     <table class="table table-bordered">
                                                         <thead>

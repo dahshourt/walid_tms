@@ -206,32 +206,22 @@ class ChangeRequestSearchService
     public function myAssignmentsCrs()
     {
         $userId = Auth::user()->id;
-        // dd($userId);
         $group = $this->resolveGroup();
         $viewStatuses = $this->getViewStatuses();
         $viewStatuses[] = config('change_request.status_ids.cr_manager_review');
-        // dd($viewStatuses);
         if ($group == config('change_request.group_ids.promo')) {
-            // dd('promo');
             $crs = Change_request::with('Req_status.status')
                 ->whereHas('Req_status', function ($query) use ($viewStatuses) {
-                    $query->whereIn('new_status_id', $viewStatuses)
-                        ->whereRaw('CAST(active AS CHAR) = ?', ['1']);
+                    $query->whereIn('new_status_id', $viewStatuses);
+                    //$query->whereRaw('CAST(active AS CHAR) = ?', ['1']);
                 })->paginate(50);
-            // dd($crs);
         } else {
             $crs = Change_request::with('Req_status.status')
                 ->whereHas('Req_status', function ($query) use ($userId, $viewStatuses) {
-                    $query->where('assignment_user_id', $userId)
-                        ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
-                        ->whereIn('new_status_id', $viewStatuses);
+                    $query->where('assignment_user_id1', $userId);
+                    //$query->whereRaw('CAST(active AS CHAR) = ?', ['1']);
+                    $query->whereIn('new_status_id', $viewStatuses);
                 })
-                /* ->orWhere(function ($query) use ($userId) {
-                    $query->whereHas('CurrentRequestStatuses', function ($q) {
-                        $q->where('new_status_id', config('change_request.status_ids.cr_manager_review'))
-                          ->whereRaw('CAST(active AS CHAR) = ?', ['1']);
-                    })->orWhere('change_request.requester_id', $userId);
-                }) */
                 ->paginate(50);
         }
 

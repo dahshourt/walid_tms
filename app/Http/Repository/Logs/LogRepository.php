@@ -148,6 +148,7 @@ class LogRepository implements LogRepositoryInterface
                             $valueName = $modelName::find($newValue)?->$fieldName;
                             $message = $info['message'] . " \"$valueName\"";
                         } else {
+							if(is_array($newValue))  $string_version = implode(' , ', $newValue);
                             $message = $info['message'] . " \"$newValue\"";
                         }
 
