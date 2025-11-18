@@ -298,11 +298,16 @@ class ChangeRequestEstimationService
      */
     protected function calculateDevelopmentEstimation($id, $changeRequest, $request, $user): array
     {
-        $data = [
+		$isTestable = $changeRequest
+							->change_request_custom_fields
+							->where('custom_field_name', 'testable')
+							->pluck('custom_field_value')
+							->first(); // check if cr is testable or not
+		$data = [
             'develop_duration' => $request['dev_estimation'],
             'developer_id' => $request['developer_id'] ?? $user->id,
         ];
-        if (isset($changeRequest['test_duration'])) {
+        if (isset($changeRequest['test_duration']) && $isTestable) {
             $dates = $this->getLastCRDate(
                 $id,
                 $data['developer_id'],
@@ -331,6 +336,20 @@ class ChangeRequestEstimationService
                 $data['end_test_time'] = $testDates[1] ?? '';
             }
         }
+		else
+		{
+			$dates = $this->getLastCRDate(
+                $id,
+                $data['developer_id'],
+                'developer_id',
+                'end_develop_time',
+                $request['dev_estimation'],
+                'dev'
+            );
+
+            $data['start_develop_time'] = $dates[0] ?? '';
+            $data['end_develop_time'] = $dates[1] ?? '';
+		}
 
         return $data;
     }

@@ -696,7 +696,6 @@
         $crCount = 0;
     }
 @endphp
-@if($crCount > 0)
 																	<li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
 																		<a href="{{ url('change_request2/dvision_manager_cr') }}" class="menu-link">
 																		<span class="svg-icon menu-icon">
@@ -714,7 +713,6 @@
 
 																		</a>
 																	</li>
-																	@endif
 
 																	@can('Show cr pending cap')
 																	<li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
