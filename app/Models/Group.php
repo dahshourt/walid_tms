@@ -58,4 +58,9 @@ class Group extends Model
     {
         return $this->title;
     }
+
+    public function getNameColumn(): string
+    {
+        return 'title';
+    }
 }

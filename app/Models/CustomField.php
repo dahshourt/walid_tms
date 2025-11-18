@@ -49,4 +49,9 @@ class CustomField extends Model
     {
         return $this->setTableName($this->related_table)->getDataByDynamicTable();
     }
+
+    public function getSpecificCustomFieldValues(array $selected, ?string $columnName = null, ?string $pluckColumn = null)
+    {
+        return $this->setTableName($this->related_table)->getCustomDataByDynamicTable($selected, $columnName, $pluckColumn);
+    }
 }
