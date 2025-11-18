@@ -250,6 +250,7 @@
                                                             <tr class="text-center">
                                                                 <th>Man Day</th>
                                                                 <th>Group</th>
+                                                                <th>User</th>
                                                                 <th>Created At</th>
                                                             </tr>
                                                         </thead>
@@ -258,6 +259,7 @@
                                                             <tr>
                                                                 <td>{{ $value->man_day }}</td>
                                                                 <td>{{ $value->group->title }}</td>
+                                                                <td>{{ $value->user->user_name }}</td>
                                                                 <td>{{ $value->created_at }}</td>
                                                             </tr>
                                                             @endforeach
