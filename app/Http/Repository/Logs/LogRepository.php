@@ -113,6 +113,7 @@ class LogRepository implements LogRepositoryInterface
 
         // fetch custom fields you want to append
         $customFields = CustomField::query()
+            ->whereNotIn('type', ['select'])
             ->whereNotIn('name', $excludeNames)
             ->get();
 
