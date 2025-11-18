@@ -38,7 +38,8 @@ return [
 			'qa_team' => 'IT.QA@te.eg',
 			'as_team' => 'int.app.support@te.eg',
 			'bo_team' => 'it.billing.ops@te.eg',
-			
+			'pmo_team' => 'Commercial.PMO@te.eg',
+			'uat_team' => 'uat-sr@te.eg',
 		],
 	'group_names' =>
 	    [
@@ -48,14 +49,26 @@ return [
 			'qa_team' => 'QA',
 			'as_team' => 'int.app.support',
 			'bo_team' => 'IT Billing Ops',
+			'pmo_team' => 'Commercial PMO',
+			'uat_team' => 'UAT Promo',
 		],	
 	'division_managers_mails' =>
 		[
-			//'ahmed.o.hasan@te.eg', 
+			'ahmed.o.hasan@te.eg', 
 			//'mahmoud.bastawisy@te.eg', 
 			//'sara.mostafa@te.eg', 
 			//'yousry.mostafa@te.eg', 
-			//'it.qa@te.eg'
+			//'it.qa@te.eg',
+		],
+	'cr_managers_mails' =>
+		[
+			'hanan.megawer@te.eg', 
+			'ahmed.o.hasan@te.eg',
+			//'mahmoud.bastawisy@te.eg', 
+			//'sara.mostafa@te.eg', 
+			//'ahmed.elzayat@te.eg',
+			//'yousry.mostafa@te.eg', 
+			
 		],
 	'rules' =>
 		[
