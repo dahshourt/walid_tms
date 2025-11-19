@@ -46,8 +46,7 @@
         {!! $errors->first('user_name', '<span class="form-control-feedback">:message</span>') !!}
     </div>
     <div class="form-group">
-        <label>Email <span class="text-danger">*</span> <small class="text-muted">(required for Local
-                Users)</small></label>
+        <label>Email <span class="text-danger">*</span></label>
         <input type="text" class="form-control" placeholder="Email" name="email"
                value="{{ isset($row) ? $row->email : old('email') }}" autocomplete="off"/>
         {!! $errors->first('email', '<span class="form-control-feedback">:message</span>') !!}
