@@ -74,7 +74,7 @@
                                                             </a>
                                                         </li>
                                                     @endcan
-                                                    
+
                                                     @canany(['Access CustomFields', 'List Custom Fields'])
                                                         <li class="menu-item menu-item-submenu" data-menu-toggle="hover"
                                                             aria-haspopup="true">
