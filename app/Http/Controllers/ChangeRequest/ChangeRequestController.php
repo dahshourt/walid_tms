@@ -41,7 +41,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
-
+use Illuminate\Support\Facades\Session;
 
 class ChangeRequestController extends Controller
 {
@@ -522,9 +522,10 @@ class ChangeRequestController extends Controller
         $this->authorize('Edit ChangeRequest');
         if($request->man_days AND !empty($request->man_days))
         {
-            $group_name = Group::where('id',auth()->user()->default_group )->first();
+            //$group_name = Group::where('id',auth()->user()->default_group )->first();
             ManDaysLog::create([
-                'group_id' => auth()->user()->default_group,
+                'group_id' =>  Session::get('current_group'),
+                'user_id' => auth()->user()->id,
                 'cr_id'    => $id,
                 'man_day'  => $request->man_days,
             ]);
@@ -965,7 +966,7 @@ class ChangeRequestController extends Controller
         $title = (!empty($workflow_type_id) && $workflow_type_id == 9)
             ? "List Promo"
             : view()->shared('title');
-        $man_days = ManDaysLog::where('cr_id', $id)->get();
+        $man_days = ManDaysLog::where('cr_id', $id)->with('user')->get();
 
 
         //  echo "<pre>";

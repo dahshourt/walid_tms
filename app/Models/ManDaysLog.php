@@ -16,6 +16,7 @@ class ManDaysLog extends Model
      */
     protected $fillable = [
         'group_id',
+        'user_id',
         'cr_id',
         'man_day',
     ];
@@ -26,6 +27,11 @@ class ManDaysLog extends Model
     public function group()
     {
         return $this->belongsTo(Group::class, 'group_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
