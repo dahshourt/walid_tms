@@ -30,7 +30,7 @@
     {!! $errors->first('email', '<span class="form-control-feedback">:message</span>') !!}
 </div>
 <div class="form-group">
-    <label for="status">Status</label>
+    <label for="status">Status <span class="text-danger">*</span></label>
     <select name="status" class="form-control form-control-lg">
         <option value="">Select Status</option>
         <option value="1" {{ (isset($row) && $row->status == true) || old('status') == '1' ? 'selected' : '' }}>Active</option>

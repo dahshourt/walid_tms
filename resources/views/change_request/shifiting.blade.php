@@ -39,7 +39,7 @@
 										<!--begin::Card-->
 										<div class="card card-custom gutter-b example example-compact">
 											<div class="card-header">
-												<h3 class="card-title">shifting {{ $form_title }}</h3>
+												<h3 class="card-title">Shifting {{ $form_title }}</h3>
 												
 											</div>
 											<!--begin::Form-->

@@ -50,7 +50,7 @@ class UserRepository implements UserRepositoryInterface
 
     public function paginateAll()
     {
-        return User::orderBy('id', 'DESC')->get();
+        return User::orderBy('id', 'DESC')->with('defualt_group')->get();
     }
 
     public function create($request)

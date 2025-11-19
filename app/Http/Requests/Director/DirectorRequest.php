@@ -26,7 +26,7 @@ class DirectorRequest extends FormRequest
         return [
             'user_name' => ['required', 'string', 'max:255', 'unique:directors,user_name'],
             'email' => ['required', 'email', 'max:255', 'unique:directors,email'],
-            'status' => ['nullable', 'in:0,1'],
+            'status' => ['required', 'in:0,1'],
         ];
     }
 
@@ -47,7 +47,7 @@ class DirectorRequest extends FormRequest
                 'max:255',
                 Rule::unique('directors', 'email')->ignore($directorId),
             ],
-            'status' => ['nullable', 'in:0,1'],
+            'status' => ['required', 'in:0,1'],
         ];
     }
 

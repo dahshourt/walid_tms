@@ -30,11 +30,11 @@
     @endif
     {{-- Status Dropdown --}}
     <div class="form-group">
-        <label for="status_id">Status:</label>
+        <label for="status_id">Status <span class="text-danger">*</span></label>
         <select id="status_id" name="status_id" class="form-control">
-            <option value="">-- Select Status  --</option>
+            <option value="">-- Select Status --</option>
             @foreach($statuses as $status)
-                <option value="{{ $status->id }}" 
+                <option value="{{ $status->id }}"
                     {{ (isset($row) && $row->status_id == $status->id) || old('status_id') == $status->id ? 'selected' : '' }}>
                     {{ $status->name }}
                 </option>
@@ -42,6 +42,10 @@
         </select>
         {!! $errors->first('status_id', '<span class="form-control-feedback">:message</span>') !!}
     </div>
+    <p class="text-muted mb-4">
+        At least one SLA level (Unit, Division, or Director) must be provided. Division SLA requires Unit SLA, and
+        Director SLA requires both Unit and Division SLAs.
+    </p>
     {{-- Groups Dropdown --}}
     {{-- <div class="form-group mt-3">
         <label for="group_id">Units:</label>
@@ -49,7 +53,7 @@
             <option value="">-- Select Units --</option>
             @if(isset($units) && count($units) > 0)
                 @foreach($units as $unit)
-                    <option value="{{ $unit->id }}" 
+                    <option value="{{ $unit->id }}"
                         {{ (isset($row) && $row->unit_id == $unit->id) || old('unit_id') == $unit->id ? 'selected' : '' }}>
                         {{ $unit->name }}
                     </option>
@@ -64,13 +68,13 @@
         <div class="col-md-8">
             <div class="form-group">
                 <label for="unit_sla_time">SLA For Unit:</label>
-                <input 
-                    type="number" 
+                <input
+                    type="number"
                     id="unit_sla_time"
-                    name="unit_sla_time" 
-                    class="form-control" 
-                    placeholder="SLA For Unit" 
-                    value="{{ isset($row) ? $row->unit_sla_time : old('unit_sla_time') }}" 
+                    name="unit_sla_time"
+                    class="form-control"
+                    placeholder="SLA For Unit"
+                    value="{{ isset($row) ? $row->unit_sla_time : old('unit_sla_time') }}"
                 />
                 {!! $errors->first('unit_sla_time', '<span class="form-control-feedback">:message</span>') !!}
             </div>
@@ -78,19 +82,25 @@
                 <label for="sla_type_unit">SLA Type For Unit:</label>
                 <select id="sla_type_unit" name="sla_type_unit" class="form-control">
                     <option value="">-- Select Type --</option>
-                    <option value="day" {{ (isset($row) && $row->sla_type_unit == 'day') || old('sla_type_unit') == 'day' ? 'selected' : '' }}>Day</option>
-                    <option value="hour" {{ (isset($row) && $row->sla_type_unit == 'hour') || old('sla_type_unit') == 'hour' ? 'selected' : '' }}>Hour</option>
+                    <option
+                        value="day" {{ (isset($row) && $row->sla_type_unit == 'day') || old('sla_type_unit') == 'day' ? 'selected' : '' }}>
+                        Day
+                    </option>
+                    <option
+                        value="hour" {{ (isset($row) && $row->sla_type_unit == 'hour') || old('sla_type_unit') == 'hour' ? 'selected' : '' }}>
+                        Hour
+                    </option>
                 </select>
                 {!! $errors->first('sla_type_unit', '<span class="form-control-feedback">:message</span>') !!}
             </div>
         </div>
         <div class="col-md-4 d-flex align-items-center">
             <div class="form-check checkbox-large">
-                <input 
-                    type="checkbox" 
-                    class="form-check-input" 
-                    id="notification_unit" 
-                    name="unit_notification" 
+                <input
+                    type="checkbox"
+                    class="form-check-input"
+                    id="notification_unit"
+                    name="unit_notification"
                     value="1"
                     {{ (isset($row) && $row->unit_notification) || old('unit_notification') ? 'checked' : '' }}
                 >
@@ -106,13 +116,13 @@
         <div class="col-md-8">
             <div class="form-group">
                 <label for="division_sla_time">SLA For Division:</label>
-                <input 
-                    type="number" 
+                <input
+                    type="number"
                     id="division_sla_time"
-                    name="division_sla_time" 
-                    class="form-control" 
-                    placeholder="SLA For Division" 
-                    value="{{ isset($row) ? $row->division_sla_time : old('division_sla_time') }}" 
+                    name="division_sla_time"
+                    class="form-control"
+                    placeholder="SLA For Division"
+                    value="{{ isset($row) ? $row->division_sla_time : old('division_sla_time') }}"
                 />
                 {!! $errors->first('division_sla_time', '<span class="form-control-feedback">:message</span>') !!}
             </div>
@@ -120,19 +130,25 @@
                 <label for="sla_type_division">SLA Type For Division:</label>
                 <select id="sla_type_division" name="sla_type_division" class="form-control">
                     <option value="">-- Select Type --</option>
-                    <option value="day" {{ (isset($row) && $row->sla_type_division == 'day') || old('sla_type_division') == 'day' ? 'selected' : '' }}>Day</option>
-                    <option value="hour" {{ (isset($row) && $row->sla_type_division == 'hour') || old('sla_type_division') == 'hour' ? 'selected' : '' }}>Hour</option>
+                    <option
+                        value="day" {{ (isset($row) && $row->sla_type_division == 'day') || old('sla_type_division') == 'day' ? 'selected' : '' }}>
+                        Day
+                    </option>
+                    <option
+                        value="hour" {{ (isset($row) && $row->sla_type_division == 'hour') || old('sla_type_division') == 'hour' ? 'selected' : '' }}>
+                        Hour
+                    </option>
                 </select>
                 {!! $errors->first('sla_type_division', '<span class="form-control-feedback">:message</span>') !!}
             </div>
         </div>
         <div class="col-md-4 d-flex align-items-center">
             <div class="form-check checkbox-large">
-                <input 
-                    type="checkbox" 
-                    class="form-check-input" 
-                    id="notification_division" 
-                    name="division_notification" 
+                <input
+                    type="checkbox"
+                    class="form-check-input"
+                    id="notification_division"
+                    name="division_notification"
                     value="1"
                     {{ (isset($row) && $row->division_notification) || old('division_notification') ? 'checked' : '' }}
                 >
@@ -148,13 +164,13 @@
         <div class="col-md-8">
             <div class="form-group">
                 <label for="director_sla_time">SLA For Director:</label>
-                <input 
-                    type="number" 
+                <input
+                    type="number"
                     id="director_sla_time"
-                    name="director_sla_time" 
-                    class="form-control" 
-                    placeholder="SLA For Director" 
-                    value="{{ isset($row) ? $row->director_sla_time : old('director_sla_time') }}" 
+                    name="director_sla_time"
+                    class="form-control"
+                    placeholder="SLA For Director"
+                    value="{{ isset($row) ? $row->director_sla_time : old('director_sla_time') }}"
                 />
                 {!! $errors->first('director_sla_time', '<span class="form-control-feedback">:message</span>') !!}
             </div>
@@ -162,19 +178,25 @@
                 <label for="sla_type_director">SLA Type For Director:</label>
                 <select id="sla_type_director" name="sla_type_director" class="form-control">
                     <option value="">-- Select Type --</option>
-                    <option value="day" {{ (isset($row) && $row->sla_type_director == 'day') || old('sla_type_director') == 'day' ? 'selected' : '' }}>Day</option>
-                    <option value="hour" {{ (isset($row) && $row->sla_type_director == 'hour') || old('sla_type_director') == 'hour' ? 'selected' : '' }}>Hour</option>
+                    <option
+                        value="day" {{ (isset($row) && $row->sla_type_director == 'day') || old('sla_type_director') == 'day' ? 'selected' : '' }}>
+                        Day
+                    </option>
+                    <option
+                        value="hour" {{ (isset($row) && $row->sla_type_director == 'hour') || old('sla_type_director') == 'hour' ? 'selected' : '' }}>
+                        Hour
+                    </option>
                 </select>
                 {!! $errors->first('sla_type_director', '<span class="form-control-feedback">:message</span>') !!}
             </div>
         </div>
         <div class="col-md-4 d-flex align-items-center">
             <div class="form-check checkbox-large">
-                <input 
-                    type="checkbox" 
-                    class="form-check-input" 
-                    id="notification_director" 
-                    name="director_notification" 
+                <input
+                    type="checkbox"
+                    class="form-check-input"
+                    id="notification_director"
+                    name="director_notification"
                     value="1"
                     {{ (isset($row) && $row->director_notification) || old('director_notification') ? 'checked' : '' }}
                 >
@@ -184,7 +206,7 @@
             </div>
         </div>
     </div>
-    
+
 </div>
 
 

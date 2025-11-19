@@ -24,8 +24,8 @@ class RejectionReasonsController extends Controller
         $route = 'rejection_reasons';
         $OtherRoute = 'rejection_reasons'; // rejection_reasons
 
-        $title = 'Rejection reasons';
-        $form_title = 'Rejection reason';
+        $title = 'Rejection Reasons';
+        $form_title = 'Rejection Reason';
         view()->share(compact('view', 'route', 'title', 'form_title', 'OtherRoute'));
 
     }
