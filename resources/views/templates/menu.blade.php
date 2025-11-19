@@ -37,7 +37,7 @@
 											@canany(['List Users' , 'Access CustomFields' , 'List Statuses' , 'List Workflows' , 'List Division' , 'List Groups' , 'List Roles' , 'List Permissions' , 'List Stages' , 'List Parents' , 'List HighLevelStatuses' , 'List RejectionReasons','List Applications'])
 											<li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
 												<a href="javascript:;" class="menu-link menu-toggle">
-													<span class="menu-text">settings</span>
+													<span class="menu-text">Settings</span>
 													<span class="menu-desc"></span>
 													<i class="menu-arrow"></i>
 												</a>
@@ -97,7 +97,7 @@
 																	</svg>
 																	<!--end::Svg Icon-->
 																</span>
-																<span class="menu-text">shifting CRS</span>
+																<span class="menu-text">Shifting CRS</span>
 
 															</a>
 														</li>
@@ -182,7 +182,7 @@
 																			<i class="menu-bullet menu-bullet-dot">
 																				<span></span>
 																			</i>
-																			<span class="menu-text">view CR special CF</span>
+																			<span class="menu-text">View CR Special CF</span>
 																		</a>
 																	</li>
 																	<li class="menu-item" aria-haspopup="true">
@@ -190,7 +190,7 @@
 																			<i class="menu-bullet menu-bullet-dot">
 																				<span></span>
 																			</i>
-																			<span class="menu-text">update CR CF</span>
+																			<span class="menu-text">Update CR CF</span>
 																		</a>
 																	</li>
 
@@ -199,7 +199,7 @@
 																			<i class="menu-bullet menu-bullet-dot">
 																				<span></span>
 																			</i>
-																			<span class="menu-text"> update CR special CF</span>
+																			<span class="menu-text">Update CR Special CF</span>
 																		</a>
 																	</li>
 																	<li class="menu-item" aria-haspopup="true">
@@ -442,7 +442,7 @@
 																	</svg>
 																	<!--end::Svg Icon-->
 																</span>
-													<span class="menu-text">stages</span>
+													<span class="menu-text">Stages</span>
 
 												</a>
 											</li>
@@ -480,7 +480,7 @@
 																	</svg>
 																	<!--end::Svg Icon-->
 																</span>
-													<span class="menu-text">high level statuses</span>
+													<span class="menu-text">High Level Statuses</span>
 
 												</a>
 											</li>
@@ -864,7 +864,7 @@
 											@can('Access Advanced Search')
 											<li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
 												<a href="{{ route('advanced.search') }}" class="menu-link">
-													<span class="menu-text">advanced search</span>
+													<span class="menu-text">Advanced Search</span>
 
 												</a>
 											</li>
@@ -872,7 +872,7 @@
 											@can('List Release')
 											<li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
 												<a href="{{ url('releases') }}" class="menu-link">
-													<span class="menu-text">releases</span>
+													<span class="menu-text">Releases</span>
 
 												</a>
 											</li>
