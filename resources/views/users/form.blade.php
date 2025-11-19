@@ -22,7 +22,7 @@
 													</div>
 
 													<div class="form-group">
-														<label for="user_type">User Type</label>
+														<label for="user_type">User Type <span class="text-danger">*</span></label>
 														<select class="form-control form-control-lg" id="user_type" name="user_type">
 															<option value=""> Select </option>
 															<option value="0" {{ (isset($row) && $row->user_type != 1) ? "selected" : "" }}> Local User </option>
@@ -32,18 +32,18 @@
 													</div>
 
 													<div class="form-group">
-														<label>Name</label>
+														<label>Name <span class="text-danger">*</span></label>
 														<input type="text" class="form-control form-control-lg" placeholder="Name" name="name" value="{{ isset($row) ? $row->name : old('name') }}" />
 														{!! $errors->first('name', '<span class="form-control-feedback">:message</span>') !!}
 													</div>
 
 													<div class="form-group">
-														<label>UserName</label>
+														<label>UserName <span class="text-danger">*</span></label>
 														<input type="text" class="form-control form-control-lg" placeholder="UserName" name="user_name" value="{{ isset($row) ? $row->user_name : old('user_name') }}" autocomplete="off" />
 														{!! $errors->first('user_name', '<span class="form-control-feedback">:message</span>') !!}
 													</div>
 													<div class="form-group">
-														<label>Email</label>
+														<label>Email <span class="text-danger">*</span> <small class="text-muted">(required for Local Users)</small></label>
 														<input type="text" class="form-control" placeholder="Email" name="email" value="{{ isset($row) ? $row->email : old('email') }}" autocomplete="off" />
 														{!! $errors->first('email', '<span class="form-control-feedback">:message</span>') !!}
 													</div>
@@ -109,7 +109,7 @@
 												-->
 
 													<div class="form-group">
-														<label for="default_group">Default Group</label>
+														<label for="default_group">Default Group <span class="text-danger">*</span></label>
 														<select class="form-control form-control-lg" id="default_group" name="default_group">
 															<option value=""> Select </option>
 															@foreach($groups as $item)
@@ -126,7 +126,7 @@
 													@endphp
 
 													<div class="form-group">
-														<label for="group_id">Groups</label>
+														<label for="group_id">Groups <span class="text-danger">*</span></label>
 														<select class="form-control form-control-lg select2" id="group_id" name="group_id[]" multiple="multiple">
 															@foreach($groups as $item)
 																<option value="{{ $item->id }}" {{ in_array($item->id, $group_arr) ? 'selected' : '' }}>
