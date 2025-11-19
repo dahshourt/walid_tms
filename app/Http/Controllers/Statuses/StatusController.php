@@ -32,8 +32,8 @@ class StatusController extends Controller
         $route = 'statuses';
         $OtherRoute = 'status';
 
-        $title = 'statuses';
-        $form_title = 'status';
+        $title = 'Statuses';
+        $form_title = 'Status';
         view()->share(compact('view','route','title','form_title','OtherRoute'));
 
     }
