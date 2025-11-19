@@ -23,7 +23,10 @@
 
     <!-- CR Number Field -->
     <div class="form-group mb-4">
-        <label class="font-weight-bold text-dark">CR Number:</label>
+        <label class="font-weight-bold text-dark">
+            CR Number <span class="text-danger">*</span>
+            <small class="text-muted">(must match an existing CR)</small>
+        </label>
         <div class="input-group input-group-lg">
             <div class="input-group-prepend">
                 <span class="input-group-text bg-light">
@@ -34,9 +37,9 @@
                    class="form-control form-control-lg @error('change_request_id') is-invalid @enderror" 
                    placeholder="Enter CR Number" 
                    name="change_request_id" 
-                   value="{{ isset($row) ? $row->name : old('name') }}" />
+                   value="{{ old('change_request_id') }}" />
         </div>
-        @error('name')
+        @error('change_request_id')
             <span class="text-danger small d-block mt-1">{{ $message }}</span>
         @enderror
     </div>
