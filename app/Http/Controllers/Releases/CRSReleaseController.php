@@ -21,8 +21,8 @@ class CRSReleaseController extends Controller
         $route = 'crs_related_to_releases';
         $OtherRoute = 'release';
 
-        $title = 'cr related to releases';
-        $form_title = 'cr related to releases';
+        $title = 'CRs Related to Releases';
+        $form_title = 'CRs Related to Releases';
         view()->share(compact('view', 'route', 'title', 'form_title', 'OtherRoute'));
 
     }

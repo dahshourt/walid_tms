@@ -34,6 +34,8 @@ class KamWorkflowSeeder extends Seeder
         $this->backupTableInDatabase('group_applications');
         $this->backupTableInDatabase('model_has_roles');
         $this->backupTableInDatabase('custom_fields_groups_type');//custom_fields_groups_type
+
+
        
         $this->backupTableInDatabase('applications');
 

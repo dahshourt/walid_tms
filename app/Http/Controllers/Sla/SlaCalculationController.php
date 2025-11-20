@@ -11,14 +11,19 @@ use Illuminate\Http\Request;
 
 class SlaCalculationController extends Controller
 {
-    public function __construct() {}
+    public function __construct()
+    {
+        view()->share([
+            'view' => 'sla.calculations',
+            'route' => 'sla-calculations',
+            'form_title' => 'SLA Calculation',
+        ]);
+    }
 
     public function index()
     {
         $this->authorize('SLA Calculations');
-        view()->share('title', 'List');
-        // view()->share('form_title', 'SLA');
-        view()->share('route', 'sla-calculations');
+        view()->share('title', 'SLA Calculations');
         $calculations = SlaCalculation::with('status')->get();
 
         return view('sla.calculations.index', compact('calculations'));
@@ -27,9 +32,7 @@ class SlaCalculationController extends Controller
     public function create()
     {
         $this->authorize('Create SLA');
-        view()->share('title', 'Create');
-        view()->share('form_title', 'SLA');
-        view()->share('route', 'sla-calculations');
+        view()->share('title', 'Create SLA Calculation');
         $statuses = Status::all();
         $units = Unit::all();
         return view('sla.calculations.create', compact('statuses', 'units'));
@@ -137,9 +140,7 @@ class SlaCalculationController extends Controller
     public function edit(SlaCalculation $slaCalculation)
     {
         $this->authorize('Edit SLA');
-        view()->share('title', 'Edit');
-        view()->share('form_title', 'Edit SLA');
-        view()->share('route', 'sla-calculations');
+        view()->share('title', 'Edit SLA Calculation');
         $statuses = Status::all();
         $units = Unit::all();
         $row = SlaCalculation::with('status')->find($slaCalculation->id);
