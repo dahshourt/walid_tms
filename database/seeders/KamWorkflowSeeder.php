@@ -33,7 +33,9 @@ class KamWorkflowSeeder extends Seeder
         $this->backupTableInDatabase('group_statuses');
         $this->backupTableInDatabase('group_applications');
         $this->backupTableInDatabase('model_has_roles');
-        $this->backupTableInDatabase('custom_fields_groups_type');
+        $this->backupTableInDatabase('custom_fields_groups_type');//custom_fields_groups_type
+
+
        
         $this->backupTableInDatabase('applications');
 
@@ -159,6 +161,11 @@ class KamWorkflowSeeder extends Seeder
             
             foreach ($inHouseWorkflows as $workflow) {
                 $newFromStatusId = $statusMapping[$workflow->from_status_id] ?? null;
+                $newPreviousStatusId = null;
+                
+                if ($workflow->previous_status_id) {
+                    $newPreviousStatusId = $statusMapping[$workflow->previous_status_id] ?? $workflow->previous_status_id;
+                }
                 
                 if (!$newFromStatusId) {
                     $this->command->warn("Skipping workflow {$workflow->id} - from_status not found");
@@ -167,7 +174,7 @@ class KamWorkflowSeeder extends Seeder
                 
                 $newWorkflowId = DB::table('new_workflow')->insertGetId([
                     'same_time_from' => $workflow->same_time_from,
-                    'previous_status_id' => $workflow->previous_status_id,
+                    'previous_status_id' => $newPreviousStatusId,
                     'from_status_id' => $newFromStatusId,
                     'active' => $workflow->active,
                     'same_time' => $workflow->same_time,
@@ -354,6 +361,68 @@ class KamWorkflowSeeder extends Seeder
                 $this->command->info("Created new group: {$group->title} kam (ID: {$newGroupId})");
             }
             
+            // ========================================
+            // STEP 7: Duplicate Custom Fields Mapping
+            // ========================================
+            $this->command->info("Step 7: Duplicating custom fields mapping...");
+            
+            // Get all custom field mappings for in-house workflow
+            $inHouseCustomFieldMappings = DB::table('custom_fields_groups_type')
+                ->where('wf_type_id', 3) // In-house workflow type ID
+                ->get();
+            
+            $customFieldCount = 0;
+            
+            foreach ($inHouseCustomFieldMappings as $mapping) {
+                $newGroupId = null;
+                $newStatusId = null;
+                
+                // Map group ID if it exists
+                if ($mapping->group_id) {
+                    $kamGroup = DB::table('groups')
+                        ->where('title', DB::table('groups')->where('id', $mapping->group_id)->value('title') . ' kam')
+                        ->first();
+                    
+                    if ($kamGroup) {
+                        $newGroupId = $kamGroup->id;
+                    }
+                }
+                
+                // Map status ID if it exists
+                if ($mapping->status_id) {
+                    $newStatusId = $statusMapping[$mapping->status_id] ?? null;
+                }
+                
+                // Check if this mapping already exists for KAM workflow
+                $exists = DB::table('custom_fields_groups_type')
+                    ->where('form_type', $mapping->form_type)
+                    ->where('group_id', $newGroupId)
+                    ->where('wf_type_id', $kamWorkflowTypeId)
+                    ->where('custom_field_id', $mapping->custom_field_id)
+                    ->where('status_id', $newStatusId)
+                    ->exists();
+                
+                if (!$exists) {
+                    DB::table('custom_fields_groups_type')->insert([
+                        'form_type' => $mapping->form_type,
+                        'group_id' => $newGroupId,
+                        'wf_type_id' => $kamWorkflowTypeId,
+                        'custom_field_id' => $mapping->custom_field_id,
+                        'sort' => $mapping->sort,
+                        'active' => $mapping->active,
+                        'validation_type_id' => $mapping->validation_type_id,
+                        'enable' => $mapping->enable,
+                        'status_id' => $newStatusId,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                    
+                    $customFieldCount++;
+                }
+            }
+            
+            $this->command->info("Created/Updated {$customFieldCount} custom field mappings for KAM workflow");
+            
             $this->command->info("✅ Seeding completed successfully!");
             $this->command->table(
                 ['Item', 'Count'],
@@ -364,6 +433,7 @@ class KamWorkflowSeeder extends Seeder
                     ['Workflows', count($workflowMapping)],
                     ['Workflow Statuses', $wfStatusCount],
                     ['Groups', $inHouseGroups->count()],
+                    ['Custom Field Mappings', $customFieldCount],
                 ]
             );
             $this->command->warn("NOTE: Users NOT duplicated - assign manually");
