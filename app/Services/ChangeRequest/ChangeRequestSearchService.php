@@ -218,7 +218,7 @@ class ChangeRequestSearchService
         } else {
             $crs = Change_request::with('Req_status.status')
                 ->whereHas('Req_status', function ($query) use ($userId, $viewStatuses) {
-                    $query->where('assignment_user_id1', $userId);
+                    $query->where('assignment_user_id', $userId);
                     //$query->whereRaw('CAST(active AS CHAR) = ?', ['1']);
                     $query->whereIn('new_status_id', $viewStatuses);
                 })
