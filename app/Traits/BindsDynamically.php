@@ -42,16 +42,21 @@ trait BindsDynamically
 
     public function getCustomDataByDynamicTable(array $selectedValues, ?string $columnName = null,  ?string $pluckColumn = null)
     {
-        $model = $this->getModelFromTable();
-        $model = new $model();
+        try {
 
-        $query = $model::whereIn($columnName ?? 'id', $selectedValues);
+            $model = $this->getModelFromTable();
+            $model = new $model();
 
-        if (! $model instanceof SystemUserCab) {
-            $pluckColumn = $model->getNameColumn();
+            $query = $model::whereIn($columnName ?? 'id', $selectedValues);
+
+            if (!$model instanceof SystemUserCab) {
+                $pluckColumn = $model->getNameColumn();
+            }
+
+            return $pluckColumn ? $query->pluck($pluckColumn) : $query->get();
+        } catch (\Throwable $exception) {
+            dd($exception->getMessage());
         }
-
-        return $pluckColumn ? $query->pluck($pluckColumn) : $query->get();
     }
 
     public function newInstance($attributes = [], $exists = false)

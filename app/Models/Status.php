@@ -87,4 +87,9 @@ class Status extends Model
     {
         return $this->status_name;
     }
+
+    public function getNameColumn(): string
+    {
+        return 'status_name';
+    }
 }
