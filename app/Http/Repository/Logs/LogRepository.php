@@ -162,6 +162,7 @@ class LogRepository implements LogRepositoryInterface
 
         // append without overriding existing keys in $fields
         $fields += $customFieldMap;
+        
         foreach ($fields as $field => $info) {
             if (isset($request->$field)) {
                 $oldValue = $change_request->$field ?? null;

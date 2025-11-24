@@ -2,6 +2,8 @@
 
 namespace App\Traits;
 
+use App\Models\NewWorkFlowStatuses;
+use App\Models\Status;
 use App\Models\SystemUserCab;
 use File;
 use Str;
@@ -46,6 +48,12 @@ trait BindsDynamically
 
             $model = $this->getModelFromTable();
             $model = new $model();
+
+            if ($model instanceof Status) {
+                $new_work_flow_status = NewWorkFlowStatuses::with('to_status')->whereIn('new_workflow_id', $selectedValues)->first();
+
+                return collect($new_work_flow_status?->to_status?->status_name);
+            }
 
             $query = $model::whereIn($columnName ?? 'id', $selectedValues);
 
