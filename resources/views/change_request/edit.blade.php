@@ -242,6 +242,30 @@
                                                     </table>
                                             @endif
                                             @endcan 
+
+                                            @if($man_days && count($man_days) > 0)
+                                                    <h5>Man Days Logs</h5>
+                                                    <table class="table table-bordered">
+                                                        <thead>
+                                                            <tr class="text-center">
+                                                                <th>Man Day</th>
+                                                                <th>Group</th>
+                                                                <th>User</th>
+                                                                <th>Created At</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody class="text-center">
+                                                            @foreach ($man_days as $index => $value)
+                                                            <tr>
+                                                                <td>{{ $value->man_day }}</td>
+                                                                <td>{{ $value->group->title }}</td>
+                                                                <td>{{ $value->user->user_name }}</td>
+                                                                <td>{{ $value->created_at }}</td>
+                                                            </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
+                                            @endif
                                             <!-- end feedback table -->
 											@if(count($cr['attachments'])  > 0  )
 													<div class="form-group col-md-12" style="float:left">

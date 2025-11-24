@@ -87,7 +87,8 @@ class EscalationCron extends Command
                        
                         //$director = DB::table('directors')->where('id', $unit->group->director_id)->first();
                         //$divisionManager = DB::table('division_managers')->where('id', $unit->group->division_manager_id)->first();
-                        $mail = \App\Models\GroupStatuses::with('group')->where('status_id', $sla->status_id)->first(); 
+                        
+                        $mail = \App\Models\GroupStatuses::with('group')->where('status_id', $sla->status_id)->where('type', 2)->first(); 
                         $unit =   Unit::where('id', $mail->group->unit_id)->first();
                         $director =   Director::where('id', $mail->group->director_id)->first();
                         $divisionManager =   DivisionManagers::where('id', $mail->group->division_manager_id)->first();
@@ -218,7 +219,7 @@ class EscalationCron extends Command
 
             Mail::raw($message, function ($mail) use ($recipient, $level, $cr) {
                 $mail->to($recipient)
-                    ->subject("SLA Exceeded Alert - {$level} - CR #{$cr}");
+                    ->subject("SLA Exceeded Alert - {$level} - CR #{$changeRequest->cr_no}");
             });
 
             return true;

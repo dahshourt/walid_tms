@@ -177,6 +177,7 @@ class LogRepository implements LogRepositoryInterface
                         } elseif (array_key_exists('already_has_message', $info)) {
                             $message = $info['message'];
                         } else {
+							if(is_array($newValue))  $string_version = implode(' , ', $newValue);
                             $message = $info['message'] . " \"$newValue\"";
                         }
 

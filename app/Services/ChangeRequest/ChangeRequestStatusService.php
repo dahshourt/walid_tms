@@ -399,13 +399,18 @@ class ChangeRequestStatusService
 
             $newStatusRow = Status::find($workflowStatus->to_status_id);
             $oldStatusRow = Status::find($statusData['old_status_id']);
-
+			
             //$previous_group_id = session('current_group') ?: auth()->user()->default_group;
 			$previous_group_id = session('current_group') ?: (auth()->check() ? auth()->user()->default_group : null);
             $viewTechFlag = $newStatusRow?->view_technical_team_flag ?? false;
             if ($viewTechFlag) {
-                $teams = $request->technical_teams ?? $request['technical_teams'] ?? [];
-                if (!empty($teams) && is_iterable($teams)) {
+				$previous_technical_teams = [];
+				if($changeRequest && $changeRequest->technical_Cr_first)
+				{
+					$previous_technical_teams = $changeRequest->technical_Cr_first->technical_cr_team ? $changeRequest->technical_Cr_first->technical_cr_team->pluck('group_id')->toArray() : [];
+				}	
+                $teams = $request->technical_teams ?? $request['technical_teams'] ?? $previous_technical_teams;
+				if (!empty($teams) && is_iterable($teams)) {
                     foreach ($teams as $teamGroupId) {
                         $payload = $this->buildStatusData(
                             $changeRequest->id,

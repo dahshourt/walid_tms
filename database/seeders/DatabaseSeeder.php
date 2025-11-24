@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
             CrCreationNotification::class,
             CrUpdateNotification::class,
             UpdateDivisionTemplateSeeder::class,
+            NotificationRecipientsTableSeeder::class,
 
         ]);
         // \App\Models\User::factory(10)->create();

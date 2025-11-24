@@ -25,8 +25,8 @@ class highLevelStatusesControlller extends Controller
         $route = 'high_level_status';
         $OtherRoute = 'high_level_status';
 
-        $title = 'High level status';
-        $form_title = 'High level status';
+        $title = 'High Level Statuses';
+        $form_title = 'High Level Status';
         view()->share(compact('view', 'route', 'title', 'form_title', 'OtherRoute'));
 
     }
