@@ -20,8 +20,9 @@ class KamCustomFieldsSeeder extends Seeder
     public function run(): void
     {
         // Backup relevant tables
-        $this->backupTableInDatabase('custom_fields_groups_type');
-
+        //$this->backupTableInDatabase('custom_fields_groups_type');
+		//DB::statement('DELETE FROM custom_fields_groups_type WHERE status_id NOT IN (SELECT id FROM statuses);');
+		DB::statement('DELETE FROM custom_fields_groups_type WHERE wf_type_id = 37;');
         DB::transaction(function () {
             // ========================================
             // STEP 1: Get KAM and In-house IDs

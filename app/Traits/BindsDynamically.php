@@ -2,8 +2,11 @@
 
 namespace App\Traits;
 
+use App\Models\NewWorkFlowStatuses;
+use App\Models\Status;
 use App\Models\SystemUserCab;
 use File;
+use Illuminate\Support\Facades\Log;
 use Str;
 
 trait BindsDynamically
@@ -42,16 +45,33 @@ trait BindsDynamically
 
     public function getCustomDataByDynamicTable(array $selectedValues, ?string $columnName = null,  ?string $pluckColumn = null)
     {
-        $model = $this->getModelFromTable();
-        $model = new $model();
+        try {
 
-        $query = $model::whereIn($columnName ?? 'id', $selectedValues);
+            $model = $this->getModelFromTable();
+            $model = new $model();
 
-        if (! $model instanceof SystemUserCab) {
-            $pluckColumn = $model->getNameColumn();
+            if ($model instanceof Status) {
+                $new_work_flow_status = NewWorkFlowStatuses::with('to_status')->whereIn('new_workflow_id', $selectedValues)->first();
+
+                return collect($new_work_flow_status?->to_status?->status_name);
+            }
+
+            $query = $model::whereIn($columnName ?? 'id', $selectedValues);
+
+            if (!$model instanceof SystemUserCab) {
+                $pluckColumn = $model->getNameColumn();
+            }
+
+            return $pluckColumn ? $query->pluck($pluckColumn) : $query->get();
+        } catch (\Throwable $exception) {
+            Log::error('Error while getting custom data by dynamic table', [
+                'message' => $exception->getMessage(),
+                'exception' => $exception->getTraceAsString(),
+                'line' => $exception->getLine(),
+            ]);
+
+            return collect([]);
         }
-
-        return $pluckColumn ? $query->pluck($pluckColumn) : $query->get();
     }
 
     public function newInstance($attributes = [], $exists = false)

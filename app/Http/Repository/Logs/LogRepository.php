@@ -113,11 +113,15 @@ class LogRepository implements LogRepositoryInterface
 
         // fetch custom fields you want to append
         $customFields = CustomField::query()
-            ->whereNotIn('type', ['select'])
             ->whereNotIn('name', $excludeNames)
             ->get();
 
         $customFieldMap = $customFields->mapWithKeys(function ($cf) use ($request) {
+
+            if(! $request->{$cf->name} || ! array_key_exists($cf->name, $request->all())) {
+                return [];
+            }
+
             // Fallback message if label is null
             $label = $cf->label ?: Str::of($cf->name)->replace('_', ' ')->title();
 
@@ -128,11 +132,17 @@ class LogRepository implements LogRepositoryInterface
 
                 if ($cf->name === 'cap_users') {
                     $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name}, 'user_id')?->load('user');
-                    $rest_of_message = $data?->pluck('user.name')?->implode(', ');
+                    $rest_of_message = $data?->pluck('user.name')?->unique()?->implode(', ');
                 } else {
                     $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name});
                     $rest_of_message = $data?->implode(', ');
                 }
+
+                $message .= " '$rest_of_message'";
+                $base['already_has_message'] = true;
+            } elseif ($cf->type === 'select') {
+                $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name});
+                $rest_of_message = $data?->implode(', ');
 
                 $message .= " '$rest_of_message'";
                 $base['already_has_message'] = true;
@@ -152,11 +162,14 @@ class LogRepository implements LogRepositoryInterface
 
         // append without overriding existing keys in $fields
         $fields += $customFieldMap;
+
         foreach ($fields as $field => $info) {
             if (isset($request->$field)) {
                 $oldValue = $change_request->$field ?? null;
                 $newValue = $request->$field;
+
                 if ($oldValue != $newValue) {
+
                     if (is_array($info)) {
                         if (isset($info['model'])) {
                             $modelName = $info['model'];
@@ -166,7 +179,12 @@ class LogRepository implements LogRepositoryInterface
                         } elseif (array_key_exists('already_has_message', $info)) {
                             $message = $info['message'];
                         } else {
-							if(is_array($newValue))  $string_version = implode(' , ', $newValue);
+							if(is_array($newValue))  $newValue = implode(' , ', $newValue);
+
+                            if ($field === 'testable') {
+                                $newValue = $request->get('testable') === '1' ? 'Testable' : 'Not Testable';
+                            }
+
                             $message = $info['message'] . " \"$newValue\"";
                         }
 

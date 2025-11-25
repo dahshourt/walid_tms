@@ -62,7 +62,7 @@ return [
 		],
 	'cr_managers_mails' =>
 		[
-			'hanan.megawer@te.eg', 
+			//'hanan.megawer@te.eg', 
 			'ahmed.o.hasan@te.eg',
 			//'mahmoud.bastawisy@te.eg', 
 			//'sara.mostafa@te.eg', 

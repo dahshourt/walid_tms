@@ -30,6 +30,7 @@ use App\Models\Attachements_crs;
 use App\Models\User;
 use App\Models\Defect;
 use App\Models\WorkFlowType;
+use App\Models\NewWorkFlow;
 use App\Models\ChangeRequestTechnicalTeam;
 use App\Models\Change_request_statuse;
 use App\Models\ApplicationImpact;
@@ -202,6 +203,8 @@ class ChangeRequestController extends Controller
     public function cr_pending_cap()
     {
         try {
+			
+			
             $this->authorize('Show cr pending cap');
 
             $title = 'CR Pending Cap';
@@ -460,10 +463,8 @@ class ChangeRequestController extends Controller
 				}
 			}
 		}
-
+		
         $cr = $this->getCRForEdit($id, $cab_cr_flag);
-
-    
 
         if (is_a($cr, 'Illuminate\Http\RedirectResponse')) {
             return $cr;
@@ -1209,14 +1210,47 @@ class ChangeRequestController extends Controller
      */
     private function getWorkflowIdForAction(int $workflow_type_id, string $action): ?int
     {
-        $workflowMap = [
+        /* $workflowMap = [
             3 => ['approve' => 36, 'reject' => 35],
             5 => ['approve' => 188, 'reject' => 184],
-            40=> ['approve' => 687, 'reject' => 686],
-        ];
+            37=> ['approve' => 937, 'reject' => 938],
+        ]; */
+		$workflowMap = [
+			3 => [
+				'approve' => $this->GetDivisionManagerActionId(3, "Business Approval", "Business Validation"),
+				'reject'  => $this->GetDivisionManagerActionId(3, "Business Approval", "Reject")
+			],
+			5 => [
+				'approve' => $this->GetDivisionManagerActionId(5, "Business Approval", "CR Analysis"),
+				'reject'  => $this->GetDivisionManagerActionId(5, "Business Approval", "Reject")
+			],
+			37 => [
+				'approve' => $this->GetDivisionManagerActionId(37, "Business Approval kam", "Business Validation kam"),
+				'reject'  => $this->GetDivisionManagerActionId(37, "Business Approval kam", "Reject kam")
+			],
+		];
 
-        return $workflowMap[$workflow_type_id][$action] ?? null;
+		return $workflowMap[$workflow_type_id][$action] ?? null;
     }
+	
+	
+	private function GetDivisionManagerActionId(int $workflow_type_id, string $from_action, string $to_action): ?int
+	{
+		return NewWorkflow::query()
+			->select('new_workflow.id')
+			->join('statuses as s1', function ($join) use ($from_action) {
+				$join->on('s1.id', '=', 'new_workflow.from_status_id')
+					 ->where('s1.status_name', 'like', '%' . $from_action . '%');
+			})
+			->join('new_workflow_statuses as nws', 'nws.new_workflow_id', '=', 'new_workflow.id')
+			->join('statuses as s2', function ($join) use ($to_action) {
+				$join->on('s2.id', '=', 'nws.to_status_id')
+					 ->where('s2.status_name', 'like', '%' . $to_action . '%');
+			})
+			->where('new_workflow.type_id', $workflow_type_id)
+			->orderBy('new_workflow.id', 'desc')
+			->value('new_workflow.id');
+	}
 
     /**
      * Get promo status view for workflow type
@@ -1359,13 +1393,14 @@ class ChangeRequestController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to process division manager action (JSON)', [
                 'cr_id' => $cr_id,
-                'action' => $action,
-                'error' => $e->getMessage()
+                'action' => $action." - ".$workflowIdForAction." - ".$current_status,
+                'error' => $e,
             ]);
 
             return response()->json([
                 'isSuccess' => false,
                 'message' => 'Failed to process action. Please try again.',
+                'error' => $e,
             ], 500);
         }
     }
@@ -1505,13 +1540,7 @@ $cr->update(['hold' => 0]);
             ->where('active', '1')
             ->value('new_status_id');
 
-        if (
-        !in_array($current_status, [
-            config('change_request.status_ids.pending_cab'),
-            config('change_request.status_ids_kam.pending_cab_kam'),
-        ])
-        
-        ) {
+        if ($current_status !=  config('change_request.status_ids.pending_cab')) {
             $message = $current_status == config('change_request.status_ids.pending_cab_proceed')
                 ? 'You already rejected this CR.'
                 : 'You already approved this CR.';
@@ -1531,22 +1560,49 @@ $cr->update(['hold' => 0]);
             // ]);
             // $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
 if($action=='approve'){
-    $requestData = new \Illuminate\Http\Request([
-        'old_status_id' => config('change_request.status_ids.pending_cab'),
-        'new_status_id' => config('change_request.status_ids.pending_cab_proceed'),
-        'cab_cr_flag' => '1',
-        'user_id' => auth()->user()->id,
-    ]);
+	if($cr->workflow_type_id = 37) // kam workflow
+	{
+		$requestData = new \Illuminate\Http\Request([
+			'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
+			'new_status_id' => $this->GetCapActionId(37,"Pending CAB kam","Design estimation kam"),
+			'cab_cr_flag' => '1',
+			'user_id' => auth()->user()->id,
+		]);
+	}
+	else
+	{
+		$requestData = new \Illuminate\Http\Request([
+			'old_status_id' => config('change_request.status_ids.pending_cab'),
+			'new_status_id' => config('change_request.status_ids.pending_cab_proceed'),
+			'cab_cr_flag' => '1',
+			'user_id' => auth()->user()->id,
+		]);
+	}
+    
 
 }
 else {
+	
+	if($cr->workflow_type_id = 37) // kam workflow
+	{
+		$requestData = new \Illuminate\Http\Request([
+			'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
+			'new_status_id' => $this->GetCapActionId(37,"Pending CAB kam","Design estimation kam"),
+			'cab_cr_flag' => '1',
+			'user_id' => auth()->user()->id,
+		]);
+	}
+	else
+	{
+		$requestData = new \Illuminate\Http\Request([
+			'old_status_id' => config('change_request.status_ids.pending_cab'),
+			'new_status_id' => config('change_request.status_ids.pending_cab_review'),
+			'cab_cr_flag' => '1',
+			'user_id' => auth()->user()->id,
+		]);
+	}
 
-    $requestData = new \Illuminate\Http\Request([
-        'old_status_id' => config('change_request.status_ids.pending_cab'),
-        'new_status_id' => config('change_request.status_ids.pending_cab_review'),
-        'cab_cr_flag' => '1',
-        'user_id' => auth()->user()->id,
-    ]);
+    
 
 }
 $repo = new ChangeRequestRepository();
@@ -1581,6 +1637,24 @@ $repo = new ChangeRequestRepository();
             ], 500);
         }
     }
+	
+	private function GetCapActionId(int $workflow_type_id, string $from_action, string $to_action): ?int
+	{
+		return NewWorkflow::query()
+			->select('new_workflow.id')
+			->join('statuses as s1', function ($join) use ($from_action) {
+				$join->on('s1.id', '=', 'new_workflow.from_status_id')
+					 ->where('s1.status_name', 'like', '%' . $from_action . '%');
+			})
+			->join('new_workflow_statuses as nws', 'nws.new_workflow_id', '=', 'new_workflow.id')
+			->join('statuses as s2', function ($join) use ($to_action) {
+				$join->on('s2.id', '=', 'nws.to_status_id')
+					 ->where('s2.status_name', 'like', '%' . $to_action . '%');
+			})
+			->where('new_workflow.type_id', $workflow_type_id)
+			->orderBy('new_workflow.id', 'desc')
+			->value('new_workflow.id');
+	}
 
     /**
      * Update attachment files

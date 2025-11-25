@@ -1,5 +1,6 @@
 <?php
 use App\Services\StatusConfigService;
+use App\Services\StatusConfigService;
 return [
 
     /*
@@ -71,6 +72,11 @@ return [
     
     // For KAM workflow, you can add a separate key:
     'status_ids_kam' => StatusConfigService::loadStatusIdsKam(),
+
+    'man_days_status' => [
+        "id" => 112,
+        "name" => "Set MD's  & Prerequisites" 
+    ],
 
     'parked_status_ids' => [
         // 'pending_uat' => 78,
