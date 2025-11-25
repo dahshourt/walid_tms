@@ -114,6 +114,7 @@ Route::middleware(['auth'])->group(
 
        Route::get('my_assignments', 'ChangeRequest\ChangeRequestController@my_assignments');
        Route::resource('groups', Groups\GroupController::class);
+	   Route::get('group/statuses/{id}', 'Groups\GroupController@GroupStatuses');
 
        //Route::resource('workflows', Workflow\WorkflowController::class);
        Route::resource('NewWorkFlowController', Workflow\NewWorkFlowController::class);
@@ -253,5 +254,3 @@ Route::middleware(['auth','role:user|admin'])->group(
        Route::get('/search/advanced_search', 'CustomFields\CustomFieldGroupTypeController@AllCustomFieldsWithSelectedByformType')->name('advanced.search');
 
 });*/
-
-
