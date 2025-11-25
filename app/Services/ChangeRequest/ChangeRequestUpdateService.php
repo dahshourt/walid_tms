@@ -20,6 +20,7 @@ use App\Traits\ChangeRequest\ChangeRequestConstants;
 use Auth;
 use Illuminate\Support\Arr;
 use App\Events\ChangeRequestUserAssignment;
+use App\Models\ChangeRequest;
 
 class ChangeRequestUpdateService
 {
@@ -371,34 +372,67 @@ class ChangeRequestUpdateService
             $testable = (string) request()->input('testable') === '1' ? 1 : 0;
         }
 
+        // Handle custom_fields array if present
+        if (isset($data['custom_fields']) && is_array($data['custom_fields'])) {
+            foreach ($data['custom_fields'] as $key => $value) {
+                $this->updateCustomField($id, $key, $value);
+            }
+        }
+
+        // Handle direct fields (legacy support)
         foreach ($data as $key => $value) {
             if ($key === 'testable' && request()->input('testable') !== null) {
-                $customFieldId = CustomField::findId($key);
-                if ($customFieldId && $value !== null) {
-                    $changeRequestCustomField = [
-                        'cr_id' => $id,
-                        'custom_field_id' => $customFieldId->id,
-                        'custom_field_name' => $key,
-                        'custom_field_value' => $testable,
-                        'user_id' => auth()->id(),
-                    ];
-                    $this->insertOrUpdateChangeRequestCustomField($changeRequestCustomField);
-                }
-            } else {
-                if (($key != '_token' && $key != 'testable') || $key === 'cr') {
-                    $customFieldId = CustomField::findId($key);
-                    if ($customFieldId && $value !== null) {
-                        $changeRequestCustomField = [
-                            'cr_id' => $id,
-                            'custom_field_id' => $customFieldId->id,
-                            'custom_field_name' => $key,
-                            'custom_field_value' => $value,
-                            'user_id' => auth()->id(),
-                        ];
-                        $this->insertOrUpdateChangeRequestCustomField($changeRequestCustomField);
-                    }
-                }
+                $this->updateCustomField($id, $key, $testable);
+            } elseif (!in_array($key, ['_token', 'testable', 'custom_fields', 'cr'])) {
+                $this->updateCustomField($id, $key, $value);
             }
+        }
+    }
+
+    /**
+     * Helper method to update a single custom field
+     */
+    // protected function updateCustomField($crId, $fieldName, $fieldValue): void
+    // {
+    //     $customFieldId = CustomField::where('name', $fieldName)->first();
+        
+    //     if ($customFieldId) {
+    //         // Convert array values to JSON string
+    //         $fieldValue = is_array($fieldValue) ? json_encode($fieldValue) : $fieldValue;
+            
+    //         $changeRequestCustomField = [
+    //             'cr_id' => $crId,
+    //             'custom_field_id' => $customFieldId->id,
+    //             'custom_field_name' => $fieldName,
+    //             'custom_field_value' => $fieldValue,
+    //             'user_id' => auth()->id(),
+    //         ];
+            
+    //         $this->insertOrUpdateChangeRequestCustomField($changeRequestCustomField);
+    //     }
+    // }
+    protected function updateCustomField($crId, $fieldName, $fieldValue): void
+    {
+        // Skip if the field value is null
+        if ($fieldValue === null) {
+            return;
+        }
+    
+        $customField = CustomField::where('name', $fieldName)->first();
+        
+        if ($customField) {
+            // Convert array values to JSON string
+            $fieldValue = is_array($fieldValue) ? json_encode($fieldValue) : $fieldValue;
+            
+            $changeRequestCustomField = [
+                'cr_id' => $crId,
+                'custom_field_id' => $customField->id,
+                'custom_field_name' => $fieldName,
+                'custom_field_value' => $fieldValue,
+                'user_id' => auth()->id(),
+            ];
+            
+            $this->insertOrUpdateChangeRequestCustomField($changeRequestCustomField);
         }
     }
 

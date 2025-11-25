@@ -277,7 +277,11 @@ class Change_request extends Model
     {
         return $this->hasOne(Change_request_statuse::class, 'cr_id', 'id')->where('active', '1');
     }
+    public function     CurrentRequestStatuses_last()
+    {
+        return $this->hasOne(Change_request_statuse::class, 'cr_id', 'id')->whereIn('active', [1, 2]);
 
+    }
     /**
      * Get the division manager for this change request.
      */
@@ -878,5 +882,10 @@ class Change_request extends Model
         $approvalStatusIds = [/* Add your approval status IDs */];
 
         return in_array($currentStatus->new_status_id, $approvalStatusIds);
+    }
+
+    public function getNameColumn()
+    {
+        return 'cr_no';
     }
 }

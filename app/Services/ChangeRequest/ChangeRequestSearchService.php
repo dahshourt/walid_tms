@@ -183,9 +183,23 @@ class ChangeRequestSearchService
         // Use full PHP-based filtering with getCurrentStatus()
         $filtered = $allRequests->filter(function ($item) {
             // $status = $item->getCurrentStatus();
-            $status = $item->getCurrentStatusForDivision();
 
-            return $status && $status->status && $status->status->id == config('change_request.status_ids.business_approval');
+        //   echo  config('change_request.status_ids.Cancel').'<br>';
+        //   echo  config('change_request.status_ids_kam.Cancel_kam').'<br>';
+
+
+        //     echo config('change_request.status_ids.Reject').'<br>'; 
+            
+        //     echo config('change_request.status_ids_kam.Reject_kam').'<br>'; die;
+
+            $status = $item->getCurrentStatusForDivision();
+            return $status 
+            && $status->status
+            && in_array($status->status->id, [
+                config('change_request.status_ids.business_approval'),
+                config('change_request.status_ids_kam.business_approval_kam'),
+            ]);
+           // return $status && $status->status && $status->status->id == config('change_request.status_ids.business_approval');
         });
 
         // Manual pagination
@@ -274,7 +288,7 @@ class ChangeRequestSearchService
             
         }
 		
-        $changeRequest = Change_request::with('category')
+        $changeRequest = Change_request::with('category')->with('change_request_custom_fields')
             ->with('attachments', function ($q) use ($groups) {
                 $q->with('user');
                 if (! in_array(8, $groups)) {

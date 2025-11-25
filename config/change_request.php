@@ -1,5 +1,5 @@
 <?php
-
+use App\Services\StatusConfigService;
 return [
 
     /*
@@ -67,36 +67,10 @@ return [
     | and business logic.
     |
     */
-    'status_ids' => [
-        'technical_estimation' => 4,
-        'pending_implementation' => 8,
-        'technical_implementation' => 10,
-        'pending_production_deployment' => 127,
-        'production_deployment' => 128,
-        'business_approval' => 22,
-        'pending_cab' => 38,
-        'pending_cab_proceed' => 160,
-        'pending_cab_review' => 37,
-        'set_kickoff' => 110,
-        'cr_manager_review' => 99,
-        'design_phase' => 40,
-        'development_ready' => 74,
-        'development_in_progress' => 41,
-        'testing_phase' => 42,
-        'uat_phase' => 43,
-        'business_test_case_approval' => 41,
-        'business_uat_sign_off' => 44,
-        'pending_business' => 64,
-        'pending_business_feedback' => 79,
-        'approved_implementation_plan' => 116,
-        'pending_cd_analysis' => 138,
-        'pending_stage_deployment_in_house' => 76,
-        'pending_production_deployment_in_house' => 20,
-
-        'Reject' => 19,
-        'Cancel' => 82,
-
-    ],
+    'status_ids' => StatusConfigService::loadStatusIds(),
+    
+    // For KAM workflow, you can add a separate key:
+    'status_ids_kam' => StatusConfigService::loadStatusIdsKam(),
 
     'parked_status_ids' => [
         // 'pending_uat' => 78,

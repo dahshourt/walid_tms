@@ -210,7 +210,46 @@
                                                                         <textarea name="{{ $item->CustomField->name }}" disabled
                                                                         class="form-control form-control-lg">{{ $custom_field_value }}</textarea>
 																</div>	
-														@endif		
+                                                                @elseif($item->CustomField->name == "relevant")
+    @php
+        // Decode the stored JSON ["6366", "6350"]
+        $selectedValues = json_decode($custom_field_value, true);
+
+        // Fallback if value is comma-separated (e.g., "6366,6350")
+        if (!is_array($selectedValues)) {
+            $selectedValues = explode(',', $custom_field_value);
+        }
+
+        // Normalize to strings
+        $selectedValues = array_map('strval', $selectedValues);
+
+        // Fetch all selected CRs by cr_no
+        $selectedCRs = \App\Models\Change_request::whereIn('id', $selectedValues)
+                            ->select('cr_no', 'title')
+                            ->get();
+    @endphp
+
+    <div class="form-group col-md-6" style="float:left">
+        <label>{{ $item->CustomField->label }}</label>
+
+        <select class="form-control form-control-lg select2-field" multiple disabled>
+
+            @foreach($selectedCRs as $crItem)
+                @php
+                    $label = $crItem->cr_no . ' - ' . $crItem->title;
+                @endphp
+
+                <option value="{{ $crItem->cr_no }}" selected>
+                    {{ $label }}
+                </option>
+            @endforeach
+
+        </select>
+    </div>
+
+                                                        
+                                                        
+                                                                @endif		
 														
 													@endforeach
 												</div>
@@ -380,11 +419,37 @@
 
 @endsection
 
+@push('css')
+        <style>
+            html, body { overflow-x: hidden; }
+            .select2-container { max-width: 100%; }
+            .select2-dropdown { max-width: 100vw; overflow-x: hidden; }
+        </style>
+    @endpush
 
+ 
 
 @push('script')					
 					<script>
-      
+        $(function() {
+                if ($.fn.select2) {
+                    // Initialize all select2 fields
+                    $('.select2-field').each(function() {
+                        var $el = $(this);
+                        
+                        // Find the closest form as parent
+                        var $form = $el.closest('form');
+                        var dropdownParent = $form.length ? $form : $(document.body);
+                        
+                        $el.select2({
+                            placeholder: $el.data('placeholder') || 'Select',
+                            allowClear: true,
+                            width: '100%',
+                            dropdownParent: dropdownParent
+                        });
+                    });
+                }
+            });
         // Get modal element
 var modal = document.getElementById("modal");
 // Get open modal button
