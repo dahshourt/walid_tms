@@ -37,7 +37,7 @@ class Status extends Model
         'created_at',
     ];
 
-    
+
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('active', '1');
@@ -89,7 +89,12 @@ class Status extends Model
     {
         return $this->status_name;
     }
-	
+
+    public function getNameColumn(): string
+    {
+        return 'status_name';
+    }
+
 	public function workflow_type()
     {
         return $this->belongsTo(WorkFlowType::class, 'workflow_type_id');

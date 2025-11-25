@@ -116,4 +116,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Log::class);
     }
+
+    public function getNameColumn(): string
+    {
+        return 'name';
+    }
 }
