@@ -6,6 +6,7 @@ use App\Models\NewWorkFlowStatuses;
 use App\Models\Status;
 use App\Models\SystemUserCab;
 use File;
+use Illuminate\Support\Facades\Log;
 use Str;
 
 trait BindsDynamically
@@ -63,7 +64,13 @@ trait BindsDynamically
 
             return $pluckColumn ? $query->pluck($pluckColumn) : $query->get();
         } catch (\Throwable $exception) {
-            dd($exception->getMessage());
+            Log::error('Error while getting custom data by dynamic table', [
+                'message' => $exception->getMessage(),
+                'exception' => $exception->getTraceAsString(),
+                'line' => $exception->getLine(),
+            ]);
+
+            return collect([]);
         }
     }
 
