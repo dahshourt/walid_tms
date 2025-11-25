@@ -242,8 +242,8 @@
                                                     </table>
                                             @endif
                                             @endcan 
-
-                                            @if($man_days && count($man_days) > 0)
+                                            @if($cr->current_status->status->status_name == config('change_request.man_days_status.name'))                    
+                                                @if($man_days && count($man_days) > 0)
                                                     <h5>Man Days Logs</h5>
                                                     <table class="table table-bordered">
                                                         <thead>
@@ -265,6 +265,7 @@
                                                             @endforeach
                                                         </tbody>
                                                     </table>
+                                                @endif
                                             @endif
                                             <!-- end feedback table -->
 											@if(count($cr['attachments'])  > 0  )
@@ -445,7 +446,7 @@
  
     $(document).ready(function () {
         var status = $('select[name="new_status_id"] option:selected').val();
-        if (status === "Reject" || status === "Closed" || status === "CR Closed") {
+        if (status === "Reject" || status === "Closed" || status === "CR Closed" || status === "Reject kam" || status === "Closed kam") {
             $('input, select, textarea').prop('disabled', true);
         } 
         $('#new_status_id').prop('disabled', false);
@@ -458,7 +459,7 @@ $(window).on("load", function () {
     function isStatusReject() {
         if (statusField) {
             const selectedText = statusField.options[statusField.selectedIndex].text;
-            return selectedText === "Reject";
+            return selectedText === "Reject" || selectedText === "Reject kam";
         }
         return false;
     }
@@ -499,7 +500,7 @@ $(window).on("load", function () {
     function isStatusReject() {
         if (statusField) {
             const selectedText = statusField.options[statusField.selectedIndex].text;
-            return selectedText === "Pending CAB";
+            return selectedText === "Pending CAB" || selectedText === "Pending CAB kam";
         }
         return false;
     }
@@ -518,7 +519,9 @@ $(window).on("load", function () {
 	// Function to handle the technical estimation require
     function handleTechnicalEstimationRequire() {
 		const TechnicalEstimationtext = statusField.options[statusField.selectedIndex].text.trim();
-		const isPending = TechnicalEstimationtext === "Pending implementation";
+		const isPending = 
+					TechnicalEstimationtext === "Pending implementation" ||
+					TechnicalEstimationtext === "Pending implementation kam";
 		const $dev = $('input[name="dev_estimation"]');
 
 		if (isPending) {
@@ -568,7 +571,7 @@ $(document).ready(function () {
             workLoadField.prop("required", false); // optional
         }
 
-        if (selectedStatus === "Test Case Approval") {
+        if (selectedStatus === "Test Case Approval" || selectedStatus === "Test Case Approved kam") {
             technicalAttachmentField.prop("required", true); // mandatory
             //console.log("Technical Attachment is now mandatory");
         }
@@ -690,7 +693,7 @@ $(window).on("load", function () {
     function isStatusPendingDesign() {
         if (statusField) {
             const selectedText = statusField.options[statusField.selectedIndex].text;
-            return selectedText === "Pending Design";
+            return selectedText === "Pending Design" || selectedText === "Pending Design kam";
         }
         return false;
     }
