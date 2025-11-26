@@ -116,7 +116,20 @@
             </select>
             {!! $errors->first('application_id', '<span class="form-control-feedback">:message</span>') !!}
         </div>
-        
+		@hasrole('Super Admin')
+        <div class="form-group">
+            <label for="user_type">Parent</label>
+            <select name="parent_id" class="form-control form-control-lg">
+                <option value="">....</option>
+                @foreach($parent_groups as $item)
+                    <option value="{{$item->id}}"
+                        {{ isset($row) && $row->parent_id == $item->id ? "selected" : "" }}
+                    >{{$item->title}}</option>
+                @endforeach
+            </select>
+        </div>
+		@endhasrole
+
         <div class="form-group">
             <label for="user_type">Head Group Name</label>
             <input type="text" name="head_group_name" class="form-control form-control-lg"
