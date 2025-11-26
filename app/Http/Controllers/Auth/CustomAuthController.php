@@ -79,12 +79,12 @@ class CustomAuthController extends Controller
             $response = $this->CheckLdapAccount($request->user_name, $request->password);
             if ($response['status']) {
                 $email = $request->user_name . '@te.eg';
-                $check_email = (new UserRepository)->CheckUniqueEmail($email);
+                $check_email = app(UserRepository::class)->CheckUniqueEmail($email);
 
                 $roles = [];
                 $group_id = [];
-                $role = (new RolesRepository)->findByName('Viewer');
-                $bussines_group = (new GroupRepository)->findByName('Business Team');
+                $role = app(RolesRepository::class)->findByName('Viewer');
+                $bussines_group = app(GroupRepository::class)->findByName('Business Team');
                 $roles[] = $role->name;
                 $default_group = $bussines_group->id;
                 $group_id[] = $bussines_group->id;
@@ -104,7 +104,7 @@ class CustomAuthController extends Controller
                     'active' => '1',
                 ];
 
-                $user = (new UserRepository)->create($data);
+                $user = app(UserRepository::class)->create($data);
                 Auth::login($user);
                 DB::table('sessions')->where('user_id', $user->id)->where('id', '!=', Session::getId())->delete();
 
