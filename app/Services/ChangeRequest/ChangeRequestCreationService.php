@@ -54,24 +54,52 @@ class ChangeRequestCreationService
         ];
     }
 
-    public function generateCrNumber($workflowTypeId): int
-    {
-        $changeRequest = Change_request::where('workflow_type_id', $workflowTypeId)
-            ->orderBy('cr_no', 'desc')
-            ->first();
-
-        $firstCrNo = config('change_request.default_values.first_cr_no.' . $workflowTypeId,
-            config('change_request.default_values.first_cr_no.default'));
-
-        return $changeRequest && $changeRequest->cr_no ? $changeRequest->cr_no + 1 : $firstCrNo;
-    }
-
+  public function generateCrNumber($workflowTypeId): int
+  {
+      // Get KAM workflow ID dynamically from DB
+      $kamWorkflow = \App\Models\WorkFlowType::where('name', 'KAM')->first();
+      $isKamWorkflow = $kamWorkflow && $workflowTypeId == $kamWorkflow->id;
+  
+      // Get the last CR number for this workflow type
+      $lastCr = Change_request::where('workflow_type_id', $workflowTypeId)
+          ->orderBy('cr_no', 'desc')
+          ->first();
+  
+      // If this is a KAM workflow, use the default starting number (6000)
+      if ($isKamWorkflow) {
+          $firstCrNo = config('change_request.default_values.first_cr_no.default', 6000);
+          
+          // Find the highest CR number in the system
+          $highestCr = Change_request::max('cr_no');
+          
+          // If no CRs exist yet, return the first CR number
+          if (!$highestCr) {
+              return $firstCrNo;
+          }
+          
+          // Return the next available number (max + 1)
+          return max($highestCr + 1, $firstCrNo);
+      }
+  
+      // For other workflows, use their specific starting numbers
+      $firstCrNo = config(
+          "change_request.default_values.first_cr_no.{$workflowTypeId}",
+          config('change_request.default_values.first_cr_no.default', 6000)
+      );
+  
+      if (!$lastCr || !$lastCr->cr_no) {
+          return $firstCrNo;
+      }
+  
+      return $lastCr->cr_no + 1;
+  }
     protected function prepareCreateData(array $data, int $defaultStatus): array
     {
+        $crNo = $this->generateCrNumber($data['workflow_type_id']);
         $data['requester_id'] = Auth::id();
         $data['requester_name'] = Auth::user()->user_name;
         $data['requester_email'] = Auth::user()->email;
-        $data['cr_no'] = $this->generateCrNumber($data['workflow_type_id']);
+        $data['cr_no'] = $crNo;
 
         return Arr::only($data, $this->getRequiredFields());
     }
@@ -81,40 +109,39 @@ class ChangeRequestCreationService
         $data['requester_id'] = Auth::id();
         $data['requester_name'] = Auth::user()->user_name;
         $data['requester_email'] = Auth::user()->email;
-        $data['cr_no'] = $this->getLastCrNo();
         $data['old_status_id'] = $defaultStatus;
         $data['new_status_id'] = $defaultStatus;
 
         return Arr::except($data, []);
     }
 
-    protected function getLastCrNo(): int
-    {
-        $changeRequest = Change_request::orderBy('id', 'desc')->first();
-
-        return $changeRequest ? $changeRequest->cr_no + 1 : 1;
-    }
-
     protected function handleCustomFields(int $crId, array $data): void
     {
         $excludedKeys = ['_token', 'business_attachments', 'technical_attachments'];
-
+    
         foreach ($data as $key => $value) {
-            if (! in_array($key, $excludedKeys) && $value) {
-                $customField = CustomField::findId($key);
-                if ($customField) {
-                    ChangeRequestCustomField::updateOrCreate(
-                        [
-                            'cr_id' => $crId,
-                            'custom_field_id' => $customField->id,
-                            'custom_field_name' => $key,
-                        ],
-                        [
-                            'custom_field_value' => $value,
-                            'user_id' => Auth::user()->id,
-                        ]
-                    );
-                }
+            // Skip excluded keys and empty values
+            if (in_array($key, $excludedKeys) || empty($value)) {
+                continue;
+            }
+    
+            $customField = CustomField::findId($key);
+            
+            if ($customField) {
+                // Convert arrays to JSON string before saving
+                $fieldValue = is_array($value) ? json_encode($value) : $value;
+                
+                ChangeRequestCustomField::updateOrCreate(
+                    [
+                        'cr_id' => $crId,
+                        'custom_field_id' => $customField->id,
+                        'custom_field_name' => $key,
+                    ],
+                    [
+                        'custom_field_value' => $fieldValue,
+                        'user_id' => Auth::user()->id,
+                    ]
+                );
             }
         }
     }

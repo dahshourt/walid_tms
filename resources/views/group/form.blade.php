@@ -116,6 +116,7 @@
             </select>
             {!! $errors->first('application_id', '<span class="form-control-feedback">:message</span>') !!}
         </div>
+		@hasrole('Super Admin')
         <div class="form-group">
             <label for="user_type">Parent</label>
             <select name="parent_id" class="form-control form-control-lg">
@@ -127,6 +128,7 @@
                 @endforeach
             </select>
         </div>
+		@endhasrole
 
         <div class="form-group">
             <label for="user_type">Head Group Name</label>

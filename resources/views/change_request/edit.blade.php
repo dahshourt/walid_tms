@@ -423,9 +423,15 @@
 
 @endsection
 
+
+
 @push('script')
 
 <script>
+    
+    window.pendingProductionId = "{{ $pendingProductionId }}";
+    window.relevantNotPending = "{{ $relevantNotPending }}";
+
     var modal = document.getElementById("modal");
     var btn = document.getElementById("openModal");
     var closeBtn = document.getElementById("close_logs");
@@ -1009,5 +1015,48 @@ if (typeof jQuery !== 'undefined') {
         };
     });
 }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.querySelector("form");
+        const statusSelect = document.querySelector('select[name="new_status_id"]');
+        const originalValue = statusSelect ? statusSelect.value : null;
+        if (form) {
+            form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    const selectedStatus = statusSelect.value;
+//     alert( parseInt(window.relevantNotPending));
+//     alert(selectedStatus);
+// alert(window.pendingProductionId);
+// alert(originalValue);
+   // const selectedStatus = document.querySelector('select[name="new_status_id"]').value;
+
+    if (
+        selectedStatus != window.pendingProductionId && originalValue == window.pendingProductionId&&
+        parseInt(window.relevantNotPending) > 0
+    ) {
+        Swal.fire({
+            title: 'Relevant CRs Not Ready',
+            text: "Some relevant CRs are NOT in Pending Production Deployment. Continue anyway?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, continue',
+            cancelButtonText: 'Cancel'
+        }).then(result => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+
+        return;
+    }
+    form.submit();
+});
+
+
+
+        }
+    });
 </script>
 @endpush

@@ -471,4 +471,42 @@ document.addEventListener('DOMContentLoaded', function() {
 		@stack('script')
 	</body>
 	<!--end::Body-->
+
+	<!-- Display SweetAlert2 notifications -->
+	@if(session('error') && is_array(session('error')))
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			const error = @json(session('error'));
+			Swal.fire({
+				title: error.title || 'Error',
+				html: error.message || 'An error occurred',
+				icon: error.icon || 'error',
+				confirmButtonText: error.confirmButtonText || 'OK',
+				showCancelButton: error.showCancelButton || false,
+				buttonsStyling: false,
+				customClass: {
+					confirmButton: 'btn font-weight-bold btn-light-primary',
+					cancelButton: 'btn font-weight-bold btn-light-danger'
+				}
+			});
+		});
+	</script>
+	@endif
+
+	@if(session('success'))
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			Swal.fire({
+				title: 'Success',
+				text: '{{ session('success') }}',
+				icon: 'success',
+				confirmButtonText: 'OK',
+				buttonsStyling: false,
+				customClass: {
+					confirmButton: 'btn font-weight-bold btn-light-primary'
+				}
+			});
+		});
+	</script>
+	@endif
 </html>

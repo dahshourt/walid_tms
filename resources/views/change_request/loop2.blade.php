@@ -28,7 +28,13 @@ $check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_
                                         @endcan
                                     @endcan
                                     <th scope="row">{{ $item->title}}</th>
-                                    <th scope="row">{{ $item->description}}</th>
+                                    <th scope="row">
+                                        <span class="description-preview text-primary"
+                                              data-description="{{ e($item->description) }}"
+                                              role="button">
+                                            {{ \Illuminate\Support\Str::limit($item->description, 50) }}
+                                        </span>
+                                    </th>
                                     <td>{{ $item->getCurrentStatus() && $item->getCurrentStatus()->status ? $item->getCurrentStatus()->status->status_name : "" }}</td>
                                     @if(!empty($roles_name) && isset($roles_name[0]) && $roles_name[0] != "Viewer")
                                    
