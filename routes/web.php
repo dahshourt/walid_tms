@@ -97,6 +97,10 @@ Route::middleware(['auth'])->group(
         Route::post('units/updateactive', 'Units\UnitController@updateStatus')->name('units.updateStatus');
 
 		 Route::resource('stages', Stages\StageController::class);
+         Route::resource('requester-department', RequesterDepartment\RequesterDepartmentController::class);
+        Route::post('requester-department/updateactive', 'RequesterDepartment\RequesterDepartmentController@updateactive')
+        ->name('requester-department.update-active');
+         
        Route::post('stage/updateactive', 'Stages\StageController@updateactive');
        Route::resource('parents', Parents\ParentController::class);
         Route::post('parent/updateactive', 'Parents\ParentController@updateactive');
