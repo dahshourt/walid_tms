@@ -26,7 +26,9 @@ use App\Http\Controllers\ChangeRequest\Api\EmailApprovalController;
 
 //Auth::routes();
 Route::get('/mail_approve', [EmailApprovalController::class, 'ApproveMail']);
-Route::get('login', 'Auth\CustomAuthController@index')->name('login');
+Route::get('login', 'Auth\CustomAuthController@index')
+    ->middleware('guest')
+    ->name('login');
 Route::post('login', 'Auth\CustomAuthController@login')->name('login.custom')->middleware('throttle:5,1');
 Route::get('/logout', 'Auth\LoginController@logout');
 Route::get('/inactive-logout','Auth\CustomAuthController@inactive_logout')->name('inactive-logout');

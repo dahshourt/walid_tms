@@ -23,16 +23,6 @@
     </div>
 
     <div class="form-group">
-        <label for="user_type">User Type <span class="text-danger">*</span></label>
-        <select class="form-control form-control-lg" id="user_type" name="user_type">
-            <option value=""> Select</option>
-            <option value="0" {{ (isset($row) && $row->user_type != 1) ? "selected" : "" }}> Local User</option>
-            <option value="1" {{ (isset($row) && $row->user_type == 1) ? "selected" : "" }}> AD User</option>
-        </select>
-        {!! $errors->first('user_type', '<span class="form-control-feedback">:message</span>') !!}
-    </div>
-
-    <div class="form-group">
         <label>Name <span class="text-danger">*</span></label>
         <input type="text" class="form-control form-control-lg" placeholder="Name" name="name"
                value="{{ isset($row) ? $row->name : old('name') }}"/>
@@ -51,35 +41,6 @@
                value="{{ isset($row) ? $row->email : old('email') }}" autocomplete="off"/>
         {!! $errors->first('email', '<span class="form-control-feedback">:message</span>') !!}
     </div>
-
-    @php
-        $style="";
-        if(isset($row) && $row->user_type !=1)
-        {
-            $style="display:block;";
-        }
-    @endphp
-    <div class="form-group local_password_div" style="{{ $style }}">
-        <label>Password</label>
-
-
-        <input type="password" class="form-control" placeholder="password" name="password" autocomplete="off"/>
-        {!! $errors->first('password', '<span class="form-control-feedback">:message</span>') !!}
-
-
-    </div>
-
-    <div class="form-group local_password_div" style="{{ $style }}">
-        <label>Password Confirmation</label>
-
-
-        <input type="password" class="form-control" placeholder="confirm password" name="password_confirmation"
-               autocomplete="off"/>
-        {!! $errors->first('password_confirmation', '<span class="form-control-feedback">:message</span>') !!}
-
-
-    </div>
-
 
     <div class="form-group">
         <label for="role_id">User Roles</label>
@@ -192,17 +153,3 @@
 
 </div>
 
-@push('script')
-
-    <script>
-        $('#user_type').change(function () {
-            if ($(this).val() != 1) {
-                $(".local_password_div").show();
-            } else {
-                $(".local_password_div").hide();
-            }
-        });
-
-    </script>
-
-@endpush
