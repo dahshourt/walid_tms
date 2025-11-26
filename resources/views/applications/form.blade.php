@@ -28,17 +28,6 @@
         {!! $errors->first('name', '<span class="form-control-feedback">:message</span>') !!}
     </div>
 
-    <div class="form-group">
-        <label for="parent_id">Parent</label>
-        <select name="parent_id" class="form-control form-control-lg">
-            <option value="">....</option>
-            @foreach($parent_apps as $item)
-                <option value="{{$item->id}}"
-                    {{ isset($row) && $row->parent_id == $item->id ? "selected" : "" }}
-                >{{$item->name}}</option>
-            @endforeach
-        </select>
-    </div>
 
     <div class="form-group">
         <label for="wf_type_id">Workflow Type <span class="text-danger">*</span></label>
