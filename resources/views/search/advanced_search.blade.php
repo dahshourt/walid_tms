@@ -315,7 +315,16 @@
                                         @php
                                             $statuses_names = $item->RequestStatuses->pluck('status.name');
                                         @endphp
-                                        {{ $statuses_names->implode(', ') }}
+                                        <div class="d-flex flex-wrap align-items-center" style="gap: 0.4rem;">
+                                            @forelse ($statuses_names as $statusName)
+                                                <span class="label label-lg label-light-primary label-inline text-dark px-4 py-2"
+                                                      style="white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; font-weight: 400;">
+                                                    {{ $statusName }}
+                                                </span>
+                                            @empty
+                                                <span class="text-muted">—</span>
+                                            @endforelse
+                                        </div>
                                     </td>
                                     <td>{{ $item['requester_name'] ?? "" }}</td>
                                     <td>{{ $item['requester_email'] ?? "" }}</td>
