@@ -465,8 +465,6 @@ class ChangeRequestController extends Controller
 		}
 		
         $cr = $this->getCRForEdit($id, $cab_cr_flag);
-		
-    
 
         if (is_a($cr, 'Illuminate\Http\RedirectResponse')) {
             return $cr;
@@ -981,8 +979,39 @@ class ChangeRequestController extends Controller
             ? "List Promo"
             : view()->shared('title');
         $man_days = ManDaysLog::where('cr_id', $id)->with('user')->get();
+        $relevantField = $cr->change_request_custom_fields
+        ->where('custom_field_name', 'relevant')
+        ->first();
+    
+    // Step 2: decode the JSON values into selected CR IDs
+    $selectedRelevant = [];
+    if ($relevantField && !empty($relevantField->custom_field_value)) {
+        $decoded = json_decode($relevantField->custom_field_value, true);
+        if (is_array($decoded)) {
+            $selectedRelevant = array_map('intval', $decoded);
+        }
+    }
+    
+    // Step 3: load these CRs with status
+    
+        $relevantCrsData = \App\Models\Change_request::whereIn('id', $selectedRelevant)
+        ->with('CurrentRequestStatuses')
+        ->get(['id', 'cr_no', 'title']);
+
+        // echo"<pre>";
+        // print_r($relevantCrsData);
+        // echo "</pre>";
+        // die;
 
 
+    //echo config('change_request.status_ids.pending_production_deployment'); die;
+    // Step 4: check if any relevant CR is not in Pending Production Deployment
+    $pendingProductionId = config('change_request.status_ids.pending_production_deployment');
+    //echo $pendingProductionId; die;
+    $relevantNotPending = $relevantCrsData->filter(function ($item) use ($pendingProductionId) {
+        return $item->CurrentRequestStatuses_last?->new_status_id != $pendingProductionId;
+    })->count();
+//echo $relevantNotPending; die;
         //  echo "<pre>";
         //  print_r( $rejects);
         //  echo "</pre>"; die;
@@ -991,7 +1020,11 @@ class ChangeRequestController extends Controller
             'ApplicationImpact', 'cap_users', 'CustomFields', 'cr', 'workflow_type_id',
             'logs_ers', 'developer_users', 'sa_users', 'testing_users', 'technical_teams',
             'all_defects', 'reminder_promo_tech_teams', 'rtm_members', 'assignment_users',
-            'reminder_promo_tech_teams_text','technical_groups','man_days'
+            'reminder_promo_tech_teams_text','technical_groups','man_days',
+            'relevantCrsData',
+            'relevantNotPending',
+            'pendingProductionId'
+        
         );
     }
 
@@ -1506,14 +1539,8 @@ $cr->update(['hold' => 0]);
         $current_status = Change_request_statuse::where('cr_id', $cr_id)
             ->where('active', '1')
             ->value('new_status_id');
-		
-        if (
-        !in_array($current_status, [
-            config('change_request.status_ids.pending_cab'),
-            config('change_request.status_ids_kam.pending_cab_kam'),
-        ])
-        
-        ) {
+
+        if ($current_status !=  config('change_request.status_ids.pending_cab')) {
             $message = $current_status == config('change_request.status_ids.pending_cab_proceed')
                 ? 'You already rejected this CR.'
                 : 'You already approved this CR.';

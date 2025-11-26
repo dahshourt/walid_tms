@@ -179,6 +179,8 @@ return [
         Maatwebsite\Excel\ExcelServiceProvider::class,
         App\Providers\WorkflowConfigServiceProvider::class, // Add this line
         App\Services\ChangeRequest\ChangeRequestServiceProvider::class,
+        App\Services\ChangeRequest\ChangeRequestServiceProvider::class,
+
         // Spatie
 
         Spatie\Permission\PermissionServiceProvider::class,
