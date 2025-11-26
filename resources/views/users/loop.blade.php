@@ -6,7 +6,7 @@
                                     <td>{{ $item->name }}</td>
                                     <td>{{ $item->user_name }}</td>
                                     <td>{{ $item->email }}</td>
-                                    <td>{{ $item->defualt_group->title }}</td>
+                                    <td>{{ $item->defualt_group? $item->defualt_group->title : "" }}</td>
                                     @can('Active User')
                                     <td>
                                         @if($item->active)

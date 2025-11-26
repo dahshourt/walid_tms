@@ -1,6 +1,5 @@
 <?php
 use App\Services\StatusConfigService;
-use App\Services\StatusConfigService;
 return [
 
     /*
