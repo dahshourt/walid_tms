@@ -216,6 +216,11 @@ Route::middleware(['auth'])->group(
         Route::resource('notification_templates', NotificationTemplates\NotificationTemplatesController::class);
         Route::get('/get-groups/{status_id}', [SlaCalculationController::class, 'getGroups'])->name('get.groups');
 
+        // KPI Routes
+        Route::resource('kpis', KPIs\KPIController::class);
+        Route::get('kpis/{kpi}/search-cr', 'KPIs\KPIController@searchChangeRequest')->name('kpis.search-cr');
+        Route::post('kpis/{kpi}/attach-cr', 'KPIs\KPIController@attachChangeRequest')->name('kpis.attach-cr');
+        Route::delete('kpis/{kpi}/detach-cr/{cr}', 'KPIs\KPIController@detachChangeRequest')->name('kpis.detach-cr');
 
         //test ews
 
