@@ -17,6 +17,11 @@ class RejectionReasons extends Model
 
     public function workflowType()
     {
-        return $this->belongsTo(WorkflowType::class, 'workflow_type_id');
+        return $this->belongsTo(WorkFlowType::class, 'workflow_type_id');
+    }
+
+    public function getNameColumn(): string
+    {
+        return 'name';
     }
 }

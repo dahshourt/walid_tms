@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\DynamicNotification;
 use App\Models\User;
 use App\Models\Group;
+use App\Models\TechnicalCr;
 
 class NotificationService
 {
@@ -191,8 +192,8 @@ class NotificationService
                 return [];
 
             case 'designer':
-                if (isset($event->changeRequest->designer_id)) {
-                    $designer = User::find($event->changeRequest->designer_id);
+                if (isset($event->request->designer_id)) {
+                    $designer = User::find($event->request->designer_id);
                     $this->toMailUser = $designer->email;
                     return $designer ? [$designer->email] : [];
                 }
@@ -215,6 +216,8 @@ class NotificationService
                     return $cr_member ? [$cr_member] : [];
                 }
                 return [];
+            case 'cr_managers':
+                return config('constants.cr_managers_mails');
 
             case 'cr_team':
 				$group = Group::where('title',config('constants.group_names.cr_team'))->first();
@@ -250,12 +253,44 @@ class NotificationService
             
             case 'assigned_dev_team':
                 // Get the group assigned to handle the CR
-                if (isset($event->changeRequest->application_id)) {
+
+                $group = Group::find(
+                    $event->changeRequest->change_request_custom_fields()
+                        ->where('custom_field_name', 'tech_group_id')
+                        ->value('custom_field_value')
+                );
+                return $group ? [$group->head_group_email] : [];
+
+                /*if (isset($event->changeRequest->application_id)) {
                     $group_id = $event->changeRequest->application->group_applications->last()->group_id;
                     $group = Group::find($group_id);
                     return $group ? [$group->head_group_email] : [];
                 }
+                return [];*/
+            case 'tech_teams':
+                if (!empty($event->request->technical_teams) && is_array($event->request->technical_teams)) {
+                    return Group::whereIn('id', $event->request->technical_teams)
+                        ->pluck('head_group_email')
+                        ->filter()
+                        ->values()
+                        ->toArray();
+                }
+                else{
+                    $tech_cr = TechnicalCr::with('technical_cr_team')
+                        ->where('cr_id', $event->changeRequest->id)
+                        ->latest()
+                        ->first();
+
+                    $tech_team = $tech_cr->technical_cr_team->pluck('group_id')->toArray();
+
+                    return Group::whereIn('id', $tech_team)
+                        ->pluck('head_group_email')
+                        ->filter()
+                        ->values()
+                        ->toArray();
+                }
                 return [];
+                
             // Add more types as needed
             default:
                 return [];
@@ -371,7 +406,12 @@ class NotificationService
                 $groupName = $group ? $group->title : '';
             }
         }
-        
+
+        $kickoff_meeting_date = $cr->change_request_custom_fields
+            ->where('custom_field_name', 'kick_off_meeting_date')
+            ->first()
+            ->custom_field_value ?? null;
+
         return [
             'cr_no' => $cr->cr_no,
             'cr_id' => $cr->id,
@@ -390,6 +430,9 @@ class NotificationService
             'reject_link' => $rejectLink,
             'workflow_type_id' => $cr->workflow_type_id ?? '',
             'system_link' => $systemLink,
+            'start_cr_date' => $cr->start_CR_time,
+            'start_sa_date' => $cr->start_design_time,
+            'kickoff_meeting_date' => $kickoff_meeting_date,
             
         ];
     }

@@ -27,7 +27,13 @@
         </th>
         @if($cr->workflow_type_id == 5)
             <td>{{ $cr->title }}</td>
-            <td>{{ $cr->description }}</td>
+            <td>
+                <span class="description-preview text-primary"
+                      data-description="{{ e($cr->description) }}"
+                      role="button">
+                    {{ \Illuminate\Support\Str::limit($cr->description, 50) }}
+                </span>
+            </td>
             <td>{{ $cr_status_name }}</td>
             <td>{{ $cr->application->name }}</td>
             <td>{{ @$cr->Release->name }}</td>
@@ -42,7 +48,13 @@
             <td>{{ @$cr->Release->planned_end_smoke_test_date }}</td>
         @else
             <td>{{ $cr->title }}</td>
-            <td>{{ $cr->description }}</td>
+            <td>
+                <span class="description-preview text-primary"
+                      data-description="{{ e($cr->description) }}"
+                      role="button">
+                    {{ \Illuminate\Support\Str::limit($cr->description, 50) }}
+                </span>
+            </td>
             <td>{{ $cr_status_name }}</td>
             <td>{{ $cr->application->name }}</td>
             <td>{{ $cr->design_duration }}</td>

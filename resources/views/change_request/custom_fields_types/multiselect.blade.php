@@ -1,17 +1,17 @@
 @php
-        $fieldName = $item->CustomField->name;
-        $fieldLabel = $item->CustomField->label;
-        $isRequired = isset($item->validation_type_id) && $item->validation_type_id == 1;
-        $isEnabled = isset($item->enable) && $item->enable == 1;
-        $inputType = $fieldName === 'division_manager' ? 'email' : 'text';
-        $inputValue = isset($cr) ? old($fieldName, $custom_field_value) : old($fieldName);
-    @endphp
+    $fieldName = $item->CustomField->name;
+    $fieldLabel = $item->CustomField->label;
+    $isRequired = isset($item->validation_type_id) && $item->validation_type_id == 1;
+    $isEnabled = isset($item->enable) && $item->enable == 1;
+    $inputType = $fieldName === 'division_manager' ? 'email' : 'text';
+    $inputValue = isset($cr) ? old($fieldName, $custom_field_value ?? '') : old($fieldName);
+@endphp
+
 @if($item->CustomField->type == "multiselect")
     <div class="col-md-6 change-request-form-field field_{{ $item->CustomField->name }}">
 
         {{-- Smart label rendering --}}
         @php
-            $fieldName = $item->CustomField->name;
             $durationFieldMap = [
                 'tester_id' => 'test_duration',
                 'designer_id' => 'design_duration',
@@ -20,8 +20,10 @@
             $showLabelName = $durationFieldMap[$fieldName] ?? null;
         @endphp
 
-        @if($showLabelName && !empty($cr->{$durationFieldMap[$fieldName]}))
-            <label type="text" class="form-control form-control-lg"> {{ $cr->{$fieldName == 'tester_id' ? 'tester' : ($fieldName == 'designer_id' ? 'designer' : 'developer')}->name }} </label>
+        @if($showLabelName && isset($cr) && !empty($cr->{$durationFieldMap[$fieldName] ?? ''}))
+            <label type="text" class="form-control form-control-lg"> 
+                {{ $cr->{$fieldName == 'tester_id' ? 'tester' : ($fieldName == 'designer_id' ? 'designer' : 'developer')}->name ?? '' }} 
+            </label>
         @else
             <label for="{{ $fieldName }}">{{ $item->CustomField->label }}</label>
         @endif
@@ -32,11 +34,11 @@
 
         {{-- Special handling for specific fields --}}
         @if(!isset($cr) && $fieldName === 'application_id')
-            <select name="{{ $fieldName }}" class="form-control form-control-lg" multiple>
+            <select name="{{ $fieldName }}" class="form-control form-control-lg select2-field" multiple>
                 <option value="{{ $target_system->id }}">{{ $target_system->name }}</option>
             </select>
         @elseif($fieldName === 'cr_member')
-            <select name="{{ $fieldName }}" class="form-control form-control-lg" multiple>
+            <select name="{{ $fieldName }}" class="form-control form-control-lg select2-field" multiple>
                 <option value="">Select</option>
                 @foreach($item->CustomField->getCustomFieldValue() as $value)
                     @if($value->defualt_group->title === 'CR Team Admin')
@@ -46,6 +48,8 @@
                     @endif
                 @endforeach
             </select>
+
+            
         @else
             @php
                 $required = isset($item->validation_type_id) && $item->validation_type_id == 1 ? 'required' : '';
@@ -53,10 +57,14 @@
                 $customOptions = $item->CustomField->getCustomFieldValue();
             @endphp
 
-            <select name="{{ $fieldName }}[]" class="form-control form-control-lg kt-select2" multiple="multiple" {{ $required }} {{ $disabled }}
-                @cannot('Set Time For Another User')
-                    @if(in_array($fieldName, ['tester_id', 'designer_id', 'developer_id'])) disabled @endif
-                @endcannot>
+            <select name="{{ $fieldName }}[]" 
+                    class="form-control form-control-lg select2-field" 
+                    multiple="multiple" 
+                    data-placeholder="Select {{ $fieldLabel }}"
+                    {{ $required }} {{ $disabled }}
+                    @cannot('Set Time For Another User')
+                        @if(in_array($fieldName, ['tester_id', 'designer_id', 'developer_id'])) disabled @endif
+                    @endcannot>
 
                 {{-- Permissions logic --}}
                 @cannot('Set Time For Another User')
@@ -68,8 +76,8 @@
                 {{-- Dynamic options --}}
                 @switch($fieldName)
                     @case('new_status_id')
-                        <option value="{{ $cr->getCurrentStatus()?->status?->status_name }}" disabled selected>
-                            {{ $cr->getCurrentStatus()?->status?->status_name }}
+                        <option value="{{ $cr->getCurrentStatus()?->status?->status_name ?? '' }}" disabled selected>
+                            {{ $cr->getCurrentStatus()?->status?->status_name ?? '' }}
                         </option>
                         @foreach($cr->set_status as $status)
                             <option value="{{ $status->id }}" {{ $cr->{$fieldName} == $status->id ? 'selected' : '' }}>
@@ -92,7 +100,7 @@
                     @case('developer_id')
                         <option value="">Select</option>
                         @foreach($developer_users as $dev)
-                            <option value="{{ $dev->id }}" {{ old($fieldName, $cr->{$fieldName}) == $dev->id ? 'selected' : '' }}>
+                            <option value="{{ $dev->id }}" {{ old($fieldName, $cr->{$fieldName} ?? '') == $dev->id ? 'selected' : '' }}>
                                 {{ $dev->user_name }}
                             </option>
                         @endforeach
@@ -101,7 +109,7 @@
                     @case('tester_id')
                         <option value="">Select</option>
                         @foreach($testing_users as $tester)
-                            <option value="{{ $tester->id }}" {{ old($fieldName, $cr->{$fieldName}) == $tester->id ? 'selected' : '' }}>
+                            <option value="{{ $tester->id }}" {{ old($fieldName, $cr->{$fieldName} ?? '') == $tester->id ? 'selected' : '' }}>
                                 {{ $tester->user_name }}
                             </option>
                         @endforeach
@@ -110,7 +118,7 @@
                     @case('sa_users')
                         <option value="">Select</option>
                         @foreach($sa_users as $sa)
-                            <option value="{{ $sa->id }}" {{ old($fieldName, $cr->{$fieldName}) == $sa->id ? 'selected' : '' }}>
+                            <option value="{{ $sa->id }}" {{ old($fieldName, $cr->{$fieldName} ?? '') == $sa->id ? 'selected' : '' }}>
                                 {{ $sa->user_name }}
                             </option>
                         @endforeach
@@ -118,64 +126,142 @@
 
                     @case('cap_users')
                         <option value="">Select</option>
-							@if(!in_array($cr->requester->id , $cap_users->pluck('user_id')->toArray()))
-								<option value="{{ $cr->requester->id }}">{{ $cr->requester->name }}</option>
-							@endif
+                        @if(!in_array($cr->requester->id ?? '', $cap_users->pluck('user_id')->toArray()))
+                            <option value="{{ $cr->requester->id ?? '' }}">{{ $cr->requester->name ?? '' }}</option>
+                        @endif
                         @foreach($cap_users as $cap)
                             <option value="{{ $cap->user_id }}">{{ $cap->user->name }}</option>
                         @endforeach
                         @break
 
-                        @case('technical_teams')
-                            @if(count($selected_technical_teams) > 0)
-								@php
-									$selected_teams_ids = array_column($selected_technical_teams,'id');
-								@endphp
-                                @if($isEnabled)
-                                    @if($status_name == "Rollback" OR $status_name == "Pending Rollback" OR $status_name == "Pending fixation on production")
-                                        <option value="">Select...</option>
-                                        @foreach($technical_teams as $team)
-                                            <option value="{{ $team['id'] }}" {{ in_array($team['id'],$selected_teams_ids) ? "selected" : "" }}>{{ $team['title'] }}</option>
-                                        @endforeach
-                                    @else
-                                        <option  value="">Select...</option>
-                                        @foreach($technical_teams as $team)
-                                            <option  value="{{ $team['id'] }}" {{ in_array($team['id'],$selected_teams_ids) ? "selected" : "" }}>{{ $team['title'] }}</option>
-                                        @endforeach
-                                    @endif
-                                @else
-                                    <option  value="">Select...</option>
+                        @case('relevant')
+    <option value="">Select</option>
+
+    @php
+        $changeRequests = \App\Models\change_request::where('active', 1)
+            ->where('id', '!=', $cr->id ?? null) // Exclude current CR
+            ->orderBy('cr_no', 'desc')
+            ->get(['id', 'cr_no', 'title']);
+
+        // Retrieve selected values from custom fields relationship
+        $selectedRelevant = [];
+
+        if (isset($cr)) {
+            // Find the custom field entry for 'relevant'
+            $relevantField = $cr->change_request_custom_fields
+                ->where('custom_field_name', 'relevant')
+                ->first();
+            
+            if ($relevantField && !empty($relevantField->custom_field_value)) {
+                // Decode the JSON string
+                $decoded = json_decode($relevantField->custom_field_value, true);
+                
+                if (is_array($decoded)) {
+                    // Convert string IDs to integers
+                    $selectedRelevant = array_map('intval', $decoded);
+                }
+            }
+        }
+        
+        // Also check for old input (form validation errors)
+        $oldValues = old($fieldName);
+        if ($oldValues) {
+            $selectedRelevant = is_array($oldValues) ? array_map('intval', $oldValues) : [$oldValues];
+        }
+    @endphp
+
+    @foreach($changeRequests as $crItem)
+        <option value="{{ $crItem->id }}" 
+            {{ in_array((int)$crItem->id, $selectedRelevant) ? 'selected' : '' }}>
+            {{ $crItem->cr_no }} - {{ $crItem->title }}
+        </option>
+    @endforeach
+@break
+
+                    @case('technical_teams')
+                        @if(count($selected_technical_teams) > 0)
+                            @php
+                                $selected_teams_ids = array_column($selected_technical_teams,'id');
+                            @endphp
+                            @if($isEnabled)
+                                @if($status_name == "Rollback" OR $status_name == "Pending Rollback" OR $status_name == "Pending fixation on production")
+                                    <option value="">Select...</option>
                                     @foreach($technical_teams as $team)
-                                        <option  value="{{ $team['id'] }}" {{ in_array($team['id'],$selected_teams_ids) ? "selected" : "" }}>{{ $team['title'] }}</option>
+                                        <option value="{{ $team['id'] }}" {{ in_array($team['id'],$selected_teams_ids) ? "selected" : "" }}>{{ $team['title'] }}</option>
+                                    @endforeach
+                                @else
+                                    <option value="">Select...</option>
+                                    @foreach($technical_teams as $team)
+                                        <option value="{{ $team['id'] }}" {{ in_array($team['id'],$selected_teams_ids) ? "selected" : "" }}>{{ $team['title'] }}</option>
                                     @endforeach
                                 @endif
                             @else
                                 <option value="">Select...</option>
                                 @foreach($technical_teams as $team)
-                                    <option value="{{ $team->id }}">{{ $team->title }}</option>
+                                    <option value="{{ $team['id'] }}" {{ in_array($team['id'],$selected_teams_ids) ? "selected" : "" }}>{{ $team['title'] }}</option>
                                 @endforeach
                             @endif
+                        @else
+                            <option value="">Select...</option>
+                            @foreach($technical_teams as $team)
+                                <option value="{{ $team->id }}">{{ $team->title }}</option>
+                            @endforeach
+                        @endif
                         @break
 
                     @default
                         @if(isset($customOptions) && count($customOptions))
                             <option value="">Select</option>
                             @foreach($customOptions as $option)
-                                <option value="{{ $option->id }}" {{ old($fieldName, $cr->{$fieldName}) == $option->id ? 'selected' : '' }}>
+                                <option value="{{ $option->id }}" {{ old($fieldName, $cr->{$fieldName} ?? '') == $option->id ? 'selected' : '' }}>
                                     {{ $option->name }}
                                 </option>
                             @endforeach
                         @endif
                 @endswitch
             </select>
+
             {{-- Hidden inputs to preserve POST data when disabled --}}
             @if(!$isEnabled && count($selected_technical_teams) > 0)
                 @foreach($selected_technical_teams as $team)
-				{{-- <input type="hidden" name="technical_teams[]" value="{{ $team['id'] }}">--}}
+                    {{-- <input type="hidden" name="technical_teams[]" value="{{ $team['id'] }}"> --}}
                 @endforeach
             @endif
         @endif
     </div>
 @endif
 
+{{-- IMPORTANT: Only add this once in your main layout file, NOT in this component --}}
+@once
+    @push('css')
+        <style>
+            html, body { overflow-x: hidden; }
+            .select2-container { max-width: 100%; }
+            .select2-dropdown { max-width: 100vw; overflow-x: hidden; }
+        </style>
+    @endpush
 
+    @push('script')
+        <script>
+            $(function() {
+                if ($.fn.select2) {
+                    // Initialize all select2 fields
+                    $('.select2-field').each(function() {
+                        var $el = $(this);
+                        
+                        // Find the closest form as parent
+                        var $form = $el.closest('form');
+                        var dropdownParent = $form.length ? $form : $(document.body);
+                        
+                        $el.select2({
+                            placeholder: $el.data('placeholder') || 'Select',
+                            allowClear: true,
+                            width: '100%',
+                            dropdownParent: dropdownParent
+                        });
+                    });
+                }
+            });
+        </script>
+    @endpush
+@endonce

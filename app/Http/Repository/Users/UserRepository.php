@@ -50,7 +50,7 @@ class UserRepository implements UserRepositoryInterface
 
     public function paginateAll()
     {
-        return User::orderBy('id', 'DESC')->get();
+        return User::orderBy('id', 'DESC')->with('defualt_group')->get();
     }
 
     public function create($request)
@@ -61,11 +61,8 @@ class UserRepository implements UserRepositoryInterface
 
         }
         $request['flag'] = '1';
-        if ($request['user_type']) {
-            $request['user_type'] = '1';
-        } else {
-            $request['user_type'] = '0';
-        }
+        // All users are now AD users (user_type = 1)
+        $request['user_type'] = '1';
         $user = User::create($request);
 
         // Old Roles
@@ -125,16 +122,15 @@ class UserRepository implements UserRepositoryInterface
             'user_id' => $id,
         ]);
 
-        if (empty($request['password'])) {
-            $except = ['group_id', '_method', 'password', 'password_confirmation', 'all_users_roles_values', 'roles', 'permissions'];
-        } else {
-
-            $except = ['group_id', '_method', 'password_confirmation', 'all_users_roles_values', 'roles', 'permissions'];
-            $request['password'] = Hash::make($request['password']);
-        }
+        // All users are AD users, no password handling needed
+        $except = ['group_id', '_method', 'password', 'password_confirmation', 'all_users_roles_values', 'roles', 'permissions', 'user_type'];
+        
         if (isset($request['active']) && $request['active'] == 1) {
             $request['failed_attempts'] = '1';
         }
+        
+        // Ensure user_type remains 1 (AD user)
+        $request['user_type'] = '1';
 
         $filteredRequest = Arr::except($request, $except);
         $user = User::where('id', $id)->update($filteredRequest);

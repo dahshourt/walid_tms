@@ -12,4 +12,9 @@ class Priority extends Model
     protected $fillable = [
         'name',
     ];
+
+    public function getNameColumn() : string
+    {
+        return 'name';
+    }
 }

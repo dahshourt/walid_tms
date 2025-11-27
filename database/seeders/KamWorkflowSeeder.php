@@ -7,9 +7,49 @@ use Illuminate\Support\Facades\DB;
 
 class KamWorkflowSeeder extends Seeder
 {
+	
+	private function backupTableInDatabase($table)
+    {
+        $date = date('Y_m_d'); // format without time
+        $backupTable = "{$table}_{$date}";
+    
+        // Drop old table if exists (optional)
+        DB::statement("DROP TABLE IF EXISTS `$backupTable`");
+    
+        // Create a copy structure + data
+        DB::statement("CREATE TABLE `$backupTable` LIKE `$table`");
+        DB::statement("INSERT INTO `$backupTable` SELECT * FROM `$table`");
+    }
+	
     public function run(): void
     {
         DB::transaction(function () {
+
+			
+			DB::statement('DELETE FROM workflow_type WHERE name LIKE "%kam%";');
+			DB::statement('DELETE FROM statuses WHERE status_name LIKE "%kam%";');
+            DB::statement('DELETE FROM new_workflow WHERE type_id = 37;');
+			//DB::statement('DELETE FROM new_workflow WHERE type_id NOT IN (SELECT id FROM workflow_type);');
+            DB::statement('DELETE FROM groups WHERE title LIKE "%kam%";');
+            DB::statement('DELETE FROM applications WHERE name LIKE "%kam%";');
+            DB::statement('DELETE FROM group_statuses WHERE group_id NOT IN (SELECT id FROM groups);');
+            DB::statement('DELETE FROM group_applications WHERE group_id NOT IN (SELECT id FROM groups);');
+            DB::statement('DELETE FROM custom_fields_groups_type WHERE status_id NOT IN (SELECT id FROM statuses);');
+			
+			
+			$this->backupTableInDatabase('workflow_type');
+			$this->backupTableInDatabase('statuses');
+			$this->backupTableInDatabase('new_workflow');
+			$this->backupTableInDatabase('new_workflow_statuses');
+			$this->backupTableInDatabase('groups');
+			$this->backupTableInDatabase('group_statuses');
+			$this->backupTableInDatabase('group_applications');
+			$this->backupTableInDatabase('model_has_roles');
+			$this->backupTableInDatabase('custom_fields_groups_type');
+		   
+			$this->backupTableInDatabase('applications');
+			
+			
             $statusMapping = [];
             
             // ========================================
@@ -28,6 +68,7 @@ class KamWorkflowSeeder extends Seeder
                 $inHouseWorkflow = DB::table('workflow_type')->where('id', 3)->first();
                 
                 $kamWorkflowTypeId = DB::table('workflow_type')->insertGetId([
+                    'id' => 37,
                     'name' => 'KAM',
                     'parent_id' => $inHouseWorkflow->parent_id ?? null,
                     'active' => '1',
@@ -131,14 +172,20 @@ class KamWorkflowSeeder extends Seeder
             foreach ($inHouseWorkflows as $workflow) {
                 $newFromStatusId = $statusMapping[$workflow->from_status_id] ?? null;
                 
+				$newPreviousStatusId = null;
+				if ($workflow->previous_status_id) {
+                    $newPreviousStatusId = $statusMapping[$workflow->previous_status_id] ?? $workflow->previous_status_id;
+                }
+				//dd($newPreviousStatusId);
                 if (!$newFromStatusId) {
                     $this->command->warn("Skipping workflow {$workflow->id} - from_status not found");
                     continue;
                 }
                 
+				
                 $newWorkflowId = DB::table('new_workflow')->insertGetId([
                     'same_time_from' => $workflow->same_time_from,
-                    'previous_status_id' => $workflow->previous_status_id,
+                    'previous_status_id' => $newPreviousStatusId,
                     'from_status_id' => $newFromStatusId,
                     'active' => $workflow->active,
                     'same_time' => $workflow->same_time,

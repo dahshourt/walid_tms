@@ -265,6 +265,7 @@
                                                             @endforeach
                                                         </tbody>
                                                     </table>
+                                                @endif
                                             @endif
                                             @endcan
                                             <!-- end feedback table -->
@@ -423,9 +424,15 @@
 
 @endsection
 
+
+
 @push('script')
 
 <script>
+    
+    window.pendingProductionId = "{{ $pendingProductionId }}";
+    window.relevantNotPending = "{{ $relevantNotPending }}";
+
     var modal = document.getElementById("modal");
     var btn = document.getElementById("openModal");
     var closeBtn = document.getElementById("close_logs");
@@ -446,7 +453,7 @@
  
     $(document).ready(function () {
         var status = $('select[name="new_status_id"] option:selected').val();
-        if (status === "Reject" || status === "Closed" || status === "CR Closed") {
+        if (status === "Reject" || status === "Closed" || status === "CR Closed" || status === "Reject kam" || status === "Closed kam") {
             $('input, select, textarea').prop('disabled', true);
         } 
         $('#new_status_id').prop('disabled', false);
@@ -459,7 +466,7 @@ $(window).on("load", function () {
     function isStatusReject() {
         if (statusField) {
             const selectedText = statusField.options[statusField.selectedIndex].text;
-            return selectedText === "Reject";
+            return selectedText === "Reject" || selectedText === "Reject kam";
         }
         return false;
     }
@@ -500,7 +507,7 @@ $(window).on("load", function () {
     function isStatusReject() {
         if (statusField) {
             const selectedText = statusField.options[statusField.selectedIndex].text;
-            return selectedText === "Pending CAB";
+            return selectedText === "Pending CAB" || selectedText === "Pending CAB kam";
         }
         return false;
     }
@@ -519,7 +526,9 @@ $(window).on("load", function () {
 	// Function to handle the technical estimation require
     function handleTechnicalEstimationRequire() {
 		const TechnicalEstimationtext = statusField.options[statusField.selectedIndex].text.trim();
-		const isPending = TechnicalEstimationtext === "Pending implementation";
+		const isPending = 
+					TechnicalEstimationtext === "Pending implementation" ||
+					TechnicalEstimationtext === "Pending implementation kam";
 		const $dev = $('input[name="dev_estimation"]');
 
 		if (isPending) {
@@ -569,7 +578,7 @@ $(document).ready(function () {
             workLoadField.prop("required", false); // optional
         }
 
-        if (selectedStatus === "Test Case Approval") {
+        if (selectedStatus === "Test Case Approval" || selectedStatus === "Test Case Approved kam") {
             technicalAttachmentField.prop("required", true); // mandatory
             //console.log("Technical Attachment is now mandatory");
         }
@@ -691,7 +700,7 @@ $(window).on("load", function () {
     function isStatusPendingDesign() {
         if (statusField) {
             const selectedText = statusField.options[statusField.selectedIndex].text;
-            return selectedText === "Pending Design";
+            return selectedText === "Pending Design" || selectedText === "Pending Design kam";
         }
         return false;
     }
@@ -1007,5 +1016,48 @@ if (typeof jQuery !== 'undefined') {
         };
     });
 }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.querySelector("form");
+        const statusSelect = document.querySelector('select[name="new_status_id"]');
+        const originalValue = statusSelect ? statusSelect.value : null;
+        if (form) {
+            form.addEventListener("submit", function (event) {
+    event.preventDefault();
+    const selectedStatus = statusSelect.value;
+//     alert( parseInt(window.relevantNotPending));
+//     alert(selectedStatus);
+// alert(window.pendingProductionId);
+// alert(originalValue);
+   // const selectedStatus = document.querySelector('select[name="new_status_id"]').value;
+
+    if (
+        selectedStatus != window.pendingProductionId && originalValue == window.pendingProductionId&&
+        parseInt(window.relevantNotPending) > 0
+    ) {
+        Swal.fire({
+            title: 'Relevant CRs Not Ready',
+            text: "Some relevant CRs are NOT in Pending Production Deployment. Continue anyway?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, continue',
+            cancelButtonText: 'Cancel'
+        }).then(result => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+
+        return;
+    }
+    form.submit();
+});
+
+
+
+        }
+    });
 </script>
 @endpush

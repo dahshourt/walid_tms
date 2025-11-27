@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Services\EwsMailReader;
 use App\Http\Controllers\Sla\SlaCalculationController;
 use App\Http\Controllers\ChangeRequest\Api\EmailApprovalController;
-
+use App\Http\Controllers\Report\ReportController;
 
 
 
@@ -26,7 +26,9 @@ use App\Http\Controllers\ChangeRequest\Api\EmailApprovalController;
 
 //Auth::routes();
 Route::get('/mail_approve', [EmailApprovalController::class, 'ApproveMail']);
-Route::get('login', 'Auth\CustomAuthController@index')->name('login');
+Route::get('login', 'Auth\CustomAuthController@index')
+    ->middleware('guest')
+    ->name('login');
 Route::post('login', 'Auth\CustomAuthController@login')->name('login.custom')->middleware('throttle:5,1');
 Route::get('/logout', 'Auth\LoginController@logout');
 Route::get('/inactive-logout','Auth\CustomAuthController@inactive_logout')->name('inactive-logout');
@@ -114,6 +116,7 @@ Route::middleware(['auth'])->group(
 
        Route::get('my_assignments', 'ChangeRequest\ChangeRequestController@my_assignments');
        Route::resource('groups', Groups\GroupController::class);
+	   Route::get('group/statuses/{id}', 'Groups\GroupController@GroupStatuses');
 
        //Route::resource('workflows', Workflow\WorkflowController::class);
        Route::resource('NewWorkFlowController', Workflow\NewWorkFlowController::class);
@@ -216,6 +219,25 @@ Route::middleware(['auth'])->group(
         Route::get('/get-groups/{status_id}', [SlaCalculationController::class, 'getGroups'])->name('get.groups');
 
 
+        Route::prefix('reports')->group(function () {
+
+            Route::get('/actual-vs-planned', [ReportController::class, 'actualVsPlanned'])
+                ->name('reports.actual_vs_planned');
+
+            Route::get('/all-crs-by-requester', [ReportController::class, 'allCrsByRequester'])
+                ->name('reports.all_crs_by_requester');
+
+            Route::get('/cr-current-status', [ReportController::class, 'crCurrentStatus'])
+                ->name('reports.cr_current_status');
+
+            Route::get('/cr-crossed-sla', [ReportController::class, 'crCrossedSla'])
+                ->name('reports.cr_crossed_sla');
+
+            Route::get('/rejected-crs', [ReportController::class, 'rejectedCrs'])
+                ->name('reports.rejected_crs');
+
+        });
+
         //test ews
 
         /*Route::get('/test-ews', function () {
@@ -253,5 +275,3 @@ Route::middleware(['auth','role:user|admin'])->group(
        Route::get('/search/advanced_search', 'CustomFields\CustomFieldGroupTypeController@AllCustomFieldsWithSelectedByformType')->name('advanced.search');
 
 });*/
-
-

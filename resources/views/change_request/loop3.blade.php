@@ -45,7 +45,13 @@
 
                 {{-- ✅ Basic Fields --}}
                 <td>{{ $item->title }}</td>
-                <td>{{ $item->description }}</td>
+                <td>
+                    <span class="description-preview text-primary"
+                          data-description="{{ e($item->description) }}"
+                          role="button">
+                        {{ \Illuminate\Support\Str::limit($item->description, 50) }}
+                    </span>
+                </td>
 
                
                 @can('edit hold cr')

@@ -42,4 +42,9 @@ class WorkFlowType extends Model
     {
         return $this->belongsTo(WorkFlowType::class, 'parent_id');
     }
+
+    public function getNameColumn(): string
+    {
+        return 'name';
+    }
 }

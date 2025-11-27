@@ -91,11 +91,11 @@ class UserController extends Controller
         $this->authorize('Edit User'); // permission check
 
         $row = $this->user->find($id);
-        $departments = (new DepartmentRepository)->getAll();
-        $groups = (new GroupRepository)->getAllActive();
-        $units = (new UnitRepository)->getAll();
-        $roles = (new RolesRepository)->list();
-        $permissions = (new PermissionRepository)->list();
+        $departments = app(DepartmentRepository::class)->getAll();
+        $groups = app(GroupRepository::class)->getAllActive();
+        $units = app(UnitRepository::class)->getAll();
+        $roles = app(RolesRepository::class)->list();
+        $permissions = app(PermissionRepository::class)->list();
 
         // echo"<pre>";
         // print_r($row);
@@ -115,20 +115,6 @@ class UserController extends Controller
     public function update(UserRequest $request, $id)
     {
         $this->authorize('Edit User'); // permission check
-
-        // $validator = Validator::make($request->all(), [
-        //     'password' => [
-        //         'sometimes','nullable','confirmed','required_with:password_confirmed', function ($attribute, $value, $fail) {
-        //             if (1!=1) {
-        //                 $fail('Old Password didn\'t match');
-        //             }
-        //         },
-        //     ],
-        // ]);
-
-        // if($validator->fails()) {
-        //     return redirect()->back()->withInput()->withErrors($validator);
-        // }
 
         $this->user->update($request->except(['_token', '_method', 'user_id']), $id);
 

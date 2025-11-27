@@ -45,14 +45,6 @@ class ChangeRequestStatusService
         $this->mailController = new MailController();
     }
 
-    /**
-     * Update change request status with proper workflow validation
-     *
-     * @param int $changeRequestId
-     * @param array|object $request
-     * @return bool
-     * @throws \Exception
-     */
     public function updateChangeRequestStatus(int $changeRequestId, $request): bool
     {
         try {
@@ -62,15 +54,26 @@ class ChangeRequestStatusService
             $workflow = $this->getWorkflow($statusData);
             $changeRequest = $this->getChangeRequest($changeRequestId);
             $userId = $this->getUserId($changeRequest, $request);
+            
             if (!$workflow) {
-                throw new \Exception("Workflow not found for status: {$statusData['new_status_id']}");
+                $newStatusId = $statusData['new_status_id'] ?? 'not set';
+                throw new \Exception("Workflow not found for status: {$newStatusId}");
             }
-
+    
+            // Check if status has changed
+            $statusChanged = $this->validateStatusChange($changeRequest, $statusData, $workflow);
+            
+            // If status hasn't changed, just return true without throwing an error
+            if (!$statusChanged) {
+                DB::commit();
+                return true;
+            }
+    
             $this->processStatusUpdate($changeRequest, $statusData, $workflow, $userId, $request);
-
+    
             DB::commit();
             return true;
-
+    
         } catch (\Exception $e) {
             DB::rollback();
             Log::error('Error updating change request status', [
@@ -81,7 +84,28 @@ class ChangeRequestStatusService
             throw $e;
         }
     }
-
+private function validateStatusChange($changeRequest, $statusData, $workflow)
+{
+    $currentStatus = $changeRequest->status;
+    $newStatus = $statusData['new_status_id'] ?? null;
+    
+    // Debug log to see what values we're working with
+    \Log::debug('Status change validation', [
+        'currentStatus' => $currentStatus,
+        'newStatus' => $newStatus,
+        'statusData' => $statusData
+    ]);
+    
+    // Return false if status hasn't changed (not an error condition)
+    if ($currentStatus == $newStatus) {  // Using loose comparison in case of string vs int
+        return false;
+    }
+    
+    // Add other validation rules here if needed
+    // Throw exceptions for actual validation failures
+    
+    return true;
+}
     /**
      * Update change request final confirmation status with proper workflow validation
      *
