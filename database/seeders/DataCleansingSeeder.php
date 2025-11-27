@@ -12,25 +12,6 @@ use App\Models\Group;
 class DataCleansingSeeder extends Seeder
 {
     /**
-     * Backup a table in the database
-     *
-     * @param string $table
-     * @return void
-     */
-    private function backupTableInDatabase($table)
-    {
-        $date = date('Y_m_d'); // format without time
-        $backupTable = "{$table}_{$date}";
-
-        // Drop old table if exists (optional)
-        DB::statement("DROP TABLE IF EXISTS `$backupTable`");
-
-        // Create a copy structure + data
-        DB::statement("CREATE TABLE `$backupTable` LIKE `$table`");
-        DB::statement("INSERT INTO `$backupTable` SELECT * FROM `$table`");
-    }
-
-    /**
      * Delete inactive workflows
      *
      * @return int Number of deleted records
@@ -196,12 +177,6 @@ class DataCleansingSeeder extends Seeder
     {
         $this->command->info('Starting data cleansing process...');
         $this->command->info('');
-
-        // Backup tables before deletion
-        $this->backupTableInDatabase('workflow');
-        $this->backupTableInDatabase('users');
-        $this->backupTableInDatabase('applications');
-        $this->backupTableInDatabase('groups');
 
         // Start transaction
         DB::beginTransaction();
