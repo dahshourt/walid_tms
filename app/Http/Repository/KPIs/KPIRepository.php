@@ -3,7 +3,7 @@
 namespace App\Http\Repository\KPIs;
 
 use App\Contracts\KPIs\KPIRepositoryInterface;
-use App\Models\KPI;
+use App\Models\Kpi;
 use App\Models\Change_request;
 use Illuminate\Support\Facades\DB;
 
@@ -19,7 +19,7 @@ class KPIRepository implements KPIRepositoryInterface
     public function getAll()
     {
         
-        return KPI::orderByDesc('created_at')->paginate(10);
+        return Kpi::orderByDesc('created_at')->paginate(10);
     } // end method
 
     public function create($request)
@@ -32,7 +32,7 @@ class KPIRepository implements KPIRepositoryInterface
             if (! isset($kpiData['status'])) {
                 $kpiData['status'] = 'Open';
             }
-            $kpi = KPI::create($kpiData);
+            $kpi = Kpi::create($kpiData);
 
             // base log entry
             $kpi->logs()->create([
@@ -59,14 +59,14 @@ class KPIRepository implements KPIRepositoryInterface
 
     public function find($id)
     {
-        return KPI::with(['creator', 'comments.user', 'logs.user', 'changeRequests.workflowType', 'changeRequests.currentStatusRel'])
+        return Kpi::with(['creator', 'comments.user', 'logs.user', 'changeRequests.workflowType', 'changeRequests.currentStatusRel'])
             ->find($id);
     } // end method
 
     public function update($request, $id)
     {
         return DB::transaction(function () use ($request, $id) {
-            $kpi = KPI::findOrFail($id);
+            $kpi = Kpi::findOrFail($id);
             $oldData = $kpi->replicate(); // Keep a copy of old data
 
             $data = collect($request);
@@ -113,14 +113,14 @@ class KPIRepository implements KPIRepositoryInterface
 
     public function delete($id)
     {
-        return KPI::find($id)->delete();
+        return Kpi::find($id)->delete();
     } // end method
 
     // attach cr to kpi
     public function attachChangeRequestByNumber($kpiId, $crNo)
     {
         return DB::transaction(function () use ($kpiId, $crNo) {
-            $kpi = KPI::findOrFail($kpiId);
+            $kpi = Kpi::findOrFail($kpiId);
 
             $cr = Change_request::where('cr_no', $crNo)->first();
 
@@ -169,7 +169,7 @@ class KPIRepository implements KPIRepositoryInterface
     public function detachChangeRequest($kpiId, $crId)
     {
         return DB::transaction(function () use ($kpiId, $crId) {
-            $kpi = KPI::findOrFail($kpiId);
+            $kpi = Kpi::findOrFail($kpiId);
 
             $cr = Change_request::findOrFail($crId);
 

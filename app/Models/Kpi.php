@@ -48,7 +48,7 @@ class Kpi extends Model
 
     public function logs(): HasMany
     {
-        return $this->hasMany(KpiLog::class)->latest();
+        return $this->hasMany(KpiLog::class)->oldest();
     }
 
     public function changeRequests(): BelongsToMany

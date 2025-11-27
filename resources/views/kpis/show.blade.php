@@ -20,8 +20,9 @@
             <div class="row">
                 <div class="col-md-12">
                     <div class="card card-custom gutter-b example example-compact">
-                        <div class="card-header">
-                            <h3 class="card-title">View KPI</h3>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3 class="card-title m-0">View KPI</h3>
+                            <button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
                         </div>
                         
                         <div class="card-body">
@@ -30,8 +31,9 @@
                         
                         <div class="card-footer">
                             <a href="{{ route("$route.index") }}" class="btn btn-light-primary font-weight-bold">Back</a>
-                            <button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
                         </div>
+                        @include("kpis.related_crs")
+                        @include("kpis.comments_history")
                         @include("kpis.logs")
                     </div>
                 </div>
