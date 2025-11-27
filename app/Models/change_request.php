@@ -326,7 +326,7 @@ class Change_request extends Model
     public function currentStatusRel(): HasOne
     {
         return $this->hasOne(Change_request_statuse::class, 'cr_id')
-            ->where('active', 1)
+            ->where('active', '1')
             ->latest('id')
             ->with('status');
     }

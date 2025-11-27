@@ -1,0 +1,546 @@
+@php
+    $role_permissions = $role_permissions ?? [];
+    $isView = request()->routeIs('*.show');
+    $inputClass = $isView ? 'form-control-plaintext' : 'form-control';
+    $isDisabled = $isView ? 'disabled' : '';
+    $currentYear = date('Y');
+    $years = range($currentYear - 5, $currentYear + 5);
+    
+    // Status Badge Color Mapping
+    $statusColors = [
+        'Open' => 'primary',
+        'In Progress' => 'warning',
+        'Delivered' => 'success'
+    ];
+    $currentStatus = $row->status ?? 'Open';
+    $statusColor = $statusColors[$currentStatus] ?? 'secondary';
+@endphp
+
+<div class="card-body">
+    @if($errors->any()) 
+        <div class="alert alert-custom alert-light-danger fade show mb-5" role="alert">
+            <div class="alert-icon"><i class="flaticon-warning"></i></div>
+            <div class="alert-text">
+                <ul class="mb-0 pl-3">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            <div class="alert-close">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true"><i class="ki ki-close"></i></span>
+                </button>
+            </div>
+        </div>
+    @endif
+
+    <!-- Section: General Information -->
+    <div class="card card-custom card-stretch gutter-b">
+        <div class="card-header border-0 pt-5">
+            <h3 class="card-title font-weight-bolder">General Information</h3>
+            @if(isset($row))
+                <div class="card-toolbar">
+                    <span class="label label-lg label-light-{{ $statusColor }} label-inline font-weight-bold py-4">
+                        Status: {{ $currentStatus }}
+                    </span>
+                </div>
+            @endif
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="form-group">
+                        <label class="font-weight-bold">KPI Name <span class="text-danger">*</span></label>
+                        <input type="text" class="{{ $inputClass }}" name="name" 
+                               value="{{ $row->name ?? old('name') }}" {{ $isDisabled }} required placeholder="Enter KPI Name">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Priority <span class="text-danger">*</span></label>
+                        <select class="form-control kt-select2" name="priority" {{ $isDisabled }} required>
+                            <option value="">Select Priority</option>
+                            @foreach($priorities as $priority)
+                                <option value="{{ $priority }}" 
+                                    {{ (isset($row) && $row->priority == $priority) || old('priority') == $priority ? 'selected' : '' }}>
+                                    {{ $priority }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Strategic Pillar <span class="text-danger">*</span></label>
+                        <input type="text" class="{{ $inputClass }}" name="strategic_pillar" 
+                               value="{{ $row->strategic_pillar ?? old('strategic_pillar') }}" {{ $isDisabled }} required placeholder="Enter Strategic Pillar">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Initiative <span class="text-danger">*</span></label>
+                        <input type="text" class="{{ $inputClass }}" name="initiative" 
+                               value="{{ $row->initiative ?? old('initiative') }}" {{ $isDisabled }} required placeholder="Enter Initiative">
+                    </div>
+                </div>
+            </div>
+            
+             <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Sub-Initiative <span class="text-muted font-weight-normal">(Optional)</span></label>
+                        <input type="text" class="{{ $inputClass }}" name="sub_initiative" 
+                               value="{{ $row->sub_initiative ?? old('sub_initiative') }}" {{ $isDisabled }} placeholder="Enter Sub-Initiative">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Business & Classification -->
+    <div class="card card-custom card-stretch gutter-b">
+        <div class="card-header border-0 pt-5">
+            <h3 class="card-title font-weight-bolder">Business & Classification</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Business Unit (BU) <span class="text-danger">*</span></label>
+                        <input type="text" class="{{ $inputClass }}" name="bu" 
+                               value="{{ $row->bu ?? old('bu') }}" {{ $isDisabled }} required placeholder="Enter Business Unit">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Sub-Business Unit <span class="text-muted font-weight-normal">(Optional)</span></label>
+                        <input type="text" class="{{ $inputClass }}" name="sub_bu" 
+                               value="{{ $row->sub_bu ?? old('sub_bu') }}" {{ $isDisabled }} placeholder="Enter Sub-Business Unit">
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Type <span class="text-danger">*</span></label>
+                        <select class="form-control kt-select2" name="type" {{ $isDisabled }} required>
+                            <option value="">Select Type</option>
+                            @foreach($types as $type)
+                                <option value="{{ $type }}" 
+                                    {{ (isset($row) && $row->type == $type) || old('type') == $type ? 'selected' : '' }}>
+                                    {{ $type }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Classification <span class="text-danger">*</span></label>
+                        <select class="form-control kt-select2" name="classification" {{ $isDisabled }} required>
+                            <option value="">Select Classification</option>
+                            @foreach($classifications as $class)
+                                <option value="{{ $class }}" 
+                                    {{ (isset($row) && $row->classification == $class) || old('classification') == $class ? 'selected' : '' }}>
+                                    {{ $class }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Timeline -->
+    <div class="card card-custom card-stretch gutter-b">
+        <div class="card-header border-0 pt-5">
+            <h3 class="card-title font-weight-bolder">Timeline</h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Target Launch Quarter <span class="text-danger">*</span></label>
+                        <select class="form-control kt-select2" name="target_launch_quarter" {{ $isDisabled }} required>
+                            <option value="">Select Quarter</option>
+                            @foreach($quarters as $quarter)
+                                <option value="{{ $quarter }}" 
+                                    {{ (isset($row) && $row->target_launch_quarter == $quarter) || old('target_launch_quarter') == $quarter ? 'selected' : '' }}>
+                                    {{ $quarter }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Target Launch Year <span class="text-danger">*</span></label>
+                        <select class="form-control kt-select2" name="target_launch_year" {{ $isDisabled }} required>
+                            <option value="">Select Year</option>
+                            @foreach($years as $year)
+                                <option value="{{ $year }}" 
+                                    {{ (isset($row) && $row->target_launch_year == $year) || old('target_launch_year') == $year ? 'selected' : '' }}>
+                                    {{ $year }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Details -->
+    <div class="card card-custom card-stretch gutter-b">
+        <div class="card-header border-0 pt-5">
+            <h3 class="card-title font-weight-bolder">Details</h3>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label class="font-weight-bold">KPI Brief <span class="text-danger">*</span></label>
+                <textarea class="{{ $inputClass }}" name="kpi_brief" rows="4" {{ $isDisabled }} required placeholder="Enter KPI Brief">{{ $row->kpi_brief ?? old('kpi_brief') }}</textarea>
+            </div>
+
+            <div class="form-group">
+                <label class="font-weight-bold">KPI Comment</label>
+                <textarea class="{{ $inputClass }}" name="kpi_comment" rows="4" {{ $isDisabled }} placeholder="Add a comment (optional)">{{ old('kpi_comment') }}</textarea>
+                <span class="form-text text-muted">This comment will be added to the history logs.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section: Comments History -->
+    @if(isset($comments) && $comments->count() > 0)
+    <div class="card card-custom card-stretch gutter-b">
+        <div class="card-header border-0 pt-5">
+            <h3 class="card-title font-weight-bolder">Comments History</h3>
+        </div>
+        <div class="card-body">
+            <div class="timeline timeline-3">
+                <div class="timeline-items">
+                    @foreach($comments as $comment)
+                        <div class="timeline-item">
+                            <div class="timeline-media">
+                                <i class="flaticon2-chat-1 text-primary"></i>
+                            </div>
+                            <div class="timeline-content">
+                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                    <div class="mr-2">
+                                        <a href="#" class="text-dark-75 text-hover-primary font-weight-bold">{{ $comment->user->name ?? 'Unknown User' }}</a>
+                                        <span class="text-muted ml-2">{{ $comment->created_at->format('d M Y, H:i') }}</span>
+                                    </div>
+                                </div>
+                                <p class="p-0">{{ $comment->comment }}</p>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Section: Linked Change Requests -->
+    @if(isset($row))
+    <div class="card card-custom card-stretch gutter-b">
+        <div class="card-header border-0 pt-5">
+            <h3 class="card-title font-weight-bolder">Related Change Requests</h3>
+        </div>
+        <div class="card-body">
+            @if(!$isView)
+            <div class="alert alert-custom alert-light-primary fade show mb-5" role="alert">
+                <div class="alert-icon"><i class="flaticon2-search-1"></i></div>
+                <div class="alert-text">
+                    <div class="input-group">
+                        <input type="text" id="kpi_cr_no" class="form-control" placeholder="Enter CR number to link...">
+                        <div class="input-group-append">
+                            <button type="button" id="kpi_cr_search_btn" class="btn btn-primary font-weight-bold">Search & Link</button>
+                        </div>
+                    </div>
+                    <small id="kpi_cr_search_message" class="form-text text-danger mt-2 font-weight-bold"></small>
+                </div>
+            </div>
+
+            <div id="kpi_cr_search_result" class="card card-custom bg-light-success gutter-b" style="display:none;">
+                <div class="card-body d-flex align-items-center justify-content-between p-4">
+                    <div>
+                        <span class="font-weight-bolder mr-2">Found:</span>
+                        <span id="kpi_cr_result_no" class="font-weight-bold mr-3"></span>
+                        <span id="kpi_cr_result_title" class="mr-3"></span>
+                        <span class="label label-inline label-white mr-3" id="kpi_cr_result_status"></span>
+                    </div>
+                    <div>
+                        <a href="#" target="_blank" id="kpi_cr_result_link" class="btn btn-sm btn-light-primary font-weight-bold mr-2">View CR</a>
+                        <button type="button" id="kpi_cr_attach_btn" class="btn btn-sm btn-success font-weight-bold">Link to KPI</button>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            <div class="table-responsive">
+                <table class="table table-head-custom table-vertical-center" id="kt_advance_table_widget_1">
+                    <thead>
+                        <tr class="text-left">
+                            <th class="pl-0" style="width: 100px">CR #</th>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Workflow</th>
+                            @if(!$isView)
+                                <th class="text-right pr-0">Actions</th>
+                            @endif
+                        </tr>
+                    </thead>
+                    <tbody id="kpi_cr_table_body">
+                        @php
+                            $linkedCrs = isset($changeRequests) ? $changeRequests : ($row->changeRequests ?? collect());
+                        @endphp
+                        @forelse($linkedCrs as $cr)
+                            <tr data-cr-id="{{ $cr->id }}">
+                                <td class="pl-0 font-weight-bolder">{{ $cr->cr_no }}</td>
+                                <td>
+                                    <a href="{{ route('show.cr', $cr->id) }}" target="_blank" class="text-dark-75 text-hover-primary font-weight-bold">{{ $cr->title }}</a>
+                                </td>
+                                <td>
+                                    <span class="label label-lg label-light-info label-inline font-weight-bold">{{ optional(optional($cr->CurrentRequestStatuses)->status)->status_name ?? '-' }}</span>
+                                </td>
+                                <td>{{ $cr->workflowType->name ?? '-' }}</td>
+                                @if(!$isView)
+                                <td class="text-right pr-0">
+                                    <button type="button" class="btn btn-icon btn-light-danger btn-sm js-detach-cr" data-cr-id="{{ $cr->id }}" title="Remove">
+                                        <i class="flaticon2-trash"></i>
+                                    </button>
+                                </td>
+                                @endif
+                            </tr>
+                        @empty
+                            <tr class="no-records">
+                                <td colspan="{{ $isView ? 4 : 5 }}" class="text-center text-muted font-weight-bold py-5">No Change Requests linked to this KPI.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- Hidden Inputs for Read-Only Status -->
+    @if(isset($row))
+        <input type="hidden" name="status" value="{{ $row->status }}">
+    @else
+        <input type="hidden" name="status" value="Open">
+        <input type="hidden" name="created_by" value="{{ auth()->id() }}">
+    @endif
+</div>
+
+@push('styles')
+    <link href="{{ asset('assets/plugins/custom/select2/css/select2.min.css') }}" rel="stylesheet" type="text/css" />
+    <style>
+        .card-title { font-size: 1.2rem; }
+        .form-group label { font-size: 0.95rem; }
+        .timeline.timeline-3 .timeline-item .timeline-content { padding-left: 10px; }
+    </style>
+@endpush
+
+@push('script')
+    <script>
+        jQuery(document).ready(function() {
+            $('.kt-select2').select2({
+                placeholder: "Select an option",
+                allowClear: true,
+                width: '100%'
+            });
+
+            @if(isset($row) && !$isView)
+            var kpiId = {{ (int) $row->id }};
+            var searchUrl = "{{ route('kpis.search-cr', ['kpi' => $row->id]) }}";
+            var attachUrl = "{{ route('kpis.attach-cr', ['kpi' => $row->id]) }}";
+            var detachBaseUrl = "{{ url('kpis/'.$row->id.'/detach-cr') }}";
+            var csrfToken = $('meta[name="csrf-token"]').attr('content');
+
+            $('#kpi_cr_search_btn').on('click', function () {
+                var crNo = $('#kpi_cr_no').val().trim();
+                $('#kpi_cr_search_message').text('');
+                $('#kpi_cr_search_result').hide();
+
+                if (!crNo) {
+                    $('#kpi_cr_search_message').text('Please enter a CR number.');
+                    return;
+                }
+
+                // Show loading state
+                var btn = $(this);
+                btn.addClass('spinner spinner-white spinner-right').prop('disabled', true);
+
+                $.get(searchUrl, { cr_no: crNo })
+                    .done(function (response) {
+                        btn.removeClass('spinner spinner-white spinner-right').prop('disabled', false);
+                        
+                        if (!response.success) {
+                            $('#kpi_cr_search_message').text(response.message || 'Unable to find Change Request.');
+                            return;
+                        }
+
+                        $('#kpi_cr_result_no').text(response.data.cr_no);
+                        $('#kpi_cr_result_title').text(response.data.title);
+                        $('#kpi_cr_result_status').text(response.data.status || '-');
+                        $('#kpi_cr_result_link').attr('href', response.data.show_url || '#');
+                        $('#kpi_cr_attach_btn').data('cr-no', response.data.cr_no);
+
+                        if (response.already_linked) {
+                            $('#kpi_cr_search_message').text('This Change Request is already linked to this KPI.');
+                            $('#kpi_cr_attach_btn').hide();
+                        } else {
+                            $('#kpi_cr_attach_btn').show();
+                        }
+
+                        $('#kpi_cr_search_result').slideDown();
+                    })
+                    .fail(function (xhr) {
+                        btn.removeClass('spinner spinner-white spinner-right').prop('disabled', false);
+                        var msg = 'Error searching for Change Request.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message;
+                        }
+                        $('#kpi_cr_search_message').text(msg);
+                    });
+            });
+
+            $('#kpi_cr_attach_btn').on('click', function () {
+                var crNo = $(this).data('cr-no');
+                if (!crNo) return;
+
+                var btn = $(this);
+                btn.addClass('spinner spinner-white spinner-right').prop('disabled', true);
+
+                $.ajax({
+                    url: attachUrl,
+                    type: 'POST',
+                    data: {
+                        cr_no: crNo,
+                        _csrf: csrfToken,
+                    },
+                    headers: { 'X-CSRF-TOKEN': csrfToken }
+                })
+                .done(function (response) {
+                    btn.removeClass('spinner spinner-white spinner-right').prop('disabled', false);
+                    $('#kpi_cr_search_result').hide();
+                    $('#kpi_cr_no').val('');
+
+                    if (!response.success) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Unable to link Change Request.'
+                        });
+                        return;
+                    }
+
+                    // Add row to table
+                    var cr = response.cr;
+                    if (cr) {
+                        $('.no-records').remove();
+                        var existingRow = $('#kpi_cr_table_body').find('tr[data-cr-id="' + cr.id + '"]');
+                        if (existingRow.length === 0) {
+                            var statusText = (cr.CurrentRequestStatuses && cr.CurrentRequestStatuses.status) ? cr.CurrentRequestStatuses.status.status_name : (cr.status_name || '-');
+                            var workflowText = (cr.workflow_type && cr.workflow_type.name) ? cr.workflow_type.name : (cr.workflowType && cr.workflowType.name ? cr.workflowType.name : '');
+                            
+                            var newRow = `
+                                <tr data-cr-id="${cr.id}">
+                                    <td class="pl-0 font-weight-bolder">${cr.cr_no}</td>
+                                    <td><a href="${response.show_url || '#'}" target="_blank" class="text-dark-75 text-hover-primary font-weight-bold">${cr.title || ''}</a></td>
+                                    <td><span class="label label-lg label-light-info label-inline font-weight-bold">${statusText}</span></td>
+                                    <td>${workflowText}</td>
+                                    <td class="text-right pr-0">
+                                        <button type="button" class="btn btn-icon btn-light-danger btn-sm js-detach-cr" data-cr-id="${cr.id}" title="Remove">
+                                            <i class="flaticon2-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                            $('#kpi_cr_table_body').append(newRow);
+                        }
+                    }
+
+                    if (response.kpi_status) {
+                        // Update status badge if needed (requires page reload or complex DOM manipulation, simple reload for now or just alert)
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success',
+                            text: response.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        }).then(() => {
+                            location.reload(); // Reload to update status badge
+                        });
+                    }
+                })
+                .fail(function (xhr) {
+                    btn.removeClass('spinner spinner-white spinner-right').prop('disabled', false);
+                    var msg = 'Error linking Change Request.';
+                    if (xhr.responseJSON && xhr.responseJSON.message) {
+                        msg = xhr.responseJSON.message;
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: msg
+                    });
+                });
+            });
+
+            $('#kpi_cr_table_body').on('click', '.js-detach-cr', function () {
+                var crId = $(this).data('cr-id');
+                var row = $(this).closest('tr');
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "You are about to unlink this Change Request.",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, unlink it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: detachBaseUrl + '/' + crId,
+                            type: 'DELETE',
+                            headers: { 'X-CSRF-TOKEN': csrfToken }
+                        })
+                        .done(function (response) {
+                            if (!response.success) {
+                                Swal.fire('Error', response.message || 'Unable to remove Change Request.', 'error');
+                                return;
+                            }
+                            row.remove();
+                            if ($('#kpi_cr_table_body tr').length === 0) {
+                                $('#kpi_cr_table_body').append('<tr class="no-records"><td colspan="5" class="text-center text-muted font-weight-bold py-5">No Change Requests linked to this KPI.</td></tr>');
+                            }
+                            
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Unlinked!',
+                                text: response.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            }).then(() => {
+                                location.reload(); // Reload to update status badge
+                            });
+                        })
+                        .fail(function (xhr) {
+                            Swal.fire('Error', 'Error removing Change Request.', 'error');
+                        });
+                    }
+                });
+            });
+            @endif
+        });
+    </script>
+@endpush

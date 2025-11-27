@@ -165,6 +165,8 @@ class StatusConfigService
             'Reject_kam' => 'Reject',
             'Cancel' => 'Cancel',
             'Cancel_kam' => 'Cancel',
+            'Closed' => 'Closed',
+            'Delivered' => 'Delivered',
         ];
     }
 

@@ -125,6 +125,24 @@ class CustomAuthController extends Controller
             return redirect('login')->with('failed', $accountLockedError);
         }
 
+        if (isset($user->user_type) && $user->user_type == 0) {
+            if (Auth::attempt(['user_name' => $request->user_name, 'password' => $request->password])) {
+                $user->failed_attempts = 0;
+                $user->save();
+                DB::table('sessions')->where('user_id', $user->id)->where('id', '!=', Session::getId())->delete();
+
+                return redirect()->intended(url('/'));
+            }
+            $user->failed_attempts += 1;
+            if ($user->failed_attempts >= $maxAttempts) {
+                $user->active = 0;
+            }
+            $user->save();
+
+            return redirect('login')->with('failed', $generalLoginError);
+
+        }
+
         // All users are now LDAP/AD users
         $response = $this->CheckLdapAccount($request->user_name, $request->password);
         if ($response['status']) {
