@@ -35,6 +35,17 @@
                                         </li>
                                     @endcan
 
+                                    @can('List KPIs')
+                                        <li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click"
+                                            aria-haspopup="true">
+                                            <a href="{{ url('/kpis') }}" class="menu-link">
+                                                <span class="menu-text">KPIs</span>
+
+                                            </a>
+
+                                        </li>
+                                    @endcan
+
                                     <!--check if the user have any of the below permissions -->
                                     @canany(['List Users' , 'Access CustomFields' , 'List Statuses' , 'List Workflows' , 'List Division' , 'List Groups' , 'List Roles' , 'List Permissions' , 'List Stages' , 'List Parents' , 'List HighLevelStatuses' , 'List RejectionReasons','List Applications'])
                                         <li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click"
