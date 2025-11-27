@@ -42,7 +42,7 @@ class DataCleansingSeeder extends Seeder
 
         if ($workflowCount > 0) {
             $workflowDeleted = Workflow::where('active', '0')->delete();
-            $this->command->info("✓ Deleted {$workflowDeleted} inactive workflow(s)");
+            $this->command->info("✓ Deleted {$workflowDeleted} inactive workflow(s) from workflow table.");
             return $workflowDeleted;
         }
 
@@ -63,36 +63,41 @@ class DataCleansingSeeder extends Seeder
         if ($userCount > 0) {
             $userIds = User::where('active', '0')->pluck('id')->toArray();
 
-            // Delete related records first
+            // Delete from model_has_roles table (Spatie permissions)
             $rolesDeleted = DB::table('model_has_roles')
                 ->where('model_type', User::class)
                 ->whereIn('model_id', $userIds)
                 ->delete();
 
+            $this->command->info("✓ Deleted {$rolesDeleted} role assignment(s) from model_has_roles table.");
+
+            // Delete from model_has_permissions table (Spatie permissions)
             $permissionsDeleted = DB::table('model_has_permissions')
                 ->where('model_type', User::class)
                 ->whereIn('model_id', $userIds)
                 ->delete();
+
+            $this->command->info("✓ Deleted {$permissionsDeleted} permission assignment(s) from model_has_permissions table.");
 
             // Delete from sessions table
             $sessionsDeleted = DB::table('sessions')
                 ->whereIn('user_id', $userIds)
                 ->delete();
 
-            $this->command->info("✓ Deleted {$sessionsDeleted} sessions from sessions table.");
+            $this->command->info("✓ Deleted {$sessionsDeleted} session(s) from sessions table.");
 
             // Delete from change_request_custom_fields table
             $change_request_custom_fields = DB::table('change_request_custom_fields')
                 ->whereIn('user_id', $userIds)
                 ->delete();
 
-            $this->command->info("✓ Deleted {$change_request_custom_fields} change_request_custom_fields from change_request_custom_fields table.");
-
+            $this->command->info("✓ Deleted {$change_request_custom_fields} record(s) from change_request_custom_fields table.");
 
             // Delete users
             $userDeleted = User::where('active', '0')->delete();
-            $this->command->info("✓ Deleted {$userDeleted} inactive user(s)");
-            $this->command->info("  └─ Also deleted {$rolesDeleted} roles, {$permissionsDeleted} permissions, {$sessionsDeleted} sessions");
+            $this->command->info("✓ Deleted {$userDeleted} inactive user(s) from users table.");
+            $this->command->info("  └─ CASCADE will automatically delete related records from other tables");
+
             return $userDeleted;
         }
 
@@ -113,11 +118,12 @@ class DataCleansingSeeder extends Seeder
         if ($applicationCount > 0) {
             $applicationIds = Application::where('active', '0')->pluck('id')->toArray();
 
-            // Now delete the applications
+            // Delete the applications
             $applicationDeleted = Application::whereIn('id', $applicationIds)->delete();
 
-            $this->command->info("✓ Deleted {$applicationDeleted} inactive application(s)");
-            $this->command->info("  └─ Also cleaned up related records from multiple tables");
+            $this->command->info("✓ Deleted {$applicationDeleted} inactive application(s) from applications table.");
+            $this->command->info("  └─ CASCADE will automatically delete related records from other tables");
+
             return $applicationDeleted;
         }
 
@@ -138,26 +144,40 @@ class DataCleansingSeeder extends Seeder
         if ($groupCount > 0) {
             $groupIds = Group::where('active', '0')->pluck('id')->toArray();
 
-            // Delete or update related records first to avoid foreign key constraints
+            // Update change_request_statuses - set current_group_id to NULL (RESTRICT constraint)
+            $currentGroupUpdated = DB::table('change_request_statuses')
+                ->whereIn('current_group_id', $groupIds)
+                ->update(['current_group_id' => null]);
 
-            DB::table('change_request_statuses')
+            $this->command->info("✓ Updated {$currentGroupUpdated} record(s) in change_request_statuses (current_group_id set to NULL).");
+
+            // Update change_request_statuses - set reference_group_id to NULL (RESTRICT constraint)
+            $referenceGroupUpdated = DB::table('change_request_statuses')
                 ->whereIn('reference_group_id', $groupIds)
                 ->update(['reference_group_id' => null]);
 
-            DB::table('change_request_statuses')
+            $this->command->info("✓ Updated {$referenceGroupUpdated} record(s) in change_request_statuses (reference_group_id set to NULL).");
+
+            // Update change_request_statuses - set previous_group_id to NULL (RESTRICT constraint)
+            $previousGroupUpdated = DB::table('change_request_statuses')
                 ->whereIn('previous_group_id', $groupIds)
                 ->update(['previous_group_id' => null]);
 
+            $this->command->info("✓ Updated {$previousGroupUpdated} record(s) in change_request_statuses (previous_group_id set to NULL).");
+
             // Delete from custom_fields_groups_type
-            DB::table('custom_fields_groups_type')
+            $customFieldsDeleted = DB::table('custom_fields_groups_type')
                 ->whereIn('group_id', $groupIds)
                 ->delete();
 
-            // Now delete the groups
+            $this->command->info("✓ Deleted {$customFieldsDeleted} record(s) from custom_fields_groups_type table.");
+
+            // Delete the groups
             $groupDeleted = Group::whereIn('id', $groupIds)->delete();
 
-            $this->command->info("✓ Deleted {$groupDeleted} inactive group(s)");
-            $this->command->info("  └─ Also cleaned up related records from multiple tables");
+            $this->command->info("✓ Deleted {$groupDeleted} inactive group(s) from groups table.");
+            $this->command->info("  └─ CASCADE will automatically delete related records from other tables");
+
             return $groupDeleted;
         }
 
