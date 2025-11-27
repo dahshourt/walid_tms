@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
 
 class Change_request extends Model
@@ -208,6 +209,11 @@ class Change_request extends Model
         return $this->belongsTo(User::class, 'designer_id')->select('id', 'name', 'user_name', 'email');
     }
 
+    public function kpis(): BelongsToMany
+    {
+        return $this->belongsToMany(Kpi::class, 'kpi_change_request', 'cr_id', 'kpi_id');
+    }
+
     /**
      * Get the active CAB record for this change request.
      */
@@ -320,7 +326,7 @@ class Change_request extends Model
     public function currentStatusRel(): HasOne
     {
         return $this->hasOne(Change_request_statuse::class, 'cr_id')
-            ->where('active', 1)
+            ->where('active', '1')
             ->latest('id')
             ->with('status');
     }

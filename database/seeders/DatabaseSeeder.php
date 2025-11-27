@@ -30,6 +30,8 @@ class DatabaseSeeder extends Seeder
             CrUpdateNotification::class,
             UpdateDivisionTemplateSeeder::class,
             NotificationRecipientsTableSeeder::class,
+            KamCustomFieldsSeeder::class,
+            KamWorkflowSeeder::class,
 
         ]);
         // \App\Models\User::factory(10)->create();
