@@ -28,8 +28,9 @@
                 <div class="col-md-12">
                     <!--begin::Card-->
                     <div class="card card-custom gutter-b example example-compact">
-                        <div class="card-header">
-                            <h3 class="card-title">Update {{ $form_title ?? 'KPI' }}</h3>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3 class="card-title m-0">Update {{ $form_title ?? 'KPI' }}</h3>
+                            <button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
                         </div>
                         <!--begin::Form-->
                         <form class="form" action='{{ route("$route.update", $row->id) }}' method="post" enctype="multipart/form-data">
@@ -37,10 +38,11 @@
                             @method('PATCH')
                             @include("$view.form")
                             <div class="card-footer">
-                            <button type="submit" class="btn btn-success mr-2">Update</button>
-                            <a href="{{ route("$route.index") }}" class="btn btn-primary">Cancel</a>
-                            <button type="button" id="openModal" class="btn btn-primary">View History Logs</button>
+                                <button type="submit" class="btn btn-success mr-2">Update</button>
+                                <a href="{{ route("$route.index") }}" class="btn btn-primary">Cancel</a>
                             </div>
+                            @include("kpis.related_crs")
+                            @include("kpis.comments_history")
                             @include("kpis.logs")
                         </form>
                         <!--end::Form-->

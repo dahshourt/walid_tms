@@ -15,7 +15,7 @@
                     @forelse($logs as $key => $log)
                         <div class="timeline-item align-items-start">
                             <!-- Label -->
-                            <div class="timeline-label font-weight-bolder text-dark-75 font-size-lg">
+                            <div class="timeline-label font-weight-bold text-primary font-size-lg">
                                 {{ $log->created_at->format('d M Y') }} {{ $log->created_at->format('h:i A') }}
                             </div>
 
@@ -72,5 +72,8 @@
     .timeline.timeline-6 .timeline-item .timeline-badge {
         margin-left: 10px;
         margin-right: 10px;
+    }
+    .timeline.timeline-6:before {
+        display: none;
     }
 </style>
