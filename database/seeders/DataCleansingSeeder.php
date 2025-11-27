@@ -113,32 +113,6 @@ class DataCleansingSeeder extends Seeder
         if ($applicationCount > 0) {
             $applicationIds = Application::where('active', '0')->pluck('id')->toArray();
 
-            // Delete or update related records first to avoid foreign key constraints
-
-            // Delete from group_applications
-            $groupApplicationsDeleted = DB::table('group_applications')
-                ->whereIn('application_id', $applicationIds)
-                ->delete();
-
-            // Delete from system_user_cabs (if exists)
-            if (DB::getSchemaBuilder()->hasTable('system_user_cabs')) {
-                DB::table('system_user_cabs')
-                    ->whereIn('system_id', $applicationIds)
-                    ->delete();
-            }
-
-            // Delete from application_impact_pivot (if exists)
-            if (DB::getSchemaBuilder()->hasTable('application_impact_pivot')) {
-                DB::table('application_impact_pivot')
-                    ->whereIn('application_id', $applicationIds)
-                    ->delete();
-            }
-
-            // Update change_request - set application_id to NULL instead of deleting
-            DB::table('change_request')
-                ->whereIn('application_id', $applicationIds)
-                ->update(['application_id' => null]);
-
             // Now delete the applications
             $applicationDeleted = Application::whereIn('id', $applicationIds)->delete();
 
@@ -166,11 +140,6 @@ class DataCleansingSeeder extends Seeder
 
             // Delete or update related records first to avoid foreign key constraints
 
-            // Update change_request_statuses - set group references to NULL
-            DB::table('change_request_statuses')
-                ->whereIn('current_group_id', $groupIds)
-                ->update(['current_group_id' => null]);
-
             DB::table('change_request_statuses')
                 ->whereIn('reference_group_id', $groupIds)
                 ->update(['reference_group_id' => null]);
@@ -179,55 +148,10 @@ class DataCleansingSeeder extends Seeder
                 ->whereIn('previous_group_id', $groupIds)
                 ->update(['previous_group_id' => null]);
 
-            // Delete from user_groups
-            $userGroupsDeleted = DB::table('user_groups')
+            // Delete from custom_fields_groups_type
+            DB::table('custom_fields_groups_type')
                 ->whereIn('group_id', $groupIds)
                 ->delete();
-
-            // Delete from group_statuses
-            $groupStatusesDeleted = DB::table('group_statuses')
-                ->whereIn('group_id', $groupIds)
-                ->delete();
-
-            // Delete from group_applications
-            $groupApplicationsDeleted = DB::table('group_applications')
-                ->whereIn('group_id', $groupIds)
-                ->delete();
-
-            // Delete from technical_cr_teams (if exists)
-            if (DB::getSchemaBuilder()->hasTable('technical_cr_teams')) {
-                DB::table('technical_cr_teams')
-                    ->whereIn('group_id', $groupIds)
-                    ->delete();
-            }
-
-            // Delete from custom_fields_groups_type (if exists)
-            if (DB::getSchemaBuilder()->hasTable('custom_fields_groups_type')) {
-                DB::table('custom_fields_groups_type')
-                    ->whereIn('group_id', $groupIds)
-                    ->delete();
-            }
-
-            // Delete from man_days_logs (if exists)
-            if (DB::getSchemaBuilder()->hasTable('man_days_logs')) {
-                DB::table('man_days_logs')
-                    ->whereIn('group_id', $groupIds)
-                    ->delete();
-            }
-
-            // Delete from defects (if exists)
-            if (DB::getSchemaBuilder()->hasTable('defects')) {
-                DB::table('defects')
-                    ->whereIn('group_id', $groupIds)
-                    ->delete();
-            }
-
-            // Delete from prerequisites (if exists)
-            if (DB::getSchemaBuilder()->hasTable('prerequisites')) {
-                DB::table('prerequisites')
-                    ->whereIn('group_id', $groupIds)
-                    ->delete();
-            }
 
             // Now delete the groups
             $groupDeleted = Group::whereIn('id', $groupIds)->delete();
