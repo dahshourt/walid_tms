@@ -35,7 +35,18 @@
         @endforeach
     @endif
 
-    @foreach($item->CustomField->getCustomFieldValue() as $value)
+    @php
+        $values = $item->CustomField->getCustomFieldValue();
+        
+        // Filter to show only active requester departments
+        if ($item->CustomField->name === 'requester_department') {
+            $values = $values->filter(function($value) {
+                return $value->active == 1; // Assuming there's an 'active' column in the requester_departments table
+            });
+        }
+    @endphp
+    
+    @foreach($values as $value)
         @unless(in_array($item->CustomField->name, ['developer_id', 'tester_id', 'designer_id','rtm_member']))
             <option value="{{ $value->id }}" {{ old($item->CustomField->name, $custom_field_value) == $value->id ? 'selected' : '' }}>
                 @if($item->CustomField->name == "parent_id")
