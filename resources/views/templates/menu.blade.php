@@ -1216,6 +1216,47 @@
                                     </a>
                                 </li>
                             @endcan
+                             @can('Reports')
+                                <li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click" aria-haspopup="true">
+                                    <a href="javascript:;" class="menu-link menu-toggle">
+                                        <span class="menu-text">Reports</span>
+                                        <i class="menu-arrow"></i>
+                                    </a>
+                                    <div class="menu-submenu menu-submenu-classic menu-submenu-left">
+                                        <ul class="menu-subnav">
+                                            <li class="menu-item">
+                                                <a href="{{ url('reports/actual-vs-planned') }}" class="menu-link">
+                                                    <span class="menu-text">Actual vs planned</span>
+                                                </a>
+                                            </li>
+
+                                            <li class="menu-item">
+                                                <a href="{{ url('reports/all-crs-by-requester') }}" class="menu-link">
+                                                    <span class="menu-text">All CRs by requester</span>
+                                                </a>
+                                            </li>
+
+                                            <li class="menu-item">
+                                                <a href="{{ url('reports/cr-current-status') }}" class="menu-link">
+                                                    <span class="menu-text">CR Current Status</span>
+                                                </a>
+                                            </li>
+
+                                            <li class="menu-item">
+                                                <a href="{{ url('reports/cr-crossed-sla') }}" class="menu-link">
+                                                    <span class="menu-text">List of CRs crossed SLA</span>
+                                                </a>
+                                            </li>
+
+                                            <li class="menu-item">
+                                                <a href="{{ url('reports/rejected-crs') }}" class="menu-link">
+                                                    <span class="menu-text">Rejected CRs</span>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </li>
+                            @endcan
                             @can('Access Advanced Search')
                                 <li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click"
                                     aria-haspopup="true">

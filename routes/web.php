@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Services\EwsMailReader;
 use App\Http\Controllers\Sla\SlaCalculationController;
 use App\Http\Controllers\ChangeRequest\Api\EmailApprovalController;
-
+use App\Http\Controllers\Report\ReportController;
 
 
 
@@ -227,6 +227,25 @@ Route::middleware(['auth'])->group(
         Route::get('kpis/{kpi}/search-cr', 'KPIs\KPIController@searchChangeRequest')->name('kpis.search-cr');
         Route::post('kpis/{kpi}/attach-cr', 'KPIs\KPIController@attachChangeRequest')->name('kpis.attach-cr');
         Route::delete('kpis/{kpi}/detach-cr/{cr}', 'KPIs\KPIController@detachChangeRequest')->name('kpis.detach-cr');
+
+        Route::prefix('reports')->group(function () {
+
+            Route::get('/actual-vs-planned', [ReportController::class, 'actualVsPlanned'])
+                ->name('reports.actual_vs_planned');
+
+            Route::get('/all-crs-by-requester', [ReportController::class, 'allCrsByRequester'])
+                ->name('reports.all_crs_by_requester');
+
+            Route::get('/cr-current-status', [ReportController::class, 'crCurrentStatus'])
+                ->name('reports.cr_current_status');
+
+            Route::get('/cr-crossed-sla', [ReportController::class, 'crCrossedSla'])
+                ->name('reports.cr_crossed_sla');
+
+            Route::get('/rejected-crs', [ReportController::class, 'rejectedCrs'])
+                ->name('reports.rejected_crs');
+
+        });
 
         //test ews
 
