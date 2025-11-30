@@ -3,7 +3,7 @@
     @cannot('Set Time For Another User') disabled @endcannot>
     <option value="">Select</option>
     @foreach($item->CustomField->getCustomFieldValue() as $value)
-        @if($value->defualt_group->title === 'CR Team Admin')
+        @if($value->defualt_group && $value->defualt_group->title === 'CR Team Admin')
             <option value="{{ $value->id }}" {{ $custom_field_value == $value->id ? 'selected' : '' }}>
                 {{ $value->name }}
             </option>

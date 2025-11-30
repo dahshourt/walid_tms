@@ -995,7 +995,7 @@
 																				</svg>
                                                                             <!--end::Svg Icon-->
 																			</span>
-                                                        <span class="menu-text">CR Pending Cap</span>
+                                                        <span class="menu-text">CR Pending Cab</span>
 
                                                     </a>
                                                 </li>

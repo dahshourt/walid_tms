@@ -121,6 +121,7 @@ Route::middleware(['auth'])->group(
        Route::get('my_assignments', 'ChangeRequest\ChangeRequestController@my_assignments');
        Route::resource('groups', Groups\GroupController::class);
 	   Route::get('group/statuses/{id}', 'Groups\GroupController@GroupStatuses');
+	   Route::post('group/store/statuses/{id}', 'Groups\GroupController@StoreGroupStatuses');
 
        //Route::resource('workflows', Workflow\WorkflowController::class);
        Route::resource('NewWorkFlowController', Workflow\NewWorkFlowController::class);
