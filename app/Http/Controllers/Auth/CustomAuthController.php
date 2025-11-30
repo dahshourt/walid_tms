@@ -3,18 +3,24 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Http\Repository\Groups\GroupRepository;
-use App\Http\Repository\Roles\RolesRepository;
-use App\Http\Repository\Users\UserRepository;
+use App\Http\Requests\Auth\Api\LoginRequest;
 use App\Models\User;
-use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Adldap\Laravel\Facades\Adldap;
+use App\Models\UserGroups;
+use Illuminate\Support\Facades\Config;
+
+
+use App\Http\Repository\Users\UserRepository;
+use App\Http\Repository\Roles\RolesRepository;
+use App\Http\Repository\Groups\GroupRepository;
+
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
-use Log;
-use Redirect;
+use App\Http\Requests\Auth\ResetPasswordRequest;
+use App\Http\Requests\Auth\UpdatePasswordRequest;
 
 class CustomAuthController extends Controller
 {
@@ -23,96 +29,73 @@ class CustomAuthController extends Controller
         return view('auth.login');
     }
 
-    public function CheckLdapAccount($user_name, $password)
+    /**
+     * Check LDAP Account credentials.
+     *
+     * @param string $username
+     * @param string $password
+     * @return array
+     */
+    private function checkLdapAccount($username, $password)
     {
-        $ldapconn = @ldap_connect(config('constants.cairo.ldap_host'));
-        $response = [];
-        if (! $ldapconn) {
-            $response['message'] = 'There is a connection problem with ldap.';
-            $response['status'] = false;
+        $ldapHost = config('constants.cairo.ldap_host');
+        $ldapConn = @ldap_connect($ldapHost);
 
-            return $response;
+        if (!$ldapConn) {
+            return [
+                'status' => false,
+                'message' => 'There is a connection problem with ldap.',
+            ];
         }
-        $ldap_binddn = config('constants.cairo.ldap_binddn') . $user_name;
 
-        $ldapbind = @ldap_bind($ldapconn, $ldap_binddn, $password);
-        if (! $ldapbind) {
-            $response['message'] = 'Credentials Invalid.';
-            $response['status'] = false;
+        $ldapBindDn = config('constants.cairo.ldap_binddn') . $username;
+        $ldapBind = @ldap_bind($ldapConn, $ldapBindDn, $password);
 
-            return $response;
-            // return \Redirect::back()->withErrors(['msg' => "Credentials Invalid."])->withInput();
+        if (!$ldapBind) {
+            return [
+                'status' => false,
+                'message' => 'Credentials Invalid.',
+            ];
         }
-        $response['message'] = 'Success';
-        $response['status'] = true;
 
-        return $response;
+        return [
+            'status' => true,
+            'message' => 'Success',
+        ];
     }
 
     /**
      * Login
      *
-     * @param  [string] username
-     * @param  [string] password
-     * @return [object] user data
-     *
-     * @throws \SMartins\PassportMultiauth\Exceptions\MissingConfigException
+     * @param LoginRequest $request
+     * @return \Illuminate\Http\RedirectResponse
      */
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $request->validate([
-            'user_name' => 'required',
-            'password' => 'required',
-        ]);
-
         $generalLoginError = 'Login error. Please contact administration.';
         $accountLockedError = 'Your account is locked due to too many failed login attempts. Please contact your administrator.';
-
-        $maxAttempts = config('auth.max_login_attempts', 5); // default to 5 if not set
+        $maxAttempts = config('auth.max_login_attempts', 5);
 
         $user = User::with('user_groups', 'user_groups.group', 'defualt_group')
             ->where('user_name', $request->user_name)
             ->first();
 
-        // User not found in local DB, try LDAP
-        if (! $user) {
-            $response = $this->CheckLdapAccount($request->user_name, $request->password);
-            if ($response['status']) {
-                $email = $request->user_name . '@te.eg';
-                $check_email = app(UserRepository::class)->CheckUniqueEmail($email);
+        // User not found in local DB, try LDAP and create if successful
+        if (!$user) {
+            $ldapResponse = $this->checkLdapAccount($request->user_name, $request->password);
 
-                $roles = [];
-                $group_id = [];
-                $role = app(RolesRepository::class)->findByName('Viewer');
-                $bussines_group = app(GroupRepository::class)->findByName('Business Team');
-                $roles[] = $role->name;
-                $default_group = $bussines_group->id;
-                $group_id[] = $bussines_group->id;
-
-                if ($check_email) {
-                    return Redirect::back()->withErrors(['msg' => $generalLoginError])->withInput();
+            if ($ldapResponse['status']) {
+                $user = $this->createUserFromLdap($request->user_name);
+                
+                if (!$user) {
+                     return Redirect::back()->withErrors(['msg' => $generalLoginError])->withInput();
                 }
 
-                $data = [
-                    'user_type' => 1,
-                    'name' => $request->user_name,
-                    'user_name' => $request->user_name,
-                    'email' => $email,
-                    'roles' => $roles,
-                    'default_group' => $default_group,
-                    'group_id' => $group_id,
-                    'active' => '1',
-                ];
-
-                $user = app(UserRepository::class)->create($data);
-                Auth::login($user);
-                DB::table('sessions')->where('user_id', $user->id)->where('id', '!=', Session::getId())->delete();
-
+                $this->loginUser($user);
                 return redirect()->intended(url('/'));
             }
 
             return Redirect::back()->withErrors(['msg' => $generalLoginError])->withInput();
-
         }
 
         // Check if account is locked
@@ -124,36 +107,24 @@ class CustomAuthController extends Controller
         if ($user->active == 0) {
             return redirect('login')->with('failed', $accountLockedError);
         }
-        // local user
-        /*if (isset($user->user_type) && $user->user_type == 0) {
-            if (Auth::attempt(['user_name' => $request->user_name, 'password' => $request->password])) {
-                $user->failed_attempts = 0;
-                $user->save();
-                DB::table('sessions')->where('user_id', $user->id)->where('id', '!=', Session::getId())->delete();
 
-                return redirect()->intended(url('/'));
-            }
-            $user->failed_attempts += 1;
-            if ($user->failed_attempts >= $maxAttempts) {
-                $user->active = 0;
-            }
-            $user->save();
+        // Local user login attempt
+        if (isset($user->user_type) && $user->user_type == 0) {
+            return $this->attemptLocalLogin($user, $request->password, $maxAttempts, $generalLoginError);
+        }
 
-            return redirect('login')->with('failed', $generalLoginError);
+        // Existing LDAP user: Verify against LDAP
+        $ldapResponse = $this->checkLdapAccount($request->user_name, $request->password);
 
-        }*/
-
-        // All users are now LDAP/AD users
-        $response = $this->CheckLdapAccount($request->user_name, $request->password);
-        if ($response['status']) {
+        if ($ldapResponse['status']) {
             $user->failed_attempts = 0;
             $user->save();
 
-            Auth::login($user);
-            DB::table('sessions')->where('user_id', $user->id)->where('id', '!=', Session::getId())->delete();
-
+            $this->loginUser($user);
             return redirect()->intended(url('/'));
         }
+
+        // Failed login attempt
         $user->failed_attempts += 1;
         if ($user->failed_attempts >= $maxAttempts) {
             $user->active = 0;
@@ -161,26 +132,105 @@ class CustomAuthController extends Controller
         $user->save();
 
         return Redirect::back()->withErrors(['msg' => $generalLoginError])->withInput();
+    }
 
+    /**
+     * Attempt local user login.
+     *
+     * @param User $user
+     * @param string $password
+     * @param int $maxAttempts
+     * @param string $errorMessage
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    private function attemptLocalLogin(User $user, $password, $maxAttempts, $errorMessage)
+    {
+        if (Auth::attempt(['user_name' => $user->user_name, 'password' => $password])) {
+            $user->failed_attempts = 0;
+            $user->save();
+            DB::table('sessions')
+                ->where('user_id', $user->id)
+                ->where('id', '!=', Session::getId())
+                ->delete();
+
+            return redirect()->intended(url('/'));
+        }
+
+        $user->failed_attempts += 1;
+        if ($user->failed_attempts >= $maxAttempts) {
+            $user->active = 0;
+        }
+        $user->save();
+
+        return redirect('login')->with('failed', $errorMessage);
+    }
+
+    /**
+     * Create a new user from LDAP information.
+     *
+     * @param string $username
+     * @return User|null
+     */
+    private function createUserFromLdap($username)
+    {
+        $email = $username . '@te.eg';
+        
+        // Check if email already exists
+        if (app(UserRepository::class)->CheckUniqueEmail($email)) {
+            return null;
+        }
+
+        $role = app(RolesRepository::class)->findByName('Viewer');
+        $businessGroup = app(GroupRepository::class)->findByName('Business Team');
+
+        $data = [
+            'user_type' => 1,
+            'name' => $username,
+            'user_name' => $username,
+            'email' => $email,
+            'roles' => [$role->name],
+            'default_group' => $businessGroup->id,
+            'group_id' => [$businessGroup->id],
+            'active' => '1',
+        ];
+
+        return app(UserRepository::class)->create($data);
+    }
+
+    /**
+     * Log the user in and clear other sessions.
+     *
+     * @param User $user
+     * @return void
+     */
+    private function loginUser(User $user)
+    {
+        Auth::login($user);
+        DB::table('sessions')
+            ->where('user_id', $user->id)
+            ->where('id', '!=', Session::getId())
+            ->delete();
     }
 
     /**
      * Logout user (Revoke the token)
      *
-     * @param  [string] token
-     * @return [array] msg
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function logout(Request $request)
     {
         try {
             $user = User::where('id', $request->user()->id)->first();
-            $user->device_token = null;
-            $user->save();
+            if ($user) {
+                $user->device_token = null;
+                $user->save();
+            }
             $request->user()->tokens()->delete();
 
             return response()->json(['msg' => [__('messages.logout_successfully')]], 200);
-        } catch (Exception $e) {
-            Log::debug($e->getMessage());
+        } catch (\Exception $e) {
+            \Log::debug($e->getMessage());
 
             return response()->json(['msg' => [__('messages.failed_request')]], 403);
         }
@@ -189,25 +239,25 @@ class CustomAuthController extends Controller
     /**
      * Reset Password
      *
-     * @param  [string] password
-     * @param  [string] password confiramtion
-     * @return [array] msg
-     *
-     * @throws \SMartins\PassportMultiauth\Exceptions\MissingConfigException
+     * @param ResetPasswordRequest $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function resetPassword(ResetPasswordRequest $request)
     {
         try {
             $user = User::where('phone', $request->phone)->first();
+            if (!$user) {
+                 return response()->json(['msg' => [__('messages.failed_request')]], 404);
+            }
             // reset user password
             $user->password = Hash::make($request->password);
             $user->save();
 
             // Revoke a all user tokens...
             return response()->json(['msg' => [__('messages.reset_successfully')]], 200);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollBack();
-            Log::debug($e->getMessage());
+            \Log::debug($e->getMessage());
 
             return response()->json(['msg' => [__('messages.failed_request')]], 403);
         }
@@ -216,10 +266,8 @@ class CustomAuthController extends Controller
     /**
      * Update Password
      *
-     * @param  [string] old_password
-     * @param  [string] password
-     * @param  [string] password_confirmation
-     * @return [array] msg
+     * @param UpdatePasswordRequest $request
+     * @return \Illuminate\Http\JsonResponse
      */
     public function updatePassword(UpdatePasswordRequest $request)
     {
@@ -236,9 +284,9 @@ class CustomAuthController extends Controller
             DB::commit();
 
             return response()->json(['msg' => [__('messages.success_update')]], 200);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             DB::rollback();
-            Log::debug($e->getMessage());
+            \Log::debug($e->getMessage());
 
             return response()->json(['msg' => [__('messages.failed_request')]], 403);
         }

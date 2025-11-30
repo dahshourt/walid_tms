@@ -39,7 +39,7 @@
                             You are logged in as
                             <span>
                                 @if(session()->has('default_group'))
-                                    {{ session('default_group_name') }}
+                                    {{ session('current_group_name') }}
                                 @else
                                     @if(auth()->user()->default_group)
                                         {{ auth()->user()->defualt_group->name }}
