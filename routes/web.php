@@ -238,6 +238,13 @@ Route::middleware(['auth'])->group(
 
         });
 
+
+
+        Route::post('/reports/cr-current-status', [ReportController::class, 'crCurrentStatus'])
+    ->name('report.current-status');
+    Route::post('/reports/cr-current-status/export', [ReportController::class, 'exportCurrentStatus'])
+    ->name('report.current-status.export');
+
         //test ews
 
         /*Route::get('/test-ews', function () {
