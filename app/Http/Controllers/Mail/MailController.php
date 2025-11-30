@@ -183,9 +183,9 @@ class MailController extends Controller
         foreach ($users_mail as $key => $user) {
             $cr_link = route('edit_cab.cr', $cr_id);
             $templateContent = [
-                'subject' => "CR #$cr_no Is Pending Cap",
+                'subject' => "CR #$cr_no Is Pending Cab",
                 'body' => "Dear $user, <br><br>"
-                . "CR #$cr_no has been transfered To Pending Cap Status Waiting Your Approval Or Rejection following Link."
+                . "CR #$cr_no has been transfered To Pending Cab Status Waiting Your Approval Or Rejection following Link."
                 . '<br><br>'
                 . "You can review it here: <a href='$cr_link'>CR: #$cr_no</a>"
                 . '<br><br>'

@@ -286,7 +286,8 @@ class ChangeRequestController extends Controller
         session([
             'default_group' => $group,
             'current_group' => $group,
-            'current_group_name' => $selectedGroup->title
+            'default_group_name' => $selectedGroup->title,
+            'current_group_name' => $selectedGroup->title,
         ]);
 
         return redirect()->back()->with('success', 'Group selected successfully.');

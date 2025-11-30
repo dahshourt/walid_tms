@@ -11,6 +11,7 @@ use App\Http\Repository\Applications\ApplicationRepository;
 use App\Http\Repository\divisionManager\DivisionManagerRepository;
 use App\Http\Repository\Units\UnitRepository;
 use App\Models\Director;
+use App\Models\Status;
 
 class GroupController extends Controller
 {
@@ -20,7 +21,7 @@ class GroupController extends Controller
     function __construct(GroupFactory $group){        
         $this->group = $group::index();
         $this->view = 'group';
-        $OtherRoute = 'groups';
+        $OtherRoute = 'group';
         $view = 'group';
         $route = 'groups';
         $title = 'Groups List';
@@ -133,7 +134,18 @@ class GroupController extends Controller
 	public function GroupStatuses($id)
 	{
 		$group = $this->group->find($id);   
-		return view("$this->view.group_statuses",compact('group'));
+		$statuses = Status::all();   
+		return view("$this->view.group_statuses",compact('group','statuses'));
 	}
+
+
+    public function StoreGroupStatuses(Request $request)
+    {
+        //$this->authorize('Store Group Statuses'); // permission check
+        $id=$request->id;
+        $group = $this->group->find($id);   
+        $this->group->StoreGroupStatuses($request,$id);
+        return redirect()->back()->with('status' , 'Added Successfully' );
+    }   
 
 }

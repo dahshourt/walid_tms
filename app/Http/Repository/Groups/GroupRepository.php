@@ -5,6 +5,7 @@ use App\Contracts\Groups\GroupRepositoryInterface;
 use Illuminate\Support\Arr;// declare Entities
 use App\Models\Group;
 use App\Models\GroupApplications;
+use App\Models\GroupStatuses;
 
 
 
@@ -117,6 +118,35 @@ class GroupRepository implements GroupRepositoryInterface
             $q->where('application_id', $app_id);
         })->get();
 	}
+
+
+    public function StoreGroupStatuses($request,$group_id)
+    {
+        
+        GroupStatuses::where('group_id',$group_id)->delete();
+        if(isset($group_id) && !empty($request->view_statuses_id))
+        {
+            foreach($request->view_statuses_id as $key=>$value)
+            {
+                $group_statuses = new GroupStatuses;
+                $group_statuses->group_id = $group_id;
+                $group_statuses->status_id = $value;
+                $group_statuses->type = 2;                $group_statuses->save();
+            }
+        }
+
+        if(isset($group_id) && !empty($request->set_statuses_id))
+        {
+            foreach($request->set_statuses_id as $key=>$value)
+            {
+                $group_statuses = new GroupStatuses;
+                $group_statuses->group_id = $group_id;
+                $group_statuses->status_id = $value;                $group_statuses->type = 1;
+                $group_statuses->save();
+            }
+        }
+        return true;
+    }
 
 
     
