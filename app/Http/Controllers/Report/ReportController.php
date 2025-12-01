@@ -7,10 +7,33 @@ use Illuminate\Http\Request;
 use DB;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use App\Factories\Statuses\StatusFactory;
+use App\Factories\NewWorkFlow\NewWorkFlowFactory;
+use App\Factories\Workflow\Workflow_type_factory;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 
 class ReportController extends Controller
 {
+        private $status;
+        private $workflow;
+        private $workflow_type;
+
+     public function __construct(
+       
+        StatusFactory $status,
+        NewWorkFlowFactory $workflow,
+       Workflow_type_factory $workflow_type,
+    ) {
+      
+        $this->status = $status::index();
+        $this->changerworkflowequeststatus = $workflow::index();
+        $this->workflow_type = $workflow_type::index();
+      
+
+       // $this->shareViewData();
+    }
     /**
      * Show Actual vs Planned report page
      */
@@ -411,88 +434,205 @@ $query = "
     /**
      * Show CR Current Status report page
      */
+//   public function crCurrentStatus(Request $request)
+// {
+//      /* ---------------------------------------------------------
+//         1) READ FILTERS FROM FORM
+//     --------------------------------------------------------- */
+//     $cr_type = $request->input('cr_type');                     // single value
+//     $status_ids = $request->input('status_ids');               // array
+//     $cr_nos = $request->input('cr_nos');                       // optional text field: "1001,1002"
+   
+//     //dd(intval($cr_type));
+//     // Convert arrays to comma-separated strings
+//     $status_ids_str = !empty($status_ids) ? implode(",", $status_ids) : null;
+
+//     /* ---------------------------------------------------------
+//         2) SET MYSQL USER VARIABLES TO PASS INTO THE QUERY
+//     --------------------------------------------------------- */
+//     DB::statement("SET @cr_type := " . ($cr_type ? $cr_type : "NULL"));
+//     DB::statement("SET @status_ids := " . ($status_ids_str ? "'" . $status_ids_str . "'" : "NULL"));
+//     DB::statement("SET @cr_nos := " . ($cr_nos ? "'" . $cr_nos . "'" : "NULL"));
+
+
+//     // Main SELECT query (cleaned & corrected)
+//     $query = "
+//         SELECT 
+//             req.cr_no,
+//             apps.name AS `Applications`,
+//             req.title,
+//             flow.name AS `Workflow Type`,
+//             'NA' AS `Vendor Name`,
+//             GROUP_CONCAT(DISTINCT stat.status_name ORDER BY stat.status_name SEPARATOR ', ') AS `Current Status`,
+//             CONCAT(sla.unit_sla_time, ' ', sla.sla_type_unit) AS `Assigned SLA`,
+//             req.start_design_time AS `Design Estimation Start`,
+//             req.end_design_time AS `Design Estimation End`,
+//             req.start_develop_time AS `Technical Estimation Start`,
+//             req.end_develop_time AS `Technical Estimation End`,
+//             unt.name AS `Unit Name`,
+//             req.start_test_time AS `Testing Estimation Start`,
+//             req.end_test_time AS `Testing Estimation End`,
+//             grou.title AS `Current Assigned Group`,
+//             usr.user_name AS `Assigned Member`,
+//             'Not Found' AS `Assigned Member Level`,
+//             IFNULL(req.end_test_time, req.end_develop_time) AS `Expected Delivery date`,
+//             req.requester_name,
+//             req.division_manager
+//         FROM change_request AS req
+//         LEFT JOIN applications AS apps 
+//             ON apps.id = req.application_id
+//         LEFT JOIN workflow_type AS flow 
+//             ON flow.id = req.workflow_type_id
+//         LEFT JOIN change_request_statuses AS curr_status 
+//             ON curr_status.cr_id = req.id 
+//             AND curr_status.active = '1'
+//         LEFT JOIN statuses AS stat 
+//             ON stat.id = curr_status.new_status_id
+//         LEFT JOIN group_statuses AS gro_stat 
+//             ON gro_stat.status_id = curr_status.new_status_id
+//         LEFT JOIN `groups` AS grou 
+//             ON grou.id = gro_stat.group_id
+//         LEFT JOIN group_applications AS grou_apps 
+//             ON grou_apps.application_id = req.application_id
+//         LEFT JOIN `groups` AS grou_unit 
+//             ON grou_unit.id = grou_apps.group_id
+//         LEFT JOIN units AS unt 
+//             ON unt.id = grou_unit.unit_id
+//         LEFT JOIN sla_calculations AS sla 
+//             ON sla.status_id = curr_status.new_status_id
+//         LEFT JOIN change_request_custom_fields AS custom_field_chang 
+//             ON custom_field_chang.cr_id = req.id 
+//             AND custom_field_chang.custom_field_id = 67
+//         LEFT JOIN users AS usr 
+//             ON usr.id = custom_field_chang.custom_field_value 
+//         LEFT JOIN roles  
+//             ON roles.id = usr.role_id
+//         WHERE
+//             (@cr_type IS NULL OR req.workflow_type_id = @cr_type)
+//             AND (@status_ids IS NULL OR FIND_IN_SET(curr_status.new_status_id, @status_ids))
+//             AND (@cr_nos IS NULL OR FIND_IN_SET(req.cr_no, @cr_nos))
+//         GROUP BY req.cr_no
+//     ";
+
+//     // Execute query
+//     $results = collect(DB::select($query));
+
+//     // Pagination
+//     $perPage = 10;
+//     $page = $request->get('page', 1);
+
+//     $currentPageItems = $results->slice(($page - 1) * $perPage, $perPage)->values();
+
+//     $paginatedResults = new LengthAwarePaginator(
+//         $currentPageItems,
+//         $results->count(),
+//         $perPage,
+//         $page,
+//         [
+//             'path' => $request->url(),
+//             'query' => $request->query()
+//         ]
+//     );
+//     $workflow_types =$this->workflow_type->get_workflow_all_subtype();
+//     $status =$this->status->getAll();
+   
+//     return view('reports.cr_current_status', [
+//         'results' => $paginatedResults,
+//         'status' => $status,
+//         'workflow_type' => $workflow_types
+//     ]);
+// }
+
     public function crCurrentStatus(Request $request)
     {
+        // 1) Read filters from form (optional)
+        $cr_type = $request->input('cr_type');                // single value
+        $status_ids = $request->input('status_ids', []);      // array
+        $cr_nos = $request->input('cr_nos');                 // optional text field "CR001,CR002"
 
-$query = "
-       SET @cr_type = NULL;
-SET @status_ids = NULL;
-SET @cr_nos = NULL;
+        // 2) Build query dynamically
+        $query = DB::table('change_request as req')
+            ->leftJoin('applications as apps', 'apps.id', '=', 'req.application_id')
+            ->leftJoin('workflow_type as flow', 'flow.id', '=', 'req.workflow_type_id')
+            ->leftJoin('change_request_statuses as curr_status', function ($join) {
+                $join->on('curr_status.cr_id', '=', 'req.id')
+                     ->where('curr_status.active', 1);
+            })
+            ->leftJoin('statuses as stat', 'stat.id', '=', 'curr_status.new_status_id')
+            ->leftJoin('group_statuses as gro_stat', 'gro_stat.status_id', '=', 'curr_status.new_status_id')
+            ->leftJoin('groups as grou', 'grou.id', '=', 'gro_stat.group_id')
+            ->leftJoin('group_applications as grou_apps', 'grou_apps.application_id', '=', 'req.application_id')
+            ->leftJoin('groups as grou_unit', 'grou_unit.id', '=', 'grou_apps.group_id')
+            ->leftJoin('units as unt', 'unt.id', '=', 'grou_unit.unit_id')
+            ->leftJoin('sla_calculations as sla', 'sla.status_id', '=', 'curr_status.new_status_id')
+            ->leftJoin('change_request_custom_fields as custom_field_chang', function($join) {
+                $join->on('custom_field_chang.cr_id', '=', 'req.id')
+                     ->where('custom_field_chang.custom_field_id', 67);
+            })
+            ->leftJoin('users as usr', 'usr.id', '=', 'custom_field_chang.custom_field_value')
+            ->leftJoin('roles', 'roles.id', '=', 'usr.role_id')
+            ->select(
+                'req.cr_no',
+                'apps.name as Applications',
+                'req.title',
+                'flow.name as Workflow_Type',
+                DB::raw("'NA' as Vendor_Name"),
+                DB::raw("GROUP_CONCAT(DISTINCT stat.status_name ORDER BY stat.status_name SEPARATOR ', ') as Current_Status"),
+                DB::raw("CONCAT(sla.unit_sla_time, ' ', sla.sla_type_unit) as Assigned_SLA"),
+                'req.start_design_time as Design_Estimation_Start',
+                'req.end_design_time as Design_Estimation_End',
+                'req.start_develop_time as Technical_Estimation_Start',
+                'req.end_develop_time as Technical_Estimation_End',
+                'unt.name as Unit_Name',
+                'req.start_test_time as Testing_Estimation_Start',
+                'req.end_test_time as Testing_Estimation_End',
+                'grou.title as Current_Assigned_Group',
+                'usr.user_name as Assigned_Member',
+                DB::raw("'Not Found' as Assigned_Member_Level"),
+                DB::raw("IFNULL(req.end_test_time, req.end_develop_time) as Expected_Delivery_date"),
+                'req.requester_name',
+                'req.division_manager'
+            )
+            ->groupBy('req.cr_no');
 
-SELECT 
-    req.cr_no,
-    apps.`name` 'Applications',
-    req.title,
-    flow.`name` 'Workflow Type',
-    'NA' AS `Vendor Name`,
-    GROUP_CONCAT(DISTINCT stat.status_name ORDER BY stat.status_name SEPARATOR ', ') AS 'Current Status',
-    CONCAT(sla.unit_sla_time, ' ', sla.sla_type_unit) AS `Assigned SLA`,
-    req.start_design_time 'Design Estimation Start',
-    req.end_design_time 'Design Estimation End',
-    req.start_develop_time 'Technical Estimation Start',
-    req.end_develop_time 'Technical Estimation End',
-     unt.`name` as 'Unit Name',
-    req.start_test_time 'Testing Estimation Start',
-    req.end_test_time 'Testing Estimation End',
-    grou.title AS `Current Assigned Group `,
-    usr.user_name as 'Assigned Member',
-    'Not Found' as 'Assigned Member Level',
-    IFNULL(req.end_test_time, req.end_develop_time) as 'Expected Delivery date'  ,
-    req.requester_name,
-    req.division_manager
-FROM  change_request AS req
-LEFT JOIN applications AS apps ON apps.id = req.application_id
-LEFT JOIN workflow_type AS flow ON flow.id = req.workflow_type_id
-LEFT JOIN change_request_statuses AS curr_status 
-       ON curr_status.cr_id = req.id AND curr_status.`active` = '1'
-LEFT JOIN statuses AS stat ON stat.id = curr_status.new_status_id
-LEFT JOIN group_statuses AS gro_stat ON gro_stat.status_id = curr_status.new_status_id
-LEFT JOIN `groups` AS grou ON grou.id = gro_stat.group_id
+        // 3) Apply filters if present
+        if($cr_type) {
+            $query->where('req.workflow_type_id', $cr_type);
+        }
 
--- LEFT JOIN group_statuses AS gro_stat ON gro_stat.status_id = curr_status.new_status_id
+        if(!empty($status_ids)) {
+            $query->whereIn('curr_status.new_status_id', $status_ids);
+        }
 
-LEFT JOIN group_applications AS grou_apps ON grou_apps.application_id = req.application_id
-LEFT JOIN `groups` AS grou_unit ON grou_unit.id = grou_apps.group_id
-LEFT JOIN units AS unt ON unt.id = grou_unit.unit_id
-LEFT JOIN sla_calculations as sla ON sla.status_id = curr_status.new_status_id
-LEFT JOIN change_request_custom_fields as custom_field_chang ON custom_field_chang.cr_id = req.id and custom_field_chang.custom_field_id = 67
-LEFT JOIN users as usr ON usr.id = custom_field_chang.custom_field_value 
-LEFT JOIN roles  ON roles.id = usr.role_id 
+        if($cr_nos) {
+            $cr_nos_array = array_map('trim', explode(',', $cr_nos));
+            $query->whereIn('req.cr_no', $cr_nos_array);
+        }
 
+        $results = collect($query->get());
 
-WHERE
-    (@cr_type IS NULL OR req.workflow_type_id = @cr_type)
-    AND (@status_ids IS NULL OR FIND_IN_SET(curr_status.new_status_id, @status_ids))
-    AND (@cr_nos IS NULL OR FIND_IN_SET(req.cr_no, @cr_nos))
-GROUP BY req.cr_no;
+        // 4) Pagination
+        $perPage = 10;
+        $page = $request->input('page', 1);
+        $currentPageItems = $results->slice(($page - 1) * $perPage, $perPage)->values();
+        $paginatedResults = new LengthAwarePaginator(
+            $currentPageItems,
+            $results->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
+        // 5) Get filter options
+        $workflow_types = $this->workflow_type->get_workflow_all_subtype();
+        $status = $this->status->getAll();
 
-                ";
-
-                $results = \DB::select($query);
-                $results = collect($results);
-
-                // Pagination setup
-                $perPage = 10;
-                $page = $request->get('page', 1);
-
-                // Slice collection for current page
-                $currentPageItems = $results->slice(($page - 1) * $perPage, $perPage)->values();
-
-                // Create LengthAwarePaginator
-                $paginatedResults = new LengthAwarePaginator(
-                    $currentPageItems,
-                    $results->count(),
-                    $perPage,
-                    $page,
-                    ['path' => $request->url(), 'query' => $request->query()]
-                );
-
-                return view('reports.cr_current_status', [
-                    'results' => $paginatedResults // <-- pass paginator to view
-                ]);  
+        return view('reports.cr_current_status', [
+            'results' => $paginatedResults,
+            'workflow_type' => $workflow_types,
+            'status' => $status
+        ]);
     }
-
     /**
      * Show CR Crossed SLA report page
      */
@@ -755,5 +895,13 @@ GROUP BY req.cr_no;
                 return view('reports.rejected_crs', [
                     'results' => $paginatedResults // <-- pass paginator to view
                 ]);   
+    }
+
+    public function exportCurrentStatus(Request $request)
+    {
+        // Get same filters from POST
+        $filters = $request->only(['cr_type', 'status_ids', 'cr_nos']);
+
+        return Excel::download(new TableExport($filters), 'current_status.xlsx');
     }
 }
