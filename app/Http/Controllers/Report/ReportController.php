@@ -37,165 +37,123 @@ class ReportController extends Controller
     /**
      * Show Actual vs Planned report page
      */
-    public function actualVsPlanned(Request $request)
+   /* public function actualVsPlanned(Request $request)
     {
         $query = "
-                    WITH designprogress_ranked AS (
-                        SELECT 
-                            cr_id,
-                            id,
-                            created_at,
-                            updated_at,
-                            user_id,
-                            ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
-                        FROM change_request_statuses
-                        WHERE new_status_id = 15
-                    ),
-                    pend_design_ranked AS (
-                        SELECT 
-                            cr_id,
-                            id,
-                            created_at,
-                            updated_at,
-                            ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
-                        FROM change_request_statuses
-                        WHERE new_status_id = 7
-                    ),
-                    pend_implementaion_ranked AS (
-                        SELECT 
-                            cr_id,
-                            id,
-                            created_at,
-                            updated_at,
-                            user_id,
-                            group_id,
-                            ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
-                        FROM change_request_statuses
-                        WHERE new_status_id = 8
-                    ),
-                    technical_implementation_ranked AS (
-                        SELECT 
-                            cr_id,
-                            id,
-                            created_at,
-                            updated_at,
-                            group_id,
-                            ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
-                        FROM change_request_statuses
-                        WHERE new_status_id = 10
-                    ),
-                    pend_testing_ranked AS (
-                        SELECT 
-                            cr_id,
-                            id,
-                            created_at,
-                            updated_at,
-                            user_id,
-                            group_id,
-                            ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
-                        FROM change_request_statuses
-                        WHERE new_status_id = 11
-                    )
+                      WITH designprogress_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        user_id,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+    FROM change_request_statuses
+    WHERE new_status_id = 15
+),
+ pend_design_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+    FROM change_request_statuses
+    WHERE new_status_id = 7
+),
+    pend_implementaion_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        user_id,
+        group_id,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+    FROM change_request_statuses
+    WHERE new_status_id = 8
+),
+technical_implementation_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        group_id,
+        user_id,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+    FROM change_request_statuses
+    WHERE new_status_id = 10
+),
+    pend_testing_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        user_id,
+        group_id,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+    FROM change_request_statuses
+    WHERE new_status_id = 11
+)
 
-                    SELECT 
-                        req.id,
-                        req.cr_no,
-                        apps.`name` AS Applications,
-                        req.title,
-                        flow.`name` AS WorkflowType,
+   SELECT 
+        req.id,
+        req.cr_no,
+        apps.`name` 'Applications',
+        req.title,
+        flow.`name` 'CR Type',
+        req.start_design_time 'Design Estimation Planned Start',
+        req.end_design_time 'Design Estimation Planned End',
+        designprogress.created_at AS DesignInProgressActualStart,
+        designprogress.updated_at AS DesignInProgressActualEnd,
+        TIMESTAMPDIFF(MINUTE,ch_cus_fields.created_at , pendig_disgn_start.created_at ) 'Pending Design Assigned Member Duration IN MINUTES',
+        design_team_name.`name` as 'Team Member Name',
 
-                        req.start_design_time AS DesignEstimationPlannedStart,
-                        req.end_design_time AS DesignEstimationPlannedEnd,
+        req.start_develop_time 'Technical Estimation Planned Start',
+        req.end_develop_time 'Technical Estimation Planned End',
+        
+        tetch_implt_start.created_at 'TechnicalImplementationActualStart',
+        tetch_implt_start.updated_at 'TechnicalImplementationActualEnd',
+        TIMESTAMPDIFF(MINUTE,ch_cus_tech_flds.created_at , pend_implement.created_at ) 'Pending Implementation Assigned Member Duration IN MINUTES',
+        group_concat(technical_team.title)  'Technical Team',
+        pend_imple_assig_usr.`name` 'Pending Implementation Assigned Member',
+        req.start_test_time 'Testing Estimation Planned Start',
+        req.end_test_time 'Testing Estimation Planned End', 
+        pend_test.created_at 'Pending Testing ActualStart',
+        pend_test.updated_at 'Pending Testing ActualEnd',
+        
+        pend_test_assig_usr.`name` 'Testing Team Member',
+        IFNULL(req.end_test_time, req.end_develop_time) as 'Expected Delivery date'  ,
+        req.requester_name,
+        req.division_manager,
+        'Not Found' as 'Requseter division',
+        'Not Found' as 'Requester Sector'
 
-                        designprogress.created_at AS DesignInProgressActualStart,
-                        designprogress.updated_at AS DesignInProgressActualEnd,
-                        
-                        TIMESTAMPDIFF(MINUTE,ch_cus_fields.created_at , pendig_disgn_start.created_at ) 
-                            AS PendingDesignAssignedMemberDuration,
+    FROM  change_request AS req
+    LEFT JOIN applications AS apps ON apps.id = req.application_id
+    LEFT JOIN workflow_type AS flow ON flow.id = req.workflow_type_id
+    LEFT JOIN change_request_statuses AS curr_status  ON curr_status.cr_id = req.id  
+    LEFT JOIN statuses AS stat ON stat.id = curr_status.new_status_id 
+    
+   LEFT JOIN designprogress_ranked designprogress ON designprogress.cr_id = req.id AND designprogress.rn = 1
+   LEFT JOIN pend_implementaion_ranked pend_implement ON pend_implement.cr_id = req.id AND pend_implement.rn = 1
+   LEFT JOIN pend_testing_ranked pend_test ON pend_test.cr_id = req.id AND pend_test.rn = 1
+   LEFT JOIN change_request_custom_fields AS ch_cus_fields ON ch_cus_fields.cr_id = req.id and ch_cus_fields.custom_field_id = 48
 
-                        design_team_name.`name` AS TeamMemberName,
-
-                        req.start_develop_time AS TechnicalEstimationPlannedStart,
-                        req.end_develop_time AS TechnicalEstimationPlannedEnd,
-
-                        tetch_implt_start.created_at AS TechnicalImplementationActualStart,
-                        tetch_implt_start.updated_at AS TechnicalImplementationActualEnd,
-
-                        TIMESTAMPDIFF(MINUTE,ch_cus_tech_flds.created_at , pend_implement.created_at ) 
-                            AS PendingImplementationAssignedMemberDuration,
-
-                        technical_team.title AS TechnicalTeam,
-                        pend_imple_assig_usr.`name` AS PendingImplementationAssignedMember,
-
-                        req.start_test_time AS TestingEstimationPlannedStart,
-                        req.end_test_time AS TestingEstimationPlannedEnd,
-
-                        pend_test.created_at AS PendingTestingActualStart,
-                        pend_test.updated_at AS PendingTestingActualEnd,
-
-                        pend_test_assig_usr.`name` AS TestingTeamMember,
-
-                        IFNULL(req.end_test_time, req.end_develop_time) AS ExpectedDeliveryDate,
-
-                        req.requester_name,
-                        req.division_manager,
-                        'Not Found' AS RequesterDivision,
-                        'Not Found' AS RequesterSector
-
-                    FROM change_request AS req
-                    LEFT JOIN applications AS apps 
-                        ON apps.id = req.application_id
-                    LEFT JOIN workflow_type AS flow 
-                        ON flow.id = req.workflow_type_id
-                    LEFT JOIN change_request_statuses AS curr_status  
-                        ON curr_status.cr_id = req.id  
-                    LEFT JOIN statuses AS stat 
-                        ON stat.id = curr_status.new_status_id 
-                    
-                    LEFT JOIN designprogress_ranked AS designprogress 
-                        ON designprogress.cr_id = req.id AND designprogress.rn = 1
-                    
-                    LEFT JOIN pend_implementaion_ranked AS pend_implement 
-                        ON pend_implement.cr_id = req.id AND pend_implement.rn = 1
-                    
-                    LEFT JOIN pend_testing_ranked AS pend_test 
-                        ON pend_test.cr_id = req.id AND pend_test.rn = 1
-                    
-                    LEFT JOIN change_request_custom_fields AS ch_cus_fields 
-                        ON ch_cus_fields.cr_id = req.id 
-                        AND ch_cus_fields.custom_field_id = 48
-
-                    LEFT JOIN pend_design_ranked AS pendig_disgn_start 
-                        ON pendig_disgn_start.cr_id = req.id  
-                        AND pendig_disgn_start.rn = 1
-                    
-                    LEFT JOIN technical_implementation_ranked AS tetch_implt_start 
-                        ON tetch_implt_start.cr_id = req.id  
-                        AND tetch_implt_start.rn = 1
-                    
-                    LEFT JOIN `groups` AS technical_team 
-                        ON technical_team.id = tetch_implt_start.group_id 
-                    
-                    LEFT JOIN change_request_custom_fields AS ch_cus_tech_flds 
-                        ON ch_cus_tech_flds.cr_id = req.id 
-                        AND ch_cus_tech_flds.custom_field_id = 46
-                    
-                    LEFT JOIN users AS design_team_name 
-                        ON design_team_name.id = ch_cus_fields.custom_field_value
-                    
-                    LEFT JOIN users AS designprogress_assig_usr 
-                        ON designprogress_assig_usr.id = designprogress.user_id 
-                    
-                    LEFT JOIN users AS pend_imple_assig_usr 
-                        ON pend_imple_assig_usr.id = pend_implement.user_id 
-                    
-                    LEFT JOIN `groups` AS grop 
-                        ON grop.id = pend_implement.group_id 
-                    
-                    LEFT JOIN users AS pend_test_assig_usr 
-                        ON pend_test_assig_usr.id = pend_test.user_id 
-
-                    GROUP BY req.cr_no
+   LEFT JOIN pend_design_ranked AS pendig_disgn_start ON pendig_disgn_start.cr_id = req.id  AND pendig_disgn_start.rn = 1
+   LEFT JOIN technical_implementation_ranked AS tetch_implt_start ON tetch_implt_start.cr_id = req.id  AND tetch_implt_start.rn = 1
+    LEFT JOIN user_groups AS usr_grp ON usr_grp.user_id = tetch_implt_start.user_id 
+   LEFT JOIN `groups` AS technical_team ON technical_team.id = usr_grp.group_id 
+   LEFT JOIN change_request_custom_fields AS ch_cus_tech_flds ON ch_cus_tech_flds.cr_id = req.id and ch_cus_tech_flds.custom_field_id = 46
+   LEFT JOIN users AS design_team_name ON design_team_name.id = ch_cus_fields.custom_field_value
+   LEFT JOIN users AS designprogress_assig_usr ON designprogress_assig_usr.id = designprogress.user_id 
+   LEFT JOIN users AS pend_imple_assig_usr ON pend_imple_assig_usr.id = pend_implement.user_id 
+   LEFT JOIN `groups` AS grop ON grop.id = pend_implement.group_id 
+   LEFT JOIN users AS pend_test_assig_usr ON pend_test_assig_usr.id = pend_test.user_id 
+  
+    GROUP BY req.cr_no;
                 ";
 
                 $results = \DB::select($query);
@@ -220,7 +178,111 @@ class ReportController extends Controller
                 return view('reports.actual_vs_planned', [
                     'results' => $paginatedResults // <-- pass paginator to view
                 ]);
+    }*/
+
+public function actualVsPlanned(Request $request)
+    {
+        $query = DB::table('change_request as req')
+            ->leftJoin('applications as apps', 'apps.id', '=', 'req.application_id')
+            ->leftJoin('workflow_type as flow', 'flow.id', '=', 'req.workflow_type_id')
+            ->leftJoin('change_request_statuses as curr_status', 'curr_status.cr_id', '=', 'req.id')
+            ->leftJoin('statuses as stat', 'stat.id', '=', 'curr_status.new_status_id')
+
+            // Join CTE-equivalent tables using DB::raw and subqueries
+            ->leftJoin(DB::raw("(SELECT * FROM (
+                    SELECT *,
+                        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+                    FROM change_request_statuses
+                    WHERE new_status_id = 15
+                ) AS x WHERE rn = 1) AS designprogress"), "designprogress.cr_id", "=", "req.id")
+
+            ->leftJoin(DB::raw("(SELECT * FROM (
+                    SELECT *,
+                        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+                    FROM change_request_statuses
+                    WHERE new_status_id = 7
+                ) AS x WHERE rn = 1) AS pendig_disgn_start"), "pendig_disgn_start.cr_id", "=", "req.id")
+
+            ->leftJoin(DB::raw("(SELECT * FROM (
+                    SELECT *,
+                        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+                    FROM change_request_statuses
+                    WHERE new_status_id = 8
+                ) AS x WHERE rn = 1) AS pend_implement"), "pend_implement.cr_id", "=", "req.id")
+
+            ->leftJoin(DB::raw("(SELECT * FROM (
+                    SELECT *,
+                        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+                    FROM change_request_statuses
+                    WHERE new_status_id = 10
+                ) AS x WHERE rn = 1) AS tetch_implt_start"), "tetch_implt_start.cr_id", "=", "req.id")
+
+            ->leftJoin(DB::raw("(SELECT * FROM (
+                    SELECT *,
+                        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+                    FROM change_request_statuses
+                    WHERE new_status_id = 11
+                ) AS x WHERE rn = 1) AS pend_test"), "pend_test.cr_id", "=", "req.id")
+
+            ->leftJoin('change_request_custom_fields as ch_cus_fields', function ($join) {
+                $join->on('ch_cus_fields.cr_id', '=', 'req.id')
+                    ->where('ch_cus_fields.custom_field_id', '=', 48);
+            })
+
+            ->leftJoin('change_request_custom_fields as ch_cus_tech_flds', function ($join) {
+                $join->on('ch_cus_tech_flds.cr_id', '=', 'req.id')
+                    ->where('ch_cus_tech_flds.custom_field_id', '=', 46);
+            })
+
+            ->leftJoin('users as design_team_name', 'design_team_name.id', '=', 'ch_cus_fields.custom_field_value')
+            ->leftJoin('users as pend_imple_assig_usr', 'pend_imple_assig_usr.id', '=', 'pend_implement.user_id')
+            ->leftJoin('users as pend_test_assig_usr', 'pend_test_assig_usr.id', '=', 'pend_test.user_id')
+            ->leftJoin('user_groups as usr_grp', 'usr_grp.user_id', '=', 'tetch_implt_start.user_id')
+            ->leftJoin('groups as technical_team', 'technical_team.id', '=', 'usr_grp.group_id')
+
+            ->selectRaw("
+                req.id,
+                req.cr_no,
+                apps.name AS `Applications`,
+                req.title,
+                flow.name AS `CR Type`,
+                req.start_design_time AS `Design Estimation Planned Start`,
+                req.end_design_time AS `Design Estimation Planned End`,
+                designprogress.created_at AS DesignInProgressActualStart,
+                designprogress.updated_at AS DesignInProgressActualEnd,
+                TIMESTAMPDIFF(MINUTE, ch_cus_fields.created_at, pendig_disgn_start.created_at) AS `Pending Design Assigned Member Duration IN MINUTES`,
+                design_team_name.name AS `Team Member Name`,
+                req.start_develop_time AS `Technical Estimation Planned Start`,
+                req.end_develop_time AS `Technical Estimation Planned End`,
+                tetch_implt_start.created_at AS `TechnicalImplementationActualStart`,
+                tetch_implt_start.updated_at AS `TechnicalImplementationActualEnd`,
+                TIMESTAMPDIFF(MINUTE, ch_cus_tech_flds.created_at, pend_implement.created_at) AS `Pending Implementation Assigned Member Duration IN MINUTES`,
+                GROUP_CONCAT(technical_team.title) AS `Technical Team`,
+                pend_imple_assig_usr.name AS `Pending Implementation Assigned Member`,
+                req.start_test_time AS `Testing Estimation Planned Start`,
+                req.end_test_time AS `Testing Estimation Planned End`,
+                pend_test.created_at AS `Pending Testing ActualStart`,
+                pend_test.updated_at AS `Pending Testing ActualEnd`,
+                pend_test_assig_usr.name AS `Testing Team Member`,
+                IFNULL(req.end_test_time, req.end_develop_time) AS `Expected Delivery date`,
+                req.requester_name,
+                req.division_manager,
+                'Not Found' AS `Requseter division`,
+                'Not Found' AS `Requester Sector`
+            ")
+            ->groupBy("req.cr_no");
+
+        // handle export
+        if ($request->has('export')) {
+            return Excel::download(new ActualVsPlannedReportExport($query->get()), 'actual_vs_planned.xlsx');
+        }
+
+        // paginate
+        $results = $query->paginate(10);
+
+        return view('reports.actual_vs_planned', compact('results'));
     }
+
 
     /**
      * Show All CRs By Requester report page
@@ -430,6 +492,11 @@ $query = "
 
         
     }
+
+    public function exportAllCrsByRequester()
+        {
+            return Excel::download(new AllCrsByRequesterExport, 'all_crs_by_requester.xlsx');
+        }
 
     /**
      * Show CR Current Status report page
@@ -766,6 +833,12 @@ $query = "
  
     }
 
+
+    public function exportCrsCrossedSla()
+        {
+            return Excel::download(new CRsCrossedSLAExport, 'CRsCrossedSLA.xlsx');
+        }
+
     /**
      * Show Rejected CRs report page
      */
@@ -773,12 +846,12 @@ $query = "
     {
 
    $query = "
-        SELECT 
+           SELECT 
         req.cr_no,
         req.id,
         apps.`name` 'Applications',
         req.title,
-        flow.`name` 'Workflow Type',
+        flow.`name` 'CR Type',
    --     chang_stat_reject.created_at 'Review and estimation start date' ,
     --    chang_stat_reject.updated_at 'Review and estimation start date' ,
      --   chang_stat_analysis.created_at 'Analysis start date',
@@ -871,6 +944,7 @@ $query = "
     where curr_status.new_status_id = 19
     GROUP BY req.cr_no;
 
+
                 ";
 
                 $results = \DB::select($query);
@@ -896,6 +970,11 @@ $query = "
                     'results' => $paginatedResults // <-- pass paginator to view
                 ]);   
     }
+
+    public function exportRejectedCrs()
+        {
+            return Excel::download(new RejectedCRsExport, 'RejectedCRs.xlsx');
+        }
 
     public function exportCurrentStatus(Request $request)
     {
