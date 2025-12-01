@@ -35,8 +35,8 @@ class RolesRepository implements RolesRepositoryInterface
     public function paginateAll()
     {
         return Role::where('name', '!=', 'Super Admin')
-                  ->orderBy('id')  // or any other unique, sequential field
-                  ->paginate(10);
+                ->orderBy('id')  // or any other unique, sequential field
+                ->paginate(10);
     }
 
     public function find($id)
