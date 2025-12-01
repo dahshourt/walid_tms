@@ -8,7 +8,7 @@
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3>Report: All CRs by Requester</h3>
-                    <form action=" " method="POST">
+                    <form action="{{ route('all.crs.by.requester.export') }}" method="POST">
                         @csrf
                         <button type="submit" class="btn btn-success">
                             Export Table

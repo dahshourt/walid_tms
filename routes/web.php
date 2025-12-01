@@ -254,7 +254,15 @@ Route::middleware(['auth'])->group(
     ->name('report.current-status');
     Route::post('/reports/cr-current-status/export', [ReportController::class, 'exportCurrentStatus'])
     ->name('report.current-status.export');
-
+Route::get('/reports/actual-vs-planned', [ReportController::class, 'actualVsPlanned'])
+     ->name('actual.vs.planned');
+     Route::post('/reports/all-crs-by-requester/export',
+    [ReportController::class, 'exportAllCrsByRequester'])
+    ->name('all.crs.by.requester.export');
+    Route::get('/report/crs-crossed-sla/export', [ReportController::class, 'exportCrsCrossedSla'])
+    ->name('report.cross_sla.export');
+    Route::get('/report/rejected-crs/export', [ReportController::class, 'exportRejectedCrs'])
+    ->name('report.rejected_crs.export');
         //test ews
 
         /*Route::get('/test-ews', function () {
