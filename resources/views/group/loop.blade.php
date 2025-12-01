@@ -34,6 +34,14 @@
                         </svg>
                     </span>
                     </a>
+
+                    @hasrole('Super Admin')
+                    <a href='{{url("group/statuses")}}/{{ $item->id }}' class="btn btn-outline-success">
+                        <i class="flaticon2-poll-symbol"></i> Group Statuses
+                    </a>
+                    @endhasrole
+
+
                 </td>
             @endcan
         </tr>
