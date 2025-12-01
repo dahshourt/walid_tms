@@ -534,6 +534,29 @@ class ChangeRequestController extends Controller
                 'man_day'  => $request->man_days,
             ]);
         }
+        //dd($request->all());
+        if($request->cap_users){
+            $cap_users = array_unique($request->cap_users);
+            
+            if($request->cr) {
+                $requesterId = $request->cr->requester_id;
+                $requester = User::find($requesterId);
+                $requesterGroupId = $requester->default_group;
+                $crTeamGroup = Group::where('title', config('constants.group_names.cr_team'))->first();
+
+                if($requesterGroupId == $crTeamGroup->id)
+                {
+                    if(in_array($requesterId, $cap_users))
+                    {
+                        if(count($cap_users) < 2)
+                        {
+                            return redirect()->back()->withErrors('You cannot be the only CAB user. Please select at least one additional CAB user.');
+                        }
+                    }
+                } 
+            }
+        }
+        //dd('test');
         DB::beginTransaction();
         try {
             // Handle technical teams assignment
