@@ -2,6 +2,7 @@
 
 namespace App\Services\ChangeRequest;
 
+use App\Http\Repository\ChangeRequest\AttachmentsCRSRepository;
 use App\Http\Repository\ChangeRequest\ChangeRequestStatusRepository;
 use App\Http\Repository\Logs\LogRepository;
 use App\Models\Change_request;
@@ -11,6 +12,7 @@ use App\Models\User;
 use App\Traits\ChangeRequest\ChangeRequestConstants;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Log;
 
 class ChangeRequestSchedulingService
@@ -322,21 +324,30 @@ class ChangeRequestSchedulingService
                 ];
             }
 
-            // Create the hold record if hold data is provided
-            if (! empty($holdData)) {
-                ChangeRequestHold::create([
-                    'change_request_id' => $cr->id,
-                    'hold_reason_id' => $holdData['hold_reason_id'],
-                    'resuming_date' => $holdData['resuming_date'],
-                    'justification' => $holdData['justification'] ?? null,
-                ]);
-            }
+            DB::transaction(function () use ($cr, $holdData) {
+                // Create the hold record if hold data is provided
+                if (! empty($holdData)) {
+                    ChangeRequestHold::create([
+                        'change_request_id' => $cr->id,
+                        'hold_reason_id' => $holdData['hold_reason_id'],
+                        'resuming_date' => $holdData['resuming_date'],
+                        'justification' => $holdData['justification'] ?? null,
+                    ]);
 
-            $cr->RequestStatuses()
-                ->where('active', '1')
-                ->update(['active' => '3']);
+                    if (request()->hasFile('attachments')) {
+                        $attachments_repo = app(AttachmentsCRSRepository::class);
 
-            $cr->update(['hold' => 1]);
+                        $attachments = request()->file('attachments');
+                        $attachments_repo->add_files($attachments, $cr->id, 2);
+                    }
+                }
+
+                $cr->RequestStatuses()
+                    ->where('active', '1')
+                    ->update(['active' => '3']);
+
+                $cr->update(['hold' => 1]);
+            });
 
             return [
                 'status' => true,

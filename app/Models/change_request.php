@@ -305,6 +305,12 @@ class Change_request extends Model
         return $this->hasMany(Attachements_crs::class, 'cr_id');
     }
 
+    public function businessAttachments(): HasMany
+    {
+        return $this->hasMany(Attachements_crs::class, 'cr_id')
+            ->where('flag', 2);
+    }
+
     /**
      * Get the release this change request is associated with.
      */
