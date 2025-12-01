@@ -52,10 +52,13 @@
                         {{ \Illuminate\Support\Str::limit($item->description, 50) }}
                     </span>
                 </td>
+                <td>{{ $item->crHold?->resuming_date }}</td>
+                <td>{{ $item->crHold?->holdReason?->name }}</td>
+                <td>{{ $item->crHold?->justification }}</td>
 
-               
+
                 @can('edit hold cr')
-               
+
 
                 {{-- ✅ Action Buttons --}}
                 <td class="align-middle">
@@ -73,7 +76,7 @@
                     </div>
                 </td>
 @endcan
-                
+
             </tr>
         @endif
     @endforeach

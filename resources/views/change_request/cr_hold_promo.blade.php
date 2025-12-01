@@ -64,8 +64,11 @@
                                     <th style="width: 70px;">#ID</th>
                                     <th>Title</th>
                                     <th>Description</th>
-                                   
-                                    
+                                    <th>Resuming Date</th>
+                                    <th>Reason</th>
+                                    <th>Justification</th>
+
+
                                     @can('edit hold cr')
 													<th>Actions</th>
 													@endcan

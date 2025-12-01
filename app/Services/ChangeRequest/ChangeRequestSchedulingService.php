@@ -5,6 +5,7 @@ namespace App\Services\ChangeRequest;
 use App\Http\Repository\ChangeRequest\ChangeRequestStatusRepository;
 use App\Http\Repository\Logs\LogRepository;
 use App\Models\Change_request;
+use App\Models\ChangeRequestHold;
 use App\Models\Group;
 use App\Models\User;
 use App\Traits\ChangeRequest\ChangeRequestConstants;
@@ -299,11 +300,10 @@ class ChangeRequestSchedulingService
     //     }
     // }
 
-    public function holdPromo($id): array
+    public function holdPromo($id, array $holdData = []): array
     {
         try {
             $cr = Change_request::where('cr_no', $id)
-                ->where('workflow_type_id', 9)
                 ->first();
 
             // If not found
@@ -321,6 +321,17 @@ class ChangeRequestSchedulingService
                     'message' => "Change Request #{$cr->cr_no} is currently on hold.",
                 ];
             }
+
+            // Create the hold record if hold data is provided
+            if (! empty($holdData)) {
+                ChangeRequestHold::create([
+                    'change_request_id' => $cr->id,
+                    'hold_reason_id' => $holdData['hold_reason_id'],
+                    'resuming_date' => $holdData['resuming_date'],
+                    'justification' => $holdData['justification'] ?? null,
+                ]);
+            }
+
             $cr->RequestStatuses()
                 ->where('active', '1')
                 ->update(['active' => '3']);
@@ -329,7 +340,7 @@ class ChangeRequestSchedulingService
 
             return [
                 'status' => true,
-                'message' => "Successfully hold  promo CR #{$cr->cr_no}.",
+                'message' => "Successfully hold promo CR #{$cr->cr_no}.",
             ];
         } catch (Exception $e) {
             return [
