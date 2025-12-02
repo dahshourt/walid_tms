@@ -1003,7 +1003,7 @@
                                             @can('show hold cr')
                                                 <li class="menu-item menu-item-submenu menu-item-rel"
                                                     data-menu-toggle="click" aria-haspopup="true">
-                                                    <a href="{{ url('change_request2/cr_hold_promo') }}"
+                                                    <a href="{{ route('cr_hold') }}"
                                                        class="menu-link">
 																		<span class="svg-icon menu-icon">
 																				<!--begin::Svg Icon | path:assets/media/svg/icons/General/Shield-check.svg-->
@@ -1026,7 +1026,7 @@
 																				</svg>
                                                                             <!--end::Svg Icon-->
 																			</span>
-                                                        <span class="menu-text">Hold promo</span>
+                                                        <span class="menu-text">Hold CR</span>
 
                                                     </a>
                                                 </li>

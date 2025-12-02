@@ -102,7 +102,7 @@ Route::middleware(['auth'])->group(
          Route::resource('requester-department', RequesterDepartment\RequesterDepartmentController::class);
         Route::post('requester-department/updateactive', 'RequesterDepartment\RequesterDepartmentController@updateactive')
         ->name('requester-department.update-active');
-         
+
        Route::post('stage/updateactive', 'Stages\StageController@updateactive');
        Route::resource('parents', Parents\ParentController::class);
         Route::post('parent/updateactive', 'Parents\ParentController@updateactive');
@@ -154,10 +154,10 @@ Route::middleware(['auth'])->group(
         Route::get('change_request/listcrsbyuser', 'ChangeRequest\ChangeRequestController@list_crs_by_user');
         Route::get('change_request/export-user-created-crs', 'ChangeRequest\ChangeRequestController@exportUserCreatedCRs')->name('change_request.export_user_created_crs');
 
+        Route::get('change_request/on-hold', 'ChangeRequest\ChangeRequestController@cr_hold_promo')->name('cr_hold');
         Route::resource('change_request', 'ChangeRequest\ChangeRequestController');
         Route::get('change_request2/dvision_manager_cr', 'ChangeRequest\ChangeRequestController@dvision_manager_cr')->name('dvision_manager_cr');
         Route::get('change_request2/cr_pending_cap', 'ChangeRequest\ChangeRequestController@cr_pending_cap')->name('cr_pending_cap');
-        Route::get('change_request2/cr_hold_promo', 'ChangeRequest\ChangeRequestController@cr_hold_promo')->name('cr_hold_promo');
 
         Route::get('dvision_manager_cr/unreadNotifications', 'ChangeRequest\ChangeRequestController@unreadNotifications');
         Route::get('change_request1/asd/{group?}', 'ChangeRequest\ChangeRequestController@asd')->name('change_request.asd');
