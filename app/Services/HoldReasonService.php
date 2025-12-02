@@ -21,7 +21,7 @@ class HoldReasonService
         return $this->holdReasonRepository->getAll();
     }
 
-    public function findHoldReason($id): HoldReason
+    public function findHoldReason($id): ?HoldReason
     {
         return $this->holdReasonRepository->find($id);
     }
@@ -33,6 +33,7 @@ class HoldReasonService
 
     public function updateHoldReason(array $data, $id): bool
     {
-        return $this->holdReasonRepository->update($data, $id);
+        $result = $this->holdReasonRepository->update($data, $id);
+        return $result > 0 || $result === 0; // Return true if update was successful (even if no rows changed)
     }
 }

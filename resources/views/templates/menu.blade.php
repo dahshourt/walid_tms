@@ -47,7 +47,7 @@
                                     @endcan
 
                                     <!--check if the user have any of the below permissions -->
-                                    @canany(['List Users' , 'Access CustomFields' , 'List Statuses' , 'List Workflows' , 'List Division' , 'List Groups' , 'List Roles' , 'List Permissions' , 'List Stages' , 'List Parents' , 'List HighLevelStatuses' , 'List RejectionReasons','List Applications'])
+                                    @canany(['List Users' , 'Access CustomFields' , 'List Statuses' , 'List Workflows' , 'List Division' , 'List Groups' , 'List Roles' , 'List Permissions' , 'List Stages' , 'List Parents' , 'List HighLevelStatuses' , 'List RejectionReasons','List Applications','List Hold Reasons'])
                                         <li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click"
                                             aria-haspopup="true">
                                             <a href="javascript:;" class="menu-link menu-toggle">
@@ -580,6 +580,31 @@
                                                     <!--end::Svg Icon-->
 																</span>
                                                     <span class="menu-text">Parent CR</span>
+
+                                                </a>
+                                            </li>
+                                        @endcan
+                                        @can('List Hold Reasons')
+                                            <li class="menu-item menu-item-submenu menu-item-rel"
+                                                data-menu-toggle="click" aria-haspopup="true">
+                                                <a href="{{ route('hold-reasons.index') }}" class="menu-link">
+												<span class="svg-icon menu-icon">
+																	<!--begin::Svg Icon | path:assets/media/svg/icons/General/Shield-check.svg-->
+																	<svg xmlns="http://www.w3.org/2000/svg"
+                                                                         xmlns:xlink="http://www.w3.org/1999/xlink"
+                                                                         width="24px" height="24px" viewBox="0 0 24 24"
+                                                                         version="1.1">
+																		<g stroke="none" stroke-width="1" fill="none"
+                                                                           fill-rule="evenodd">
+																			<rect x="0" y="0" width="24" height="24"/>
+																			<path
+                                                                                d="M12,22 C6.4771525,22 2,17.5228475 2,12 C2,6.4771525 6.4771525,2 12,2 C17.5228475,2 22,6.4771525 22,12 C22,17.5228475 17.5228475,22 12,22 Z M12,20 C16.418278,20 20,16.418278 20,12 C20,7.581722 16.418278,4 12,4 C7.581722,4 4,7.581722 4,12 C4,16.418278 7.581722,20 12,20 Z M12,10 L12,6 L12,10 Z M12,18 L12,14 L12,18 Z"
+                                                                                fill="#000000"/>
+																		</g>
+																	</svg>
+                                                    <!--end::Svg Icon-->
+																</span>
+                                                    <span class="menu-text">Hold Reason</span>
 
                                                 </a>
                                             </li>

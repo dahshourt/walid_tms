@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('hold_reasons', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->enum('status', ['1', '0'])->default('1');
             $table->timestamps();
         });
     }

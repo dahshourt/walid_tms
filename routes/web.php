@@ -95,6 +95,10 @@ Route::middleware(['auth'])->group(
         Route::post('custom-fields/updateactive', 'CustomField\CustomFieldController@updateStatus')->name('custom-fields.updateStatus');
         Route::get('custom-fields/get-table-options', 'CustomField\CustomFieldController@getTableOptions')->name('custom-fields.get-table-options');
 
+        // Hold Reasons Management Routes
+        Route::resource('hold-reasons', 'HoldReasonController')->except(['show', 'destroy']);
+        Route::post('hold-reasons/update-status', 'HoldReasonController@updateStatus')->name('hold-reasons.update-status');
+
         Route::resource('units', 'Units\UnitController')->except(['show', 'destroy']);
         Route::post('units/updateactive', 'Units\UnitController@updateStatus')->name('units.updateStatus');
 

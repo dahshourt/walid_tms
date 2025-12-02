@@ -235,7 +235,7 @@ class ChangeRequestController extends Controller
 
             $title = 'CR Hold';
             $collection = $this->changerequest->cr_hold_promo();
-            $holdReasons = $this->holdReasonService->getAllHoldReasons();
+            $holdReasons = \App\Models\HoldReason::active()->get();
 
             return view("{$this->view}.cr_hold_promo", compact('collection', 'title', 'holdReasons'));
         } catch (AuthorizationException $e) {
