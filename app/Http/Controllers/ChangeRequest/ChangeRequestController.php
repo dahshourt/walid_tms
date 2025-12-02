@@ -18,6 +18,7 @@ use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use App\Http\Repository\RejectionReasons\RejectionReasonsRepository;
 use App\Http\Requests\Change_Request\Api\attachments_CRS_Request;
 use App\Http\Requests\Change_Request\Api\changeRequest_Requests;
+use App\Http\Requests\Change_Request\HoldCRRequest;
 use App\Http\Resources\MyCRSResource;
 use App\Models\Application;
 use App\Models\ApplicationImpact;
@@ -232,7 +233,7 @@ class ChangeRequestController extends Controller
         try {
             $this->authorize('show hold cr');
 
-            $title = 'CR Hold Promo';
+            $title = 'CR Hold';
             $collection = $this->changerequest->cr_hold_promo();
             $holdReasons = $this->holdReasonService->getAllHoldReasons();
 
@@ -757,16 +758,10 @@ class ChangeRequestController extends Controller
         return redirect()->back()->with('error', $result['message']);
     }
 
-    public function holdChangeRequest(Request $request)
+    public function holdChangeRequest(HoldCRRequest $request)
     {
         try {
-            // Validate the request
-            $validated = $request->validate([
-                'change_request_id' => 'required|numeric|exists:change_request,cr_no',
-                'resuming_date' => 'required|date|after:today',
-                'hold_reason_id' => 'required|exists:hold_reasons,id',
-                'justification' => 'nullable|string',
-            ]);
+            $validated = $request->validated();
 
             $crId = $validated['change_request_id'];
 

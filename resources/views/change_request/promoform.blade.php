@@ -1,22 +1,4 @@
 <div class="card-body">
-    <!-- Error Message Section -->
-    @if($errors->any())
-        <div class="alert alert-danger d-flex align-items-center" role="alert">
-            <i class="la la-warning la-2x mr-3"></i>
-            <div>
-                <strong>Validation Error!</strong> Please correct the errors below.
-                <ul class="mb-0 mt-2">
-                    @foreach ($errors->all() as $error)
-                        <li>{{ $error }}</li>
-                    @endforeach
-                </ul>
-            </div>
-            <button type="button" class="close ml-auto" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    @endif
-
     <!-- Row 1: CR Number and Resuming Date -->
     <div class="row">
         <!-- CR Number Field -->
@@ -24,7 +6,7 @@
             <div class="form-group mb-4 mb-lg-5">
                 <label for="change_request_id" class="font-weight-bold text-dark">
                     <i class="la la-file-text text-primary mr-1"></i>
-                    CR Number for Promo
+                    CR Number
                     <span class="text-danger">*</span>
                 </label>
                 <div class="input-group">
