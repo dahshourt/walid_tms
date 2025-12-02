@@ -142,9 +142,8 @@
                     <div class="dropzone-desc">
                         <i class="la la-cloud-upload la-3x text-primary mb-2"></i>
                         <p class="mb-1">Click to browse or drag and drop files here</p>
-                        <p class="text-muted small mb-0">PDF, DOC, DOCX, XLS, XLSX, ZIP, RAR, Images</p>
                     </div>
-                    <input type="file" name="attachments[]" id="attachments" class="dropzone-input" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.zip,.rar,.jpg,.jpeg,.png,.gif">
+                    <input type="file" name="attachments[]" id="attachments" class="dropzone-input" multiple>
                 </div>
                 <div id="file-preview" class="mt-3"></div>
                 @error('attachments')
@@ -237,33 +236,58 @@
     }
 
     /* File Preview Styles */
+    #file-preview {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+
+    @media (max-width: 768px) {
+        #file-preview {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 480px) {
+        #file-preview {
+            grid-template-columns: 1fr;
+        }
+    }
+
     .file-preview-item {
         display: flex;
-        align-items: center;
-        padding: 10px 12px;
+        flex-direction: column;
+        padding: 12px;
         background: #f8f9fa;
         border-radius: 0.25rem;
-        margin-bottom: 8px;
         border: 1px solid #dee2e6;
+        position: relative;
+        min-height: 100px;
     }
 
     .file-preview-item i {
-        font-size: 1.5rem;
-        margin-right: 10px;
+        font-size: 2rem;
+        margin-bottom: 8px;
+        align-self: center;
     }
 
     .file-preview-info {
         flex: 1;
+        text-align: center;
     }
 
     .file-preview-name {
         font-weight: 600;
         color: #212529;
-        margin-bottom: 2px;
+        margin-bottom: 4px;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        font-size: 0.875rem;
+        line-height: 1.3;
     }
 
     .file-preview-size {
-        font-size: 0.875rem;
+        font-size: 0.75rem;
         color: #6c757d;
     }
 
@@ -272,9 +296,9 @@
         color: white;
         border: none;
         border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        min-width: 30px;
+        width: 24px;
+        height: 24px;
+        min-width: 24px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -282,6 +306,9 @@
         transition: background 0.2s ease;
         padding: 0;
         line-height: 1;
+        position: absolute;
+        top: 8px;
+        right: 8px;
     }
 
     .file-preview-remove:hover {
@@ -289,7 +316,7 @@
     }
 
     .file-preview-remove i {
-        font-size: 14px;
+        font-size: 12px;
         line-height: 1;
         margin: 0;
     }
@@ -381,7 +408,7 @@ $(document).ready(function() {
                         <div class="file-preview-size">${fileSize}</div>
                     </div>
                     <button type="button" class="file-preview-remove" data-index="${index}">
-                        <i class="la la-times"></i>
+                        <i class="la la-times" style="color: white !important;"></i>
                     </button>
                 </div>
             `);
