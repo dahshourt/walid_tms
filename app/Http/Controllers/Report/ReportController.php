@@ -241,7 +241,7 @@ public function actualVsPlanned(Request $request)
             ->leftJoin('groups as technical_team', 'technical_team.id', '=', 'usr_grp.group_id')
 
             ->selectRaw("
-                req.id,
+              
                 req.cr_no,
                 apps.name AS `Applications`,
                 req.title,
@@ -369,7 +369,7 @@ $query = "
 
 
    SELECT 
-        req.id,
+        
         req.cr_no,
         apps.`name` 'Applications',
         req.title,
@@ -745,7 +745,7 @@ $query = "
 )
 
    SELECT 
-        req.id,
+        
         req.cr_no,
         apps.`name` 'Applications',
         req.title,
@@ -848,7 +848,7 @@ $query = "
    $query = "
            SELECT 
         req.cr_no,
-        req.id,
+       
         apps.`name` 'Applications',
         req.title,
         flow.`name` 'CR Type',

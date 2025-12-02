@@ -13,7 +13,7 @@ class RejectedCRsExport implements FromCollection, WithHeadings
         $query = "
                SELECT 
         req.cr_no,
-        req.id,
+       
         apps.`name` 'Applications',
         req.title,
         flow.`name` 'CR Type',
@@ -118,7 +118,7 @@ class RejectedCRsExport implements FromCollection, WithHeadings
     {
         return [
             'CR No',
-            'ID',
+            
             'Applications',
             'Title',
             'Workflow Type',

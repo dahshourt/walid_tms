@@ -22,7 +22,7 @@ class ActualVsPlannedReportExport implements FromCollection, WithHeadings
     public function headings(): array
     {
         return [
-            'ID',
+         
             'CR No',
             'Applications',
             'Title',

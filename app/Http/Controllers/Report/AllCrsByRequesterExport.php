@@ -79,7 +79,7 @@ delivred_cr_ranked AS (
 )
 
 SELECT 
-    req.id,
+    
     req.cr_no,
     apps.`name` AS Applications,
     req.title,
@@ -165,7 +165,7 @@ GROUP BY req.cr_no;
     public function headings(): array
     {
         return [
-            'id',
+            
             'cr_no',
             'Applications',
             'title',
