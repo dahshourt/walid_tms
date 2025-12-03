@@ -25,26 +25,6 @@
     <div class="d-flex flex-column-fluid">
         <!--begin::Container-->
         <div class="container">
-            <!--begin::Success/Error Messages-->
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <strong>Success!</strong> {{ session('success') }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <strong>Error!</strong> {{ session('error') }}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-            @endif
-            <!--end::Success/Error Messages-->
-
             <!--begin::Card-->
             <div class="card">
                 <div class="card-header flex-wrap border-0 pt-6 pb-0">
@@ -109,54 +89,80 @@
 @push('script')
 <script>
 $(document).ready(function() {
-    // Handle status toggle
+    // Handle status toggle (same behavior as Custom Fields page)
     $('.status-toggle').on('change', function() {
         const checkbox = $(this);
+        const isChecked = checkbox.is(':checked');
+        const statusText = isChecked ? 'activate' : 'deactivate';
+        const confirmText = isChecked ? 'Yes, activate it!' : 'Yes, deactivate it!';
         const holdReasonId = checkbox.data('id');
-        const newStatus = checkbox.is(':checked') ? 1 : 0;
         const holdReasonName = checkbox.data('name');
 
         Swal.fire({
             title: 'Are you sure?',
-            text: `Do you want to ${newStatus ? 'activate' : 'deactivate'} "${holdReasonName}"?`,
+            text: `You want to ${statusText} "${holdReasonName}"?`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, update it!',
+            confirmButtonText: confirmText,
             cancelButtonText: 'Cancel'
         }).then((result) => {
             if (result.isConfirmed) {
+                // Show loading alert while updating
+                Swal.fire({
+                    title: 'Processing...',
+                    text: 'Updating hold reason status...',
+                    icon: 'info',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
                 $.ajax({
                     url: '{{ route("hold-reasons.update-status") }}',
                     type: 'POST',
                     data: {
                         _token: '{{ csrf_token() }}',
                         id: holdReasonId,
-                        status: newStatus
+                        status: isChecked ? 1 : 0,
                     },
                     success: function(response) {
-                        Swal.fire(
-                            'Updated!',
-                            response.message,
-                            'success'
-                        );
+                        if (response.success) {
+                            Swal.fire({
+                                title: 'Updated!',
+                                text: response.message,
+                                icon: 'success',
+                                timer: 2000,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire({
+                                title: 'Error!',
+                                text: response.message || 'Failed to update status.',
+                                icon: 'error'
+                            });
+                            // Revert switch on logical failure
+                            checkbox.prop('checked', !isChecked);
+                        }
                     },
                     error: function(xhr) {
-                        // Revert checkbox state
-                        checkbox.prop('checked', !checkbox.is(':checked'));
-                        
                         const errorMessage = xhr.responseJSON?.message || 'Failed to update status.';
-                        Swal.fire(
-                            'Error!',
-                            errorMessage,
-                            'error'
-                        );
+                        Swal.fire({
+                            title: 'Error!',
+                            text: errorMessage,
+                            icon: 'error'
+                        });
+                        // Revert switch on error
+                        checkbox.prop('checked', !isChecked);
                     }
                 });
             } else {
-                // Revert checkbox state if cancelled
-                checkbox.prop('checked', !checkbox.is(':checked'));
+                // User cancelled, revert the switch
+                checkbox.prop('checked', !isChecked);
             }
         });
     });

@@ -3,19 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Services\HoldReasonService;
+use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Auth\Access\AuthorizationException;
 
 class HoldReasonController extends Controller
 {
     protected $holdReasonService;
+
     private $view = 'hold-reasons';
 
     public function __construct(HoldReasonService $holdReasonService)
     {
         $this->holdReasonService = $holdReasonService;
-        
+
         $title = 'Hold Reasons';
         $view = 'hold-reasons';
         $route = 'hold-reasons';
@@ -29,7 +31,7 @@ class HoldReasonController extends Controller
     {
         try {
             $this->authorize('List Hold Reasons');
-            
+
             $collection = $this->holdReasonService->getAllHoldReasons();
             $title = 'Hold Reasons';
 
@@ -38,6 +40,7 @@ class HoldReasonController extends Controller
             Log::warning('Unauthorized access attempt to hold reasons list', [
                 'user_id' => auth()->id(),
             ]);
+
             return redirect('/')->with('error', 'You do not have permission to access this page.');
         }
     }
@@ -49,13 +52,15 @@ class HoldReasonController extends Controller
     {
         try {
             $this->authorize('Create Hold Reasons');
-            
+
             $title = 'Create Hold Reason';
+
             return view("{$this->view}.create", compact('title'));
         } catch (AuthorizationException $e) {
             Log::warning('Unauthorized access attempt to create hold reason', [
                 'user_id' => auth()->id(),
             ]);
+
             return redirect('/')->with('error', 'You do not have permission to access this page.');
         }
     }
@@ -86,19 +91,20 @@ class HoldReasonController extends Controller
                 'user_id' => auth()->id(),
             ]);
 
-            return redirect()->route('hold-reasons.index')
-                ->with('success', 'Hold reason created successfully.');
+            return redirect()->route('hold-reasons.index');
 
         } catch (AuthorizationException $e) {
             Log::warning('Unauthorized attempt to create hold reason', [
                 'user_id' => auth()->id(),
             ]);
+
             return redirect('/')->with('error', 'You do not have permission to perform this action.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Failed to create hold reason', [
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
             ]);
+
             return redirect()->back()
                 ->with('error', 'Failed to create hold reason. Please try again.')
                 ->withInput();
@@ -112,21 +118,23 @@ class HoldReasonController extends Controller
     {
         try {
             $this->authorize('Edit Hold Reasons');
-            
+
             $row = $this->holdReasonService->findHoldReason($id);
-            
-            if (!$row) {
+
+            if (! $row) {
                 return redirect()->route('hold-reasons.index')
                     ->with('error', 'Hold reason not found.');
             }
 
             $title = 'Edit Hold Reason';
+
             return view("{$this->view}.edit", compact('row', 'title'));
         } catch (AuthorizationException $e) {
             Log::warning('Unauthorized access attempt to edit hold reason', [
                 'user_id' => auth()->id(),
                 'hold_reason_id' => $id,
             ]);
+
             return redirect('/')->with('error', 'You do not have permission to access this page.');
         }
     }
@@ -152,7 +160,7 @@ class HoldReasonController extends Controller
 
             $updated = $this->holdReasonService->updateHoldReason($validated, $id);
 
-            if (!$updated) {
+            if (! $updated) {
                 return redirect()->back()
                     ->with('error', 'Hold reason not found.')
                     ->withInput();
@@ -164,21 +172,22 @@ class HoldReasonController extends Controller
                 'user_id' => auth()->id(),
             ]);
 
-            return redirect()->route('hold-reasons.index')
-                ->with('success', 'Hold reason updated successfully.');
+            return redirect()->route('hold-reasons.index');
 
         } catch (AuthorizationException $e) {
             Log::warning('Unauthorized attempt to update hold reason', [
                 'user_id' => auth()->id(),
                 'hold_reason_id' => $id,
             ]);
+
             return redirect('/')->with('error', 'You do not have permission to perform this action.');
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Failed to update hold reason', [
                 'id' => $id,
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
             ]);
+
             return redirect()->back()
                 ->with('error', 'Failed to update hold reason. Please try again.')
                 ->withInput();
@@ -199,10 +208,10 @@ class HoldReasonController extends Controller
             ]);
 
             $updated = $this->holdReasonService->updateHoldReason([
-                'status' => $validated['status']
+                'status' => $validated['status'],
             ], $validated['id']);
 
-            if (!$updated) {
+            if (! $updated) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Hold reason not found.',
@@ -225,11 +234,12 @@ class HoldReasonController extends Controller
                 'success' => false,
                 'message' => 'You do not have permission to perform this action.',
             ], 403);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Failed to update hold reason status', [
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
             ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to update status.',
@@ -237,4 +247,3 @@ class HoldReasonController extends Controller
         }
     }
 }
-
