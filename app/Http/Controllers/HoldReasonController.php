@@ -86,11 +86,6 @@ class HoldReasonController extends Controller
 
             $this->holdReasonService->createHoldReason($validated);
 
-            Log::info('Hold reason created successfully', [
-                'name' => $validated['name'],
-                'user_id' => auth()->id(),
-            ]);
-
             return redirect()->route('hold-reasons.index');
 
         } catch (AuthorizationException $e) {
@@ -166,12 +161,6 @@ class HoldReasonController extends Controller
                     ->withInput();
             }
 
-            Log::info('Hold reason updated successfully', [
-                'id' => $id,
-                'name' => $validated['name'],
-                'user_id' => auth()->id(),
-            ]);
-
             return redirect()->route('hold-reasons.index');
 
         } catch (AuthorizationException $e) {
@@ -217,12 +206,6 @@ class HoldReasonController extends Controller
                     'message' => 'Hold reason not found.',
                 ], 404);
             }
-
-            Log::info('Hold reason status updated', [
-                'id' => $validated['id'],
-                'status' => $validated['status'],
-                'user_id' => auth()->id(),
-            ]);
 
             return response()->json([
                 'success' => true,
