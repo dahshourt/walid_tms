@@ -7,10 +7,10 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
 
 class Change_request extends Model
@@ -237,7 +237,6 @@ class Change_request extends Model
     {
         return $this->hasOne(TechnicalCr::class, 'cr_id', 'id')->orderBy('id', 'DESC');
     }
-	
 
     /**
      * Get current group statuses through status relationship.
@@ -283,11 +282,13 @@ class Change_request extends Model
     {
         return $this->hasOne(Change_request_statuse::class, 'cr_id', 'id')->where('active', '1');
     }
-    public function     CurrentRequestStatuses_last()
+
+    public function CurrentRequestStatuses_last()
     {
         return $this->hasOne(Change_request_statuse::class, 'cr_id', 'id')->whereIn('active', [1, 2]);
 
     }
+
     /**
      * Get the division manager for this change request.
      */
@@ -302,6 +303,12 @@ class Change_request extends Model
     public function attachments(): HasMany
     {
         return $this->hasMany(Attachements_crs::class, 'cr_id');
+    }
+
+    public function businessAttachments(): HasMany
+    {
+        return $this->hasMany(Attachements_crs::class, 'cr_id')
+            ->where('flag', 2);
     }
 
     /**
@@ -329,6 +336,11 @@ class Change_request extends Model
             ->where('active', '1')
             ->latest('id')
             ->with('status');
+    }
+
+    public function crHold(): HasOne
+    {
+        return $this->hasOne(ChangeRequestHold::class);
     }
 
     // ===================================
@@ -806,6 +818,11 @@ class Change_request extends Model
         return $this->hasOne(CrAssignee::class, 'cr_id', 'id')->where('role', 'cr_member')->latest();
     }
 
+    public function getNameColumn()
+    {
+        return 'cr_no';
+    }
+
     // ===================================
     // HELPER METHODS
     // ===================================
@@ -888,10 +905,5 @@ class Change_request extends Model
         $approvalStatusIds = [/* Add your approval status IDs */];
 
         return in_array($currentStatus->new_status_id, $approvalStatusIds);
-    }
-
-    public function getNameColumn()
-    {
-        return 'cr_no';
     }
 }

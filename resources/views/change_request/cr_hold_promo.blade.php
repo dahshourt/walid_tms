@@ -19,6 +19,57 @@
     <div class="d-flex flex-column-fluid">
         <div class="container">
             @can('make hold cr')
+            <!-- 🔸 Success/Error Messages -->
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-check-circle fa-2x mr-3 text-success"></i>
+                        <div>
+                            <strong>Success!</strong> {{ session('success') }}
+                        </div>
+                    </div>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-circle fa-2x mr-3 text-danger"></i>
+                        <div>
+                            <strong>Error!</strong> {{ session('error') }}
+                        </div>
+                    </div>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            @endif
+
+            @if($errors->any())
+                <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+                    <div class="d-flex align-items-start">
+                        <i class="fas fa-exclamation-triangle fa-2x mr-3 text-danger"></i>
+                        <div class="flex-grow-1">
+                            <h5 class="alert-heading mb-2">
+                                <strong>Validation Error!</strong>
+                            </h5>
+                            <p class="mb-2">Please correct the following errors before submitting:</p>
+                            <ul class="mb-0 pl-3">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            @endif
+
             <!-- 🔸 Shifting Form Card -->
             <div class="card card-custom shadow-sm mb-8 border-0">
                 <div class="card-header bg-light d-flex justify-content-between align-items-center">
@@ -64,8 +115,11 @@
                                     <th style="width: 70px;">#ID</th>
                                     <th>Title</th>
                                     <th>Description</th>
-                                   
-                                    
+                                    <th>Resuming Date</th>
+                                    <th>Reason</th>
+                                    <th>Justification</th>
+
+
                                     @can('edit hold cr')
 													<th>Actions</th>
 													@endcan

@@ -40,21 +40,19 @@ class ChangeRequestSearchService
             /* $changeRequests = $changeRequests->whereHas('change_request_custom_fields', function ($q) use ($groupApplications) {
                 $q->whereIn('change_request_custom_fields.custom_field_name', ['application_id', 'sub_application_id'])->whereIn('change_request_custom_fields.custom_field_value', $groupApplications);
             }); */
-            
+
             $changeRequests = $changeRequests->where(function ($query) use ($groupData) {
                 // Case 1: Where unit_id matches in custom fields
                 $query->whereHas('change_request_custom_fields', function ($q) use ($groupData) {
                     $q->where('custom_field_name', 'tech_group_id')
-                    ->where('custom_field_value', $groupData->id);
+                        ->where('custom_field_value', $groupData->id);
                 })
                 // Case 2: OR unit_id does NOT exist in custom fields
-                ->orWhereDoesntHave('change_request_custom_fields', function ($q) {
-                    $q->where('custom_field_name', 'tech_group_id');
-                });
+                    ->orWhereDoesntHave('change_request_custom_fields', function ($q) {
+                        $q->where('custom_field_name', 'tech_group_id');
+                    });
             });
         }
-
-	
 
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
             $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($group) {
@@ -88,16 +86,14 @@ class ChangeRequestSearchService
                 // Case 1: Where unit_id matches in custom fields
                 $query->whereHas('change_request_custom_fields', function ($q) use ($groupData) {
                     $q->where('custom_field_name', 'tech_group_id')
-                    ->where('custom_field_value', $groupData->id);
+                        ->where('custom_field_value', $groupData->id);
                 })
                 // Case 2: OR unit_id does NOT exist in custom fields
-                ->orWhereDoesntHave('change_request_custom_fields', function ($q) {
-                    $q->where('custom_field_name', 'tech_group_id');
-                });
+                    ->orWhereDoesntHave('change_request_custom_fields', function ($q) {
+                        $q->where('custom_field_name', 'tech_group_id');
+                    });
             });
         }
-
-		
 
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
             $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($group) {
@@ -134,13 +130,14 @@ class ChangeRequestSearchService
         // Filter by status using getCurrentStatusForDivision()
         $filtered = $allRequests->filter(function ($item) {
             $status = $item->getCurrentStatusForDivision();
-			return $status 
+
+            return $status
             && $status->status
             && in_array($status->status->id, [
                 config('change_request.status_ids.pending_cab'),
                 config('change_request.status_ids_kam.pending_cab_kam'),
             ]);
-            //return $status && $status->status && $status->status->id == config('change_request.status_ids.pending_cab');
+            // return $status && $status->status && $status->status->id == config('change_request.status_ids.pending_cab');
         });
 
         // Manual pagination
@@ -163,7 +160,10 @@ class ChangeRequestSearchService
     {
 
         // Get all hold requests with relationships
-        $allRequests = Change_request::with(['RequestStatuses.status'])
+        $allRequests = Change_request::with([
+            'RequestStatuses.status',
+            'crHold.holdReason',
+        ])
             ->where('hold', 1)
 
             ->orderBy('id', 'DESC')
@@ -189,22 +189,22 @@ class ChangeRequestSearchService
         $filtered = $allRequests->filter(function ($item) {
             // $status = $item->getCurrentStatus();
 
-        //   echo  config('change_request.status_ids.Cancel').'<br>';
-        //   echo  config('change_request.status_ids_kam.Cancel_kam').'<br>';
+            //   echo  config('change_request.status_ids.Cancel').'<br>';
+            //   echo  config('change_request.status_ids_kam.Cancel_kam').'<br>';
 
+            //     echo config('change_request.status_ids.Reject').'<br>';
 
-        //     echo config('change_request.status_ids.Reject').'<br>'; 
-            
-        //     echo config('change_request.status_ids_kam.Reject_kam').'<br>'; die;
+            //     echo config('change_request.status_ids_kam.Reject_kam').'<br>'; die;
 
             $status = $item->getCurrentStatusForDivision();
-            return $status 
+
+            return $status
             && $status->status
             && in_array($status->status->id, [
                 config('change_request.status_ids.business_approval'),
                 config('change_request.status_ids_kam.business_approval_kam'),
             ]);
-           // return $status && $status->status && $status->status->id == config('change_request.status_ids.business_approval');
+            // return $status && $status->status && $status->status->id == config('change_request.status_ids.business_approval');
         });
 
         // Manual pagination
@@ -232,13 +232,13 @@ class ChangeRequestSearchService
             $crs = Change_request::with('Req_status.status')
                 ->whereHas('Req_status', function ($query) use ($viewStatuses) {
                     $query->whereIn('new_status_id', $viewStatuses);
-                    //$query->whereRaw('CAST(active AS CHAR) = ?', ['1']);
+                    // $query->whereRaw('CAST(active AS CHAR) = ?', ['1']);
                 })->paginate(50);
         } else {
             $crs = Change_request::with('Req_status.status')
                 ->whereHas('Req_status', function ($query) use ($userId, $viewStatuses) {
                     $query->where('assignment_user_id', $userId);
-                    //$query->whereRaw('CAST(active AS CHAR) = ?', ['1']);
+                    // $query->whereRaw('CAST(active AS CHAR) = ?', ['1']);
                     $query->whereIn('new_status_id', $viewStatuses);
                 })
                 ->paginate(50);
@@ -260,11 +260,11 @@ class ChangeRequestSearchService
         $groupData = null;
         $userEmail = strtolower(auth()->user()->email);
         $divisionManager = strtolower(Change_request::where('id', $id)->value('division_manager'));
-		
-		$groups = ($userEmail === $divisionManager && request()->has('check_dm'))
+
+        $groups = ($userEmail === $divisionManager && request()->has('check_dm'))
             ? Group::pluck('id')->toArray()
             : [$this->resolveGroup()];
-		// : auth()->user()->user_groups->pluck('group_id')->toArray();
+        // : auth()->user()->user_groups->pluck('group_id')->toArray();
         if ($userEmail == $divisionManager && (request()->has('check_dm') || request()->has('cab_cr_flag'))) {
             $groupApplications = null;
         } else {
@@ -278,21 +278,21 @@ class ChangeRequestSearchService
 
         $promoGroups = [50];
         $groups = array_merge($groups, $promoGroups);
-		
+
         $groupPromo = Group::with('group_statuses')->find(50);
         $statusPromoView = $groupPromo->group_statuses->where('type', \App\Models\GroupStatuses::VIEWBY)->pluck('status.id');
-		$viewStatuses = $this->getViewStatuses($groups, $id);
-		$viewStatuses = $statusPromoView->merge($viewStatuses)->unique();
-		
+        $viewStatuses = $this->getViewStatuses($groups, $id);
+        $viewStatuses = $statusPromoView->merge($viewStatuses)->unique();
+
         $viewStatuses->push(config('change_request.status_ids.cr_manager_review'));
         if (request()->has('check_business')) {
             $viewStatuses->push(config('change_request.status_ids.business_test_case_approval'));
             $viewStatuses->push(config('change_request.status_ids.business_uat_sign_off'));
             $viewStatuses->push(config('change_request.status_ids.pending_business'));
             $viewStatuses->push(config('change_request.status_ids.pending_business_feedback'));
-            
+
         }
-		
+
         $changeRequest = Change_request::with('category')->with('change_request_custom_fields')
             ->with('attachments', function ($q) use ($groups) {
                 $q->with('user');
@@ -322,26 +322,22 @@ class ChangeRequestSearchService
         $changeRequest = $changeRequest->where('id', $id);
         if ($groupApplications && ! request()->has('check_business')) {
             $changeRequest = $changeRequest->whereIn('application_id', $groupApplications);
-            
-            if($groupData)
-            {
+
+            if ($groupData) {
                 $changeRequest = $changeRequest->where(function ($query) use ($groupData) {
                     // Case 1: Where unit_id matches in custom fields
                     $query->whereHas('change_request_custom_fields', function ($q) use ($groupData) {
                         $q->where('custom_field_name', 'tech_group_id')
-                        ->where('custom_field_value', $groupData[0]->id);
+                            ->where('custom_field_value', $groupData[0]->id);
                     })
                     // Case 2: OR unit_id does NOT exist in custom fields
-                    ->orWhereDoesntHave('change_request_custom_fields', function ($q) {
-                        $q->where('custom_field_name', 'tech_group_id');
-                    });
-                });	
+                        ->orWhereDoesntHave('change_request_custom_fields', function ($q) {
+                            $q->where('custom_field_name', 'tech_group_id');
+                        });
+                });
             }
-        
+
         }
-		
-		
-		
 
         $changeRequest = $changeRequest->first();
 
@@ -468,9 +464,9 @@ class ChangeRequestSearchService
         }
 
         $viewStatuses = $viewStatuses->groupBy('status_id')->get()->pluck('status_id')->toArray();
-		//dd($id);
+        // dd($id);
         // Handle technical team status
-		
+
         /* if ($id) {
             $technicalCrTeamStatus = $this->getTechnicalTeamCurrentStatus($id);
             //dd($technicalCrTeamStatus, $viewStatuses);
@@ -479,7 +475,7 @@ class ChangeRequestSearchService
                 // dd($viewStatuses);
             }
         } */
-		
+
         return $viewStatuses;
     }
 
