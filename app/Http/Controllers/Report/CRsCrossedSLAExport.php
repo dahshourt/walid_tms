@@ -31,7 +31,7 @@ class CRsCrossedSLAExport implements FromCollection, WithHeadings
             )
 
             SELECT 
-                req.id,
+               
                 req.cr_no,
                 apps.`name` AS Applications,
                 req.title,
@@ -86,7 +86,7 @@ class CRsCrossedSLAExport implements FromCollection, WithHeadings
     public function headings(): array
     {
         return [
-            'ID',
+            
             'CR No',
             'Applications',
             'Title',
