@@ -233,7 +233,7 @@ class ChangeRequestController extends Controller
         try {
             $this->authorize('show hold cr');
 
-            $title = 'CR Hold';
+            $title = 'Hold CR';
             $collection = $this->changerequest->cr_hold_promo();
             $holdReasons = $this->holdReasonService->getActiveHoldReasons();
 
