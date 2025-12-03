@@ -118,6 +118,11 @@
         	placeholder: "Select group/groups",
         });
 
+		
+		$('#status_ids').select2({
+        	placeholder: "Select Status",
+        });
+
 		$('#view_group_id').select2({
         	placeholder: "Select group/groups",
         });
