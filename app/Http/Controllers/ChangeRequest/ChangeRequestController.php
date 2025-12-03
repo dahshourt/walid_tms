@@ -235,7 +235,7 @@ class ChangeRequestController extends Controller
 
             $title = 'CR Hold';
             $collection = $this->changerequest->cr_hold_promo();
-            $holdReasons = \App\Models\HoldReason::active()->get();
+            $holdReasons = $this->holdReasonService->getActiveHoldReasons();
 
             return view("{$this->view}.cr_hold_promo", compact('collection', 'title', 'holdReasons'));
         } catch (AuthorizationException $e) {
@@ -1079,11 +1079,11 @@ class ChangeRequestController extends Controller
             if ($action == 'approve') {
                 if ($cr->workflow_type_id = 37) { // kam workflow
                     $requestData = new \Illuminate\Http\Request([
-                            'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
-                            'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),
-                            'cab_cr_flag' => '1',
-                            'user_id' => auth()->user()->id,
-                        ]);
+                        'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
+                        'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),
+                        'cab_cr_flag' => '1',
+                        'user_id' => auth()->user()->id,
+                    ]);
                 } else {
                     $requestData = new \Illuminate\Http\Request([
                         'old_status_id' => config('change_request.status_ids.pending_cab'),
@@ -1097,11 +1097,11 @@ class ChangeRequestController extends Controller
 
                 if ($cr->workflow_type_id = 37) { // kam workflow
                     $requestData = new \Illuminate\Http\Request([
-                            'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
-                            'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),
-                            'cab_cr_flag' => '1',
-                            'user_id' => auth()->user()->id,
-                        ]);
+                        'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
+                        'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),
+                        'cab_cr_flag' => '1',
+                        'user_id' => auth()->user()->id,
+                    ]);
                 } else {
                     $requestData = new \Illuminate\Http\Request([
                         'old_status_id' => config('change_request.status_ids.pending_cab'),

@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Http\Repository\HoldReason\HoldReasonRepository;
 use App\Models\HoldReason;
+use Illuminate\Support\Collection;
 
 class HoldReasonService
 {
@@ -16,9 +17,14 @@ class HoldReasonService
         $this->holdReasonRepository = $holdReasonRepository;
     }
 
-    public function getAllHoldReasons()
+    public function getAllHoldReasons(): Collection
     {
         return $this->holdReasonRepository->getAll();
+    }
+
+    public function getActiveHoldReasons(): Collection
+    {
+        return $this->holdReasonRepository->getAllActive();
     }
 
     public function findHoldReason($id): ?HoldReason
@@ -34,6 +40,7 @@ class HoldReasonService
     public function updateHoldReason(array $data, $id): bool
     {
         $result = $this->holdReasonRepository->update($data, $id);
+
         return $result > 0 || $result === 0; // Return true if update was successful (even if no rows changed)
     }
 }
