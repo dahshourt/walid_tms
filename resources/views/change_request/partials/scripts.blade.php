@@ -67,6 +67,47 @@ $(window).on("load", function () {
     if (statusField) {
         statusField.addEventListener("change", handleRejectionReasonsVisibility);
     }
+
+    // make technical attachments required on specific statuses
+    function handleTechnicalAttachmentsVisibility() {
+
+        const technicalAttachmentField = document.querySelector('input[name="technical_attachments[]"]');
+        const selectedStatus = statusField.options[statusField.selectedIndex].text.trim();
+        const requiredStatuses = {!! json_encode(array_values(config('change_request.need_technical_attachments_statuses'))) !!};
+        const isRequired = requiredStatuses.includes(selectedStatus);
+
+        technicalAttachmentField.required = isRequired;
+
+        // add red asterisk if required
+        if (technicalAttachmentField) {
+            const container = technicalAttachmentField.closest('.change-request-form-field');
+            if (container) {
+                const label = container.querySelector('label');
+                if (label) {
+                    let asterisk = label.querySelector('.required-mark');
+                    if (isRequired) {
+                        if (!asterisk) {
+                            asterisk = document.createElement('span');
+                            asterisk.className = 'required-mark';
+                            asterisk.style.color = 'red';
+                            asterisk.innerHTML = ' *';
+                            label.appendChild(asterisk);
+                        }
+                    } else {
+                        if (asterisk) {
+                            asterisk.remove();
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    handleTechnicalAttachmentsVisibility(); 
+
+    statusField.addEventListener("change", handleTechnicalAttachmentsVisibility);
+
+
 }); 
 
 

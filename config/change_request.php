@@ -107,6 +107,12 @@ return [
         'rollback' => 134,
     ],
 
+    'need_technical_attachments_statuses' =>[
+        'pending_testing' => "Pending Testing",
+        'test_case_approval' => "Test Case Approval",
+        'uat_sign_off' => "UAT Sign Off",
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Group IDs Configuration
