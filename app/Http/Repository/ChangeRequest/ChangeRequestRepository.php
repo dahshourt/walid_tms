@@ -11,6 +11,7 @@ use App\Services\ChangeRequest\ChangeRequestSearchService;
 use App\Services\ChangeRequest\ChangeRequestStatusService;
 use App\Services\ChangeRequest\ChangeRequestUpdateService;
 use App\Services\ChangeRequest\ChangeRequestValidationService;
+use App\Http\Repository\Logs\LogRepository;
 
 class ChangeRequestRepository implements ChangeRequestRepositoryInterface
 {
@@ -26,6 +27,8 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
 
     protected $validationService;
 
+    protected $logRepository;
+
     public function __construct()
     {
         $this->creationService = new ChangeRequestCreationService();
@@ -34,6 +37,7 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
         $this->schedulingService = new ChangeRequestSchedulingService();
         $this->searchService = new ChangeRequestSearchService();
         $this->validationService = new ChangeRequestValidationService();
+        $this->logRepository = new LogRepository();
     }
 
     // Basic CRUD Operations
@@ -178,8 +182,13 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
     // Status update methods
     public function UpateChangeRequestStatus($id, $request)
     {
+        $ChangeRequest = Change_request::find($id);
 
-        return $this->statusService->updateChangeRequestStatus($id, $request);
+        $this->statusService->updateChangeRequestStatus($id, $request);
+
+        $this->logRepository->logCreate($id, $request, $ChangeRequest, 'update');
+
+        return true;
     }
 
     public function UpateChangeRequestReleaseStatus($id, $request)
