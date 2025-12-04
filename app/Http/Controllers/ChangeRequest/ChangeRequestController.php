@@ -1100,7 +1100,7 @@ class ChangeRequestController extends Controller
             // ]);
             // $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
             if ($action == 'approve') {
-                if ($cr->workflow_type_id = 37) { // kam workflow
+                if ($cr->workflow_type_id == 37) { // kam workflow
                     $requestData = new \Illuminate\Http\Request([
                         'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
                         'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),
@@ -1118,7 +1118,7 @@ class ChangeRequestController extends Controller
 
             } else {
 
-                if ($cr->workflow_type_id = 37) { // kam workflow
+                if ($cr->workflow_type_id == 37) { // kam workflow
                     $requestData = new \Illuminate\Http\Request([
                         'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
                         'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),

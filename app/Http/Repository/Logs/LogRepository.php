@@ -66,6 +66,7 @@ class LogRepository implements LogRepositoryInterface
     public function logCreate($id, $request, $changeRequest_old, $type = 'create')
     {
 
+        //dd($request->all());
         $log = new LogRepository();
         // $user_id = $request->user_id ? $request->user_id : \Auth::user()->id;
 
@@ -227,15 +228,15 @@ class LogRepository implements LogRepositoryInterface
         }
 
         // Estimations without assignments
-        $this->logEstimateWithoutAssignee($log, $id, $user, $request, 'develop_duration', 'developer_id', 'Dev');
+
         $this->logEstimateWithoutAssignee($log, $id, $user, $request, 'design_duration', 'design_duration', 'Design');
+        $this->logEstimateWithoutAssignee($log, $id, $user, $request, 'develop_duration', 'developer_id', 'Dev');
         $this->logEstimateWithoutAssignee($log, $id, $user, $request, 'test_duration', 'tester_id', 'Testing');
 
         // Durations with times
         $this->logDurationWithTimes($log, $id, $user, $request, 'design_duration', 'start_design_time', 'end_design_time');
-        $this->logDurationWithTimes($log, $id, $user, $request, 'test_duration', 'start_test_time', 'end_test_time');
         $this->logDurationWithTimes($log, $id, $user, $request, 'develop_duration', 'start_develop_time', 'end_develop_time');
-
+        $this->logDurationWithTimes($log, $id, $user, $request, 'test_duration', 'start_test_time', 'end_test_time');
         // Status change
         if (isset($request->new_status_id)) {
             // echo $request->new_status_id; die;
@@ -295,7 +296,14 @@ class LogRepository implements LogRepositoryInterface
     {
         if (isset($request->$durationField)) {
             $this->createLog($logRepo, $crId, $user->id, "Issue $durationField manually set to '{$request->$durationField} H' by {$user->user_name}");
-            $this->createLog($logRepo, $crId, $user->id, "Issue $startField set to '{$request->$startField}' and $endField set to '{$request->$endField}' by {$user->user_name}");
+        }
+
+        if(isset($request->$startField) && isset($request->$endField))
+        {
+            $startLabel = Str::of($startField)->replace('_', ' ')->title();
+            $endLabel = Str::of($endField)->replace('_', ' ')->title();
+            $this->createLog($logRepo, $crId, $user->id, "Issue $startLabel set to '{$request->$startField}' and $endLabel set to '{$request->$endField}' by {$user->user_name}");
         }
     }
+
 }
