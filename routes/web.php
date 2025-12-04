@@ -5,6 +5,7 @@ use App\Services\EwsMailReader;
 use App\Http\Controllers\Sla\SlaCalculationController;
 use App\Http\Controllers\ChangeRequest\Api\EmailApprovalController;
 use App\Http\Controllers\Report\ReportController;
+use App\Http\Controllers\ConfigurationController;
 
 
 
@@ -267,6 +268,10 @@ Route::get('/reports/actual-vs-planned', [ReportController::class, 'actualVsPlan
     ->name('report.cross_sla.export');
     Route::get('/report/rejected-crs/export', [ReportController::class, 'exportRejectedCrs'])
     ->name('report.rejected_crs.export');
+
+    Route::get('/configurations', [ConfigurationController::class, 'index'])->name('configurations.index');
+    Route::post('/configurations/update', [ConfigurationController::class, 'update'])->name('configurations.update');
+
         //test ews
 
         /*Route::get('/test-ews', function () {
