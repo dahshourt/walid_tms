@@ -157,7 +157,7 @@
 											<!--begin::Form-->
 									
 												<div class="card-header d-flex justify-content-between align-items-center">
-                                                    <h3 class="card-title m-0">{{ $form_title.' #  '.$cr->cr_no }}</h3>
+                                                    <h3 class="card-title m-0">{{ $form_title.' #  '.$cr->cr_no.' | '.$cr?->workflowType?->name?:' ' }}</h3>
                                                     <div class="d-flex">
                                                         
 														@can('Show CR Logs')
