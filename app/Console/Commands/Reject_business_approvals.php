@@ -37,8 +37,8 @@ class Reject_business_approvals extends Command
         // Fetch eligible records
         $records = DB::table('change_request_statuses')
             ->where('new_status_id', 22)
-            ->where('active', 1)
-            ->where('created_at', '>', $sevenDaysAgo)
+            ->where('active', '1')
+            ->where('created_at', '<', $sevenDaysAgo)
             ->get();
 
         $approvedCount = 0;
@@ -49,8 +49,7 @@ class Reject_business_approvals extends Command
 
             $requestData = new \Illuminate\Http\Request([
                 'old_status_id' => '22',
-                'new_status_id' => '19',
-                'cab_cr_flag' => '1',
+                'new_status_id' => '35',
                 'user_id' => $user_id,
             ]);
 
