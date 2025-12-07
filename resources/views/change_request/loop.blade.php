@@ -25,7 +25,11 @@ $check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_
                                         </button>
                                
                                             @can('Edit ChangeRequest')
+                                                @if($item->getSetStatus()->count() > 0)
                                                 <a href='{{ url("$route") }}/{{ $item->id }}/edit'>{{ $item->cr_no }} </a>
+                                                @else
+                                                <a href='{{ url("$route") }}/{{ $item->id }}/edit'>{{ $item->cr_no }} </a>
+                                                @endif
                                             @else
                                                 @can('Show ChangeRequest')
                                                 <a href='{{ url("$route") }}/{{ $item->id }}'>{{ $item->cr_no }} </a>
@@ -150,12 +154,14 @@ $check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_
                                             @can('Edit ChangeRequest')
                                             @if(in_array($status->new_status_id,$user_group->group_statuses->where('type', 2)->pluck('status_id')->toArray()))
                                                     @if(!$status->group_id OR $status->current_group_id == $user_group->id )
+                                                        @if($item->getSetStatus()->count() > 0)
                                                         <a href='{{ url("$route") }}/{{ $item->id }}/edit?reference_status={{ $status->id }}' 
                                                         class="btn btn-light-success btn-sm" 
                                                         title="Edit"
                                                         style="padding: 0.4rem 0.9rem; border-radius: 0 4px 4px 0;">
                                                             <i class="la la-edit"></i> Edit
                                                         </a>
+                                                    @endif
                                                     @endif
                                                 @endif
                                             @endcan
