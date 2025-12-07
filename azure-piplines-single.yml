@@ -15,22 +15,22 @@ parameters:
 - name: commitHash
   displayName: 'Commit Hash (for single commit)'
   type: string
-  default: ''
+  default: ' '
 
 - name: pullRequestId
   displayName: 'Pull Request ID (e.g., 123)'
   type: string
-  default: ''
+  default: ' '
 
 - name: startCommit
   displayName: 'Start Commit (for range)'
   type: string
-  default: ''
+  default: ' '
 
 - name: endCommit
   displayName: 'End Commit (for range - leave empty for HEAD)'
   type: string
-  default: ''
+  default: ' '
 
 - name: targetBranch
   displayName: 'Target Branch (for PR comparison)'
