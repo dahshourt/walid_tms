@@ -3,24 +3,20 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\Api\LoginRequest;
-use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Adldap\Laravel\Facades\Adldap;
-use App\Models\UserGroups;
-use Illuminate\Support\Facades\Config;
-
-
-use App\Http\Repository\Users\UserRepository;
-use App\Http\Repository\Roles\RolesRepository;
 use App\Http\Repository\Groups\GroupRepository;
-
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Session;
+use App\Http\Repository\Roles\RolesRepository;
+use App\Http\Repository\Users\UserRepository;
+use App\Http\Requests\Auth\Api\LoginRequest;
 use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Http\Requests\Auth\UpdatePasswordRequest;
+use App\Models\User;
+use Exception;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Session;
+use Log;
 
 class CustomAuthController extends Controller
 {
@@ -30,44 +26,8 @@ class CustomAuthController extends Controller
     }
 
     /**
-     * Check LDAP Account credentials.
-     *
-     * @param string $username
-     * @param string $password
-     * @return array
-     */
-    private function checkLdapAccount($username, $password)
-    {
-        $ldapHost = config('constants.cairo.ldap_host');
-        $ldapConn = @ldap_connect($ldapHost);
-
-        if (!$ldapConn) {
-            return [
-                'status' => false,
-                'message' => 'There is a connection problem with ldap.',
-            ];
-        }
-
-        $ldapBindDn = config('constants.cairo.ldap_binddn') . $username;
-        $ldapBind = @ldap_bind($ldapConn, $ldapBindDn, $password);
-
-        if (!$ldapBind) {
-            return [
-                'status' => false,
-                'message' => 'Credentials Invalid.',
-            ];
-        }
-
-        return [
-            'status' => true,
-            'message' => 'Success',
-        ];
-    }
-
-    /**
      * Login
      *
-     * @param LoginRequest $request
      * @return \Illuminate\Http\RedirectResponse
      */
     public function login(LoginRequest $request)
@@ -81,21 +41,22 @@ class CustomAuthController extends Controller
             ->first();
 
         // User not found in local DB, try LDAP and create if successful
-        if (!$user) {
+        if (! $user) {
             $ldapResponse = $this->checkLdapAccount($request->user_name, $request->password);
 
             if ($ldapResponse['status']) {
                 $user = $this->createUserFromLdap($request->user_name);
-                
-                if (!$user) {
-                     return Redirect::back()->withErrors(['msg' => $generalLoginError])->withInput();
+
+                if (! $user) {
+                    return redirect()->back()->withErrors(['msg' => $generalLoginError])->withInput();
                 }
 
                 $this->loginUser($user);
+
                 return redirect()->intended(url('/'));
             }
 
-            return Redirect::back()->withErrors(['msg' => $generalLoginError])->withInput();
+            return redirect()->back()->withErrors(['msg' => $generalLoginError])->withInput();
         }
 
         // Check if account is locked
@@ -121,6 +82,7 @@ class CustomAuthController extends Controller
             $user->save();
 
             $this->loginUser($user);
+
             return redirect()->intended(url('/'));
         }
 
@@ -131,16 +93,144 @@ class CustomAuthController extends Controller
         }
         $user->save();
 
-        return Redirect::back()->withErrors(['msg' => $generalLoginError])->withInput();
+        return redirect()->back()->withErrors(['msg' => $generalLoginError])->withInput();
+    }
+
+    /**
+     * Logout user (Revoke the token)
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function logout(Request $request)
+    {
+        try {
+            $user = User::where('id', $request->user()->id)->first();
+            if ($user) {
+                $user->device_token = null;
+                $user->save();
+            }
+            $request->user()->tokens()->delete();
+
+            return response()->json(['msg' => [__('messages.logout_successfully')]], 200);
+        } catch (Exception $e) {
+            Log::debug($e->getMessage());
+
+            return response()->json(['msg' => [__('messages.failed_request')]], 403);
+        }
+    }
+
+    /**
+     * Reset Password
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function resetPassword(ResetPasswordRequest $request)
+    {
+        try {
+            $user = User::where('phone', $request->phone)->first();
+            if (! $user) {
+                return response()->json(['msg' => [__('messages.failed_request')]], 404);
+            }
+            // reset user password
+            $user->password = Hash::make($request->password);
+            $user->save();
+
+            // Revoke a all user tokens...
+            return response()->json(['msg' => [__('messages.reset_successfully')]], 200);
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::debug($e->getMessage());
+
+            return response()->json(['msg' => [__('messages.failed_request')]], 403);
+        }
+    }
+
+    /**
+     * Update Password
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function updatePassword(UpdatePasswordRequest $request)
+    {
+
+        try {
+            DB::beginTransaction();
+            $user = User::where('id', $request->user()->id)->first();
+            if (Hash::check($request->old_password, $user->password)) {
+                $user->password = Hash::make($request->password);
+                $user->save();
+            } else {
+                return response()->json(['msg' => [__('messages.old_password_is_incorrect')]], 403);
+            }
+            DB::commit();
+
+            return response()->json(['msg' => [__('messages.success_update')]], 200);
+        } catch (Exception $e) {
+            DB::rollback();
+            Log::debug($e->getMessage());
+
+            return response()->json(['msg' => [__('messages.failed_request')]], 403);
+        }
+    }
+
+    public function check_active()
+    {
+        // dd(auth()->user(),Auth::check());
+        return response()->json([
+            'active' => Auth::check() ? Auth::user()->active : false,
+        ]);
+    }
+
+    public function inactive_logout()
+    {
+
+        Auth::logout();
+
+        return redirect('/login')->withErrors(['msg' => 'Login error. Please contact administration.'])->withInput();
+
+    }
+
+    /**
+     * Check LDAP Account credentials.
+     *
+     * @param  string  $username
+     * @param  string  $password
+     * @return array
+     */
+    private function checkLdapAccount($username, $password)
+    {
+        $ldapHost = config('constants.cairo.ldap_host');
+        $ldapConn = @ldap_connect($ldapHost);
+
+        if (! $ldapConn) {
+            return [
+                'status' => false,
+                'message' => 'There is a connection problem with ldap.',
+            ];
+        }
+
+        $ldapBindDn = config('constants.cairo.ldap_binddn') . $username;
+        $ldapBind = @ldap_bind($ldapConn, $ldapBindDn, $password);
+
+        if (! $ldapBind) {
+            return [
+                'status' => false,
+                'message' => 'Credentials Invalid.',
+            ];
+        }
+
+        return [
+            'status' => true,
+            'message' => 'Success',
+        ];
     }
 
     /**
      * Attempt local user login.
      *
-     * @param User $user
-     * @param string $password
-     * @param int $maxAttempts
-     * @param string $errorMessage
+     * @param  string  $password
+     * @param  int  $maxAttempts
+     * @param  string  $errorMessage
      * @return \Illuminate\Http\RedirectResponse
      */
     private function attemptLocalLogin(User $user, $password, $maxAttempts, $errorMessage)
@@ -168,13 +258,13 @@ class CustomAuthController extends Controller
     /**
      * Create a new user from LDAP information.
      *
-     * @param string $username
+     * @param  string  $username
      * @return User|null
      */
     private function createUserFromLdap($username)
     {
         $email = $username . '@te.eg';
-        
+
         // Check if email already exists
         if (app(UserRepository::class)->CheckUniqueEmail($email)) {
             return null;
@@ -200,7 +290,6 @@ class CustomAuthController extends Controller
     /**
      * Log the user in and clear other sessions.
      *
-     * @param User $user
      * @return void
      */
     private function loginUser(User $user)
@@ -210,102 +299,5 @@ class CustomAuthController extends Controller
             ->where('user_id', $user->id)
             ->where('id', '!=', Session::getId())
             ->delete();
-    }
-
-    /**
-     * Logout user (Revoke the token)
-     *
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function logout(Request $request)
-    {
-        try {
-            $user = User::where('id', $request->user()->id)->first();
-            if ($user) {
-                $user->device_token = null;
-                $user->save();
-            }
-            $request->user()->tokens()->delete();
-
-            return response()->json(['msg' => [__('messages.logout_successfully')]], 200);
-        } catch (\Exception $e) {
-            \Log::debug($e->getMessage());
-
-            return response()->json(['msg' => [__('messages.failed_request')]], 403);
-        }
-    }
-
-    /**
-     * Reset Password
-     *
-     * @param ResetPasswordRequest $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function resetPassword(ResetPasswordRequest $request)
-    {
-        try {
-            $user = User::where('phone', $request->phone)->first();
-            if (!$user) {
-                 return response()->json(['msg' => [__('messages.failed_request')]], 404);
-            }
-            // reset user password
-            $user->password = Hash::make($request->password);
-            $user->save();
-
-            // Revoke a all user tokens...
-            return response()->json(['msg' => [__('messages.reset_successfully')]], 200);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::debug($e->getMessage());
-
-            return response()->json(['msg' => [__('messages.failed_request')]], 403);
-        }
-    }
-
-    /**
-     * Update Password
-     *
-     * @param UpdatePasswordRequest $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function updatePassword(UpdatePasswordRequest $request)
-    {
-
-        try {
-            DB::beginTransaction();
-            $user = User::where('id', $request->user()->id)->first();
-            if (Hash::check($request->old_password, $user->password)) {
-                $user->password = Hash::make($request->password);
-                $user->save();
-            } else {
-                return response()->json(['msg' => [__('messages.old_password_is_incorrect')]], 403);
-            }
-            DB::commit();
-
-            return response()->json(['msg' => [__('messages.success_update')]], 200);
-        } catch (\Exception $e) {
-            DB::rollback();
-            \Log::debug($e->getMessage());
-
-            return response()->json(['msg' => [__('messages.failed_request')]], 403);
-        }
-    }
-
-    public function check_active()
-    {
-        // dd(auth()->user(),Auth::check());
-        return response()->json([
-            'active' => Auth::check() ? Auth::user()->active : false,
-        ]);
-    }
-
-    public function inactive_logout()
-    {
-
-        Auth::logout();
-
-        return redirect('/login')->withErrors(['msg' => 'Login error. Please contact administration.'])->withInput();
-
     }
 }

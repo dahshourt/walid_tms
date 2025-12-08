@@ -7,13 +7,11 @@
         <div class="col-md-12">
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3>Report: Rejected CRs</h3>
-                    <form action=" " method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-success">
-                            Export Table
-                        </button>
-                    </form>
+                    <h3>Rejected CRs</h3>
+
+                    <a href="{{ route('report.rejected_crs.export') }}" class="btn btn-success">
+                        Export RejectedCRs
+                    </a>
                 </div>
                 <div class="card-body">
                     @if($results->count())

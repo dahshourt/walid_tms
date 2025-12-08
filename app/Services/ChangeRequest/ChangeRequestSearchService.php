@@ -538,8 +538,6 @@ class ChangeRequestSearchService
                 $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
             })
             ->where('type_id', $typeId)
-            // ->where('active', '1')
-            // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
             ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->orderBy('id', 'DESC')
             ->get();

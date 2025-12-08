@@ -547,6 +547,29 @@ class ChangeRequestController extends Controller
                 'man_day' => $request->man_days,
             ]);
         }
+        //dd($request->all());
+        if($request->cap_users){
+            $cap_users = array_unique($request->cap_users);
+            
+            if($request->cr) {
+                $requesterId = $request->cr->requester_id;
+                $requester = User::find($requesterId);
+                $requesterGroupId = $requester->default_group;
+                $crTeamGroup = Group::where('title', config('constants.group_names.cr_team'))->first();
+
+                if($requesterGroupId == $crTeamGroup->id)
+                {
+                    if(in_array($requesterId, $cap_users))
+                    {
+                        if(count($cap_users) < 2)
+                        {
+                            return redirect()->back()->withErrors('You cannot be the only CAB user. Please select at least one additional CAB user.');
+                        }
+                    }
+                } 
+            }
+        }
+        //dd('test');
         DB::beginTransaction();
         try {
             // Handle technical teams assignment
@@ -1077,7 +1100,7 @@ class ChangeRequestController extends Controller
             // ]);
             // $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
             if ($action == 'approve') {
-                if ($cr->workflow_type_id = 37) { // kam workflow
+                if ($cr->workflow_type_id == 37) { // kam workflow
                     $requestData = new \Illuminate\Http\Request([
                         'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
                         'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),
@@ -1095,7 +1118,7 @@ class ChangeRequestController extends Controller
 
             } else {
 
-                if ($cr->workflow_type_id = 37) { // kam workflow
+                if ($cr->workflow_type_id == 37) { // kam workflow
                     $requestData = new \Illuminate\Http\Request([
                         'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
                         'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),

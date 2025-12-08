@@ -16,6 +16,8 @@ use App\Models\Priority;
 use App\Models\Rejection_reason;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\NewWorkFlowStatuses;
+use App\Models\Status;
 use Auth;
 use Illuminate\Support\Str;
 
@@ -64,6 +66,7 @@ class LogRepository implements LogRepositoryInterface
     public function logCreate($id, $request, $changeRequest_old, $type = 'create')
     {
 
+        //dd($request->all());
         $log = new LogRepository();
         // $user_id = $request->user_id ? $request->user_id : \Auth::user()->id;
 
@@ -109,7 +112,7 @@ class LogRepository implements LogRepositoryInterface
             'rejection_reason_id' => ['model' => Rejection_reason::class, 'field' => 'name', 'message' => 'rejection Reason Changed To'],
             'deployment_impact' => ['model' => DeploymentImpact::class, 'field' => 'name', 'message' => 'Deployment Impact Changed To'],
         ];
-        $excludeNames = ['develop_duration', 'design_duration', 'test_duration'];
+        $excludeNames = ['develop_duration', 'design_duration', 'test_duration', 'new_status_id'];
 
         // fetch custom fields you want to append
         $customFields = CustomField::query()
@@ -162,7 +165,6 @@ class LogRepository implements LogRepositoryInterface
 
         // append without overriding existing keys in $fields
         $fields += $customFieldMap;
-
         foreach ($fields as $field => $info) {
             if (isset($request->$field)) {
                 $oldValue = $change_request->$field ?? null;
@@ -226,24 +228,41 @@ class LogRepository implements LogRepositoryInterface
         }
 
         // Estimations without assignments
-        $this->logEstimateWithoutAssignee($log, $id, $user, $request, 'develop_duration', 'developer_id', 'Dev');
+
         $this->logEstimateWithoutAssignee($log, $id, $user, $request, 'design_duration', 'design_duration', 'Design');
+        $this->logEstimateWithoutAssignee($log, $id, $user, $request, 'develop_duration', 'developer_id', 'Dev');
         $this->logEstimateWithoutAssignee($log, $id, $user, $request, 'test_duration', 'tester_id', 'Testing');
 
         // Durations with times
         $this->logDurationWithTimes($log, $id, $user, $request, 'design_duration', 'start_design_time', 'end_design_time');
-        $this->logDurationWithTimes($log, $id, $user, $request, 'test_duration', 'start_test_time', 'end_test_time');
         $this->logDurationWithTimes($log, $id, $user, $request, 'develop_duration', 'start_develop_time', 'end_develop_time');
-
+        $this->logDurationWithTimes($log, $id, $user, $request, 'test_duration', 'start_test_time', 'end_test_time');
         // Status change
         if (isset($request->new_status_id)) {
             // echo $request->new_status_id; die;
             $workflow = NewWorkFlow::find($request->new_status_id);
+
+            $status_title = null;
+            if ($workflow && !empty($workflow->to_status_label)) {
+                $status_title = $workflow->to_status_label;
+            }
+
+            $newStatusesIds = NewWorkFlowStatuses::where('new_workflow_id', $request->new_status_id)->pluck('to_status_id')->toArray();
+            $newStatusesNames = Status::whereIn('id', $newStatusesIds)->pluck('status_name')->toArray();
+            $actualStatuses = implode(', ', $newStatusesNames);
+
+            if ($status_title) {
+                $this->createLog($log, $id, $user->id, "Change Request Status changed to '$status_title' by {$user->user_name} (Actual Status: $actualStatuses)");
+            } else {
+                $this->createLog($log, $id, $user->id, "Change Request Status changed to '$actualStatuses' by {$user->user_name}");
+            }
+            /*
+            $workflow = NewWorkFlow::find($request->new_status_id);
             $status_title = $workflow->workflowstatus->count() > 1
                 ? $workflow->to_status_label
                 : $workflow->workflowstatus[0]->to_status->status_name;
-
-            $this->createLog($log, $id, $user->id, "Issue manually set to status '$status_title' by {$user->user_name}");
+            */
+            //$this->createLog($log, $id, $user->id, "Change Request Status changed to '$status_title' by {$user->user_name}");
         }
 
         return true;
@@ -277,7 +296,14 @@ class LogRepository implements LogRepositoryInterface
     {
         if (isset($request->$durationField)) {
             $this->createLog($logRepo, $crId, $user->id, "Issue $durationField manually set to '{$request->$durationField} H' by {$user->user_name}");
-            $this->createLog($logRepo, $crId, $user->id, "Issue start time set to '{$request->$startField}' and end time set to '{$request->$endField}' by {$user->user_name}");
+        }
+
+        if(isset($request->$startField) && isset($request->$endField))
+        {
+            $startLabel = Str::of($startField)->replace('_', ' ')->title();
+            $endLabel = Str::of($endField)->replace('_', ' ')->title();
+            $this->createLog($logRepo, $crId, $user->id, "Issue $startLabel set to '{$request->$startField}' and $endLabel set to '{$request->$endField}' by {$user->user_name}");
         }
     }
+
 }

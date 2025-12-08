@@ -81,13 +81,13 @@ class Change_request extends Model
 
     public function scopeNotInFinalState(Builder $query): Builder
     {
-        return $query->whereHas('CurrentRequestStatuses', function ($query) {
+        return $query->whereHas('currentRequestStatuses', function ($query) {
             return $query->whereNotIn('new_status_id', [config('change_request.status_ids.Reject'), config('change_request.status_ids.Cancel'), config('change_request.parked_status_ids.promo_closure')]);
         });
     }
 
     // ===================================
-    // RELATIONSHIPS - ORIGINAL NAMES
+    // RELATIONSHIPS
     // ===================================
 
     /**
@@ -106,7 +106,7 @@ class Change_request extends Model
         return $this->hasMany(Log::class, 'cr_id', 'id');
     }
 
-    public function cabCrs()
+    public function cabCrs(): HasMany
     {
         return $this->hasMany(CabCr::class, 'cr_id', 'id');
     }
@@ -114,7 +114,7 @@ class Change_request extends Model
     /**
      * Get only active (status = 0) cab_crs records
      */
-    public function activeCabCrs()
+    public function activeCabCrs(): HasMany
     {
         return $this->hasMany(CabCr::class, 'cr_id', 'id')
             ->where('status', '0');
@@ -123,18 +123,34 @@ class Change_request extends Model
     /**
      * Get the custom fields for this change request.
      */
-    public function change_request_custom_fields(): HasMany
+    public function changeRequestCustomFields(): HasMany
     {
         return $this->hasMany(ChangeRequestCustomField::class, 'cr_id', 'id');
     }
 
     /**
+     * @deprecated Use changeRequestCustomFields() instead.
+     */
+    public function change_request_custom_fields(): HasMany
+    {
+        return $this->changeRequestCustomFields();
+    }
+
+    /**
      * Get request statuses for this change request.
      */
-    public function Req_status(): HasMany
+    public function reqStatus(): HasMany
     {
         return $this->hasMany(Change_request_statuse::class, 'cr_id', 'id')
             ->select('id', 'new_status_id', 'old_status_id', 'active');
+    }
+
+    /**
+     * @deprecated Use reqStatus() instead.
+     */
+    public function Req_status(): HasMany
+    {
+        return $this->reqStatus();
     }
 
     /**
@@ -172,9 +188,17 @@ class Change_request extends Model
     /**
      * Get the change request this one depends on.
      */
-    public function depend_cr(): BelongsTo
+    public function dependCr(): BelongsTo
     {
         return $this->belongsTo(Change_request::class, 'depend_cr_id')->select('id', 'title', 'cr_no');
+    }
+
+    /**
+     * @deprecated Use dependCr() instead.
+     */
+    public function depend_cr(): BelongsTo
+    {
+        return $this->dependCr();
     }
 
     /**
@@ -217,31 +241,55 @@ class Change_request extends Model
     /**
      * Get the active CAB record for this change request.
      */
-    public function cab_cr(): HasOne
+    public function cabCr(): HasOne
     {
         return $this->hasOne(CabCr::class, 'cr_id', 'id')->where('status', '0');
     }
 
     /**
+     * @deprecated Use cabCr() instead.
+     */
+    public function cab_cr(): HasOne
+    {
+        return $this->cabCr();
+    }
+
+    /**
      * Get the active technical CR record.
      */
-    public function technical_Cr(): HasOne
+    public function technicalCr(): HasOne
     {
         return $this->hasOne(TechnicalCr::class, 'cr_id', 'id')->where('status', '0');
     }
 
     /**
+     * @deprecated Use technicalCr() instead.
+     */
+    public function technical_Cr(): HasOne
+    {
+        return $this->technicalCr();
+    }
+
+    /**
      * Get the first technical CR record.
      */
-    public function technical_Cr_first(): HasOne
+    public function technicalCrFirst(): HasOne
     {
         return $this->hasOne(TechnicalCr::class, 'cr_id', 'id')->orderBy('id', 'DESC');
     }
 
     /**
+     * @deprecated Use technicalCrFirst() instead.
+     */
+    public function technical_Cr_first(): HasOne
+    {
+        return $this->technicalCrFirst();
+    }
+
+    /**
      * Get current group statuses through status relationship.
      */
-    public function current_status(): HasManyThrough
+    public function currentStatus(): HasManyThrough
     {
         return $this->hasManyThrough(
             GroupStatuses::class,
@@ -254,47 +302,78 @@ class Change_request extends Model
     }
 
     /**
+     * @deprecated Use currentStatus() instead.
+     */
+    public function current_status(): HasManyThrough
+    {
+        return $this->currentStatus();
+    }
+
+    /**
      * Get request statuses ordered by ID descending.
      */
-    public function RequestStatuses(): HasMany
+    public function requestStatuses(): HasMany
     {
         return $this->hasMany(Change_request_statuse::class, 'cr_id', 'id')
             ->where('active', '1')
             ->orderBy('id', 'DESC');
     }
 
-    public function RequestStatusesDone()
+
+
+    public function requestStatusesDone(): HasMany
     {
         return $this->hasMany(Change_request_statuse::class, 'cr_id', 'id')
             ->where('active', '2')
             ->orderBy('id', 'desc');
     }
 
-    public function AllRequestStatuses()
+
+
+    public function allRequestStatuses(): HasMany
     {
         return $this->hasMany(Change_request_statuse::class, 'cr_id', 'id')->orderBy('id', 'DESC');
     }
 
+
+
     /**
      * Get the current request status.
      */
-    public function CurrentRequestStatuses(): HasOne
+    public function currentRequestStatuses(): HasOne
     {
         return $this->hasOne(Change_request_statuse::class, 'cr_id', 'id')->where('active', '1');
     }
 
-    public function CurrentRequestStatuses_last()
+
+
+    public function currentRequestStatusesLast(): HasOne
     {
         return $this->hasOne(Change_request_statuse::class, 'cr_id', 'id')->whereIn('active', [1, 2]);
+    }
 
+    /**
+     * @deprecated Use currentRequestStatusesLast() instead.
+     */
+    public function CurrentRequestStatuses_last(): HasOne
+    {
+        return $this->currentRequestStatusesLast();
     }
 
     /**
      * Get the division manager for this change request.
      */
-    public function division_manger(): BelongsTo
+    public function divisionManager(): BelongsTo
     {
         return $this->belongsTo(User::class, 'division_manager_id');
+    }
+
+    /**
+     * @deprecated Use divisionManager() instead.
+     */
+    public function division_manger(): BelongsTo
+    {
+        return $this->divisionManager();
     }
 
     /**
@@ -456,7 +535,7 @@ class Change_request extends Model
                 $query->whereDate('updated_at', '<=', $value);
             })
             ->when(request()->query('new_status_id'), function (Builder $query, $value) {
-                $query->whereHas('CurrentRequestStatuses', function (Builder $query) use ($value) {
+                $query->whereHas('currentRequestStatuses', function (Builder $query) use ($value) {
                     $query->whereIn('new_status_id', (array) $value);
                 });
             });
@@ -514,7 +593,10 @@ class Change_request extends Model
     /**
      * Get current status for list view with enhanced error handling.
      */
-    public function ListCurrentStatus()
+    /**
+     * Get current status for list view with enhanced error handling.
+     */
+    public function listCurrentStatus()
     {
         try {
             $group = $this->getCurrentGroupId();
@@ -535,15 +617,28 @@ class Change_request extends Model
         }
     }
 
+
+
     /**
      * Get available releases with enhanced filtering.
      */
-    public function get_releases(): Collection
+    /**
+     * Get available releases with enhanced filtering.
+     */
+    public function getReleases(): Collection
     {
         return Release::whereDate('go_live_planned_date', '>', now())
             ->where('active', true)
             ->orderBy('go_live_planned_date')
             ->get();
+    }
+
+    /**
+     * @deprecated Use getReleases() instead.
+     */
+    public function get_releases(): Collection
+    {
+        return $this->getReleases();
     }
 
     /**
@@ -576,7 +671,10 @@ class Change_request extends Model
     /**
      * Get technical team current status with enhanced logic.
      */
-    public function GetTechnicalTeamCurrentStatus()
+    /**
+     * Get technical team current status with enhanced logic.
+     */
+    public function getTechnicalTeamCurrentStatus()
     {
         try {
             $group = $this->getCurrentGroupId();
@@ -601,6 +699,8 @@ class Change_request extends Model
         }
     }
 
+
+
     /**
      * Get current status with enhanced workflow logic and better error handling.
      */
@@ -619,7 +719,7 @@ class Change_request extends Model
                     ->pluck('status_id')
                     ->toArray();
 
-                $technical_cr_team_status = $this->GetTechnicalTeamCurrentStatus();
+                $technical_cr_team_status = $this->getTechnicalTeamCurrentStatus();
 
                 if ($technical_cr_team_status) {
                     if (in_array($technical_cr_team_status->current_status_id, $view_statuses)) {
@@ -661,12 +761,14 @@ class Change_request extends Model
         }
     }
 
-    public function getallCurrentStatus()
+    public function getAllCurrentStatus()
     {
         $statuses = Change_request_statuse::where('cr_id', $this->id)->where('active', '1')->get();
 
         return $statuses;
     }
+
+
 
     /**
      * Check if the change request is completed.
@@ -786,14 +888,14 @@ class Change_request extends Model
 
     public function inFinalState(): bool
     {
-        $current_status = $this->CurrentRequestStatuses->new_status_id;
+        $current_status = $this->currentRequestStatuses->new_status_id;
 
         return in_array($current_status, [config('change_request.parked_status_ids.promo_closure')]);
     }
 
     public function isAlreadyCancelledOrRejected(): bool
     {
-        $current_status = $this->CurrentRequestStatuses->new_status_id;
+        $current_status = $this->currentRequestStatuses->new_status_id;
 
         return in_array($current_status, [config('change_request.status_ids.Reject'), config('change_request.status_ids.Cancel')]);
     }
@@ -910,5 +1012,27 @@ class Change_request extends Model
     public function isOnHold(): bool
     {
         return $this->hold === 1;
+    }
+
+    public function getSetStatus()
+    {
+        $currentStatus = $this->getCurrentStatus();
+
+        $statusId = $currentStatus->new_status_id;
+        $previousStatusId = $currentStatus->old_status_id;
+
+        return NewWorkFlow::where('from_status_id', $statusId)
+            ->where(function ($query) use ($previousStatusId) {
+                $query->whereNull('previous_status_id')
+                    ->orWhere('previous_status_id', 0)
+                    ->orWhere('previous_status_id', $previousStatusId);
+            })
+            ->whereHas('workflowstatus', function ($q) {
+                $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
+            })
+            ->where('type_id', $this->workflow_type_id)
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            ->orderBy('id', 'DESC')
+            ->get();
     }
 }

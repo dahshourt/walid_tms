@@ -5,6 +5,7 @@ use App\Services\EwsMailReader;
 use App\Http\Controllers\Sla\SlaCalculationController;
 use App\Http\Controllers\ChangeRequest\Api\EmailApprovalController;
 use App\Http\Controllers\Report\ReportController;
+use App\Http\Controllers\ConfigurationController;
 
 
 
@@ -251,6 +252,25 @@ Route::middleware(['auth'])->group(
                 ->name('reports.rejected_crs');
 
         });
+
+
+
+        Route::post('/reports/cr-current-status', [ReportController::class, 'crCurrentStatus'])
+    ->name('report.current-status');
+    Route::post('/reports/cr-current-status/export', [ReportController::class, 'exportCurrentStatus'])
+    ->name('report.current-status.export');
+Route::get('/reports/actual-vs-planned', [ReportController::class, 'actualVsPlanned'])
+     ->name('actual.vs.planned');
+     Route::post('/reports/all-crs-by-requester/export',
+    [ReportController::class, 'exportAllCrsByRequester'])
+    ->name('all.crs.by.requester.export');
+    Route::get('/report/crs-crossed-sla/export', [ReportController::class, 'exportCrsCrossedSla'])
+    ->name('report.cross_sla.export');
+    Route::get('/report/rejected-crs/export', [ReportController::class, 'exportRejectedCrs'])
+    ->name('report.rejected_crs.export');
+
+    Route::get('/configurations', [ConfigurationController::class, 'index'])->name('configurations.index');
+    Route::post('/configurations/update', [ConfigurationController::class, 'update'])->name('configurations.update');
 
         //test ews
 

@@ -6,14 +6,12 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3>Report: CRs Crossed SlA</h3>
-                    <form action=" " method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-success">
-                            Export Table
-                        </button>
-                    </form>
+               <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3>CRs Crossed SLA</h3>
+
+                    <a href="{{ route('report.cross_sla.export') }}" class="btn btn-success">
+                        Export CRsCrossedSLA
+                    </a>
                 </div>
                 <div class="card-body">
                     @if($results->count())

@@ -6,15 +6,13 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h3>Report: Actual vs Planned</h3>
-                    <form action=" " method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-success">
-                            Export Table
-                        </button>
-                    </form>
-                </div>
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h3>Report: Actual vs Planned</h3>
+
+                <a href="{{ request()->fullUrlWithQuery(['export' => 1]) }}" class="btn btn-success">
+                    Export Table
+                </a>
+            </div>
                 <div class="card-body">
                     @if($results->count())
                         <!-- Responsive table wrapper -->

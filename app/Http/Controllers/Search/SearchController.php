@@ -10,7 +10,7 @@ use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use App\Http\Resources\AdvancedSearchRequestResource;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-
+use Illuminate\Http\Request;
 // use App\Models\User;
 // use App\Models\change_request;
 
@@ -115,9 +115,10 @@ class SearchController extends Controller
         return view("$this->view.AdvancedSearchResult", ['totalCount' => $totalCount, 'items' => $collection, 'crs_in_queues' => $crs_in_queues]);
     }
 
-    public function AdvancedSearchResultExport(): BinaryFileResponse
+    public function AdvancedSearchResultExport(request $request): BinaryFileResponse
     {
         $this->authorize('Access Advanced Search');
+//$filters = $request->only(['cr_type', 'status_ids', 'cr_nos']);
 
         // Export the filtered results as Excel
         return Excel::download(new TableExport, 'advanced_search_results.xlsx');
