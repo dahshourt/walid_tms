@@ -906,4 +906,9 @@ class Change_request extends Model
 
         return in_array($currentStatus->new_status_id, $approvalStatusIds);
     }
+
+    public function isOnHold(): bool
+    {
+        return $this->hold === 1;
+    }
 }
