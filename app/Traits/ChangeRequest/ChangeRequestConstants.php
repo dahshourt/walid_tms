@@ -19,7 +19,7 @@ trait ChangeRequestConstants
             'updated_at', 'category_id', 'priority_id', 'unit_id', 'department_id',
             'application_id', 'workflow_type_id', 'division_manager', 'creator_mobile_number',
             'calendar', 'CR_duration', 'chnage_requester_id', 'start_CR_time',
-            'end_CR_time', 'release_name', 'cr_no',
+            'end_CR_time', 'release_name', 'cr_no','hold'
         ];
     }
 

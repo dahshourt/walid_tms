@@ -990,7 +990,9 @@ class ChangeRequestController extends Controller
 
         try {
 
-            if ($action == 'approve') {
+            $cr_repo = app(ChangeRequestRepository::class);
+
+            if ($action === 'approve') {
                 Change_request_statuse::where('cr_id', $cr->id)
                     ->where('active', '3')
                     ->update(['active' => '1']);
@@ -1000,19 +1002,47 @@ class ChangeRequestController extends Controller
                 Change_request_statuse::where('cr_id', $cr->id)
                     ->where('active', '3')
                     ->update(['active' => '2']);
-                $firstStatus = Change_request_statuse::where('cr_id', $cr->id)
-                    ->orderBy('id', 'asc') // or desc, depending on which you want
-                    ->first();
 
-                if ($firstStatus) {
-                    // Duplicate the row
-                    $newStatus = $firstStatus->replicate(); // clone all fields
-                    $newStatus->active = '1';              // change only what you need
-                    $newStatus->save();                    // insert the new record
+                // CR is In-House work flow
+                if ($cr->workflow_type_id === 3) {
+                    $second_status = Change_request_statuse::where('cr_id', $cr->id)
+                        ->orderBy('id')
+                        ->skip(1)
+                        ->first();
+
+                    if ($second_status) {
+                        $new_status_work_flow_id = $this->getNewStatusWorkFlowId($cr->workflow_type_id, $second_status->old_status_id, $second_status->new_status_id);
+
+                        $request->merge(['new_status_id' => $new_status_work_flow_id]);
+                        $request->merge(['old_status_id' => $second_status->old_status_id]);
+
+                        // Duplicate the row
+                        $newStatus = $second_status->replicate();
+                        $newStatus->active = '1';
+                        $newStatus->save();
+                    }
+                } else {
+                    $firstStatus = Change_request_statuse::where('cr_id', $cr->id)
+                        ->orderBy('id', 'asc') // or desc, depending on which you want
+                        ->first();
+
+                    if ($firstStatus) {
+                        $new_status_work_flow_id = $this->getNewStatusWorkFlowId($cr->workflow_type_id, $firstStatus->old_status_id, $firstStatus->new_status_id);
+
+                        $request->merge(['new_status_id' => $new_status_work_flow_id]);
+                        $request->merge(['old_status_id' => $firstStatus->old_status_id]);
+
+                        // Duplicate the row
+                        $newStatus = $firstStatus->replicate();
+                        $newStatus->active = '1';
+                        $newStatus->save();
+                    }
                 }
-
             }
-            $cr->update(['hold' => 0]);
+
+            $request->merge(['hold' => 0]);
+            Log::info('req__info', $request->all());
+            $cr_repo->update($cr->id, $request);
 
             $message = $action === 'approve'
                 ? "CR #{$cr_id} has been successfully re hold."
@@ -1029,6 +1059,7 @@ class ChangeRequestController extends Controller
             ], 200);
 
         } catch (Exception $e) {
+            dd($e->getMessage());
             Log::error('Failed to process division manager action (JSON)', [
                 'cr_id' => $cr_id,
                 'action' => $action,
@@ -1891,6 +1922,24 @@ class ChangeRequestController extends Controller
             ->join('statuses as s2', function ($join) use ($to_action) {
                 $join->on('s2.id', '=', 'nws.to_status_id')
                     ->where('s2.status_name', 'like', '%' . $to_action . '%');
+            })
+            ->where('new_workflow.type_id', $workflow_type_id)
+            ->orderBy('new_workflow.id', 'desc')
+            ->value('new_workflow.id');
+    }
+
+    private function getNewStatusWorkFlowId(int $workflow_type_id, int $from, int $to): ?int
+    {
+        return NewWorkflow::query()
+            ->select('new_workflow.id')
+            ->join('statuses as s1', function ($join) use ($from) {
+                $join->on('s1.id', '=', 'new_workflow.from_status_id')
+                    ->where('s1.id', '=', $from);
+            })
+            ->join('new_workflow_statuses as nws', 'nws.new_workflow_id', '=', 'new_workflow.id')
+            ->join('statuses as s2', function ($join) use ($to) {
+                $join->on('s2.id', '=', 'nws.to_status_id')
+                    ->where('s2.id', '=', $to);
             })
             ->where('new_workflow.type_id', $workflow_type_id)
             ->orderBy('new_workflow.id', 'desc')
