@@ -1009,11 +1009,15 @@ class Change_request extends Model
         return in_array($currentStatus->new_status_id, $approvalStatusIds);
     }
 
+    public function isOnHold(): bool
+    {
+        return $this->hold === 1;
+    }
 
     public function getSetStatus()
     {
         $currentStatus = $this->getCurrentStatus();
-        
+
         $statusId = $currentStatus->new_status_id;
         $previousStatusId = $currentStatus->old_status_id;
 
@@ -1031,7 +1035,4 @@ class Change_request extends Model
             ->orderBy('id', 'DESC')
             ->get();
     }
-
-
-
 }

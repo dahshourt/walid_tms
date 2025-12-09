@@ -3,6 +3,7 @@
 namespace App\Services\ChangeRequest;
 
 use App\Http\Repository\ChangeRequest\AttachmentsCRSRepository;
+use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use App\Http\Repository\ChangeRequest\ChangeRequestStatusRepository;
 use App\Http\Repository\Logs\LogRepository;
 use App\Models\Change_request;
@@ -12,6 +13,7 @@ use App\Models\User;
 use App\Traits\ChangeRequest\ChangeRequestConstants;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Log;
 
@@ -346,7 +348,9 @@ class ChangeRequestSchedulingService
                     ->where('active', '1')
                     ->update(['active' => '3']);
 
-                $cr->update(['hold' => 1]);
+                $cr_repo = app(ChangeRequestRepository::class);
+                $data = new Request(['hold' => 1]);
+                $cr_repo->update($cr->id, $data);
             });
 
             return [

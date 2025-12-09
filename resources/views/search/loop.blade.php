@@ -1,11 +1,15 @@
 @if($cr)
 
     @php
-        $cr_status = $cr->getCurrentStatus()?->status;
-        $cr_status_name = $cr_status?->status_name;
-        if ($current_user_is_just_a_viewer) {
-            $high_level_status_name = $cr_status?->high_level?->name;
-            $cr_status_name = $high_level_status_name ?? $cr_status_name;
+        if ($cr->isOnHold()) {
+            $cr_status_name = 'On Hold';
+        } else {
+            $cr_status = $cr->getCurrentStatus()?->status;
+            $cr_status_name = $cr_status?->status_name;
+            if ($current_user_is_just_a_viewer) {
+                $high_level_status_name = $cr_status?->high_level?->name;
+                $cr_status_name = $high_level_status_name ?? $cr_status_name;
+            }
         }
     @endphp
 
@@ -154,11 +158,15 @@
                     <tbody>
                     @forelse($statuses as $status)
                         @php
-                            $cr_status = $status->status;
-                            $cr_status_name = $cr_status?->status_name;
-                            if ($current_user_is_just_a_viewer) {
-                                $high_level_status_name = $cr_status?->high_level?->name;
-                                $cr_status_name = $high_level_status_name ?? $cr_status_name;
+                            if ($cr->isOnHold()) {
+                                $cr_status_name = 'On Hold';
+                            } else {
+                                $cr_status = $status->status;
+                                $cr_status_name = $cr_status?->status_name;
+                                if ($current_user_is_just_a_viewer) {
+                                    $high_level_status_name = $cr_status?->high_level?->name;
+                                    $cr_status_name = $high_level_status_name ?? $cr_status_name;
+                                }
                             }
                         @endphp
                         <tr style="border-bottom: 1px solid #f3f4f6; transition: all 0.2s;">

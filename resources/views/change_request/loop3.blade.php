@@ -27,13 +27,7 @@
         @if(!$view_technical_team_flag || ($view_technical_team_flag && in_array($default_group, $assigned_technical_teams) && $check_if_status_active))
             <tr>
                 {{-- ✅ Change Request Number --}}
-                @can('Edit ChangeRequest')
-                    <td>
-                        <a href='{{ url("$route") }}/{{ $item->id }}/edit?check_dm=1'>
-                            {{ $item['cr_no'] }}
-                        </a>
-                    </td>
-                @elsecan('Show ChangeRequest')
+                @canany(['Edit ChangeRequest', 'Show ChangeRequest'])
                     <td>
                         <a href='{{ url("$route") }}/{{ $item->id }}'>
                             {{ $item['cr_no'] }}
@@ -59,23 +53,27 @@
 
                 @can('edit hold cr')
 
-
-                {{-- ✅ Action Buttons --}}
-                <td class="align-middle">
-                <div class="d-flex justify-content-center gap-2">
-                        <button type="button" class="btn btn-outline-success btn-sm _approved_continue mr-5"
-                                data-id="{{ $item->id }}"
-                                data-token="{{ $token }}">
-                            ✅ {{ optional($item->getCurrentStatus()?->status)->status_name ?? '' }}
-                        </button>
-                        <button type="button" class="btn btn-outline-danger btn-sm dis_approved_continue"
-                                data-id="{{ $item->id }}"
-                                data-token="{{ $token }}">
-                            ❌ Promo Validation
-                        </button>
-                    </div>
-                </td>
-@endcan
+                    {{-- Action Buttons --}}
+                    <td class="align-middle">
+                        <div class="d-flex justify-content-center gap-2">
+                            <button type="button" class="btn btn-outline-success btn-sm _approved_continue mr-5"
+                                    data-id="{{ $item->id }}"
+                                    data-token="{{ $token }}">
+                                {{ optional($item->getCurrentStatus()?->status)->status_name ?? '' }}
+                            </button>
+                            <button type="button" class="btn btn-outline-primary btn-sm dis_approved_continue"
+                                    data-id="{{ $item->id }}"
+                                    data-token="{{ $token }}">
+                                <!-- In House -->
+                                @if($item->workflow_type_id === 3)
+                                    Business Validation
+                                @else
+                                    Promo Validation
+                                @endif
+                            </button>
+                        </div>
+                    </td>
+                @endcan
 
             </tr>
         @endif

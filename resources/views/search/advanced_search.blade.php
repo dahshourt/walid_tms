@@ -313,7 +313,11 @@
                                     <td>{{ $item['release']['name'] ?? "" }}</td>
                                     <td>
                                         @php
-                                            $statuses_names = $item->RequestStatuses->pluck('status.name');
+                                            if ($item->isOnHold()) {
+                                                $statuses_names = ['On Hold'];
+                                            } else {
+                                                $statuses_names = $item->RequestStatuses->pluck('status.name');
+                                            }
                                         @endphp
                                         <div class="d-flex flex-wrap align-items-center" style="gap: 0.4rem;">
                                             @forelse ($statuses_names as $statusName)

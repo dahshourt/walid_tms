@@ -65,8 +65,6 @@ class LogRepository implements LogRepositoryInterface
 
     public function logCreate($id, $request, $changeRequest_old, $type = 'create')
     {
-
-        //dd($request->all());
         $log = new LogRepository();
         // $user_id = $request->user_id ? $request->user_id : \Auth::user()->id;
 
@@ -251,7 +249,7 @@ class LogRepository implements LogRepositoryInterface
             $newStatusesNames = Status::whereIn('id', $newStatusesIds)->pluck('status_name')->toArray();
             $actualStatuses = implode(', ', $newStatusesNames);
 
-            if ($status_title) {
+            if ($status_title && $request->missing('hold')) {
                 $this->createLog($log, $id, $user->id, "Change Request Status changed to '$status_title' by {$user->user_name} (Actual Status: $actualStatuses)");
             } else {
                 $this->createLog($log, $id, $user->id, "Change Request Status changed to '$actualStatuses' by {$user->user_name}");
@@ -263,6 +261,12 @@ class LogRepository implements LogRepositoryInterface
                 : $workflow->workflowstatus[0]->to_status->status_name;
             */
             //$this->createLog($log, $id, $user->id, "Change Request Status changed to '$status_title' by {$user->user_name}");
+        }
+
+        if ($request->hold === 1) {
+            $this->createLog($log, $id, $user->id, "CR Held by $user->user_name");
+        } else if ($request->hold === 0) {
+            $this->createLog($log, $id, $user->id, "CR unheld by $user->user_name");
         }
 
         return true;
