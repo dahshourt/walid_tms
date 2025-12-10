@@ -73,7 +73,8 @@
 
                         @if($workflows_with_crs->count() > 0)
                             <!--begin: Tabs Navigation-->
-                            <ul class="nav nav-tabs nav-tabs-line nav-tabs-line-3x nav-tabs-line-primary mb-5" role="tablist">
+                            <ul class="nav nav-tabs nav-tabs-line nav-tabs-line-3x nav-tabs-line-primary mb-5"
+                                role="tablist">
                                 @foreach($workflows_with_crs as $index => $workflow)
                                     <li class="nav-item">
                                         <a class="nav-link {{ $index === 0 ? 'active' : '' }}"
@@ -99,7 +100,7 @@
                                             $collection = $crs_by_work_flow_types[$workflow->id];
                                         @endphp
 
-                                        <!--begin: Datatable-->
+                                            <!--begin: Datatable-->
                                         <div class="table-responsive">
                                             <table class="table table-bordered">
                                                 <thead>
@@ -164,53 +165,53 @@
 @endsection
 
 @push('css')
-<style>
-    /* Enhanced Tab Styling */
-    .nav-tabs-line-3x .nav-link {
-        font-size: 1rem;
-        padding: 1rem 1.5rem;
-        color: #7e8299;
-        transition: all 0.3s ease;
-    }
-
-    .nav-tabs-line-3x .nav-link:hover {
-        color: #3699ff;
-    }
-
-    .nav-tabs-line-3x .nav-link.active {
-        color: #3699ff;
-        font-weight: 600;
-    }
-
-    .nav-tabs-line-3x .nav-link .badge {
-        font-size: 0.75rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.42rem;
-    }
-
-    /* Tab content styling */
-    .tab-content {
-        animation: fadeIn 0.3s ease-in;
-    }
-
-    @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
+    <style>
+        /* Enhanced Tab Styling */
+        .nav-tabs-line-3x .nav-link {
+            font-size: 1rem;
+            padding: 1rem 1.5rem;
+            color: #7e8299;
+            transition: all 0.3s ease;
         }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
 
-    /* Empty state styling */
-    .alert-light {
-        background-color: #f8f9fa;
-        border: 1px dashed #dee2e6;
-        padding: 2rem;
-    }
-</style>
+        .nav-tabs-line-3x .nav-link:hover {
+            color: #3699ff;
+        }
+
+        .nav-tabs-line-3x .nav-link.active {
+            color: #3699ff;
+            font-weight: 600;
+        }
+
+        .nav-tabs-line-3x .nav-link .badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.42rem;
+        }
+
+        /* Tab content styling */
+        .tab-content {
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Empty state styling */
+        .alert-light {
+            background-color: #f8f9fa;
+            border: 1px dashed #dee2e6;
+            padding: 2rem;
+        }
+    </style>
 @endpush
 
 @push('script')
@@ -277,7 +278,7 @@
 
     <script>
         // Tab persistence and pagination handling
-        $(document).ready(function() {
+        $(document).ready(function () {
             // Check for any type_X parameter in URL to determine active tab
             const urlParams = new URLSearchParams(window.location.search);
             let activeTabId = null;
