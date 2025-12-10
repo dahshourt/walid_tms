@@ -16,6 +16,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\Mail\MailController;
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use App\Http\Repository\RejectionReasons\RejectionReasonsRepository;
+use App\Http\Repository\Workflow\Workflow_type_repository;
 use App\Http\Requests\Change_Request\Api\attachments_CRS_Request;
 use App\Http\Requests\Change_Request\Api\changeRequest_Requests;
 use App\Http\Requests\Change_Request\HoldCRRequest;
@@ -133,9 +134,13 @@ class ChangeRequestController extends Controller
     {
         try {
             $this->authorize('List change requests');
-            $collection = $this->changerequest->getAll();
 
-            return view("{$this->view}.index", compact('collection'));
+            $active_work_flows = app(Workflow_type_repository::class)->getWorkflowsForListCRs();
+            $active_workflows_type_ids = $active_work_flows->pluck('id');
+
+            $crs_by_work_flow_types = $this->changerequest->getAllForLisCRs($active_workflows_type_ids->toArray());
+
+            return view("{$this->view}.index", compact('crs_by_work_flow_types', 'active_work_flows'));
         } catch (AuthorizationException $e) {
             Log::warning('Unauthorized access attempt to change requests list', [
                 'user_id' => auth()->id(),
@@ -547,29 +552,26 @@ class ChangeRequestController extends Controller
                 'man_day' => $request->man_days,
             ]);
         }
-        //dd($request->all());
-        if($request->cap_users){
+        // dd($request->all());
+        if ($request->cap_users) {
             $cap_users = array_unique($request->cap_users);
-            
-            if($request->cr) {
+
+            if ($request->cr) {
                 $requesterId = $request->cr->requester_id;
                 $requester = User::find($requesterId);
                 $requesterGroupId = $requester->default_group;
                 $crTeamGroup = Group::where('title', config('constants.group_names.cr_team'))->first();
 
-                if($requesterGroupId == $crTeamGroup->id)
-                {
-                    if(in_array($requesterId, $cap_users))
-                    {
-                        if(count($cap_users) < 2)
-                        {
+                if ($requesterGroupId == $crTeamGroup->id) {
+                    if (in_array($requesterId, $cap_users)) {
+                        if (count($cap_users) < 2) {
                             return redirect()->back()->withErrors('You cannot be the only CAB user. Please select at least one additional CAB user.');
                         }
                     }
-                } 
+                }
             }
         }
-        //dd('test');
+        // dd('test');
         DB::beginTransaction();
         try {
             // Handle technical teams assignment

@@ -10,6 +10,7 @@ use App\Models\NewWorkFlow;
 use App\Models\TechnicalCr;
 use App\Models\User;
 use Auth;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class ChangeRequestSearchService
 {
@@ -66,6 +67,64 @@ class ChangeRequestSearchService
         })->orderBy('id', 'DESC')->paginate(20);
 
         return $changeRequests;
+    }
+
+    public function getAllByWorkFlow(int $workflow_type_id, $group = null): LengthAwarePaginator
+    {
+        $group = $this->resolveGroup($group);
+        $groupData = Group::find($group);
+        $groupApplications = $groupData->group_applications->pluck('application_id')->toArray();
+        $viewStatuses = $this->getViewStatuses($group);
+
+        $changeRequests = Change_request::where('workflow_type_id', $workflow_type_id)->with('RequestStatuses.status');
+
+        if ($groupApplications) {
+            $changeRequests = $changeRequests->whereIn('application_id', $groupApplications);
+            /* $changeRequests = $changeRequests->whereHas('change_request_custom_fields', function ($q) use ($groupApplications) {
+                $q->whereIn('change_request_custom_fields.custom_field_name', ['application_id', 'sub_application_id'])->whereIn('change_request_custom_fields.custom_field_value', $groupApplications);
+            }); */
+
+            $changeRequests = $changeRequests->where(function ($query) use ($groupData) {
+                // Case 1: Where unit_id matches in custom fields
+                $query->whereHas('change_request_custom_fields', function ($q) use ($groupData) {
+                    $q->where('custom_field_name', 'tech_group_id')
+                        ->where('custom_field_value', $groupData->id);
+                })
+                    // Case 2: OR unit_id does NOT exist in custom fields
+                    ->orWhereDoesntHave('change_request_custom_fields', function ($q) {
+                        $q->where('custom_field_name', 'tech_group_id');
+                    });
+            });
+        }
+
+        return $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
+            $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($group) {
+                $qq->where('group_id', $group)->orWhereNull('group_id');
+            })
+                ->whereIn('new_status_id', $viewStatuses)
+                ->whereHas('status.group_statuses', function ($query) use ($group) {
+                    $query->where('group_id', $group)
+                        ->where('type', 2);
+                });
+        })->orderBy('id', 'DESC')
+            ->paginate(20, pageName: "type_$workflow_type_id");
+    }
+
+    public function getAllForLisCRs(array $workflow_type_ids, $group = null): array
+    {
+        $data = [];
+
+        foreach ($workflow_type_ids as $workflow_type_id) {
+            $crs = $this->getAllByWorkFlow($workflow_type_id, $group);
+
+            if ($crs->isEmpty()) {
+                continue;
+            }
+
+            $data[$workflow_type_id] = $crs;
+        }
+
+        return $data;
     }
 
     public function getAllWithoutPagination($group = null)

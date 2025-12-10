@@ -37,4 +37,12 @@ class Workflow_type_repository implements workflow_type_contracts
     {
         return WorkFlowType::active()->select('id', 'name', 'parent_id')->WhereNotNull('parent_id')->get();
     }
+
+    public function getWorkflowsForListCRs(): Collection
+    {
+        return WorkFlowType::active()->select(['id', 'name'])
+            ->WhereNotNull('parent_id')
+            ->whereIn('id', [3, 5, 9, 13])
+            ->get();
+    }
 }

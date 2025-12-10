@@ -3,6 +3,7 @@
 namespace App\Http\Repository\ChangeRequest;
 
 use App\Contracts\ChangeRequest\ChangeRequestRepositoryInterface;
+use App\Http\Repository\Logs\LogRepository;
 use App\Models\Change_request;
 use App\Models\Change_request_statuse;
 use App\Services\ChangeRequest\ChangeRequestCreationService;
@@ -11,7 +12,6 @@ use App\Services\ChangeRequest\ChangeRequestSearchService;
 use App\Services\ChangeRequest\ChangeRequestStatusService;
 use App\Services\ChangeRequest\ChangeRequestUpdateService;
 use App\Services\ChangeRequest\ChangeRequestValidationService;
-use App\Http\Repository\Logs\LogRepository;
 
 class ChangeRequestRepository implements ChangeRequestRepositoryInterface
 {
@@ -93,6 +93,11 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
     public function getAll($group = null)
     {
         return $this->searchService->getAll($group);
+    }
+
+    public function getAllForLisCRs(array $workflow_type_ids, $group = null): array
+    {
+        return $this->searchService->getAllForLisCRs($workflow_type_ids, $group);
     }
 
     public function getAllWithoutPagination($group = null)
