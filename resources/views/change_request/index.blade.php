@@ -108,72 +108,70 @@
             <!--end::Entry-->
         </div>
         <!--end::Content-->
+    </div>
 
+@endsection
 
-        @endsection
+@push('script')
 
+    <script>
+        $(function () {
+            $("#example1").DataTable({
+                "responsive": false,
+                "lengthChange": false,
+                "autoWidth": true,
+                "ordering": false,
+                "buttons": ["excel"]
+            }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+            $('#example2').DataTable({
+                "paging": false,
+                "lengthChange": false,
+                "searching": false,
+                "ordering": true,
+                "info": false,
+                "autoWidth": true,
+                "responsive": false,
+                "scrollX": true,
+                order: [[0, 'desc']]
 
+            });
+        });
 
-        @push('script')
+    </script>
 
-            <script>
-                $(function () {
-                    $("#example1").DataTable({
-                        "responsive": false,
-                        "lengthChange": false,
-                        "autoWidth": true,
-                        "ordering": false,
-                        "buttons": ["excel"]
-                    }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
-                    $('#example2').DataTable({
-                        "paging": false,
-                        "lengthChange": false,
-                        "searching": false,
-                        "ordering": true,
-                        "info": false,
-                        "autoWidth": true,
-                        "responsive": false,
-                        "scrollX": true,
-                        order: [[0, 'desc']]
+    <script>
+        $(document).on('click', '.js-toggle-cr-details', function (e) {
+            e.preventDefault();
+            var $btn = $(this);
+            var id = $btn.data('cr-id');
+            var $row = $btn.closest('tr');
+            console.log("clicked", id, $row);
+            var $details = $('tr.cr-details-row[data-cr-id="' + id + '"]');
+            var expanded = $btn.attr('aria-expanded') === 'true';
 
-                    });
-                });
+            if (expanded) {
+                $btn.attr('aria-expanded', 'false');
+                $btn.find('i.la').removeClass('la-angle-up').addClass('la-angle-down');
+                $details.hide();
+            } else {
+                $btn.attr('aria-expanded', 'true');
+                $btn.find('i.la').removeClass('la-angle-down').addClass('la-angle-up');
+                if ($details.prev()[0] !== $row[0]) {
+                    $details.insertAfter($row);
+                }
+                $details.show();
+            }
+        });
 
-            </script>
-
-            <script>
-                $(document).on('click', '.js-toggle-cr-details', function (e) {
-                    e.preventDefault();
-                    var $btn = $(this);
-                    var id = $btn.data('cr-id');
-                    var $row = $btn.closest('tr');
-                    console.log("clicked", id, $row);
-                    var $details = $('tr.cr-details-row[data-cr-id="' + id + '"]');
-                    var expanded = $btn.attr('aria-expanded') === 'true';
-
-                    if (expanded) {
-                        $btn.attr('aria-expanded', 'false');
-                        $btn.find('i.la').removeClass('la-angle-up').addClass('la-angle-down');
-                        $details.hide();
-                    } else {
-                        $btn.attr('aria-expanded', 'true');
-                        $btn.find('i.la').removeClass('la-angle-down').addClass('la-angle-up');
-                        if ($details.prev()[0] !== $row[0]) {
-                            $details.insertAfter($row);
-                        }
-                        $details.show();
-                    }
-                });
-
-                $(document).on('click', 'tr.cr-row', function (e) {
-                    if ($(e.target).closest('a, button, .js-toggle-cr-details, .dropdown-menu, .select2-container').length) {
-                        return;
-                    }
-                    $(this).find('.js-toggle-cr-details').trigger('click');
-                });
-                $(function () {
-                    $('tr.cr-row:first').find('.js-toggle-cr-details').trigger('click');
-                });
-            </script>
-    @endpush
+        $(document).on('click', 'tr.cr-row', function (e) {
+            if ($(e.target).closest('a, button, .js-toggle-cr-details, .dropdown-menu, .select2-container').length) {
+                return;
+            }
+            $(this).find('.js-toggle-cr-details').trigger('click');
+        });
+        $(function () {
+            $('tr.cr-row:first').find('.js-toggle-cr-details').trigger('click');
+        });
+    </script>
+@endpush
 
