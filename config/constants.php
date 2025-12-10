@@ -29,8 +29,8 @@ return [
 		],
 	'mails' =>
 	    [
-			'cr_manager' => 'sara.mostafa@te.eg',
-			'qc_mail' => 'mahmoud.bastawisy@te.eg',
+			'cr_manager' => 'ahmed.o.hasan@te.eg',
+			'qc_mail' => 'ahmed.o.hasan@te.eg',
 			'ticketing_dev_mail' => 'Ticketing.DEV@te.eg',
 			'cr_team' => 'IT.CR@te.eg',
 			'qc_team' => 'IT.QC@te.eg',

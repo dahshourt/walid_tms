@@ -131,13 +131,13 @@ class LogRepository implements LogRepositoryInterface
 
             if ($cf->type === 'multiselect') {
 
-                if ($cf->name === 'cap_users') {
-                    $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name}, 'user_id')?->load('user');
-                    $rest_of_message = $data?->pluck('user.name')?->unique()?->implode(', ');
-                } else {
+                // if ($cf->name === 'cap_users') {
+                //     $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name}, 'user_id')?->load('user');
+                //     $rest_of_message = $data?->pluck('user.name')?->unique()?->implode(', ');
+                // } else {
                     $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name});
                     $rest_of_message = $data?->implode(', ');
-                }
+                //}
 
                 $message .= " '$rest_of_message'";
                 $base['already_has_message'] = true;
