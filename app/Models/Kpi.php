@@ -55,4 +55,12 @@ class Kpi extends Model
     {
         return $this->belongsToMany(Change_request::class, 'kpi_change_request', 'kpi_id', 'cr_id');
     }
+
+    /**
+     * Get the column name to use for display purposes in logs
+     */
+    public function getNameColumn(): string
+    {
+        return 'name';
+    }
 }
