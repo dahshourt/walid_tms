@@ -495,7 +495,7 @@ private function validateStatusChange($changeRequest, $statusData, $workflow)
 
         $active = self::INACTIVE_STATUS;
         $cr_status = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('new_status_id', $oldStatusId)
-            ->whereRaw('CAST(active AS CHAR) != ?', ['0'])->first();
+            ->whereRaw('CAST(active AS CHAR) != ?', ['0'])->latest()->first();
         //->where('active','!=', '0')->first();
 		
         $parkedIds = array_values(config('change_request.promo_parked_status_ids', []));
