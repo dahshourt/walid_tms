@@ -118,39 +118,61 @@
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="font-weight-bold">
-                            Sub-Initiative <span class="text-muted font-weight-normal">(Optional)</span>
-                            <span id="sub-initiative-loader" class="ml-2" style="display: none;">
-                                <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                    <span class="sr-only">Loading...</span>
-                                </div>
-                            </span>
-                        </label>
-                        <select class="form-control kt-select2" name="sub_initiative_id"
-                                id="sub_initiative_id" {{ $isDisabled }}>
-                            <option value="">Select Sub-Initiative</option>
-                            @if(isset($row) && $row->subInitiative)
-                                <option value="{{ $row->subInitiative->id }}"
-                                        selected>{{ $row->subInitiative->name }}</option>
-                            @endif
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group">
-                        <label class="font-weight-bold">Creator</label>
-                        <input type="text" class="form-control-plaintext"
-                               value="{{ isset($row) ? ($row->creator->user_name ?? 'Unknown') : auth()->user()->user_name }}"
-                               disabled style="background-color: #f3f6f9; opacity: 0.65;">
-                        @if(!isset($row))
-                            <input type="hidden" name="created_by" value="{{ auth()->id() }}">
-                        @endif
-                    </div>
-                </div>
-            </div>
+             <div class="row">
+                 <div class="col-md-6">
+                     <div class="form-group">
+                         <label class="font-weight-bold">
+                             Sub-Initiative <span class="text-muted font-weight-normal">(Optional)</span>
+                             <span id="sub-initiative-loader" class="ml-2" style="display: none;">
+                                 <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                     <span class="sr-only">Loading...</span>
+                                 </div>
+                             </span>
+                         </label>
+                         <select class="form-control kt-select2" name="sub_initiative_id"
+                                 id="sub_initiative_id" {{ $isDisabled }}>
+                             <option value="">Select Sub-Initiative</option>
+                             @if(isset($row) && $row->subInitiative)
+                                 <option value="{{ $row->subInitiative->id }}"
+                                         selected>{{ $row->subInitiative->name }}</option>
+                             @endif
+                         </select>
+                     </div>
+                 </div>
+                 <div class="col-md-6">
+                     <div class="form-group">
+                         <label class="font-weight-bold">
+                             Requester Email <span class="text-danger">*</span>
+                             <span id="requester-email-loader" class="ml-2" style="display: none;">
+                                 <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                     <span class="sr-only">Checking...</span>
+                                 </div>
+                             </span>
+                         </label>
+                         <input type="email" class="{{ $isView ? 'form-control-plaintext' : 'form-control' }}" 
+                                name="requester_email" id="requester_email"
+                                value="{{ $row->requester_email ?? old('requester_email') }}" 
+                                {{ $isView || isset($row) ? 'disabled' : '' }}
+                                placeholder="Enter Requester Email"
+                                style="{{ $isView || isset($row) ? 'background-color: #f3f6f9; opacity: 0.65;' : '' }}">
+                         <div id="requester_email_feedback" class="form-control-feedback mt-1"></div>
+                     </div>
+                 </div>
+             </div>
+
+             <div class="row">
+                 <div class="col-md-6">
+                     <div class="form-group">
+                         <label class="font-weight-bold">Creator</label>
+                         <input type="text" class="form-control-plaintext"
+                                value="{{ isset($row) ? ($row->creator->user_name ?? 'Unknown') : auth()->user()->user_name }}"
+                                disabled style="background-color: #f3f6f9; opacity: 0.65;">
+                         @if(!isset($row))
+                             <input type="hidden" name="created_by" value="{{ auth()->id() }}">
+                         @endif
+                     </div>
+                 </div>
+             </div>
         </div>
     </div>
 
@@ -412,11 +434,165 @@
             });
 
             // Trigger initial load if editing existing KPI
-            @if(isset($row) && $row->pillar_id)
-            pillarSelect.trigger('change');
-            @endif
+             @if(isset($row) && $row->pillar_id)
+             pillarSelect.trigger('change');
+             @endif
 
-            @if(isset($row) && !$isView)
+             // Email validation for Requester Email (only on create page)
+             @if(!isset($row))
+             const submitButton = $('button[type="submit"]');
+             const emailFeedback = $('#requester_email_feedback');
+             const emailLoader = $('#requester-email-loader');
+             const requesterEmailInput = $("#requester_email");
+             const kpiForm = requesterEmailInput.closest('form');
+             let currentRequest = null;
+
+             // Initial check on page load
+             check_requester_email();
+
+             // Check email on input change with debouncing
+             let emailTimeout;
+             requesterEmailInput.on('paste blur', function () {
+                 clearTimeout(emailTimeout);
+                 abortCurrentRequest();
+                 resetEmailState();
+
+                 emailTimeout = setTimeout(function () {
+                     check_requester_email();
+                 }, 500);
+             });
+
+             if (kpiForm.length) {
+                 kpiForm.on('submit', function (event) {
+                     clearTimeout(emailTimeout);
+                     abortCurrentRequest();
+                     resetEmailState();
+
+                     event.preventDefault();
+
+                     const request = check_requester_email({requireEmail: true});
+
+                     if (!request || typeof request.done !== 'function') {
+                         return;
+                     }
+
+                     request.done(function (data) {
+                         if (data && data.valid) {
+                             event.currentTarget.submit();
+                         }
+                     });
+
+                     request.fail(function () {
+                         submitButton.prop("disabled", true);
+                     });
+                 });
+             }
+
+             function abortCurrentRequest() {
+                 if (currentRequest) {
+                     currentRequest.abort();
+                     currentRequest = null;
+                 }
+             }
+
+             function resetEmailState() {
+                 emailLoader.hide();
+                 requesterEmailInput.prop('disabled', false);
+                 emailFeedback.text("");
+                 emailFeedback.removeClass('text-success text-danger');
+                 requesterEmailInput.removeClass('is-valid is-invalid');
+                 submitButton.prop("disabled", true);
+             }
+
+             function check_requester_email(options = {}) {
+                 const {requireEmail = false} = options;
+                 const email = requesterEmailInput.val().trim();
+
+                 if (!email) {
+                     resetEmailState();
+                     if (requireEmail) {
+                         requesterEmailInput.removeClass('is-valid').addClass('is-invalid');
+                         emailFeedback.text('Requester email is required');
+                         emailFeedback.removeClass('text-success').addClass('text-danger');
+                     }
+                     return;
+                 }
+
+                 // Basic email format validation
+                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                 if (!emailRegex.test(email)) {
+                     resetEmailState();
+                     emailFeedback.text('Please enter a valid email format');
+                     emailFeedback.addClass('text-danger');
+                     requesterEmailInput.addClass('is-invalid');
+                     return;
+                 }
+
+                 // Start validation process
+                 startValidation();
+
+                 // Make AJAX request
+                 currentRequest = $.ajax({
+                     headers: {
+                         'X-CSRF-TOKEN': "{{ csrf_token() }}"
+                     },
+                     url: '{{ route("kpis.check-requester-email") }}',
+                     data: {email: email},
+                     dataType: 'JSON',
+                     type: 'POST',
+                     success: function (data) {
+                         currentRequest = null;
+                         endValidation();
+
+                         if (data.valid) {
+                             submitButton.prop("disabled", false);
+                             requesterEmailInput.removeClass('is-invalid');
+                             requesterEmailInput.addClass('is-valid');
+                             emailFeedback.text(data.message);
+                             emailFeedback.removeClass('text-danger');
+                             emailFeedback.addClass('text-success');
+                         } else {
+                             submitButton.prop("disabled", true);
+                             requesterEmailInput.removeClass('is-valid');
+                             requesterEmailInput.addClass('is-invalid');
+                             emailFeedback.text(data.message);
+                             emailFeedback.removeClass('text-success');
+                             emailFeedback.addClass('text-danger');
+                         }
+                     },
+                     error: function (xhr) {
+                         if (xhr.statusText !== 'abort') {
+                             currentRequest = null;
+                             endValidation();
+
+                             submitButton.prop("disabled", true);
+                             requesterEmailInput.removeClass('is-valid');
+                             requesterEmailInput.addClass('is-invalid');
+                             emailFeedback.text('Error checking email. Please try again.');
+                             emailFeedback.removeClass('text-success');
+                             emailFeedback.addClass('text-danger');
+                         }
+                     }
+                 });
+                 return currentRequest;
+             }
+
+             function startValidation() {
+                 emailLoader.show();
+                 requesterEmailInput.prop('disabled', true);
+                 emailFeedback.text("");
+                 emailFeedback.removeClass('text-success text-danger');
+                 requesterEmailInput.removeClass('is-valid is-invalid');
+                 submitButton.prop("disabled", true);
+             }
+
+             function endValidation() {
+                 emailLoader.hide();
+                 requesterEmailInput.prop('disabled', false);
+             }
+             @endif
+
+             @if(isset($row) && !$isView)
             var kpiId = {{ (int) $row->id }};
             var searchUrl = "{{ route('kpis.search-cr', ['kpi' => $row->id]) }}";
             var attachUrl = "{{ route('kpis.attach-cr', ['kpi' => $row->id]) }}";

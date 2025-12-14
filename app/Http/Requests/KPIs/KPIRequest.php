@@ -36,6 +36,7 @@ class KPIRequest extends FormRequest
             'type_id' => ['required', 'exists:kpi_types,id'],
             'kpi_brief' => ['required', 'string'],
             'classification' => ['required', 'in:CR,PM'],
+            'requester_email' => ['required', 'email', 'max:255'],
             // 'status' => ['required', 'in:Open,In Progress,Delivered'],
             'created_by' => ['nullable', 'exists:users,id'],
         ];
@@ -63,6 +64,7 @@ class KPIRequest extends FormRequest
             'type_id' => ['required', 'exists:kpi_types,id'],
             'kpi_brief' => ['required', 'string'],
             'classification' => ['required', 'in:CR,PM'],
+            'requester_email' => ['required', 'email', 'max:255'],
             // 'status' => ['required', 'in:Open,In Progress,Delivered'],
             'created_by' => ['nullable', 'exists:users,id'],
         ];

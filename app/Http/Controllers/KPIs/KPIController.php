@@ -294,4 +294,56 @@ class KPIController extends Controller
             'data' => $subInitiatives,
         ]);
     }
+
+    /**
+     * AJAX: Check requester email in Active Directory
+     */
+    public function checkRequesterEmail(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'email' => 'required|email:rfc,dns',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['valid' => false, 'message' => 'Please enter a valid email address.']);
+        }
+
+        $mail = $request->email;
+
+        // connection details
+        $name = config('constants.active-directory.name');
+        $pwd = config('constants.active-directory.pwd');
+        $ldap_host = config('constants.active-directory.ldap_host');
+        $ldap_binddn = config('constants.active-directory.ldap_binddn') . $name;
+        $ldap_rootdn = config('constants.active-directory.ldap_rootdn');
+
+        // Establish LDAP connection
+        $ldap = ldap_connect($ldap_host);
+
+        if ($ldap) {
+            ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
+            ldap_set_option($ldap, LDAP_OPT_REFERRALS, 0);
+
+            // Bind to LDAP server
+            $ldapbind = ldap_bind($ldap, $ldap_binddn, $pwd);
+
+            if ($ldapbind) {
+                // Search for the email in Active Directory
+                $escapedMail = ldap_escape($mail, '', LDAP_ESCAPE_FILTER);
+                $search = "(mail=$escapedMail)";
+                $result = ldap_search($ldap, $ldap_rootdn, $search);
+
+                // If search returns results, the email exists
+                if (ldap_count_entries($ldap, $result) > 0) {
+                    return response()->json(['valid' => true, 'message' => 'Valid email address.']);
+                }
+
+                return response()->json(['valid' => false, 'message' => 'Email not found in Active Directory.']);
+            }
+
+            return response()->json(['valid' => false, 'message' => 'Unable to connect to Active Directory.']);
+        }
+
+        return response()->json(['valid' => false, 'message' => 'Unable to connect to LDAP server.']);
+    }
 }

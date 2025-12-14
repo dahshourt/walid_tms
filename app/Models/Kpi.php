@@ -29,6 +29,7 @@ class Kpi extends Model
         'kpi_brief',
         'status',
         'created_by',
+        'requester_email',
     ];
     
     const PRIORITY = ['Critical', 'High', 'Medium', 'Low'];

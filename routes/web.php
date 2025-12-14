@@ -245,6 +245,7 @@ Route::middleware(['auth'])->group(
         Route::get('kpis/export', 'KPIs\\KPIController@export')->name('kpis.export');
         Route::get('kpis/get-initiatives', 'KPIs\KPIController@getInitiativesByPillar')->name('kpis.get-initiatives');
         Route::get('kpis/get-sub-initiatives', 'KPIs\KPIController@getSubInitiativesByInitiative')->name('kpis.get-sub-initiatives');
+        Route::post('kpis/check-requester-email', 'KPIs\KPIController@checkRequesterEmail')->name('kpis.check-requester-email');
         Route::resource('kpis', KPIs\KPIController::class);
         Route::get('kpis/{kpi}/search-cr', 'KPIs\KPIController@searchChangeRequest')->name('kpis.search-cr');
         Route::post('kpis/{kpi}/attach-cr', 'KPIs\KPIController@attachChangeRequest')->name('kpis.attach-cr');
