@@ -17,14 +17,14 @@ class Kpi extends Model
     protected $fillable = [
         'name',
         'priority',
-        'strategic_pillar',
-        'initiative',
-        'sub_initiative',
+        'pillar_id',
+        'initiative_id',
+        'sub_initiative_id',
         'bu',
         'sub_bu',
         'target_launch_quarter',
         'target_launch_year',
-        'type',
+        'type_id',
         'classification',
         'kpi_brief',
         'status',
@@ -54,6 +54,26 @@ class Kpi extends Model
     public function changeRequests(): BelongsToMany
     {
         return $this->belongsToMany(Change_request::class, 'kpi_change_request', 'kpi_id', 'cr_id');
+    }
+
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(KpiType::class, 'type_id');
+    }
+
+    public function pillar(): BelongsTo
+    {
+        return $this->belongsTo(KpiPillar::class, 'pillar_id');
+    }
+
+    public function initiative(): BelongsTo
+    {
+        return $this->belongsTo(KpiInitiative::class, 'initiative_id');
+    }
+
+    public function subInitiative(): BelongsTo
+    {
+        return $this->belongsTo(KpiSubInitiative::class, 'sub_initiative_id');
     }
 
     /**

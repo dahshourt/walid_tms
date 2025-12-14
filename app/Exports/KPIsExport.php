@@ -15,7 +15,7 @@ class KPIsExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMa
      */
     public function collection()
     {
-        return Kpi::with(['creator:id,name'])
+        return Kpi::with(['creator:id,name', 'type:id,name'])
             ->orderByDesc('created_at')
             ->get();
     }
@@ -45,8 +45,8 @@ class KPIsExport implements FromCollection, ShouldAutoSize, WithHeadings, WithMa
             $kpi->name,
             $kpi->priority ?? 'N/A',
             $kpi->status ?? 'N/A',
-            $kpi->quarter ?? 'N/A',
-            $kpi->type ?? 'N/A',
+            $kpi->target_launch_quarter ?? 'N/A',
+            $kpi->type->name ?? 'N/A',
             $kpi->classification ?? 'N/A',
             $kpi->creator->name ?? 'N/A',
             $kpi->created_at ? $kpi->created_at->format('Y-m-d H:i:s') : 'N/A',

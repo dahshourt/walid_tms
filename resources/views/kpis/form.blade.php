@@ -75,16 +75,41 @@
             <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label class="font-weight-bold">Strategic Pillar <span class="text-danger">*</span></label>
-                        <input type="text" class="{{ $inputClass }}" name="strategic_pillar" 
-                               value="{{ $row->strategic_pillar ?? old('strategic_pillar') }}" {{ $isDisabled }} required placeholder="Enter Strategic Pillar">
+                        <label class="font-weight-bold">
+                            Strategic Pillar <span class="text-danger">*</span>
+                            <span id="pillar-loader" class="ml-2" style="display: none;">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </span>
+                        </label>
+                        <select class="form-control kt-select2" name="pillar_id" id="pillar_id" {{ $isDisabled }} required>
+                            <option value="">Select Strategic Pillar</option>
+                            @foreach($pillars as $pillar)
+                                <option value="{{ $pillar->id }}" 
+                                    {{ (isset($row) && $row->pillar_id == $pillar->id) || old('pillar_id') == $pillar->id ? 'selected' : '' }}>
+                                    {{ $pillar->name }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label class="font-weight-bold">Initiative <span class="text-danger">*</span></label>
-                        <input type="text" class="{{ $inputClass }}" name="initiative" 
-                               value="{{ $row->initiative ?? old('initiative') }}" {{ $isDisabled }} required placeholder="Enter Initiative">
+                        <label class="font-weight-bold">
+                            Initiative <span class="text-danger">*</span>
+                            <span id="initiative-loader" class="ml-2" style="display: none;">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </span>
+                        </label>
+                        <select class="form-control kt-select2" name="initiative_id" id="initiative_id" {{ $isDisabled }} required>
+                            <option value="">Select Initiative</option>
+                            @if(isset($row) && $row->initiative)
+                                <option value="{{ $row->initiative->id }}" selected>{{ $row->initiative->name }}</option>
+                            @endif
+                        </select>
                     </div>
                 </div>
             </div>
@@ -92,9 +117,20 @@
              <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
-                        <label class="font-weight-bold">Sub-Initiative <span class="text-muted font-weight-normal">(Optional)</span></label>
-                        <input type="text" class="{{ $inputClass }}" name="sub_initiative" 
-                               value="{{ $row->sub_initiative ?? old('sub_initiative') }}" {{ $isDisabled }} placeholder="Enter Sub-Initiative">
+                        <label class="font-weight-bold">
+                            Sub-Initiative <span class="text-muted font-weight-normal">(Optional)</span>
+                            <span id="sub-initiative-loader" class="ml-2" style="display: none;">
+                                <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                    <span class="sr-only">Loading...</span>
+                                </div>
+                            </span>
+                        </label>
+                        <select class="form-control kt-select2" name="sub_initiative_id" id="sub_initiative_id" {{ $isDisabled }}>
+                            <option value="">Select Sub-Initiative</option>
+                            @if(isset($row) && $row->subInitiative)
+                                <option value="{{ $row->subInitiative->id }}" selected>{{ $row->subInitiative->name }}</option>
+                            @endif
+                        </select>
                     </div>
                 </div>
                 <div class="col-md-6">
@@ -139,12 +175,12 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="font-weight-bold">Type <span class="text-danger">*</span></label>
-                        <select class="form-control kt-select2" name="type" {{ $isDisabled }} required>
+                        <select class="form-control kt-select2" name="type_id" {{ $isDisabled }} required>
                             <option value="">Select Type</option>
                             @foreach($types as $type)
-                                <option value="{{ $type }}" 
-                                    {{ (isset($row) && $row->type == $type) || old('type') == $type ? 'selected' : '' }}>
-                                    {{ $type }}
+                                <option value="{{ $type->id }}" 
+                                    {{ (isset($row) && $row->type_id == $type->id) || old('type_id') == $type->id ? 'selected' : '' }}>
+                                    {{ $type->name }}
                                 </option>
                             @endforeach
                         </select>
@@ -255,6 +291,115 @@
                 allowClear: true,
                 width: '100%'
             });
+
+            // Cascading Select Logic for Pillar -> Initiative -> Sub-Initiative
+            const pillarSelect = $('#pillar_id');
+            const initiativeSelect = $('#initiative_id');
+            const subInitiativeSelect = $('#sub_initiative_id');
+            const pillarLoader = $('#pillar-loader');
+            const initiativeLoader = $('#initiative-loader');
+            const subInitiativeLoader = $('#sub-initiative-loader');
+
+            // Store initial values for edit mode
+            const initialInitiativeId = '{{ isset($row) ? $row->initiative_id : old("initiative_id") }}';
+            const initialSubInitiativeId = '{{ isset($row) ? $row->sub_initiative_id : old("sub_initiative_id") }}';
+
+            // When pillar changes, load initiatives
+            pillarSelect.on('change', function() {
+                const pillarId = $(this).val();
+                
+                // Reset initiative and sub-initiative
+                initiativeSelect.html('<option value="">Select Initiative</option>').prop('disabled', true).trigger('change');
+                subInitiativeSelect.html('<option value="">Select Sub-Initiative</option>').prop('disabled', true).trigger('change');
+
+                if (!pillarId) {
+                    return;
+                }
+
+                // Show loader
+                initiativeLoader.show();
+                initiativeSelect.prop('disabled', true);
+
+                // Fetch initiatives
+                $.ajax({
+                    url: '{{ route("kpis.get-initiatives") }}',
+                    type: 'GET',
+                    data: { pillar_id: pillarId },
+                    dataType: 'json',
+                    success: function(response) {
+                        initiativeLoader.hide();
+                        
+                        if (response.success && response.data.length > 0) {
+                            let options = '<option value="">Select Initiative</option>';
+                            response.data.forEach(function(initiative) {
+                                const selected = initiative.id == initialInitiativeId ? 'selected' : '';
+                                options += `<option value="${initiative.id}" ${selected}>${initiative.name}</option>`;
+                            });
+                            initiativeSelect.html(options).prop('disabled', false);
+                            
+                            // If there was an initial initiative selected, trigger change to load sub-initiatives
+                            if (initialInitiativeId) {
+                                initiativeSelect.trigger('change');
+                            }
+                        } else {
+                            initiativeSelect.html('<option value="">No initiatives available</option>').prop('disabled', true);
+                        }
+                    },
+                    error: function(xhr) {
+                        initiativeLoader.hide();
+                        initiativeSelect.html('<option value="">Error loading initiatives</option>').prop('disabled', true);
+                        console.error('Error fetching initiatives:', xhr);
+                    }
+                });
+            });
+
+            // When initiative changes, load sub-initiatives
+            initiativeSelect.on('change', function() {
+                const initiativeId = $(this).val();
+                
+                // Reset sub-initiative
+                subInitiativeSelect.html('<option value="">Select Sub-Initiative</option>').prop('disabled', true).trigger('change');
+
+                if (!initiativeId) {
+                    return;
+                }
+
+                // Show loader
+                subInitiativeLoader.show();
+                subInitiativeSelect.prop('disabled', true);
+
+                // Fetch sub-initiatives
+                $.ajax({
+                    url: '{{ route("kpis.get-sub-initiatives") }}',
+                    type: 'GET',
+                    data: { initiative_id: initiativeId },
+                    dataType: 'json',
+                    success: function(response) {
+                        subInitiativeLoader.hide();
+                        
+                        if (response.success && response.data.length > 0) {
+                            let options = '<option value="">Select Sub-Initiative</option>';
+                            response.data.forEach(function(subInitiative) {
+                                const selected = subInitiative.id == initialSubInitiativeId ? 'selected' : '';
+                                options += `<option value="${subInitiative.id}" ${selected}>${subInitiative.name}</option>`;
+                            });
+                            subInitiativeSelect.html(options).prop('disabled', false);
+                        } else {
+                            subInitiativeSelect.html('<option value="">No sub-initiatives available</option>').prop('disabled', false);
+                        }
+                    },
+                    error: function(xhr) {
+                        subInitiativeLoader.hide();
+                        subInitiativeSelect.html('<option value="">Error loading sub-initiatives</option>').prop('disabled', true);
+                        console.error('Error fetching sub-initiatives:', xhr);
+                    }
+                });
+            });
+
+            // Trigger initial load if editing existing KPI
+            @if(isset($row) && $row->pillar_id)
+                pillarSelect.trigger('change');
+            @endif
 
             @if(isset($row) && !$isView)
             var kpiId = {{ (int) $row->id }};

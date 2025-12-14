@@ -4,6 +4,8 @@ namespace App\Http\Controllers\KPIs;
 
 use App\Factories\KPIs\KPIFactory;
 use App\Http\Controllers\Controller;
+use App\Services\KpiPillar\KpiPillarService;
+use App\Services\KpiType\KpiTypeService;
 use Illuminate\Http\Request;
 use App\Models\Kpi;
 use App\Http\Requests\KPIs\KPIRequest;
@@ -28,7 +30,7 @@ class KPIController extends Controller
         $view = 'kpis';
         $route = 'kpis';
         $OtherRoute = 'kpis';
-        
+
         $title = 'Strategic KPIs';
         $form_title = 'Strategic KPIs';
         view()->share(compact('view', 'route', 'title', 'form_title', 'OtherRoute'));
@@ -53,10 +55,11 @@ class KPIController extends Controller
         $this->authorize('Create KPIs');
         $priorities = Kpi::PRIORITY;
         $quarters = Kpi::QUARTER;
-        $types = Kpi::TYPE;
         $classifications = Kpi::CLASSIFICATION;
+        $types = app(KpiTypeService::class)->getAllActive();
+        $pillars = app(KpiPillarService::class)->getAllActive();
 
-        return view("$this->view.create", compact('priorities', 'quarters', 'types', 'classifications'));
+        return view("$this->view.create", compact('priorities', 'quarters', 'types', 'classifications', 'pillars'));
     }
 
     /**
@@ -90,13 +93,14 @@ class KPIController extends Controller
 
         $priorities = Kpi::PRIORITY;
         $quarters = Kpi::QUARTER;
-        $types = Kpi::TYPE;
+        $types = app(KpiTypeService::class)->getAllActive();
+        $pillars = app(KpiPillarService::class)->getAllActive();
         $classifications = Kpi::CLASSIFICATION;
         $logs = $row ? $row->logs : collect();
         $comments = $row ? $row->comments : collect();
         $changeRequests = $row ? $row->changeRequests : collect();
 
-        return view("$this->view.show", compact('row', 'priorities', 'quarters', 'types', 'classifications', 'logs', 'comments', 'changeRequests'));
+        return view("$this->view.show", compact('row', 'priorities', 'quarters', 'types', 'classifications', 'logs', 'comments', 'changeRequests', 'pillars'));
     }
 
     /**
@@ -112,13 +116,14 @@ class KPIController extends Controller
 
         $priorities = Kpi::PRIORITY;
         $quarters = Kpi::QUARTER;
-        $types = Kpi::TYPE;
+        $types = app(KpiTypeService::class)->getAllActive();
+        $pillars = app(KpiPillarService::class)->getAllActive();
         $classifications = Kpi::CLASSIFICATION;
         $logs = $row ? $row->logs : collect();
         $comments = $row ? $row->comments : collect();
         $changeRequests = $row ? $row->changeRequests : collect();
 
-        return view("$this->view.edit", compact('row', 'priorities', 'quarters', 'types', 'classifications', 'logs', 'comments', 'changeRequests'));
+        return view("$this->view.edit", compact('row', 'priorities', 'quarters', 'types', 'classifications', 'logs', 'comments', 'changeRequests', 'pillars'));
     }
 
     /**
@@ -244,5 +249,49 @@ class KPIController extends Controller
         $statusCode = $result['success'] ?? false ? 200 : 422;
 
         return response()->json($result, $statusCode);
+    }
+
+    /**
+     * AJAX: Get initiatives by pillar ID
+     */
+    public function getInitiativesByPillar(Request $request)
+    {
+        $request->validate([
+            'pillar_id' => ['required', 'exists:kpi_pillars,id'],
+        ]);
+
+        $pillarId = $request->input('pillar_id');
+        
+        $initiatives = \App\Models\KpiInitiative::where('pillar_id', $pillarId)
+            ->where('status', '1')
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $initiatives,
+        ]);
+    }
+
+    /**
+     * AJAX: Get sub-initiatives by initiative ID
+     */
+    public function getSubInitiativesByInitiative(Request $request)
+    {
+        $request->validate([
+            'initiative_id' => ['required', 'exists:kpi_initiatives,id'],
+        ]);
+
+        $initiativeId = $request->input('initiative_id');
+        
+        $subInitiatives = \App\Models\KpiSubInitiative::where('initiative_id', $initiativeId)
+            ->where('status', '1')
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $subInitiatives,
+        ]);
     }
 }
