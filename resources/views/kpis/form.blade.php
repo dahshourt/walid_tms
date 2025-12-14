@@ -284,18 +284,16 @@
 </div>
 
 @push('css')
-    <link href="{{ asset('assets/plugins/custom/select2/css/select2.min.css') }}" rel="stylesheet" type="text/css"/>
+    <link href="{{ asset('assets/plugins/custom/select2/css/select2.min.css') }}" rel="stylesheet" type="text/css" />
     <style>
-        .card-title {
-            font-size: 1.2rem;
-        }
+        .card-title { font-size: 1.2rem; }
+        .form-group label { font-size: 0.95rem; }
+        .timeline.timeline-3 .timeline-item .timeline-content { padding-left: 10px; }
 
-        .form-group label {
-            font-size: 0.95rem;
-        }
-
-        .timeline.timeline-3 .timeline-item .timeline-content {
-            padding-left: 10px;
+        /* Simple section borders */
+        .card.card-custom.card-stretch.gutter-b {
+            border: 1px solid #e4e6ef;
+            margin-bottom: 20px;
         }
     </style>
 @endpush
