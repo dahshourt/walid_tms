@@ -82,6 +82,36 @@
 @endsection
 
 @push('script')
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+ 
+	const applicationIdField = document.querySelector('[name="application_id"]');
+	const selectedText =
+    applicationIdField.options[applicationIdField.selectedIndex].text;
+
+    const divisionManagerField = document.getElementById("division_manager");
+	//if(selectedText  === "TMS" ){  alert('ok');}
+	
+    function handleApplicationId() {
+        if (selectedText === "TMS") {
+            divisionManagerField.value = "tarek.tolba@te.eg";
+            divisionManagerField.disabled = true;
+        } else {
+            divisionManagerField.value = "";
+            divisionManagerField.disabled = false;
+        }
+    }
+
+    // Run on page load
+    handleApplicationId();
+
+    // Run when application_id changes
+    applicationIdField.addEventListener("change", handleApplicationId);
+});
+</script>
+
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const form = document.querySelector("form");
@@ -173,6 +203,9 @@
 	
 	
 </script>
+
+
+
 @endpush
 
 
