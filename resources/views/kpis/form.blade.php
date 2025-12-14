@@ -5,7 +5,7 @@
     $isDisabled = $isView ? 'disabled' : '';
     $currentYear = date('Y');
     $years = range($currentYear - 5, $currentYear + 5);
-    
+
     // Status Badge Color Mapping
     $statusColors = [
         'Open' => 'primary',
@@ -17,7 +17,7 @@
 @endphp
 
 <div class="card-body">
-    @if($errors->any()) 
+    @if($errors->any())
         <div class="alert alert-custom alert-light-danger fade show mb-5" role="alert">
             <div class="alert-icon"><i class="flaticon-warning"></i></div>
             <div class="alert-text">
@@ -52,8 +52,9 @@
                 <div class="col-md-8">
                     <div class="form-group">
                         <label class="font-weight-bold">KPI Name <span class="text-danger">*</span></label>
-                        <input type="text" class="{{ $inputClass }}" name="name" 
-                               value="{{ $row->name ?? old('name') }}" {{ $isDisabled }} required placeholder="Enter KPI Name">
+                        <input type="text" class="{{ $inputClass }}" name="name"
+                               value="{{ $row->name ?? old('name') }}" {{ $isDisabled }} required
+                               placeholder="Enter KPI Name">
                     </div>
                 </div>
                 <div class="col-md-4">
@@ -62,7 +63,7 @@
                         <select class="form-control kt-select2" name="priority" {{ $isDisabled }} required>
                             <option value="">Select Priority</option>
                             @foreach($priorities as $priority)
-                                <option value="{{ $priority }}" 
+                                <option value="{{ $priority }}"
                                     {{ (isset($row) && $row->priority == $priority) || old('priority') == $priority ? 'selected' : '' }}>
                                     {{ $priority }}
                                 </option>
@@ -83,10 +84,11 @@
                                 </div>
                             </span>
                         </label>
-                        <select class="form-control kt-select2" name="pillar_id" id="pillar_id" {{ $isDisabled }} required>
+                        <select class="form-control kt-select2" name="pillar_id" id="pillar_id"
+                                {{ $isDisabled }} required>
                             <option value="">Select Strategic Pillar</option>
                             @foreach($pillars as $pillar)
-                                <option value="{{ $pillar->id }}" 
+                                <option value="{{ $pillar->id }}"
                                     {{ (isset($row) && $row->pillar_id == $pillar->id) || old('pillar_id') == $pillar->id ? 'selected' : '' }}>
                                     {{ $pillar->name }}
                                 </option>
@@ -104,17 +106,19 @@
                                 </div>
                             </span>
                         </label>
-                        <select class="form-control kt-select2" name="initiative_id" id="initiative_id" {{ $isDisabled }} required>
+                        <select class="form-control kt-select2" name="initiative_id" id="initiative_id"
+                                {{ $isDisabled }} required>
                             <option value="">Select Initiative</option>
                             @if(isset($row) && $row->initiative)
-                                <option value="{{ $row->initiative->id }}" selected>{{ $row->initiative->name }}</option>
+                                <option value="{{ $row->initiative->id }}"
+                                        selected>{{ $row->initiative->name }}</option>
                             @endif
                         </select>
                     </div>
                 </div>
             </div>
-            
-             <div class="row">
+
+            <div class="row">
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="font-weight-bold">
@@ -125,10 +129,12 @@
                                 </div>
                             </span>
                         </label>
-                        <select class="form-control kt-select2" name="sub_initiative_id" id="sub_initiative_id" {{ $isDisabled }}>
+                        <select class="form-control kt-select2" name="sub_initiative_id"
+                                id="sub_initiative_id" {{ $isDisabled }}>
                             <option value="">Select Sub-Initiative</option>
                             @if(isset($row) && $row->subInitiative)
-                                <option value="{{ $row->subInitiative->id }}" selected>{{ $row->subInitiative->name }}</option>
+                                <option value="{{ $row->subInitiative->id }}"
+                                        selected>{{ $row->subInitiative->name }}</option>
                             @endif
                         </select>
                     </div>
@@ -136,8 +142,8 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="font-weight-bold">Creator</label>
-                        <input type="text" class="form-control-plaintext" 
-                               value="{{ isset($row) ? ($row->creator->user_name ?? 'Unknown') : auth()->user()->user_name }}" 
+                        <input type="text" class="form-control-plaintext"
+                               value="{{ isset($row) ? ($row->creator->user_name ?? 'Unknown') : auth()->user()->user_name }}"
                                disabled style="background-color: #f3f6f9; opacity: 0.65;">
                         @if(!isset($row))
                             <input type="hidden" name="created_by" value="{{ auth()->id() }}">
@@ -158,15 +164,17 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="font-weight-bold">Business Unit (BU) <span class="text-danger">*</span></label>
-                        <input type="text" class="{{ $inputClass }}" name="bu" 
-                               value="{{ $row->bu ?? old('bu') }}" {{ $isDisabled }} required placeholder="Enter Business Unit">
+                        <input type="text" class="{{ $inputClass }}" name="bu"
+                               value="{{ $row->bu ?? old('bu') }}" {{ $isDisabled }} required
+                               placeholder="Enter Business Unit">
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="font-weight-bold">Sub-Business Unit <span class="text-muted font-weight-normal">(Optional)</span></label>
-                        <input type="text" class="{{ $inputClass }}" name="sub_bu" 
-                               value="{{ $row->sub_bu ?? old('sub_bu') }}" {{ $isDisabled }} placeholder="Enter Sub-Business Unit">
+                        <input type="text" class="{{ $inputClass }}" name="sub_bu"
+                               value="{{ $row->sub_bu ?? old('sub_bu') }}"
+                               {{ $isDisabled }} placeholder="Enter Sub-Business Unit">
                     </div>
                 </div>
             </div>
@@ -178,7 +186,7 @@
                         <select class="form-control kt-select2" name="type_id" {{ $isDisabled }} required>
                             <option value="">Select Type</option>
                             @foreach($types as $type)
-                                <option value="{{ $type->id }}" 
+                                <option value="{{ $type->id }}"
                                     {{ (isset($row) && $row->type_id == $type->id) || old('type_id') == $type->id ? 'selected' : '' }}>
                                     {{ $type->name }}
                                 </option>
@@ -192,7 +200,7 @@
                         <select class="form-control kt-select2" name="classification" {{ $isDisabled }} required>
                             <option value="">Select Classification</option>
                             @foreach($classifications as $class)
-                                <option value="{{ $class }}" 
+                                <option value="{{ $class }}"
                                     {{ (isset($row) && $row->classification == $class) || old('classification') == $class ? 'selected' : '' }}>
                                     {{ $class }}
                                 </option>
@@ -217,7 +225,7 @@
                         <select class="form-control kt-select2" name="target_launch_quarter" {{ $isDisabled }} required>
                             <option value="">Select Quarter</option>
                             @foreach($quarters as $quarter)
-                                <option value="{{ $quarter }}" 
+                                <option value="{{ $quarter }}"
                                     {{ (isset($row) && $row->target_launch_quarter == $quarter) || old('target_launch_quarter') == $quarter ? 'selected' : '' }}>
                                     {{ $quarter }}
                                 </option>
@@ -231,7 +239,7 @@
                         <select class="form-control kt-select2" name="target_launch_year" {{ $isDisabled }} required>
                             <option value="">Select Year</option>
                             @foreach($years as $year)
-                                <option value="{{ $year }}" 
+                                <option value="{{ $year }}"
                                     {{ (isset($row) && $row->target_launch_year == $year) || old('target_launch_year') == $year ? 'selected' : '' }}>
                                     {{ $year }}
                                 </option>
@@ -251,12 +259,14 @@
         <div class="card-body">
             <div class="form-group">
                 <label class="font-weight-bold">KPI Brief <span class="text-danger">*</span></label>
-                <textarea class="{{ $inputClass }}" name="kpi_brief" rows="4" {{ $isDisabled }} required placeholder="Enter KPI Brief">{{ $row->kpi_brief ?? old('kpi_brief') }}</textarea>
+                <textarea class="{{ $inputClass }}" name="kpi_brief" rows="4" {{ $isDisabled }} required
+                          placeholder="Enter KPI Brief">{{ $row->kpi_brief ?? old('kpi_brief') }}</textarea>
             </div>
 
             <div class="form-group">
                 <label class="font-weight-bold">KPI Comment</label>
-                <textarea class="{{ $inputClass }}" name="kpi_comment" rows="4" {{ $isDisabled }} placeholder="Add a comment (optional)">{{ old('kpi_comment') }}</textarea>
+                <textarea class="{{ $inputClass }}" name="kpi_comment" rows="4"
+                          {{ $isDisabled }} placeholder="Add a comment (optional)">{{ old('kpi_comment') }}</textarea>
                 <span class="form-text text-muted">This comment will be added to the history logs.</span>
             </div>
         </div>
@@ -264,7 +274,6 @@
 
     <!-- Section: Comments History (Moved to separate partial) -->
 
-    
 
     <!-- Hidden Inputs for Read-Only Status -->
     @if(isset($row))
@@ -274,18 +283,26 @@
     @endif
 </div>
 
-@push('styles')
-    <link href="{{ asset('assets/plugins/custom/select2/css/select2.min.css') }}" rel="stylesheet" type="text/css" />
+@push('css')
+    <link href="{{ asset('assets/plugins/custom/select2/css/select2.min.css') }}" rel="stylesheet" type="text/css"/>
     <style>
-        .card-title { font-size: 1.2rem; }
-        .form-group label { font-size: 0.95rem; }
-        .timeline.timeline-3 .timeline-item .timeline-content { padding-left: 10px; }
+        .card-title {
+            font-size: 1.2rem;
+        }
+
+        .form-group label {
+            font-size: 0.95rem;
+        }
+
+        .timeline.timeline-3 .timeline-item .timeline-content {
+            padding-left: 10px;
+        }
     </style>
 @endpush
 
 @push('script')
     <script>
-        jQuery(document).ready(function() {
+        jQuery(document).ready(function () {
             $('.kt-select2').select2({
                 placeholder: "Select an option",
                 allowClear: true,
@@ -305,9 +322,9 @@
             const initialSubInitiativeId = '{{ isset($row) ? $row->sub_initiative_id : old("sub_initiative_id") }}';
 
             // When pillar changes, load initiatives
-            pillarSelect.on('change', function() {
+            pillarSelect.on('change', function () {
                 const pillarId = $(this).val();
-                
+
                 // Reset initiative and sub-initiative
                 initiativeSelect.html('<option value="">Select Initiative</option>').prop('disabled', true).trigger('change');
                 subInitiativeSelect.html('<option value="">Select Sub-Initiative</option>').prop('disabled', true).trigger('change');
@@ -324,19 +341,19 @@
                 $.ajax({
                     url: '{{ route("kpis.get-initiatives") }}',
                     type: 'GET',
-                    data: { pillar_id: pillarId },
+                    data: {pillar_id: pillarId},
                     dataType: 'json',
-                    success: function(response) {
+                    success: function (response) {
                         initiativeLoader.hide();
-                        
+
                         if (response.success && response.data.length > 0) {
                             let options = '<option value="">Select Initiative</option>';
-                            response.data.forEach(function(initiative) {
+                            response.data.forEach(function (initiative) {
                                 const selected = initiative.id == initialInitiativeId ? 'selected' : '';
                                 options += `<option value="${initiative.id}" ${selected}>${initiative.name}</option>`;
                             });
                             initiativeSelect.html(options).prop('disabled', false);
-                            
+
                             // If there was an initial initiative selected, trigger change to load sub-initiatives
                             if (initialInitiativeId) {
                                 initiativeSelect.trigger('change');
@@ -345,7 +362,7 @@
                             initiativeSelect.html('<option value="">No initiatives available</option>').prop('disabled', true);
                         }
                     },
-                    error: function(xhr) {
+                    error: function (xhr) {
                         initiativeLoader.hide();
                         initiativeSelect.html('<option value="">Error loading initiatives</option>').prop('disabled', true);
                         console.error('Error fetching initiatives:', xhr);
@@ -354,9 +371,9 @@
             });
 
             // When initiative changes, load sub-initiatives
-            initiativeSelect.on('change', function() {
+            initiativeSelect.on('change', function () {
                 const initiativeId = $(this).val();
-                
+
                 // Reset sub-initiative
                 subInitiativeSelect.html('<option value="">Select Sub-Initiative</option>').prop('disabled', true).trigger('change');
 
@@ -372,14 +389,14 @@
                 $.ajax({
                     url: '{{ route("kpis.get-sub-initiatives") }}',
                     type: 'GET',
-                    data: { initiative_id: initiativeId },
+                    data: {initiative_id: initiativeId},
                     dataType: 'json',
-                    success: function(response) {
+                    success: function (response) {
                         subInitiativeLoader.hide();
-                        
+
                         if (response.success && response.data.length > 0) {
                             let options = '<option value="">Select Sub-Initiative</option>';
-                            response.data.forEach(function(subInitiative) {
+                            response.data.forEach(function (subInitiative) {
                                 const selected = subInitiative.id == initialSubInitiativeId ? 'selected' : '';
                                 options += `<option value="${subInitiative.id}" ${selected}>${subInitiative.name}</option>`;
                             });
@@ -388,7 +405,7 @@
                             subInitiativeSelect.html('<option value="">No sub-initiatives available</option>').prop('disabled', false);
                         }
                     },
-                    error: function(xhr) {
+                    error: function (xhr) {
                         subInitiativeLoader.hide();
                         subInitiativeSelect.html('<option value="">Error loading sub-initiatives</option>').prop('disabled', true);
                         console.error('Error fetching sub-initiatives:', xhr);
@@ -398,7 +415,7 @@
 
             // Trigger initial load if editing existing KPI
             @if(isset($row) && $row->pillar_id)
-                pillarSelect.trigger('change');
+            pillarSelect.trigger('change');
             @endif
 
             @if(isset($row) && !$isView)
@@ -422,10 +439,10 @@
                 var btn = $(this);
                 btn.addClass('spinner spinner-white spinner-right').prop('disabled', true);
 
-                $.get(searchUrl, { cr_no: crNo })
+                $.get(searchUrl, {cr_no: crNo})
                     .done(function (response) {
                         btn.removeClass('spinner spinner-white spinner-right').prop('disabled', false);
-                        
+
                         if (!response.success) {
                             $('#kpi_cr_search_message').text(response.message || 'Unable to find Change Request.');
                             return;
@@ -470,32 +487,32 @@
                         cr_no: crNo,
                         _csrf: csrfToken,
                     },
-                    headers: { 'X-CSRF-TOKEN': csrfToken }
+                    headers: {'X-CSRF-TOKEN': csrfToken}
                 })
-                .done(function (response) {
-                    btn.removeClass('spinner spinner-white spinner-right').prop('disabled', false);
-                    $('#kpi_cr_search_result').hide();
-                    $('#kpi_cr_no').val('');
+                    .done(function (response) {
+                        btn.removeClass('spinner spinner-white spinner-right').prop('disabled', false);
+                        $('#kpi_cr_search_result').hide();
+                        $('#kpi_cr_no').val('');
 
-                    if (!response.success) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: response.message || 'Unable to link Change Request.'
-                        });
-                        return;
-                    }
+                        if (!response.success) {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message || 'Unable to link Change Request.'
+                            });
+                            return;
+                        }
 
-                    // Add row to table
-                    var cr = response.cr;
-                    if (cr) {
-                        $('.no-records').remove();
-                        var existingRow = $('#kpi_cr_table_body').find('tr[data-cr-id="' + cr.id + '"]');
-                        if (existingRow.length === 0) {
-                            var statusText = (cr.CurrentRequestStatuses && cr.CurrentRequestStatuses.status) ? cr.CurrentRequestStatuses.status.status_name : (cr.status_name || '-');
-                            var workflowText = (cr.workflow_type && cr.workflow_type.name) ? cr.workflow_type.name : (cr.workflowType && cr.workflowType.name ? cr.workflowType.name : '');
-                            
-                            var newRow = `
+                        // Add row to table
+                        var cr = response.cr;
+                        if (cr) {
+                            $('.no-records').remove();
+                            var existingRow = $('#kpi_cr_table_body').find('tr[data-cr-id="' + cr.id + '"]');
+                            if (existingRow.length === 0) {
+                                var statusText = (cr.CurrentRequestStatuses && cr.CurrentRequestStatuses.status) ? cr.CurrentRequestStatuses.status.status_name : (cr.status_name || '-');
+                                var workflowText = (cr.workflow_type && cr.workflow_type.name) ? cr.workflow_type.name : (cr.workflowType && cr.workflowType.name ? cr.workflowType.name : '');
+
+                                var newRow = `
                                 <tr data-cr-id="${cr.id}">
                                     <td class="pl-0 font-weight-bolder">${cr.cr_no}</td>
                                     <td><a href="${response.show_url || '#'}" target="_blank" class="text-dark-75 text-hover-primary font-weight-bold">${cr.title || ''}</a></td>
@@ -508,35 +525,35 @@
                                     </td>
                                 </tr>
                             `;
-                            $('#kpi_cr_table_body').append(newRow);
+                                $('#kpi_cr_table_body').append(newRow);
+                            }
                         }
-                    }
 
-                    if (response.kpi_status) {
-                        // Update status badge if needed (requires page reload or complex DOM manipulation, simple reload for now or just alert)
+                        if (response.kpi_status) {
+                            // Update status badge if needed (requires page reload or complex DOM manipulation, simple reload for now or just alert)
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success',
+                                text: response.message,
+                                timer: 2000,
+                                showConfirmButton: false
+                            }).then(() => {
+                                location.reload(); // Reload to update status badge
+                            });
+                        }
+                    })
+                    .fail(function (xhr) {
+                        btn.removeClass('spinner spinner-white spinner-right').prop('disabled', false);
+                        var msg = 'Error linking Change Request.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            msg = xhr.responseJSON.message;
+                        }
                         Swal.fire({
-                            icon: 'success',
-                            title: 'Success',
-                            text: response.message,
-                            timer: 2000,
-                            showConfirmButton: false
-                        }).then(() => {
-                            location.reload(); // Reload to update status badge
+                            icon: 'error',
+                            title: 'Error',
+                            text: msg
                         });
-                    }
-                })
-                .fail(function (xhr) {
-                    btn.removeClass('spinner spinner-white spinner-right').prop('disabled', false);
-                    var msg = 'Error linking Change Request.';
-                    if (xhr.responseJSON && xhr.responseJSON.message) {
-                        msg = xhr.responseJSON.message;
-                    }
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: msg
                     });
-                });
             });
 
             $('#kpi_cr_table_body').on('click', '.js-detach-cr', function () {
@@ -556,31 +573,31 @@
                         $.ajax({
                             url: detachBaseUrl + '/' + crId,
                             type: 'DELETE',
-                            headers: { 'X-CSRF-TOKEN': csrfToken }
+                            headers: {'X-CSRF-TOKEN': csrfToken}
                         })
-                        .done(function (response) {
-                            if (!response.success) {
-                                Swal.fire('Error', response.message || 'Unable to remove Change Request.', 'error');
-                                return;
-                            }
-                            row.remove();
-                            if ($('#kpi_cr_table_body tr').length === 0) {
-                                $('#kpi_cr_table_body').append('<tr class="no-records"><td colspan="5" class="text-center text-muted font-weight-bold py-5">No Change Requests linked to this KPI.</td></tr>');
-                            }
-                            
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Unlinked!',
-                                text: response.message,
-                                timer: 1500,
-                                showConfirmButton: false
-                            }).then(() => {
-                                location.reload(); // Reload to update status badge
+                            .done(function (response) {
+                                if (!response.success) {
+                                    Swal.fire('Error', response.message || 'Unable to remove Change Request.', 'error');
+                                    return;
+                                }
+                                row.remove();
+                                if ($('#kpi_cr_table_body tr').length === 0) {
+                                    $('#kpi_cr_table_body').append('<tr class="no-records"><td colspan="5" class="text-center text-muted font-weight-bold py-5">No Change Requests linked to this KPI.</td></tr>');
+                                }
+
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Unlinked!',
+                                    text: response.message,
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    location.reload(); // Reload to update status badge
+                                });
+                            })
+                            .fail(function (xhr) {
+                                Swal.fire('Error', 'Error removing Change Request.', 'error');
                             });
-                        })
-                        .fail(function (xhr) {
-                            Swal.fire('Error', 'Error removing Change Request.', 'error');
-                        });
                     }
                 });
             });
