@@ -100,6 +100,19 @@ Route::middleware(['auth'])->group(
         Route::resource('hold-reasons', 'HoldReasonController')->except(['show', 'destroy']);
         Route::post('hold-reasons/update-status', 'HoldReasonController@updateStatus')->name('hold-reasons.update-status');
 
+        // KPI Configuration Routes
+        Route::resource('kpi-types', 'KpiType\KpiTypeController')->except(['show', 'destroy']);
+        Route::post('kpi-types/update-status', 'KpiType\KpiTypeController@updateStatus')->name('kpi-types.update-status');
+
+        Route::resource('kpi-pillars', 'KpiPillar\KpiPillarController')->except(['show', 'destroy']);
+        Route::post('kpi-pillars/update-status', 'KpiPillar\KpiPillarController@updateStatus')->name('kpi-pillars.update-status');
+
+        Route::resource('kpi-initiatives', 'KpiInitiative\KpiInitiativeController')->except(['show', 'destroy']);
+        Route::post('kpi-initiatives/update-status', 'KpiInitiative\KpiInitiativeController@updateStatus')->name('kpi-initiatives.update-status');
+
+        Route::resource('kpi-sub-initiatives', 'KpiSubInitiative\KpiSubInitiativeController')->except(['show', 'destroy']);
+        Route::post('kpi-sub-initiatives/update-status', 'KpiSubInitiative\KpiSubInitiativeController@updateStatus')->name('kpi-sub-initiatives.update-status');
+
         Route::resource('units', 'Units\UnitController')->except(['show', 'destroy']);
         Route::post('units/updateactive', 'Units\UnitController@updateStatus')->name('units.updateStatus');
 
