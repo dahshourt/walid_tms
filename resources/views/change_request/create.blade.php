@@ -83,33 +83,8 @@
 
 @push('script')
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
- 
-	const applicationIdField = document.querySelector('[name="application_id"]');
-	const selectedText =
-    applicationIdField.options[applicationIdField.selectedIndex].text;
 
-    const divisionManagerField = document.getElementById("division_manager");
-	//if(selectedText  === "TMS" ){  alert('ok');}
-	
-    function handleApplicationId() {
-        if (selectedText === "TMS") {
-            divisionManagerField.value = "tarek.tolba@te.eg";
-            divisionManagerField.disabled = true;
-        } else {
-            divisionManagerField.value = "";
-            divisionManagerField.disabled = false;
-        }
-    }
 
-    // Run on page load
-    handleApplicationId();
-
-    // Run when application_id changes
-    applicationIdField.addEventListener("change", handleApplicationId);
-});
-</script>
 
 
 <script>
@@ -119,7 +94,7 @@ document.addEventListener("DOMContentLoaded", function () {
         form.addEventListener("submit", function (event) {
         
             const submitButton = form.querySelector("button[type='submit']");
-            submitButton.disabled = true;
+            //submitButton.disabled = true;
         });
     });
 </script>
@@ -175,7 +150,7 @@ document.addEventListener("DOMContentLoaded", function () {
 					dataType: 'JSON',
 					type: 'POST',
 					success: function ( data ) {
-						if (data.valid) {
+						if (data.valid) { 
 							//submitButton.disabled = false;
 							submitButton.prop("disabled", false);
 							divisionManagerInput.removeClass('is-invalid');
@@ -185,7 +160,7 @@ document.addEventListener("DOMContentLoaded", function () {
 							emailFeedback.addClass('text-success');
 						}
 						else {
-								
+								 
 							submitButton.prop("disabled", true);
 							divisionManagerInput.removeClass('is-valid');
 							divisionManagerInput.addClass('is-invalid');
@@ -204,7 +179,33 @@ document.addEventListener("DOMContentLoaded", function () {
 	
 </script>
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
 
+    const applicationIdField = document.querySelector('[name="application_id"]');
+    const divisionManagerField = document.getElementById("division_manager");
+
+    function handleApplicationId() {
+
+        const selectedText =
+            applicationIdField.options[applicationIdField.selectedIndex].text;
+
+        if (selectedText === "TMS") {
+            divisionManagerField.value = "tarek.tolba@te.eg";
+            divisionManagerField.readOnly = true;    
+        } else {
+            divisionManagerField.value = "";
+            divisionManagerField.readOnly = false;
+        }
+    }
+
+    // Run on page load
+    handleApplicationId();
+
+    // Run when application_id changes
+    applicationIdField.addEventListener("change", handleApplicationId);
+});
+</script>
 
 @endpush
 
