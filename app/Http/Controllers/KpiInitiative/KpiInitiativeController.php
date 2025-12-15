@@ -36,6 +36,7 @@ class KpiInitiativeController extends Controller
      */
     public function index(): View
     {
+        $this->authorize('List KPI Initiatives');
         $collection = $this->kpiInitiativeService->getAll();
 
         return view("$this->view.index", compact('collection'));
@@ -46,6 +47,7 @@ class KpiInitiativeController extends Controller
      */
     public function create(): View
     {
+        $this->authorize('Create KPI Initiatives');
         $pillars = $this->kpiPillarService->getAllActive();
 
         return view("$this->view.create", compact('pillars'));
@@ -56,6 +58,7 @@ class KpiInitiativeController extends Controller
      */
     public function store(KpiInitiativeRequest $request): RedirectResponse
     {
+        $this->authorize('Create KPI Initiatives');
         try {
             $this->kpiInitiativeService->create($request->validated());
 
@@ -73,6 +76,7 @@ class KpiInitiativeController extends Controller
      */
     public function edit(int $id): View
     {
+        $this->authorize('Edit KPI Initiatives');
         $row = $this->kpiInitiativeService->find($id);
 
         if (!$row) {
@@ -89,6 +93,7 @@ class KpiInitiativeController extends Controller
      */
     public function update(KpiInitiativeRequest $request, int $id): RedirectResponse
     {
+        $this->authorize('Edit KPI Initiatives');
         try {
             $updated = $this->kpiInitiativeService->update($request->validated(), $id);
 
@@ -112,6 +117,7 @@ class KpiInitiativeController extends Controller
      */
     public function updateStatus(): JsonResponse
     {
+        $this->authorize('Active KPI Initiatives');
         try {
             $id = request()->post('id');
             $updated = $this->kpiInitiativeService->toggleStatus($id);

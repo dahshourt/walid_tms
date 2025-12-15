@@ -36,6 +36,7 @@ class KpiSubInitiativeController extends Controller
      */
     public function index(): View
     {
+        $this->authorize('List KPI Sub-Initiatives');
         $collection = $this->kpiSubInitiativeService->getAll();
 
         return view("$this->view.index", compact('collection'));
@@ -46,6 +47,7 @@ class KpiSubInitiativeController extends Controller
      */
     public function create(): View
     {
+        $this->authorize('Create KPI Sub-Initiatives');
         $initiatives = $this->kpiInitiativeService->getAllActive();
 
         return view("$this->view.create", compact('initiatives'));
@@ -56,6 +58,7 @@ class KpiSubInitiativeController extends Controller
      */
     public function store(KpiSubInitiativeRequest $request): RedirectResponse
     {
+        $this->authorize('Create KPI Sub-Initiatives');
         try {
             $this->kpiSubInitiativeService->create($request->validated());
 
@@ -73,6 +76,7 @@ class KpiSubInitiativeController extends Controller
      */
     public function edit(int $id): View
     {
+        $this->authorize('Edit KPI Sub-Initiatives');
         $row = $this->kpiSubInitiativeService->find($id);
 
         if (!$row) {
@@ -89,6 +93,7 @@ class KpiSubInitiativeController extends Controller
      */
     public function update(KpiSubInitiativeRequest $request, int $id): RedirectResponse
     {
+        $this->authorize('Edit KPI Sub-Initiatives');
         try {
             $updated = $this->kpiSubInitiativeService->update($request->validated(), $id);
 
@@ -112,6 +117,7 @@ class KpiSubInitiativeController extends Controller
      */
     public function updateStatus(): JsonResponse
     {
+        $this->authorize('Active KPI Sub-Initiatives');
         try {
             $id = request()->post('id');
             $updated = $this->kpiSubInitiativeService->toggleStatus($id);

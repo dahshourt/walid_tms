@@ -31,6 +31,7 @@ class KpiTypeController extends Controller
      */
     public function index(): View
     {
+        $this->authorize('List KPI Types');
         $collection = $this->kpiTypeService->getAll();
 
         return view("$this->view.index", compact('collection'));
@@ -41,6 +42,7 @@ class KpiTypeController extends Controller
      */
     public function create(): View
     {
+        $this->authorize('Create KPI Types');
         return view("$this->view.create");
     }
 
@@ -49,6 +51,7 @@ class KpiTypeController extends Controller
      */
     public function store(KpiTypeRequest $request): RedirectResponse
     {
+        $this->authorize('Create KPI Types');
         try {
             $this->kpiTypeService->create($request->validated());
 
@@ -66,6 +69,7 @@ class KpiTypeController extends Controller
      */
     public function edit(int $id): View
     {
+        $this->authorize('Edit KPI Types');
         $row = $this->kpiTypeService->find($id);
 
         if (!$row) {
@@ -80,6 +84,7 @@ class KpiTypeController extends Controller
      */
     public function update(KpiTypeRequest $request, int $id): RedirectResponse
     {
+        $this->authorize('Edit KPI Types');
         try {
             $updated = $this->kpiTypeService->update($request->validated(), $id);
 
@@ -103,6 +108,7 @@ class KpiTypeController extends Controller
      */
     public function updateStatus(): JsonResponse
     {
+        $this->authorize('Active KPI Types');
         try {
             $id = request()->post('id');
             $updated = $this->kpiTypeService->toggleStatus($id);

@@ -31,6 +31,7 @@ class KpiPillarController extends Controller
      */
     public function index(): View
     {
+        $this->authorize('List KPI Pillars');
         $collection = $this->kpiPillarService->getAll();
 
         return view("$this->view.index", compact('collection'));
@@ -41,6 +42,7 @@ class KpiPillarController extends Controller
      */
     public function create(): View
     {
+        $this->authorize('Create KPI Pillars');
         return view("$this->view.create");
     }
 
@@ -49,6 +51,7 @@ class KpiPillarController extends Controller
      */
     public function store(KpiPillarRequest $request): RedirectResponse
     {
+        $this->authorize('Create KPI Pillars');
         try {
             $this->kpiPillarService->create($request->validated());
 
@@ -66,6 +69,7 @@ class KpiPillarController extends Controller
      */
     public function edit(int $id): View
     {
+        $this->authorize('Edit KPI Pillars');
         $row = $this->kpiPillarService->find($id);
 
         if (!$row) {
@@ -80,6 +84,7 @@ class KpiPillarController extends Controller
      */
     public function update(KpiPillarRequest $request, int $id): RedirectResponse
     {
+        $this->authorize('Edit KPI Pillars');
         try {
             $updated = $this->kpiPillarService->update($request->validated(), $id);
 
@@ -103,6 +108,7 @@ class KpiPillarController extends Controller
      */
     public function updateStatus(): JsonResponse
     {
+        $this->authorize('Active KPI Pillars');
         try {
             $id = request()->post('id');
             $updated = $this->kpiPillarService->toggleStatus($id);

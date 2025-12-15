@@ -614,6 +614,7 @@
                                         @endcan
 
                                         {{-- KPI Configurations Submenu --}}
+                                        @canany(['List KPI Types', 'List KPI Pillars', 'List KPI Initiatives', 'List KPI Sub-Initiatives'])
                                         <li class="menu-item menu-item-submenu" data-menu-toggle="hover" aria-haspopup="true">
                                             <a href="javascript:;" class="menu-link menu-toggle">
                                                 <span class="svg-icon menu-icon">
@@ -630,6 +631,7 @@
                                             </a>
                                             <div class="menu-submenu menu-submenu-classic menu-submenu-right">
                                                 <ul class="menu-subnav">
+                                                    @can('List KPI Types')
                                                     <li class="menu-item" aria-haspopup="true">
                                                         <a href="{{ route('kpi-types.index') }}" class="menu-link">
                                                             <i class="menu-bullet menu-bullet-dot">
@@ -638,6 +640,8 @@
                                                             <span class="menu-text">Type</span>
                                                         </a>
                                                     </li>
+                                                    @endcan
+                                                    @can('List KPI Pillars')
                                                     <li class="menu-item" aria-haspopup="true">
                                                         <a href="{{ route('kpi-pillars.index') }}" class="menu-link">
                                                             <i class="menu-bullet menu-bullet-dot">
@@ -646,6 +650,8 @@
                                                             <span class="menu-text">Pillars</span>
                                                         </a>
                                                     </li>
+                                                    @endcan
+                                                    @can('List KPI Initiatives')
                                                     <li class="menu-item" aria-haspopup="true">
                                                         <a href="{{ route('kpi-initiatives.index') }}" class="menu-link">
                                                             <i class="menu-bullet menu-bullet-dot">
@@ -654,6 +660,8 @@
                                                             <span class="menu-text">Initiative</span>
                                                         </a>
                                                     </li>
+                                                    @endcan
+                                                    @can('List KPI Sub-Initiatives')
                                                     <li class="menu-item" aria-haspopup="true">
                                                         <a href="{{ route('kpi-sub-initiatives.index') }}" class="menu-link">
                                                             <i class="menu-bullet menu-bullet-dot">
@@ -662,9 +670,11 @@
                                                             <span class="menu-text">Sub-Initiative</span>
                                                         </a>
                                                     </li>
+                                                    @endcan
                                                 </ul>
                                             </div>
                                         </li>
+                                        @endcanany
 
                                         @can('List HighLevelStatuses')
                                             <li class="menu-item menu-item-submenu menu-item-rel"
