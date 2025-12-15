@@ -251,6 +251,10 @@ Route::middleware(['auth'])->group(
         Route::post('kpis/{kpi}/attach-cr', 'KPIs\KPIController@attachChangeRequest')->name('kpis.attach-cr');
         Route::delete('kpis/{kpi}/detach-cr/{cr}', 'KPIs\KPIController@detachChangeRequest')->name('kpis.detach-cr');
 
+        // Project Manager KPI Routes
+        Route::resource('projects', Project\ProjectController::class);
+        Route::post('projects/delete-milestone', 'Project\ProjectController@deleteMilestone')->name('projects.delete-milestone');
+
         Route::prefix('reports')->group(function () {
 
             Route::get('/actual-vs-planned', [ReportController::class, 'actualVsPlanned'])
