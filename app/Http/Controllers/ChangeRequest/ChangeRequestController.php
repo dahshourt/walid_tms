@@ -856,8 +856,9 @@ class ChangeRequestController extends Controller
         $cr_id = $request->query('crId');
         $action = $request->query('action');
         $token = $request->query('token');
+        $workflow = $request->query('workflow');
 
-        if (! $cr_id || ! $action || ! $token) {
+        if (! $cr_id || ! $action || ! $token || ! $workflow) {
             return response()->json([
                 'isSuccess' => false,
                 'message' => 'Invalid request. Missing parameters.',
@@ -913,19 +914,19 @@ class ChangeRequestController extends Controller
             ], 400);
         }
 
-        $workflowIdForAction = $this->getWorkflowIdForAction($cr->workflow_type_id, $action);
-        if (! $workflowIdForAction) {
-            return response()->json([
-                'isSuccess' => false,
-                'message' => 'Unsupported workflow type.',
-            ], 400);
-        }
+        // $workflowIdForAction = $this->getWorkflowIdForAction($cr->workflow_type_id, $action);
+        // if (! $workflowIdForAction) {
+        //     return response()->json([
+        //         'isSuccess' => false,
+        //         'message' => 'Unsupported workflow type.',
+        //     ], 400);
+        // }
 
         try {
             $repo = new ChangeRequestRepository();
             $updateRequest = new Request([
                 'old_status_id' => $current_status,
-                'new_status_id' => $workflowIdForAction,
+                'new_status_id' => $workflow,
             ]);
             $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
 
@@ -941,7 +942,7 @@ class ChangeRequestController extends Controller
         } catch (Exception $e) {
             Log::error('Failed to process division manager action (JSON)', [
                 'cr_id' => $cr_id,
-                'action' => $action . ' - ' . $workflowIdForAction . ' - ' . $current_status,
+                'action' => $action . ' - ' . $workflow . ' - ' . $current_status,
                 'error' => $e,
             ]);
 
@@ -1077,10 +1078,11 @@ class ChangeRequestController extends Controller
     {
         $this->authorize('Edit cr pending cap');
         $cr_id = $request->query('crId');
+        $workflow = $request->query('workflow');
         $action = $request->query('action');
         $token = $request->query('token');
 
-        if (! $cr_id || ! $action || ! $token) {
+        if (! $cr_id || ! $action || ! $token || ! $workflow) {
             return response()->json([
                 'isSuccess' => false,
                 'message' => 'Invalid request. Missing parameters.',
@@ -1125,51 +1127,52 @@ class ChangeRequestController extends Controller
 
         try {
 
-            // $updateRequest = new Request([
-            //     'old_status_id' => $current_status,
-            //     'new_status_id' => $workflowIdForAction,
-            // ]);
+            $updateRequest = new Request([
+                'old_status_id' => $current_status,
+                'new_status_id' => $workflow,
+                'cab_cr_flag' => '1',
+                'user_id' => auth()->user()->id,
+            ]);
             // $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
-            if ($action == 'approve') {
-                if ($cr->workflow_type_id == 37) { // kam workflow
-                    $requestData = new \Illuminate\Http\Request([
-                        'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
-                        'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),
-                        'cab_cr_flag' => '1',
-                        'user_id' => auth()->user()->id,
-                    ]);
-                } else {
-                    $requestData = new \Illuminate\Http\Request([
-                        'old_status_id' => config('change_request.status_ids.pending_cab'),
-                        'new_status_id' => config('change_request.status_ids.pending_cab_proceed'),
-                        'cab_cr_flag' => '1',
-                        'user_id' => auth()->user()->id,
-                    ]);
-                }
+            // if ($action == 'approve') {
+            //     if ($cr->workflow_type_id == 37) { // kam workflow
+            //         $requestData = new \Illuminate\Http\Request([
+            //             'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
+            //             'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),
+            //             'cab_cr_flag' => '1',
+            //             'user_id' => auth()->user()->id,
+            //         ]);
+            //     } else {
+            //         $requestData = new \Illuminate\Http\Request([
+            //             'old_status_id' => config('change_request.status_ids.pending_cab'),
+            //             'new_status_id' => config('change_request.status_ids.pending_cab_proceed'),
+            //             'cab_cr_flag' => '1',
+            //             'user_id' => auth()->user()->id,
+            //         ]);
+            //     }
 
-            } else {
+            // } else {
 
-                if ($cr->workflow_type_id == 37) { // kam workflow
-                    $requestData = new \Illuminate\Http\Request([
-                        'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
-                        'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),
-                        'cab_cr_flag' => '1',
-                        'user_id' => auth()->user()->id,
-                    ]);
-                } else {
-                    $requestData = new \Illuminate\Http\Request([
-                        'old_status_id' => config('change_request.status_ids.pending_cab'),
-                        'new_status_id' => config('change_request.status_ids.pending_cab_review'),
-                        'cab_cr_flag' => '1',
-                        'user_id' => auth()->user()->id,
-                    ]);
-                }
+            //     if ($cr->workflow_type_id == 37) { // kam workflow
+            //         $requestData = new \Illuminate\Http\Request([
+            //             'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
+            //             'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),
+            //             'cab_cr_flag' => '1',
+            //             'user_id' => auth()->user()->id,
+            //         ]);
+            //     } else {
+            //         $requestData = new \Illuminate\Http\Request([
+            //             'old_status_id' => config('change_request.status_ids.pending_cab'),
+            //             'new_status_id' => config('change_request.status_ids.pending_cab_review'),
+            //             'cab_cr_flag' => '1',
+            //             'user_id' => auth()->user()->id,
+            //         ]);
+            //     }
 
-            }
+            // }
             $repo = new ChangeRequestRepository();
-            // print_r($requestData); die;
 
-            $repo->update($cr_id, $requestData);
+            $repo->update($cr_id, $updateRequest);
 
             $message = $action === 'approve'
                 ? "CR #{$cr_id} has been successfully approved."
