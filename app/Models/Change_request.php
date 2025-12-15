@@ -1035,4 +1035,47 @@ class Change_request extends Model
             ->orderBy('id', 'DESC')
             ->get();
     }
+
+    /**
+     * Check if the change request should be shown to the user based on technical team flags.
+     *
+     * @param int $defaultGroup
+     * @return bool
+     */
+    public function shouldShowToUser($defaultGroup): bool
+    {
+        $currentStatus = $this->getCurrentStatus();
+        if (!$currentStatus || !$currentStatus->status) {
+            return false;
+        }
+
+        $viewTechnicalTeamFlag = $currentStatus->status->view_technical_team_flag;
+
+        if (!$viewTechnicalTeamFlag) {
+            return true;
+        }
+
+        $assignedTechnicalTeams = $this->technical_Cr 
+            ? $this->technical_Cr->technical_cr_team->pluck('group_id')->toArray() 
+            : [];
+
+        $checkIfStatusActive = $this->technical_Cr 
+            ? $this->technical_Cr->technical_cr_team
+                ->where('group_id', $defaultGroup)
+                ->where('status', '0')
+                ->count() 
+            : 0;
+
+        return in_array($defaultGroup, $assignedTechnicalTeams) && $checkIfStatusActive;
+    }
+
+    /**
+     * Generate a token for approval/rejection actions.
+     *
+     * @return string
+     */
+    public function generateActionToken(): string
+    {
+        return md5($this->id . $this->created_at . env('APP_KEY'));
+    }
 }

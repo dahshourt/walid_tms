@@ -458,7 +458,11 @@ private function validateStatusChange($changeRequest, $statusData, $workflow)
                     null,
                     $currentStatus->reference_group_id,
                     $previous_group_id,
-                    $newStatusRow->group_statuses->where('type', '2')->pluck('group_id')->toArray()[0],
+                    //$newStatusRow->group_statuses->where('type', '2')->pluck('group_id')->toArray()[0],
+                    optional($newStatusRow->group_statuses)
+                        ->where('type', '2')
+                        ->pluck('group_id')
+                        ->first(),
                     $userId,
                     $active
                 );
