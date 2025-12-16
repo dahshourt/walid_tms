@@ -241,7 +241,7 @@
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label class="font-weight-bold">Target Launch Quarter <span class="text-danger">*</span></label>
                         <select class="form-control kt-select2" name="target_launch_quarter" {{ $isDisabled }} required>
@@ -255,7 +255,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label class="font-weight-bold">Target Launch Year <span class="text-danger">*</span></label>
                         <select class="form-control kt-select2" name="target_launch_year" {{ $isDisabled }} required>
@@ -267,6 +267,19 @@
                                 </option>
                             @endforeach
                         </select>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Target Numbers of CRs</label>
+                        <input
+                            type="number"
+                            class="{{ $inputClass }}"
+                            name="target_cr_count"
+                            value="{{ $row->target_cr_count ?? old('target_cr_count') }}"
+                            {{ $isDisabled }}
+                            min="0"
+                            placeholder="Enter Target Numbers of CRs">
                     </div>
                 </div>
             </div>

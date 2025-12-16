@@ -24,6 +24,7 @@ class Kpi extends Model
         'sub_bu',
         'target_launch_quarter',
         'target_launch_year',
+        'target_cr_count',
         'type_id',
         'classification',
         'kpi_brief',
