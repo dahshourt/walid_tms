@@ -125,8 +125,7 @@ class NotificationService
         return $resolved;
     }*/
 
-
-        protected function resolveRecipients($rule, $event)
+    protected function resolveRecipients($rule, $event)
         {
             $resolved = ['to' => [], 'cc' => [], 'bcc' => []];
 
@@ -139,22 +138,19 @@ class NotificationService
                 );
             }
 
-            // ✅ Add BCC condition based on event application_id
+             
             if (
-                isset($event->application_id) &&
-                (
-                    $event->application_id === 'tms' ||
-                    (int) $event->application_id === 88
-                )
+                $event instanceof \App\Events\ChangeRequestCreated &&
+                (int) $event->changeRequest->application_id == 88
             ) {
                 $resolved['bcc'][] = 'Ticketing.DEV@te.eg';
             }
 
-            // ✅ Optional: remove duplicate emails
             $resolved['bcc'] = array_unique($resolved['bcc']);
 
             return $resolved;
         }
+
 
     
     // the recipients emails
