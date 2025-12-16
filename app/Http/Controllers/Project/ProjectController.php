@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Project;
 
+use App\Exports\ProjectsExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Project\ProjectRequest;
 use App\Models\Project;
@@ -13,6 +14,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class ProjectController extends Controller
 {
@@ -144,5 +147,14 @@ class ProjectController extends Controller
                 'message' => 'Failed to delete milestone: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Export projects to Excel.
+     */
+    public function export(): BinaryFileResponse
+    {
+        $this->authorize('List Projects');
+        return Excel::download(new ProjectsExport, 'project-manager-kpis-' . date('Y-m-d') . '.xlsx');
     }
 }

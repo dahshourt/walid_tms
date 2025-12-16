@@ -254,6 +254,7 @@ Route::middleware(['auth'])->group(
         // Project Manager KPI Routes
         Route::resource('projects', Project\ProjectController::class);
         Route::post('projects/delete-milestone', 'Project\ProjectController@deleteMilestone')->name('projects.delete-milestone');
+        Route::get('projects-export', 'Project\ProjectController@export')->name('projects.export');
 
         Route::prefix('reports')->group(function () {
 
