@@ -6,6 +6,7 @@ use App\Factories\KPIs\KPIFactory;
 use App\Http\Controllers\Controller;
 use App\Services\KpiPillar\KpiPillarService;
 use App\Services\KpiType\KpiTypeService;
+use App\Services\Project\ProjectService;
 use Illuminate\Http\Request;
 use App\Models\Kpi;
 use App\Http\Requests\KPIs\KPIRequest;
@@ -58,8 +59,9 @@ class KPIController extends Controller
         $classifications = Kpi::CLASSIFICATION;
         $types = app(KpiTypeService::class)->getAllActive();
         $pillars = app(KpiPillarService::class)->getAllActive();
+        $projects = app(ProjectService::class)->listAll();
 
-        return view("$this->view.create", compact('priorities', 'quarters', 'types', 'classifications', 'pillars'));
+        return view("$this->view.create", compact('priorities', 'quarters', 'types', 'classifications', 'pillars', 'projects'));
     }
 
     /**
@@ -96,11 +98,12 @@ class KPIController extends Controller
         $types = app(KpiTypeService::class)->getAllActive();
         $pillars = app(KpiPillarService::class)->getAllActive();
         $classifications = Kpi::CLASSIFICATION;
+        $projects = app(ProjectService::class)->listAll();
         $logs = $row ? $row->logs : collect();
         $comments = $row ? $row->comments : collect();
         $changeRequests = $row ? $row->changeRequests : collect();
 
-        return view("$this->view.show", compact('row', 'priorities', 'quarters', 'types', 'classifications', 'logs', 'comments', 'changeRequests', 'pillars'));
+        return view("$this->view.show", compact('row', 'priorities', 'quarters', 'types', 'classifications', 'logs', 'comments', 'changeRequests', 'pillars', 'projects'));
     }
 
     /**
@@ -119,11 +122,12 @@ class KPIController extends Controller
         $types = app(KpiTypeService::class)->getAllActive();
         $pillars = app(KpiPillarService::class)->getAllActive();
         $classifications = Kpi::CLASSIFICATION;
+        $projects = app(ProjectService::class)->listAll();
         $logs = $row ? $row->logs : collect();
         $comments = $row ? $row->comments : collect();
         $changeRequests = $row ? $row->changeRequests : collect();
 
-        return view("$this->view.edit", compact('row', 'priorities', 'quarters', 'types', 'classifications', 'logs', 'comments', 'changeRequests', 'pillars'));
+        return view("$this->view.edit", compact('row', 'priorities', 'quarters', 'types', 'classifications', 'logs', 'comments', 'changeRequests', 'pillars', 'projects'));
     }
 
     /**

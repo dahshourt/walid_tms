@@ -23,6 +23,14 @@ class ProjectService
         return $this->projectRepository->getAll();
     }
 
+    /**
+     * Lightweight list of projects for dropdowns/selects.
+     */
+    public function listAll()
+    {
+        return $this->projectRepository->listAll();
+    }
+
     public function find(int $id): ?Project
     {
         return $this->projectRepository->find($id);

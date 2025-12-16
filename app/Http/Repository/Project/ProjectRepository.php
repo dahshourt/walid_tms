@@ -4,6 +4,7 @@ namespace App\Http\Repository\Project;
 
 use App\Models\Project;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class ProjectRepository
 {
@@ -16,6 +17,14 @@ class ProjectRepository
         }])
         ->orderBy('id', 'desc')
         ->paginate(15);
+    }
+
+    /**
+     * Return all projects (lightweight) for dropdowns/selects.
+     */
+    public function listAll(): Collection
+    {
+        return Project::orderBy('name')->get(['id', 'name']);
     }
 
     public function create(array $data): Project

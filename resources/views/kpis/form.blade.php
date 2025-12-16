@@ -219,7 +219,7 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="font-weight-bold">Classification <span class="text-danger">*</span></label>
-                        <select class="form-control kt-select2" name="classification" {{ $isDisabled }} required>
+                        <select class="form-control kt-select2" name="classification" id="classification" {{ $isDisabled }} required>
                             <option value="">Select Classification</option>
                             @foreach($classifications as $class)
                                 <option value="{{ $class }}"
@@ -240,46 +240,66 @@
             <h3 class="card-title font-weight-bolder">Timeline</h3>
         </div>
         <div class="card-body">
-            <div class="row">
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label class="font-weight-bold">Target Launch Quarter <span class="text-danger">*</span></label>
-                        <select class="form-control kt-select2" name="target_launch_quarter" {{ $isDisabled }} required>
-                            <option value="">Select Quarter</option>
-                            @foreach($quarters as $quarter)
-                                <option value="{{ $quarter }}"
-                                    {{ (isset($row) && $row->target_launch_quarter == $quarter) || old('target_launch_quarter') == $quarter ? 'selected' : '' }}>
-                                    {{ $quarter }}
-                                </option>
-                            @endforeach
-                        </select>
+            <div id="timeline-kpi-wrapper">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Target Launch Quarter <span class="text-danger">*</span></label>
+                            <select class="form-control kt-select2" name="target_launch_quarter" {{ $isDisabled }} required>
+                                <option value="">Select Quarter</option>
+                                @foreach($quarters as $quarter)
+                                    <option value="{{ $quarter }}"
+                                        {{ (isset($row) && $row->target_launch_quarter == $quarter) || old('target_launch_quarter') == $quarter ? 'selected' : '' }}>
+                                        {{ $quarter }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Target Launch Year <span class="text-danger">*</span></label>
+                            <select class="form-control kt-select2" name="target_launch_year" {{ $isDisabled }} required>
+                                <option value="">Select Year</option>
+                                @foreach($years as $year)
+                                    <option value="{{ $year }}"
+                                        {{ (isset($row) && $row->target_launch_year == $year) || old('target_launch_year') == $year ? 'selected' : '' }}>
+                                        {{ $year }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Target Numbers of CRs</label>
+                            <input
+                                type="number"
+                                class="{{ $inputClass }}"
+                                name="target_cr_count"
+                                value="{{ $row->target_cr_count ?? old('target_cr_count') }}"
+                                {{ $isDisabled }}
+                                min="0"
+                                placeholder="Enter Target Numbers of CRs">
+                        </div>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label class="font-weight-bold">Target Launch Year <span class="text-danger">*</span></label>
-                        <select class="form-control kt-select2" name="target_launch_year" {{ $isDisabled }} required>
-                            <option value="">Select Year</option>
-                            @foreach($years as $year)
-                                <option value="{{ $year }}"
-                                    {{ (isset($row) && $row->target_launch_year == $year) || old('target_launch_year') == $year ? 'selected' : '' }}>
-                                    {{ $year }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="form-group">
-                        <label class="font-weight-bold">Target Numbers of CRs</label>
-                        <input
-                            type="number"
-                            class="{{ $inputClass }}"
-                            name="target_cr_count"
-                            value="{{ $row->target_cr_count ?? old('target_cr_count') }}"
-                            {{ $isDisabled }}
-                            min="0"
-                            placeholder="Enter Target Numbers of CRs">
+            </div>
+
+            <div id="timeline-project-wrapper" style="display: none;">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label class="font-weight-bold">Project</label>
+                            <select class="form-control kt-select2" name="project_id" id="project_id" {{ $isDisabled }}>
+                                <option value="">Select Project</option>
+                                @foreach(($projects ?? []) as $project)
+                                    <option value="{{ $project->id }}" {{ old('project_id') == $project->id ? 'selected' : '' }}>
+                                        {{ $project->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -341,6 +361,28 @@
                 allowClear: true,
                 width: '100%'
             });
+
+            const classificationSelect = $('#classification');
+            const kpiTimelineWrapper = $('#timeline-kpi-wrapper');
+            const projectTimelineWrapper = $('#timeline-project-wrapper');
+            const projectSelect = $('#project_id');
+
+            const toggleTimelineByClassification = () => {
+                const value = classificationSelect.val();
+                if (value === 'PM') {
+                    kpiTimelineWrapper.hide();
+                    projectTimelineWrapper.show();
+                    projectSelect.prop('disabled', false).trigger('change.select2');
+                } else {
+                    projectTimelineWrapper.hide();
+                    projectSelect.val('').trigger('change');
+                    projectSelect.prop('disabled', true).trigger('change.select2');
+                    kpiTimelineWrapper.show();
+                }
+            };
+
+            classificationSelect.on('change', toggleTimelineByClassification);
+            toggleTimelineByClassification();
 
             // Cascading Select Logic for Pillar -> Initiative -> Sub-Initiative
             const pillarSelect = $('#pillar_id');
