@@ -344,7 +344,16 @@
         </div>
         <div class="card-body">
             @if(isset($row) && ($row->classification ?? null) === 'PM')
-                @php $kpiProjects = $row->projects ?? collect(); @endphp
+                @php
+                    $kpiProjects = $row->projects ?? collect();
+                    $statusClasses = [
+                        'Delivered'    => 'label-light-success',
+                        'In Progress'  => 'label-light-primary',
+                        'On-Hold'      => 'label-light-warning',
+                        'Canceled'     => 'label-light-danger',
+                        'Not Started'  => 'label-light-secondary text-dark',
+                    ];
+                @endphp
                 @if($kpiProjects->count() > 0)
                     <div class="table-responsive">
                         <table class="table table-bordered table-hover">
@@ -362,7 +371,8 @@
                                     <td>{{ $project->name }}</td>
                                     <td>{{ $project->project_manager_name }}</td>
                                     <td>
-                                        <span class="label label-inline label-light-{{ $project->status === 'Delivered' ? 'success' : ($project->status === 'In Progress' ? 'primary' : ($project->status === 'On-Hold' ? 'warning' : ($project->status === 'Canceled' ? 'danger' : 'secondary'))) }} font-weight-bold">
+                                        @php $statusClass = $statusClasses[$project->status] ?? 'label-light-secondary text-dark'; @endphp
+                                        <span class="label label-inline {{ $statusClass }} font-weight-bold">
                                             {{ $project->status }}
                                         </span>
                                     </td>

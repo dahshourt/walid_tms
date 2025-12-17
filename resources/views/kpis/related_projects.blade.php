@@ -34,6 +34,15 @@
             </div>
         @endif
 
+        @php
+            $statusClasses = [
+                'Delivered'    => 'label-light-success',
+                'In Progress'  => 'label-light-primary',
+                'On-Hold'      => 'label-light-warning',
+                'Canceled'     => 'label-light-danger',
+                'Not Started'  => 'label-light-secondary text-dark',
+            ];
+        @endphp
         <div class="table-responsive">
             <table class="table table-bordered table-hover">
                 <thead>
@@ -57,7 +66,8 @@
                         <td>{{ $project->name }}</td>
                         <td>{{ $project->project_manager_name }}</td>
                         <td>
-                            <span class="label label-inline label-light-{{ $project->status === 'Delivered' ? 'success' : ($project->status === 'In Progress' ? 'primary' : ($project->status === 'On-Hold' ? 'warning' : ($project->status === 'Canceled' ? 'danger' : 'secondary'))) }} font-weight-bold">
+                            @php $statusClass = $statusClasses[$project->status] ?? 'label-light-secondary text-dark'; @endphp
+                            <span class="label label-inline {{ $statusClass }} font-weight-bold">
                                 {{ $project->status }}
                             </span>
                         </td>
@@ -81,7 +91,8 @@
                                                 <div class="d-flex align-items-center justify-content-between mb-2 p-3 bg-white rounded">
                                                     <div class="flex-grow-1">
                                                         <div class="font-weight-bold">{{ $milestone->milestone }}</div>
-                                                        <span class="label label-inline label-light-{{ $milestone->status === 'Delivered' ? 'success' : ($milestone->status === 'In Progress' ? 'primary' : ($milestone->status === 'On-Hold' ? 'warning' : ($milestone->status === 'Canceled' ? 'danger' : 'secondary'))) }} font-weight-bold mt-1">
+                                                        @php $milestoneClass = $statusClasses[$milestone->status] ?? 'label-light-secondary text-dark'; @endphp
+                                                        <span class="label label-inline {{ $milestoneClass }} font-weight-bold mt-1">
                                                             {{ $milestone->status }}
                                                         </span>
                                                     </div>
