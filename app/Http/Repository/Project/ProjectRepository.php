@@ -5,6 +5,7 @@ namespace App\Http\Repository\Project;
 use App\Models\Project;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ProjectRepository
 {
@@ -25,6 +26,20 @@ class ProjectRepository
     public function listAll(): Collection
     {
         return Project::orderBy('name')->get(['id', 'name']);
+    }
+
+    /**
+     * Return projects that are not linked to any KPI (kpi_projects table).
+     */
+    public function listUnlinked(): Collection
+    {
+        return Project::whereNotExists(function ($query) {
+                $query->select(DB::raw(1))
+                    ->from('kpi_projects')
+                    ->whereColumn('kpi_projects.project_id', 'projects.id');
+            })
+            ->orderBy('name')
+            ->get(['id', 'name', 'status', 'project_manager_name', 'created_at']);
     }
 
     public function create(array $data): Project

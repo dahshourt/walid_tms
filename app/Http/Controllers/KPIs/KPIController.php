@@ -123,11 +123,12 @@ class KPIController extends Controller
         $pillars = app(KpiPillarService::class)->getAllActive();
         $classifications = Kpi::CLASSIFICATION;
         $projects = app(ProjectService::class)->listAll();
+        $unlinkedProjects = app(ProjectService::class)->listUnlinked();
         $logs = $row ? $row->logs : collect();
         $comments = $row ? $row->comments : collect();
         $changeRequests = $row ? $row->changeRequests : collect();
 
-        return view("$this->view.edit", compact('row', 'priorities', 'quarters', 'types', 'classifications', 'logs', 'comments', 'changeRequests', 'pillars', 'projects'));
+        return view("$this->view.edit", compact('row', 'priorities', 'quarters', 'types', 'classifications', 'logs', 'comments', 'changeRequests', 'pillars', 'projects', 'unlinkedProjects'));
     }
 
     /**
@@ -142,10 +143,33 @@ class KPIController extends Controller
         $data = array_merge($request->validated(), [
             'kpi_comment' => $request->input('kpi_comment'),
         ]);
+        // Classification is immutable on edit – ensure it cannot be changed
+        unset($data['classification']);
 
         $this->KPI->update($data, $id);
 
         return redirect()->route('kpis.edit', $id)->with('status', 'KPI Updated Successfully');
+    }
+
+    /**
+     * AJAX: update projects for a KPI (used on edit page).
+     */
+    public function updateProjects(Request $request, $kpiId)
+    {
+        $this->authorize('Edit KPIs');
+
+        $validated = $request->validate([
+            'project_ids' => ['nullable', 'array'],
+            'project_ids.*' => ['integer', 'exists:projects,id'],
+        ]);
+
+        $projectIds = $validated['project_ids'] ?? [];
+
+        $result = $this->KPI->updateProjects($kpiId, $projectIds);
+
+        $statusCode = $result['success'] ?? false ? 200 : 422;
+
+        return response()->json($result, $statusCode);
     }
 
     /**

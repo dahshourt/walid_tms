@@ -41,13 +41,32 @@
                                 <button type="submit" class="btn btn-success mr-2">Update</button>
                                 <a href="{{ route("$route.index") }}" class="btn btn-primary">Cancel</a>
                             </div>
-                            @include("kpis.related_crs")
-                            @include("kpis.comments_history")
-                            @include("kpis.logs")
                         </form>
                         <!--end::Form-->
                     </div>
                     <!--end::Card-->
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    @include("kpis.comments_history")
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    @if(($row->classification ?? null) === 'PM')
+                        @include("kpis.related_projects")
+                    @else
+                        @include("kpis.related_crs")
+                    @endif
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    @include("kpis.logs")
                 </div>
             </div>
         </div>

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Project extends Model
 {
@@ -24,11 +25,16 @@ class Project extends Model
         'Canceled',
     ];
 
-    /**
-     * Get the quarters for the project.
-     */
     public function quarters(): HasMany
     {
         return $this->hasMany(ProjectKpiQuarter::class);
+    }
+
+    /**
+     * KPIs associated with this project.
+     */
+    public function kpis(): BelongsToMany
+    {
+        return $this->belongsToMany(Kpi::class, 'kpi_projects', 'project_id', 'kpi_id');
     }
 }

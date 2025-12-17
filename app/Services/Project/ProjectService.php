@@ -31,6 +31,14 @@ class ProjectService
         return $this->projectRepository->listAll();
     }
 
+    /**
+     * Projects not linked to any KPI.
+     */
+    public function listUnlinked()
+    {
+        return $this->projectRepository->listUnlinked();
+    }
+
     public function find(int $id): ?Project
     {
         return $this->projectRepository->find($id);

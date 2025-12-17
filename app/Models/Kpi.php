@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Kpi extends Model
 {
@@ -76,6 +77,21 @@ class Kpi extends Model
     public function subInitiative(): BelongsTo
     {
         return $this->belongsTo(KpiSubInitiative::class, 'sub_initiative_id');
+    }
+
+    public function kpiProjects(): HasMany
+    {
+        return $this->hasMany(KpiProject::class);
+    }
+
+    /**
+     * Convenience relation to access related projects directly.
+     */
+    public function projects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class, 'kpi_projects', 'kpi_id', 'project_id')
+            ->withPivot('created_at')
+            ->withTimestamps();
     }
 
     /**

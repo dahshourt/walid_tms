@@ -247,6 +247,7 @@ Route::middleware(['auth'])->group(
         Route::get('kpis/get-sub-initiatives', 'KPIs\KPIController@getSubInitiativesByInitiative')->name('kpis.get-sub-initiatives');
         Route::post('kpis/check-requester-email', 'KPIs\KPIController@checkRequesterEmail')->name('kpis.check-requester-email');
         Route::resource('kpis', KPIs\KPIController::class);
+        Route::post('kpis/{kpi}/projects', 'KPIs\KPIController@updateProjects')->name('kpis.update-projects');
         Route::get('kpis/{kpi}/search-cr', 'KPIs\KPIController@searchChangeRequest')->name('kpis.search-cr');
         Route::post('kpis/{kpi}/attach-cr', 'KPIs\KPIController@attachChangeRequest')->name('kpis.attach-cr');
         Route::delete('kpis/{kpi}/detach-cr/{cr}', 'KPIs\KPIController@detachChangeRequest')->name('kpis.detach-cr');
@@ -255,6 +256,7 @@ Route::middleware(['auth'])->group(
         Route::resource('projects', Project\ProjectController::class);
         Route::post('projects/delete-milestone', 'Project\ProjectController@deleteMilestone')->name('projects.delete-milestone');
         Route::get('projects-export', 'Project\ProjectController@export')->name('projects.export');
+        Route::get('projects-export/kpi/{kpi}', 'Project\ProjectController@exportByKpi')->name('projects.export-by-kpi');
 
         Route::prefix('reports')->group(function () {
 

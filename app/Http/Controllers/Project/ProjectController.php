@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Project;
 
 use App\Exports\ProjectsExport;
+use App\Exports\KpiProjectsExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Project\ProjectRequest;
 use App\Models\Project;
@@ -156,5 +157,17 @@ class ProjectController extends Controller
     {
         $this->authorize('List Projects');
         return Excel::download(new ProjectsExport, 'project-manager-kpis-' . date('Y-m-d') . '.xlsx');
+    }
+
+    /**
+     * Export projects for a specific KPI to Excel.
+     */
+    public function exportByKpi(int $kpiId): BinaryFileResponse
+    {
+        $this->authorize('List Projects');
+        return Excel::download(
+            new KpiProjectsExport($kpiId),
+            'project-manager-kpis-kpi-' . $kpiId . '-' . date('Y-m-d') . '.xlsx'
+        );
     }
 }

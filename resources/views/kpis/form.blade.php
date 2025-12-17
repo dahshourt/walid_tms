@@ -5,6 +5,12 @@
     $isDisabled = $isView ? 'disabled' : '';
     $currentYear = date('Y');
     $years = range($currentYear - 5, $currentYear + 5);
+    $selectedProjectIds = isset($row) && isset($row->projects)
+        ? $row->projects->pluck('id')->toArray()
+        : (array) old('project_ids', []);
+    $currentClassification = old('classification') ?? ($row->classification ?? null);
+    $isPm = $currentClassification === 'PM';
+    $isEdit = isset($row);
 
     // Status Badge Color Mapping
     $statusColors = [
@@ -219,7 +225,13 @@
                 <div class="col-md-6">
                     <div class="form-group">
                         <label class="font-weight-bold">Classification <span class="text-danger">*</span></label>
-                        <select class="form-control kt-select2" name="classification" id="classification" {{ $isDisabled }} required>
+                        <select
+                            class="form-control kt-select2"
+                            name="classification"
+                            id="classification"
+                            {{ $isDisabled || isset($row) ? 'disabled' : '' }}
+                            required
+                        >
                             <option value="">Select Classification</option>
                             @foreach($classifications as $class)
                                 <option value="{{ $class }}"
@@ -228,14 +240,17 @@
                                 </option>
                             @endforeach
                         </select>
+                        @if(isset($row))
+                            <input type="hidden" name="classification" value="{{ $row->classification }}">
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Section: Timeline -->
-    <div class="card card-custom card-stretch gutter-b">
+    <!-- Section: Timeline (CR only) -->
+    <div class="card card-custom card-stretch gutter-b" id="timeline-card" style="{{ $isPm ? 'display:none;' : '' }}">
         <div class="card-header border-0 pt-5">
             <h3 class="card-title font-weight-bolder">Timeline</h3>
         </div>
@@ -291,18 +306,89 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <label class="font-weight-bold">Project</label>
-                            <select class="form-control kt-select2" name="project_id" id="project_id" {{ $isDisabled }}>
-                                <option value="">Select Project</option>
+                            <select class="form-control kt-select2" name="project_ids[]" id="project_id" multiple {{ $isDisabled }}>
                                 @foreach(($projects ?? []) as $project)
-                                    <option value="{{ $project->id }}" {{ old('project_id') == $project->id ? 'selected' : '' }}>
+                                    <option value="{{ $project->id }}"
+                                        {{ in_array($project->id, $selectedProjectIds, true) ? 'selected' : '' }}>
                                         {{ $project->name }}
                                     </option>
                                 @endforeach
                             </select>
+                            <span class="form-text text-muted">Select one or more projects.</span>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Section: Projects (PM only) -->
+    <div class="card card-custom card-stretch gutter-b" id="projects-card" style="{{ $isPm ? '' : 'display:none;' }}">
+        <div class="card-header border-0 pt-5">
+            <h3 class="card-title font-weight-bolder">Projects <span class="text-danger">*</span></h3>
+            @if(isset($row) && ($row->classification ?? null) === 'PM')
+                <div class="card-toolbar">
+                    <a href="{{ route('projects.export-by-kpi', ['kpi' => $row->id]) }}" class="btn btn-success font-weight-bolder btn-sm">
+                        <span class="svg-icon svg-icon-md">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                    <rect x="0" y="0" width="24" height="24"/>
+                                    <path d="M7,18 L17,18 C18.1045695,18 19,18.8954305 19,20 C19,21.1045695 18.1045695,22 17,22 L7,22 C5.8954305,22 5,21.1045695 5,20 C5,18.8954305 5.8954305,18 7,18 Z M7,20 L17,20 C17.5522847,20 18,20.4477153 18,21 C18,21.5522847 17.5522847,22 17,22 L7,22 C6.44771525,22 6,21.5522847 6,21 C6,20.4477153 6.44771525,20 7,20 Z" fill="#000000" fill-rule="nonzero"/>
+                                    <path d="M12,2 C12.5522847,2 13,2.44771525 13,3 L13,13.5857864 L15.2928932,11.2928932 C15.6834175,10.9023689 16.3165825,10.9023689 16.7071068,11.2928932 C17.0976311,11.6834175 17.0976311,12.3165825 16.7071068,12.7071068 L12.7071068,16.7071068 C12.3165825,17.0976311 11.6834175,17.0976311 11.2928932,16.7071068 L7.29289322,12.7071068 C6.90236893,12.3165825 6.90236893,11.6834175 7.29289322,11.2928932 C7.68341751,10.9023689 8.31658249,10.9023689 8.70710678,11.2928932 L11,13.5857864 L11,3 C11,2.44771525 11.4477153,2 12,2 Z" fill="#000000"/>
+                                </g>
+                            </svg>
+                        </span>Export Excel
+                    </a>
+                </div>
+            @endif
+        </div>
+        <div class="card-body">
+            @if(isset($row) && ($row->classification ?? null) === 'PM')
+                @php $kpiProjects = $row->projects ?? collect(); @endphp
+                @if($kpiProjects->count() > 0)
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover">
+                            <thead>
+                            <tr>
+                                <th>Project Name</th>
+                                <th>Project Manager</th>
+                                <th>Status</th>
+                                <th>Linked At</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach($kpiProjects as $project)
+                                <tr>
+                                    <td>{{ $project->name }}</td>
+                                    <td>{{ $project->project_manager_name }}</td>
+                                    <td>
+                                        <span class="label label-inline label-light-{{ $project->status === 'Delivered' ? 'success' : ($project->status === 'In Progress' ? 'primary' : ($project->status === 'On-Hold' ? 'warning' : ($project->status === 'Canceled' ? 'danger' : 'secondary'))) }} font-weight-bold">
+                                            {{ $project->status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ optional($project->pivot->created_at)->format('Y-m-d H:i') }}</td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="text-muted">No projects linked to this KPI.</div>
+                @endif
+            @else
+                <div class="form-group">
+                    <label class="font-weight-bold">Select Projects <span class="text-danger">*</span></label>
+                    <select class="form-control kt-select2" name="project_ids[]" id="project_id" multiple {{ $isDisabled }}>
+                        @foreach(($projects ?? []) as $project)
+                            <option value="{{ $project->id }}"
+                                {{ in_array($project->id, $selectedProjectIds, true) ? 'selected' : '' }}>
+                                {{ $project->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <span class="form-text text-muted">Choose one or more projects.</span>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -364,25 +450,77 @@
 
             const classificationSelect = $('#classification');
             const kpiTimelineWrapper = $('#timeline-kpi-wrapper');
-            const projectTimelineWrapper = $('#timeline-project-wrapper');
+            const timelineCard = $('#timeline-card');
+            const projectsCard = $('#projects-card');
             const projectSelect = $('#project_id');
+            const quarterSelect = $('select[name="target_launch_quarter"]');
+            const yearSelect = $('select[name="target_launch_year"]');
+            const targetCrInput = $('input[name="target_cr_count"]');
 
             const toggleTimelineByClassification = () => {
                 const value = classificationSelect.val();
                 if (value === 'PM') {
-                    kpiTimelineWrapper.hide();
-                    projectTimelineWrapper.show();
-                    projectSelect.prop('disabled', false).trigger('change.select2');
+                    timelineCard.hide();
+                    projectsCard.show();
+                    if (projectSelect.length) {
+                        projectSelect.prop('disabled', false).trigger('change.select2');
+                    }
+
+                    // Disable and remove required from KPI timeline fields when hidden
+                    quarterSelect.prop('disabled', true).prop('required', false);
+                    yearSelect.prop('disabled', true).prop('required', false);
+                    targetCrInput.prop('disabled', true);
                 } else {
-                    projectTimelineWrapper.hide();
-                    projectSelect.val('').trigger('change');
-                    projectSelect.prop('disabled', true).trigger('change.select2');
-                    kpiTimelineWrapper.show();
+                    projectsCard.hide();
+                    if (projectSelect.length) {
+                        projectSelect.val(null).trigger('change');
+                        projectSelect.prop('disabled', true).trigger('change.select2');
+                    }
+                    timelineCard.show();
+
+                    // Re-enable and restore required on KPI timeline fields
+                    quarterSelect.prop('disabled', false).prop('required', true);
+                    yearSelect.prop('disabled', false).prop('required', true);
+                    targetCrInput.prop('disabled', false);
                 }
             };
 
             classificationSelect.on('change', toggleTimelineByClassification);
             toggleTimelineByClassification();
+
+            @if(isset($row) && !$isView)
+            // AJAX save projects on edit
+            const updateProjectsUrl = "{{ route('kpis.update-projects', ['kpi' => $row->id]) }}";
+            const csrfToken = $('meta[name=\"csrf-token\"]').attr('content');
+
+            projectSelect.on('change', function () {
+                if (classificationSelect.val() !== 'PM') {
+                    return;
+                }
+
+                const selectedProjects = $(this).val() || [];
+
+                $.ajax({
+                    url: updateProjectsUrl,
+                    type: 'POST',
+                    data: {
+                        project_ids: selectedProjects,
+                        _token: csrfToken,
+                    },
+                })
+                    .done(function (response) {
+                        if (response && response.success) {
+                            // Optional: show a small toast/notification if desired
+                            console.log('Projects updated successfully');
+                        } else {
+                            console.error(response && response.message ? response.message : 'Unable to update projects');
+                        }
+                    })
+                    .fail(function (xhr) {
+                        console.error('Error updating projects', xhr);
+                    });
+            });
+            @endif
 
             // Cascading Select Logic for Pillar -> Initiative -> Sub-Initiative
             const pillarSelect = $('#pillar_id');
@@ -502,9 +640,6 @@
              const kpiForm = requesterEmailInput.closest('form');
              let currentRequest = null;
 
-             // Initial check on page load
-             check_requester_email();
-
              // Check email on input change with debouncing
              let emailTimeout;
              requesterEmailInput.on('paste blur', function () {
@@ -556,7 +691,8 @@
                  emailFeedback.text("");
                  emailFeedback.removeClass('text-success text-danger');
                  requesterEmailInput.removeClass('is-valid is-invalid');
-                 submitButton.prop("disabled", true);
+                 // Do not disable submit here; allow user to attempt submit
+                 submitButton.prop("disabled", false);
              }
 
              function check_requester_email(options = {}) {
@@ -575,11 +711,13 @@
 
                  // Basic email format validation
                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                 if (!emailRegex.test(email)) {
+                     if (!emailRegex.test(email)) {
                      resetEmailState();
                      emailFeedback.text('Please enter a valid email format');
                      emailFeedback.addClass('text-danger');
                      requesterEmailInput.addClass('is-invalid');
+                     // Keep submit disabled only for obvious format errors
+                     submitButton.prop("disabled", true);
                      return;
                  }
 
@@ -607,7 +745,8 @@
                              emailFeedback.removeClass('text-danger');
                              emailFeedback.addClass('text-success');
                          } else {
-                             submitButton.prop("disabled", true);
+                             // Treat directory/connection failures as warning, not a hard block
+                             submitButton.prop("disabled", false);
                              requesterEmailInput.removeClass('is-valid');
                              requesterEmailInput.addClass('is-invalid');
                              emailFeedback.text(data.message);
@@ -620,7 +759,8 @@
                              currentRequest = null;
                              endValidation();
 
-                             submitButton.prop("disabled", true);
+                             // On AJAX failure, allow submit but show warning
+                             submitButton.prop("disabled", false);
                              requesterEmailInput.removeClass('is-valid');
                              requesterEmailInput.addClass('is-invalid');
                              emailFeedback.text('Error checking email. Please try again.');
@@ -638,6 +778,7 @@
                  emailFeedback.text("");
                  emailFeedback.removeClass('text-success text-danger');
                  requesterEmailInput.removeClass('is-valid is-invalid');
+                 // Temporarily disable while checking
                  submitButton.prop("disabled", true);
              }
 
