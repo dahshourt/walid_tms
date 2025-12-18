@@ -8,6 +8,7 @@
 
             @can('Edit ChangeRequest')
                 <td>
+                   
                     @if(request('workflow_type') == 'Promo')
 
                         @if($item->getCurrentStatus() && isset($item->getCurrentStatus()->status)&&isset($status_promo_view) && in_array($item->getCurrentStatus()->status->id, $status_promo_view))
@@ -16,7 +17,11 @@
                             <a href='{{ url("$route") }}/{{ $item["id"] }}'>{{ $item['cr_no'] }} </a>
                         @endif
                     @else
-                        @if($item->getCurrentStatus() && isset($item->getCurrentStatus()->status) && in_array($item->getCurrentStatus()->status->id, [64, 79,41,44]))
+                        @if($item->getCurrentStatus() && isset($item->getCurrentStatus()->status) && in_array($item->getCurrentStatus()->status->id, [64, 79,41,44,config('change_request.status_ids.division_manager_approval'),
+                        config('change_request.status_ids.business_feedback'),config('change_request.status_ids.pending_agreed_business')
+                        
+                        
+                        ]))
                             <a href='{{ url("$route") }}/{{ $item->id }}/edit?check_business=1'>{{ $item['cr_no'] }} </a>
                         @else
                             <a href='{{ url("$route") }}/{{ $item["id"] }}'>{{ $item['cr_no'] }} </a>
@@ -109,7 +114,7 @@
                                 </a>
                             @endif
                         @else
-                            @if($item->getCurrentStatus() && isset($item->getCurrentStatus()->status) && in_array($item->getCurrentStatus()->status->id, [64, 79,41,44]))
+                            @if($item->getCurrentStatus() && isset($item->getCurrentStatus()->status) && in_array($item->getCurrentStatus()->status->id, [64, 79,41,44,232]))
                                 <a href='{{url("$route")}}/{{ $item["id"] }}/edit?check_business=1'
                                    class="btn btn-sm btn-clean btn-icon mr-2" title="Edit details">
                                             <span class="svg-icon svg-icon-md">

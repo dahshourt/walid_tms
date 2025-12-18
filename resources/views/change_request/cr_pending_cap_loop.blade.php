@@ -5,7 +5,6 @@
 
 @foreach ($collection as $item)
 @php
-
 if (session('default_group')) {
     $default_group = session('default_group');
 } else {
@@ -14,9 +13,12 @@ if (session('default_group')) {
 $view_technical_team_flag = $item->getCurrentStatus()->status->view_technical_team_flag;
 $assigned_technical_teams = $item->technical_Cr? $item->technical_Cr->technical_cr_team->pluck('group_id')->toArray() : [];
 $check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_team->where('group_id',$default_group)->where('status','0')->count() : 0;
+$currentStatus = $item->getCurrentStatus();
+$statusName = $currentStatus && $currentStatus->status ? $currentStatus->status->status_name : '';
+$isPendingCab = in_array($statusName, ['Pending CAB', 'Pending CAB Approval']);
 @endphp
 
-@if(!$view_technical_team_flag || ($view_technical_team_flag && in_array($default_group, $assigned_technical_teams) && $check_if_status_active))
+@if((!$view_technical_team_flag && $isPendingCab) || ($view_technical_team_flag && in_array($default_group, $assigned_technical_teams) && $check_if_status_active))
                                 <tr>
                                     @can('Edit CR_Pending')
                                     <td><a href='{{ url("$route") }}/{{ $item->id }}/edit?check_dm=1'>{{ $item['cr_no'] }} </a></td>
@@ -42,7 +44,7 @@ $check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_
                                     @php
     $token = md5($item->id . $item->created_at . env('APP_KEY'));
 @endphp
-@can('Edit cr pending cap')
+@if($isPendingCab && auth()->user()->can('Edit cr pending cap'))
 <td>
     <div class="d-inline-flex gap-2">
         <button type="button" class="btn btn-outline-success btn-sm _approved_active_cab"
@@ -57,7 +59,9 @@ $check_if_status_active = $item->technical_Cr?$item->technical_Cr->technical_cr_
         </button>
     </div>
 </td>
-@endcan
+@else
+    <td></td>
+@endif
 
                                         
                             </tr>
