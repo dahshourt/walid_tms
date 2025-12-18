@@ -561,48 +561,62 @@
                 const projectId = $btn.data('project-id');
                 const projectName = $btn.data('project-name');
 
-                if (!confirm('Are you sure you want to detach "' + projectName + '" from this KPI?')) {
-                    return;
-                }
-
-                const url = detachUrl.replace(':projectId', projectId);
-
-                $btn.prop('disabled', true);
-                showLoader();
-
-                $.ajax({
-                    url: url,
-                    type: 'DELETE',
-                    data: {
-                        _token: csrfToken,
-                    },
-                })
-                    .done(function (response) {
-                        if (response && response.success) {
-                            // Remove the project rows from DOM
-                            $('tr.project-row[data-project-id="' + projectId + '"]').remove();
-                            $('tr.project-details-row[data-project-id="' + projectId + '"]').remove();
-
-                            // Remove from internal IDs list
-                            const index = existingProjectIds.indexOf(projectId);
-                            if (index !== -1) {
-                                existingProjectIds.splice(index, 1);
+                // SweetAlert confirmation with built-in loading indicator
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: 'You are about to detach \"' + projectName + '\" from this KPI.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, detach',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true,
+                    showLoaderOnConfirm: true,
+                    allowOutsideClick: () => !Swal.isLoading(),
+                    preConfirm: () => {
+                        const url = detachUrl.replace(':projectId', projectId);
+                        return $.ajax({
+                            url: url,
+                            type: 'DELETE',
+                            data: {
+                                _token: csrfToken,
+                            },
+                        }).then(function (response) {
+                            if (!response || !response.success) {
+                                const message = response && response.message ? response.message : 'Failed to detach project.';
+                                // This will show an error message inside the modal without closing it
+                                Swal.showValidationMessage(message);
+                                // Reject to keep the modal open
+                                return Promise.reject(new Error(message));
                             }
-                        } else {
-                            alert(response.message || 'Failed to detach project');
-                            $btn.prop('disabled', false);
+                            return response;
+                        }).catch(function (error) {
+                            // If we threw an error above, it's already shown via showValidationMessage
+                            if (!Swal.isVisible()) {
+                                Swal.fire('Error', error.message || 'Error detaching project.', 'error');
+                            }
+                        });
+                    }
+                }).then(function (result) {
+                    if (result.isConfirmed && result.value && result.value.success) {
+                        // Remove the project rows from DOM
+                        $('tr.project-row[data-project-id=\"' + projectId + '\"]').remove();
+                        $('tr.project-details-row[data-project-id=\"' + projectId + '\"]').remove();
+
+                        // Remove from internal IDs list
+                        const index = existingProjectIds.indexOf(projectId);
+                        if (index !== -1) {
+                            existingProjectIds.splice(index, 1);
                         }
-                    })
-                    .fail(function (xhr) {
-                        const errorMsg = xhr.responseJSON && xhr.responseJSON.message
-                            ? xhr.responseJSON.message
-                            : 'Error detaching project';
-                        alert(errorMsg);
-                        $btn.prop('disabled', false);
-                    })
-                    .always(function () {
-                        hideLoader();
-                    });
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Detached',
+                            text: 'Project has been detached successfully.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                    }
+                });
             });
 
             // Toggle project details
