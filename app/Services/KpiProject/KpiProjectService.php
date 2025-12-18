@@ -3,23 +3,18 @@
 namespace App\Services\KpiProject;
 
 use App\Http\Repository\KpiProject\KpiProjectRepository;
-use App\Models\KpiLog;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class KpiProjectService
 {
-    protected $repository;
-
-    public function __construct(KpiProjectRepository $repository)
-    {
-        $this->repository = $repository;
-    }
+    public function __construct(private KpiProjectRepository $repository) {}
 
     /**
      * Attach a project to a KPI.
-     * 
-     * @return array
+     *
+     * @throws Throwable
      */
     public function attachProject(int $kpiId, int $projectId): array
     {
@@ -34,7 +29,7 @@ class KpiProjectService
 
             // Verify KPI exists
             $kpi = $this->repository->getKpi($kpiId);
-            if (!$kpi) {
+            if (! $kpi) {
                 return [
                     'success' => false,
                     'message' => 'KPI not found.',
@@ -43,7 +38,7 @@ class KpiProjectService
 
             // Verify project exists
             $project = $this->repository->getProject($projectId);
-            if (!$project) {
+            if (! $project) {
                 return [
                     'success' => false,
                     'message' => 'Project not found.',
@@ -81,15 +76,13 @@ class KpiProjectService
 
     /**
      * Detach a project from a KPI.
-     * 
-     * @return array
      */
     public function detachProject(int $kpiId, int $projectId): array
     {
         return DB::transaction(function () use ($kpiId, $projectId) {
             // Verify KPI exists
             $kpi = $this->repository->getKpi($kpiId);
-            if (!$kpi) {
+            if (! $kpi) {
                 return [
                     'success' => false,
                     'message' => 'KPI not found.',
@@ -101,7 +94,7 @@ class KpiProjectService
             $projectName = $project ? $project->name : 'Unknown Project';
 
             // Check if attached
-            if (!$this->repository->isAttached($kpiId, $projectId)) {
+            if (! $this->repository->isAttached($kpiId, $projectId)) {
                 return [
                     'success' => false,
                     'message' => 'This project is not attached to this KPI.',
@@ -128,16 +121,13 @@ class KpiProjectService
 
     /**
      * Format projects with quarters and milestones for JSON response.
-     * 
-     * @param Collection $projects
-     * @return array
      */
     protected function formatProjects(Collection $projects): array
     {
         return $projects->unique('id')->values()->map(function ($project) {
             // Ensure quarters are unique by ID
             $uniqueQuarters = $project->quarters->unique('id')->values();
-            
+
             return [
                 'id' => $project->id,
                 'name' => $project->name,
@@ -146,7 +136,7 @@ class KpiProjectService
                 'quarters' => $uniqueQuarters->map(function ($quarter) {
                     // Ensure milestones are unique by ID
                     $uniqueMilestones = $quarter->milestones->unique('id')->values();
-                    
+
                     return [
                         'id' => $quarter->id,
                         'quarter' => $quarter->quarter,
@@ -163,4 +153,3 @@ class KpiProjectService
         })->values()->all();
     }
 }
-

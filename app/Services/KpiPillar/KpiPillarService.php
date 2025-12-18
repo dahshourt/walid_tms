@@ -9,12 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class KpiPillarService
 {
-    protected $kpiPillarRepository;
-
-    public function __construct(KpiPillarRepository $kpiPillarRepository)
-    {
-        $this->kpiPillarRepository = $kpiPillarRepository;
-    }
+    public function __construct(private KpiPillarRepository $kpiPillarRepository) {}
 
     public function getAll(): Collection
     {
@@ -51,4 +46,3 @@ class KpiPillarService
         return $this->kpiPillarRepository->toggleStatus($id);
     }
 }
-

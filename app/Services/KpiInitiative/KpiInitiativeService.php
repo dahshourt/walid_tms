@@ -9,12 +9,7 @@ use Illuminate\Support\Facades\Auth;
 
 class KpiInitiativeService
 {
-    protected $kpiInitiativeRepository;
-
-    public function __construct(KpiInitiativeRepository $kpiInitiativeRepository)
-    {
-        $this->kpiInitiativeRepository = $kpiInitiativeRepository;
-    }
+    public function __construct(private KpiInitiativeRepository $kpiInitiativeRepository) {}
 
     public function getAll(): Collection
     {
@@ -51,4 +46,3 @@ class KpiInitiativeService
         return $this->kpiInitiativeRepository->toggleStatus($id);
     }
 }
-

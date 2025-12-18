@@ -4,19 +4,14 @@ namespace App\Services\Project;
 
 use App\Http\Repository\Project\ProjectRepository;
 use App\Models\Project;
-use App\Models\ProjectKpiQuarter;
 use App\Models\ProjectKpiMilestone;
+use App\Models\ProjectKpiQuarter;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class ProjectService
 {
-    protected $projectRepository;
-
-    public function __construct(ProjectRepository $projectRepository)
-    {
-        $this->projectRepository = $projectRepository;
-    }
+    public function __construct(private ProjectRepository $projectRepository) {}
 
     public function getAll(): Collection
     {
@@ -68,7 +63,7 @@ class ProjectService
 
                     if (isset($quarterData['milestones']) && is_array($quarterData['milestones'])) {
                         foreach ($quarterData['milestones'] as $milestoneData) {
-                            if (!empty($milestoneData['milestone'])) {
+                            if (! empty($milestoneData['milestone'])) {
                                 ProjectKpiMilestone::create([
                                     'project_kpi_quarter_id' => $quarter->id,
                                     'milestone' => $milestoneData['milestone'],
@@ -97,7 +92,7 @@ class ProjectService
                 'updated_by' => $userId,
             ], $id);
 
-            if (!$updated) {
+            if (! $updated) {
                 return false;
             }
 
@@ -145,7 +140,7 @@ class ProjectService
                         $existingMilestoneIds = [];
 
                         foreach ($quarterData['milestones'] as $milestoneData) {
-                            if (!empty($milestoneData['milestone'])) {
+                            if (! empty($milestoneData['milestone'])) {
                                 if (isset($milestoneData['id']) && $milestoneData['id']) {
                                     // Update existing milestone
                                     $milestone = ProjectKpiMilestone::withTrashed()->find($milestoneData['id']);
@@ -188,14 +183,14 @@ class ProjectService
                         $milestonesToDelete = array_diff($currentMilestoneIds, $existingMilestoneIds);
 
                         // Soft delete them
-                        if (!empty($milestonesToDelete)) {
+                        if (! empty($milestonesToDelete)) {
                             ProjectKpiMilestone::whereIn('id', $milestonesToDelete)->delete();
                         }
                     }
                 }
 
                 // Soft delete quarters that were explicitly marked for deletion
-                if (isset($data['deleted_quarter_ids']) && is_array($data['deleted_quarter_ids']) && !empty($data['deleted_quarter_ids'])) {
+                if (isset($data['deleted_quarter_ids']) && is_array($data['deleted_quarter_ids']) && ! empty($data['deleted_quarter_ids'])) {
                     ProjectKpiQuarter::whereIn('id', $data['deleted_quarter_ids'])
                         ->where('project_id', $id)
                         ->delete();
@@ -211,5 +206,3 @@ class ProjectService
         return $this->projectRepository->delete($id);
     }
 }
-
-
