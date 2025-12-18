@@ -65,7 +65,10 @@ class ProjectController extends Controller
     {
         $this->authorize('Create Projects');
         try {
-            $this->projectService->create($request->validated());
+            $data = $request->validated();
+            $userId = auth()->id();
+
+            $this->projectService->create($data, $userId);
 
             return redirect()->route('projects.index')
                 ->with('status', 'Project created successfully');
@@ -102,7 +105,10 @@ class ProjectController extends Controller
     {
         $this->authorize('Edit Projects');
         try {
-            $updated = $this->projectService->update($request->validated(), $id);
+            $data = $request->validated();
+            $userId = auth()->id();
+
+            $updated = $this->projectService->update($data, $id, $userId);
 
             if (!$updated) {
                 return redirect()->back()

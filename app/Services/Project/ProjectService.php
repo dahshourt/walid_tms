@@ -44,14 +44,16 @@ class ProjectService
         return $this->projectRepository->find($id);
     }
 
-    public function create(array $data): Project
+    public function create(array $data, int $userId): Project
     {
-        return DB::transaction(function () use ($data) {
+        return DB::transaction(function () use ($data, $userId) {
             // Create the project
             $project = $this->projectRepository->create([
                 'name' => $data['name'],
                 'status' => $data['status'],
                 'project_manager_name' => $data['project_manager_name'],
+                'created_by' => $userId,
+                'updated_by' => $userId,
             ]);
 
             // Create quarters and milestones
@@ -60,6 +62,8 @@ class ProjectService
                     $quarter = ProjectKpiQuarter::create([
                         'project_id' => $project->id,
                         'quarter' => $quarterData['quarter'],
+                        'created_by' => $userId,
+                        'updated_by' => $userId,
                     ]);
 
                     if (isset($quarterData['milestones']) && is_array($quarterData['milestones'])) {
@@ -69,6 +73,8 @@ class ProjectService
                                     'project_kpi_quarter_id' => $quarter->id,
                                     'milestone' => $milestoneData['milestone'],
                                     'status' => $milestoneData['status'] ?? 'Not Started',
+                                    'created_by' => $userId,
+                                    'updated_by' => $userId,
                                 ]);
                             }
                         }
@@ -80,14 +86,15 @@ class ProjectService
         });
     }
 
-    public function update(array $data, int $id): bool
+    public function update(array $data, int $id, int $userId): bool
     {
-        return DB::transaction(function () use ($data, $id) {
+        return DB::transaction(function () use ($data, $id, $userId) {
             // Update the project
             $updated = $this->projectRepository->update([
                 'name' => $data['name'],
                 'status' => $data['status'],
                 'project_manager_name' => $data['project_manager_name'],
+                'updated_by' => $userId,
             ], $id);
 
             if (!$updated) {
@@ -107,7 +114,10 @@ class ProjectService
                         // Update existing quarter
                         $quarter = ProjectKpiQuarter::withTrashed()->find($quarterData['id']);
                         if ($quarter && $quarter->project_id == $id) {
-                            $quarter->update(['quarter' => $quarterData['quarter']]);
+                            $quarter->update([
+                                'quarter' => $quarterData['quarter'],
+                                'updated_by' => $userId,
+                            ]);
                             
                             // Restore if it was soft deleted
                             if ($quarter->trashed()) {
@@ -124,6 +134,8 @@ class ProjectService
                         $quarter = ProjectKpiQuarter::create([
                             'project_id' => $id,
                             'quarter' => $quarterData['quarter'],
+                            'created_by' => $userId,
+                            'updated_by' => $userId,
                         ]);
                         $existingQuarterIds[] = $quarter->id;
                     }
@@ -141,6 +153,7 @@ class ProjectService
                                         $milestone->update([
                                             'milestone' => $milestoneData['milestone'],
                                             'status' => $milestoneData['status'] ?? 'Not Started',
+                                            'updated_by' => $userId,
                                         ]);
                                         
                                         // Restore if it was soft deleted
@@ -156,6 +169,8 @@ class ProjectService
                                         'project_kpi_quarter_id' => $quarter->id,
                                         'milestone' => $milestoneData['milestone'],
                                         'status' => $milestoneData['status'] ?? 'Not Started',
+                                        'created_by' => $userId,
+                                        'updated_by' => $userId,
                                     ]);
                                     $existingMilestoneIds[] = $milestone->id;
                                 }

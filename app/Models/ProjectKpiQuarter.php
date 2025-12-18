@@ -15,6 +15,8 @@ class ProjectKpiQuarter extends Model
     protected $fillable = [
         'project_id',
         'quarter',
+        'created_by',
+        'updated_by',
     ];
 
     const QUARTER = ['Q1', 'Q2', 'Q3', 'Q4'];

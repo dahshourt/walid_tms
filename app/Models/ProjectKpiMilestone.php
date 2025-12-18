@@ -15,6 +15,8 @@ class ProjectKpiMilestone extends Model
         'project_kpi_quarter_id',
         'milestone',
         'status',
+        'created_by',
+        'updated_by',
     ];
 
     const STATUS = [

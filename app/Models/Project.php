@@ -15,6 +15,8 @@ class Project extends Model
         'name',
         'status',
         'project_manager_name',
+        'created_by',
+        'updated_by',
     ];
 
     const STATUS = [
@@ -38,3 +40,4 @@ class Project extends Model
         return $this->belongsToMany(Kpi::class, 'kpi_projects', 'project_id', 'kpi_id');
     }
 }
+

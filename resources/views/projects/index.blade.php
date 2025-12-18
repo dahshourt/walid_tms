@@ -86,23 +86,6 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    @if(session('status'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        {{ session('status') }}
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    @endif
-
-                    @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        {{ session('error') }}
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    @endif
 
                     <!--begin: Datatable-->
                     @php
@@ -133,8 +116,8 @@
                                 @forelse($collection as $project)
                                 <tr class="project-row" data-project-id="{{ $project->id }}">
                                     <td class="text-center">
-                                        <button class="btn btn-sm btn-icon btn-light-primary js-toggle-project-details" 
-                                                data-project-id="{{ $project->id }}" 
+                                        <button class="btn btn-sm btn-icon btn-light-primary js-toggle-project-details"
+                                                data-project-id="{{ $project->id }}"
                                                 aria-expanded="false">
                                             <i class="la la-angle-down"></i>
                                         </button>
@@ -165,8 +148,8 @@
                                             @forelse($project->quarters as $quarter)
                                             <div class="mb-4">
                                                 <div class="d-flex align-items-center mb-2">
-                                                    <button class="btn btn-sm btn-icon btn-light-info js-toggle-quarter-details mr-2" 
-                                                            data-quarter-id="{{ $quarter->id }}" 
+                                                    <button class="btn btn-sm btn-icon btn-light-info js-toggle-quarter-details mr-2"
+                                                            data-quarter-id="{{ $quarter->id }}"
                                                             aria-expanded="false">
                                                         <i class="la la-angle-down"></i>
                                                     </button>
