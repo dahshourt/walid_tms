@@ -35,7 +35,7 @@
                         <div class="row">
                             <div class="col-lg-12 text-right">
                                 <a href="{{ route('projects.index') }}" class="btn btn-secondary">Cancel</a>
-                                <button type="submit" class="btn btn-primary" {{ $row->status === 'Delivered' ? 'disabled' : '' }}>
+                                <button type="submit" class="btn btn-primary">
                                     <i class="la la-save"></i> Update Project
                                 </button>
                             </div>

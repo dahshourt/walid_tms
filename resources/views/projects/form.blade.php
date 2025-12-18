@@ -1,7 +1,3 @@
-@php
-    $isDisabled = isset($row) && $row->status === 'Delivered' ? 'disabled' : '';
-@endphp
-
 <div class="card card-custom card-stretch gutter-b">
     <div class="card-header">
         <div class="card-title">
@@ -14,9 +10,9 @@
             <div class="col-md-6">
                 <div class="form-group">
                     <label class="font-weight-bold">Project Name <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="name" 
-                           value="{{ old('name', $row->name ?? '') }}" 
-                           {{ $isDisabled }} required>
+                    <input type="text" class="form-control" name="name"
+                           value="{{ old('name', $row->name ?? '') }}"
+                            required>
                     @error('name')
                     <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
@@ -27,9 +23,9 @@
             <div class="col-md-6">
                 <div class="form-group">
                     <label class="font-weight-bold">Project Manager Name <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="project_manager_name" 
-                           value="{{ old('project_manager_name', $row->project_manager_name ?? '') }}" 
-                           {{ $isDisabled }} required>
+                    <input type="text" class="form-control" name="project_manager_name"
+                           value="{{ old('project_manager_name', $row->project_manager_name ?? '') }}"
+                            required>
                     @error('project_manager_name')
                     <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
@@ -40,10 +36,10 @@
             <div class="col-md-6">
                 <div class="form-group">
                     <label class="font-weight-bold">Project Status <span class="text-danger">*</span></label>
-                    <select class="form-control" name="status" {{ $isDisabled }} required>
+                    <select class="form-control" name="status"  required>
                         <option value="">Select Status</option>
                         @foreach($statuses as $status)
-                        <option value="{{ $status }}" 
+                        <option value="{{ $status }}"
                                 {{ (old('status', $row->status ?? '') == $status) ? 'selected' : '' }}>
                             {{ $status }}
                         </option>
@@ -70,10 +66,10 @@
                 @foreach($row->quarters as $index => $quarter)
                 <div class="quarter-item mb-4 p-4 border rounded" data-index="{{ $index }}">
                     <input type="hidden" name="quarters[{{ $index }}][id]" value="{{ $quarter->id }}">
-                    
+
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="font-weight-bold mb-0">Quarter {{ $index + 1 }}</h5>
-                        <button type="button" class="btn btn-sm btn-danger remove-quarter" {{ $isDisabled }}>
+                        <button type="button" class="btn btn-sm btn-danger remove-quarter" >
                             <i class="la la-trash"></i> Remove Quarter
                         </button>
                     </div>
@@ -81,7 +77,7 @@
                     <div class="row mb-3">
                         <div class="col-md-12">
                             <label class="font-weight-bold">Quarter <span class="text-danger">*</span></label>
-                            <select class="form-control" name="quarters[{{ $index }}][quarter]" {{ $isDisabled }} required>
+                            <select class="form-control" name="quarters[{{ $index }}][quarter]"  required>
                                 <option value="">Select Quarter</option>
                                 @foreach($quarters as $q)
                                 <option value="{{ $q }}" {{ $quarter->quarter == $q ? 'selected' : '' }}>{{ $q }}</option>
@@ -95,10 +91,10 @@
                         @foreach($quarter->milestones as $mIndex => $milestone)
                         <div class="milestone-item mb-3 p-3 bg-light rounded" data-milestone-index="{{ $mIndex }}">
                             <input type="hidden" name="quarters[{{ $index }}][milestones][{{ $mIndex }}][id]" value="{{ $milestone->id }}">
-                            
+
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <strong>Milestone {{ $mIndex + 1 }}</strong>
-                                <button type="button" class="btn btn-sm btn-danger remove-milestone" {{ $isDisabled }}>
+                                <button type="button" class="btn btn-sm btn-danger remove-milestone" >
                                     <i class="la la-minus"></i>
                                 </button>
                             </div>
@@ -106,12 +102,12 @@
                             <div class="row">
                                 <div class="col-md-8">
                                     <label class="font-weight-bold">Milestone Description</label>
-                                    <textarea class="form-control" name="quarters[{{ $index }}][milestones][{{ $mIndex }}][milestone]" 
-                                              rows="2" {{ $isDisabled }}>{{ $milestone->milestone }}</textarea>
+                                    <textarea class="form-control" name="quarters[{{ $index }}][milestones][{{ $mIndex }}][milestone]"
+                                              rows="2" >{{ $milestone->milestone }}</textarea>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="font-weight-bold">Status</label>
-                                    <select class="form-control" name="quarters[{{ $index }}][milestones][{{ $mIndex }}][status]" {{ $isDisabled }}>
+                                    <select class="form-control" name="quarters[{{ $index }}][milestones][{{ $mIndex }}][status]" >
                                         @foreach($milestoneStatuses as $mStatus)
                                         <option value="{{ $mStatus }}" {{ $milestone->status == $mStatus ? 'selected' : '' }}>{{ $mStatus }}</option>
                                         @endforeach
@@ -122,7 +118,7 @@
                         @endforeach
                     </div>
 
-                    <button type="button" class="btn btn-sm btn-light-success add-milestone" {{ $isDisabled }}>
+                    <button type="button" class="btn btn-sm btn-light-success add-milestone" >
                         <i class="la la-plus"></i> Add Milestone
                     </button>
                 </div>
@@ -131,7 +127,7 @@
                 <div class="quarter-item mb-4 p-4 border rounded" data-index="0">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="font-weight-bold mb-0">Quarter 1</h5>
-                        <button type="button" class="btn btn-sm btn-danger remove-quarter" {{ $isDisabled }}>
+                        <button type="button" class="btn btn-sm btn-danger remove-quarter" >
                             <i class="la la-trash"></i> Remove Quarter
                         </button>
                     </div>
@@ -139,7 +135,7 @@
                     <div class="row mb-3">
                         <div class="col-md-12">
                             <label class="font-weight-bold">Quarter <span class="text-danger">*</span></label>
-                            <select class="form-control" name="quarters[0][quarter]" {{ $isDisabled }} required>
+                            <select class="form-control" name="quarters[0][quarter]"  required>
                                 <option value="">Select Quarter</option>
                                 @foreach($quarters as $q)
                                 <option value="{{ $q }}">{{ $q }}</option>
@@ -153,7 +149,7 @@
                         <div class="milestone-item mb-3 p-3 bg-light rounded" data-milestone-index="0">
                             <div class="d-flex justify-content-between align-items-center mb-2">
                                 <strong>Milestone 1</strong>
-                                <button type="button" class="btn btn-sm btn-danger remove-milestone" {{ $isDisabled }}>
+                                <button type="button" class="btn btn-sm btn-danger remove-milestone" >
                                     <i class="la la-minus"></i>
                                 </button>
                             </div>
@@ -161,12 +157,12 @@
                             <div class="row">
                                 <div class="col-md-8">
                                     <label class="font-weight-bold">Milestone Description</label>
-                                    <textarea class="form-control" name="quarters[0][milestones][0][milestone]" 
-                                              rows="2" {{ $isDisabled }}></textarea>
+                                    <textarea class="form-control" name="quarters[0][milestones][0][milestone]"
+                                              rows="2" ></textarea>
                                 </div>
                                 <div class="col-md-4">
                                     <label class="font-weight-bold">Status</label>
-                                    <select class="form-control" name="quarters[0][milestones][0][status]" {{ $isDisabled }}>
+                                    <select class="form-control" name="quarters[0][milestones][0][status]" >
                                         @foreach($milestoneStatuses as $mStatus)
                                         <option value="{{ $mStatus }}">{{ $mStatus }}</option>
                                         @endforeach
@@ -176,14 +172,14 @@
                         </div>
                     </div>
 
-                    <button type="button" class="btn btn-sm btn-light-success add-milestone" {{ $isDisabled }}>
+                    <button type="button" class="btn btn-sm btn-light-success add-milestone" >
                         <i class="la la-plus"></i> Add Milestone
                     </button>
                 </div>
             @endif
         </div>
 
-        <button type="button" class="btn btn-light-primary mt-3" id="add-quarter" {{ $isDisabled }}>
+        <button type="button" class="btn btn-light-primary mt-3" id="add-quarter" >
             <i class="la la-plus"></i> Add Quarter
         </button>
     </div>
@@ -257,10 +253,10 @@
         // Remove Quarter
         $(document).on('click', '.remove-quarter', function() {
             const $quarterItem = $(this).closest('.quarter-item');
-            
+
             if ($('.quarter-item').length > 1) {
                 const quarterId = $quarterItem.find('input[name*="[id]"]').val();
-                
+
                 if (quarterId) {
                     // If quarter has an ID, show confirmation
                     Swal.fire({
@@ -280,7 +276,7 @@
                             $('#deleted-quarters-container').append(
                                 `<input type="hidden" name="deleted_quarter_ids[]" value="${quarterId}">`
                             );
-                            
+
                             // Remove the quarter from DOM
                             $quarterItem.remove();
                             reindexQuarters();
@@ -376,19 +372,19 @@
             $('.quarter-item').each(function(index) {
                 $(this).attr('data-index', index);
                 $(this).find('h5').text('Quarter ' + (index + 1));
-                
+
                 // Update quarter select name
                 $(this).find('select[name*="[quarter]"]').attr('name', `quarters[${index}][quarter]`);
-                
+
                 // Update hidden ID field if exists
                 const $hiddenId = $(this).find('input[name*="quarters"][name*="[id]"]');
                 if ($hiddenId.length) {
                     $hiddenId.attr('name', `quarters[${index}][id]`);
                 }
-                
+
                 // Update milestones container
                 $(this).find('.milestones-container').attr('data-quarter-index', index);
-                
+
                 // Reindex milestones within this quarter
                 reindexMilestones($(this).find('.milestones-container'));
             });
@@ -399,11 +395,11 @@
             $container.find('.milestone-item').each(function(index) {
                 $(this).attr('data-milestone-index', index);
                 $(this).find('strong').text('Milestone ' + (index + 1));
-                
+
                 // Update milestone fields
                 $(this).find('textarea').attr('name', `quarters[${quarterIdx}][milestones][${index}][milestone]`);
                 $(this).find('select').attr('name', `quarters[${quarterIdx}][milestones][${index}][status]`);
-                
+
                 // Update hidden ID field if exists
                 const $hiddenId = $(this).find('input[name*="milestones"][name*="[id]"]');
                 if ($hiddenId.length) {
