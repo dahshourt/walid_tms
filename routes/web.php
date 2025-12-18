@@ -250,6 +250,7 @@ Route::middleware(['auth'])->group(
         Route::get('kpis/{kpi}/search-cr', 'KPIs\KPIController@searchChangeRequest')->name('kpis.search-cr');
         Route::post('kpis/{kpi}/attach-cr', 'KPIs\KPIController@attachChangeRequest')->name('kpis.attach-cr');
         Route::delete('kpis/{kpi}/detach-cr/{cr}', 'KPIs\KPIController@detachChangeRequest')->name('kpis.detach-cr');
+        Route::get('kpis/{kpi}/export-crs', 'KPIs\KPIController@exportChangeRequests')->name('kpis.export-crs');
         
         // KPI Project Routes
         Route::post('kpis/{kpi}/projects/{project}', 'KpiProject\KpiProjectController@attach')->name('kpi-projects.attach');

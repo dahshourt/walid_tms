@@ -13,6 +13,7 @@ use App\Http\Requests\KPIs\KPIRequest;
 use App\Models\Change_request;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use App\Exports\KpiChangeRequestsExport;
 
 class KPIController extends Controller
 {
@@ -229,6 +230,23 @@ class KPIController extends Controller
                 'show_url' => route('show.cr', $cr->id),
             ],
         ]);
+    }
+
+    /**
+     * Export Change Requests linked to a specific KPI.
+     */
+    public function exportChangeRequests($kpiId): BinaryFileResponse
+    {
+        $this->authorize('Export KPIs');
+
+        $kpi = $this->KPI->find($kpiId);
+        if (! $kpi) {
+            abort(404);
+        }
+
+        $fileName = 'kpi_' . $kpi->id . '_change_requests_' . date('Y-m-d_H-i-s') . '.xlsx';
+
+        return Excel::download(new KpiChangeRequestsExport((int) $kpiId), $fileName);
     }
 
     /**
