@@ -3,7 +3,6 @@
 namespace App\Http\Requests\KPIs;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class KPIRequest extends FormRequest
 {
@@ -31,10 +30,13 @@ class KPIRequest extends FormRequest
             'sub_initiative_id' => ['nullable', 'exists:kpi_sub_initiatives,id'],
             'bu' => ['required', 'string', 'max:255'],
             'sub_bu' => ['nullable', 'string', 'max:255'],
-            // Timeline fields required only for CR classification
+            // Timeline fields are shown for both classifications,
+            // but only required when classification is CR
             'target_launch_quarter' => ['required_if:classification,CR', 'nullable', 'in:Q1,Q2,Q3,Q4'],
             'target_launch_year' => ['required_if:classification,CR', 'nullable', 'integer', 'min:2000', 'max:2100'],
-            // Projects required only for PM classification
+            // Target CRs are used only for CR classification (optional/required_if)
+            'target_cr_count' => ['nullable', 'integer', 'min:0', 'required_if:classification,CR'],
+            // Projects are used only for PM classification
             'project_ids' => ['required_if:classification,PM', 'nullable', 'array'],
             'project_ids.*' => ['integer', 'exists:projects,id'],
             'type_id' => ['required', 'exists:kpi_types,id'],
@@ -55,7 +57,7 @@ class KPIRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                'unique:kpis,name,'.$kpiId,
+                'unique:kpis,name,' . $kpiId,
             ],
             'priority' => ['required', 'in:Critical,High,Medium,Low'],
             'pillar_id' => ['required', 'exists:kpi_pillars,id'],
@@ -63,10 +65,13 @@ class KPIRequest extends FormRequest
             'sub_initiative_id' => ['nullable', 'exists:kpi_sub_initiatives,id'],
             'bu' => ['required', 'string', 'max:255'],
             'sub_bu' => ['nullable', 'string', 'max:255'],
-            // Timeline fields required only for CR classification
+            // Timeline fields are shown for both classifications,
+            // but only required when classification is CR
             'target_launch_quarter' => ['required_if:classification,CR', 'nullable', 'in:Q1,Q2,Q3,Q4'],
             'target_launch_year' => ['required_if:classification,CR', 'nullable', 'integer', 'min:2000', 'max:2100'],
-            // Projects required only for PM classification
+            // Target CRs are used only for CR classification (optional/required_if)
+            'target_cr_count' => ['nullable', 'integer', 'min:0', 'required_if:classification,CR'],
+            // Projects are used only for PM classification
             'project_ids' => ['required_if:classification,PM', 'nullable', 'array'],
             'project_ids.*' => ['integer', 'exists:projects,id'],
             'type_id' => ['required', 'exists:kpi_types,id'],
