@@ -116,7 +116,71 @@ class KPIRepository implements KPIRepositoryInterface
         return Kpi::find($id)->delete();
     } // end method
 
-    // attach cr to kpi
+    // attach kpi to cr (from change request page)
+    public function attachKpiToChangeRequest($kpiId, $crNo)
+    {
+        return DB::transaction(function () use ($kpiId, $crNo) {
+
+            $kpi = Kpi::findOrFail($kpiId);
+            $cr = Change_request::where('cr_no', $crNo)->firstOrFail();
+
+            //check if already linked to this cr
+            $alreadyLinked = $kpi->changeRequests()
+                                ->where('change_request.id', $cr->id)
+                                ->exists();
+
+            if ($alreadyLinked) {
+                return [
+                    'success' => true,
+                    'kpi_status' => $kpi->status,
+                    'cr' => $cr,
+                ];
+            } else {
+
+                // check if this cr already linked to another kpi
+                $crAlreadyLinkedToAnotherKpi = $cr->kpis()->exists();
+                if ($crAlreadyLinkedToAnotherKpi) {
+
+                    // get the kpi id of the cr
+                    $kpiIdOfCr = $cr->kpis()->first()->id;
+
+                    $this->detachChangeRequest($kpiIdOfCr, $cr->id);
+                    $kpi->changeRequests()->attach($cr->id);
+
+                    $this->recalculateStatusFromChangeRequests($kpi);
+
+                    $kpi->logs()->create([
+                        'user_id' => auth()->id(),
+                        'log_text' => "Change Request #{$cr->cr_no} was linked to this KPI.",
+                    ]);
+
+                    return [
+                        'success' => true,
+                        'kpi_status' => $kpi->status,
+                        'cr' => $cr,
+                    ];
+                } else {
+
+                    $kpi->changeRequests()->attach($cr->id);
+
+                    $this->recalculateStatusFromChangeRequests($kpi);
+
+                    $kpi->logs()->create([
+                        'user_id' => auth()->id(),
+                        'log_text' => "Change Request #{$cr->cr_no} was linked to this KPI.",
+                    ]);
+                } 
+            }
+            return [
+                'success' => true,
+                'kpi_status' => $kpi->status,
+                'cr' => $cr,
+            ];
+        });
+    }
+
+
+    // attach cr to kpi (from kpi page)
     public function attachChangeRequestByNumber($kpiId, $crNo)
     {
         return DB::transaction(function () use ($kpiId, $crNo) {

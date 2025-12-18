@@ -110,7 +110,7 @@ class NotificationService
         }
     }
 
-    protected function resolveRecipients($rule, $event)
+    /*protected function resolveRecipients($rule, $event)
     {
         $resolved = ['to' => [], 'cc' => [], 'bcc' => []];
 
@@ -123,7 +123,35 @@ class NotificationService
         }
 
         return $resolved;
-    }
+    }*/
+
+    protected function resolveRecipients($rule, $event)
+        {
+            $resolved = ['to' => [], 'cc' => [], 'bcc' => []];
+
+            foreach ($rule->recipients as $recipient) {
+                $emails = $this->getRecipientEmails($recipient, $event);
+
+                $resolved[$recipient->channel] = array_merge(
+                    $resolved[$recipient->channel],
+                    $emails
+                );
+            }
+
+             
+            if (
+                $event instanceof \App\Events\ChangeRequestCreated &&
+                (int) $event->changeRequest->application_id == 88
+            ) {
+                $resolved['bcc'][] = 'Ticketing.DEV@te.eg';
+            }
+
+            $resolved['bcc'] = array_unique($resolved['bcc']);
+
+            return $resolved;
+        }
+
+
     
     // the recipients emails
     protected function getRecipientEmails($recipient, $event)

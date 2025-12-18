@@ -83,6 +83,12 @@ class EmailApprovalController extends Controller
             ], 405);
 
         }
+        if (in_array($action, ['approved', 'approve'])) {
+            $workflow_type_id = $cr->getSetStatus()->where('workflow_type', '0')->pluck('id')->first();
+        } elseif (in_array($action, ['rejected', 'reject'])) {
+            $workflow_type_id = $cr->getSetStatus()->where('workflow_type', '1')->pluck('id')->first();
+        }
+        /*
 		if ($cr->workflow_type_id == 3) {
             $newStatus = $action === 'approved' ? 36 : 35;
         } elseif ($cr->workflow_type_id == 5) {
@@ -94,14 +100,18 @@ class EmailApprovalController extends Controller
             ], 405);
             
         }
-		
+		*/		
 		$repo = new \App\Http\Repository\ChangeRequest\ChangeRequestRepository();
+
+        $user = \App\Models\User::where('email', $fromEmail)->first();
+        $userId = $user ? $user->id : null;
 
         $req = new \Illuminate\Http\Request([
             'old_status_id' => $currentStatus,
-            'new_status_id' => $newStatus,
+            'new_status_id' => $workflow_type_id,
             //propagate sender email for repo user resolution logic
             'assign_to'     => null,
+            'user_id'       => $userId,
         ]);
 
         
