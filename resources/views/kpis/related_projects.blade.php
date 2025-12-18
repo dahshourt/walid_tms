@@ -30,7 +30,7 @@
                                 <select class="form-control kt-select2" name="projects" id="kpi_unlinked_projects" multiple>
                                     @foreach(($unlinkedProjects ?? []) as $project)
                                         <option value="{{ $project->id }}">
-                                            {{ $project->name }}
+                                            {{ $project->name }} - {{ $project->status }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -48,7 +48,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Loader -->
             <div id="kpi_projects_loader" class="text-center" style="display: none;">
                 <div class="spinner-border text-primary" role="status">
@@ -350,7 +350,7 @@
 
                 // Process each project independently to ensure clean separation
                 uniqueProjects.forEach(function (project) {
-                    
+
                     const statusClass = statusClasses[project.status] || 'label-light-secondary text-dark';
 
                     // Project row
@@ -369,7 +369,7 @@
                     html +=              (project.status || '');
                     html += '        </span>';
                     html += '    </td>';
-                    
+
                     if (!isView) {
                         html += '    <td class="text-center">';
                         html += '        <button type="button"';
@@ -381,7 +381,7 @@
                         html += '        </button>';
                         html += '    </td>';
                     }
-                    
+
                     html += '</tr>';
 
                     // Details row with quarters & milestones - scoped to THIS project only
@@ -487,22 +487,22 @@
                         if (completed >= projectIds.length) {
                             hideLoader();
                             linkButton.prop('disabled', false);
-                            
+
                             // Remove successfully attached projects from select
                             projectIds.forEach(function (projectId) {
                                 if (!errors.some(function(err) { return err.includes(projectId.toString()); })) {
                                     unlinkedSelect.find('option[value="' + projectId + '"]').remove();
                                 }
                             });
-                            
+
                             // Clear selection and hide button
                             unlinkedSelect.val(null).trigger('change');
                             linkButton.hide();
-                            
+
                             if (errors.length > 0) {
                                 alert('Some projects could not be attached:\n' + errors.join('\n'));
                             }
-                            
+
                             return;
                         }
 
@@ -537,8 +537,8 @@
                                 }
                             })
                             .fail(function (xhr) {
-                                const errorMsg = xhr.responseJSON && xhr.responseJSON.message 
-                                    ? xhr.responseJSON.message 
+                                const errorMsg = xhr.responseJSON && xhr.responseJSON.message
+                                    ? xhr.responseJSON.message
                                     : 'Error attaching project ID: ' + projectId;
                                 errors.push(errorMsg);
                             })
@@ -556,17 +556,17 @@
             $(document).on('click', '.js-detach-project', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                
+
                 const $btn = $(this);
                 const projectId = $btn.data('project-id');
                 const projectName = $btn.data('project-name');
-                
+
                 if (!confirm('Are you sure you want to detach "' + projectName + '" from this KPI?')) {
                     return;
                 }
 
                 const url = detachUrl.replace(':projectId', projectId);
-                
+
                 $btn.prop('disabled', true);
                 showLoader();
 
@@ -594,8 +594,8 @@
                         }
                     })
                     .fail(function (xhr) {
-                        const errorMsg = xhr.responseJSON && xhr.responseJSON.message 
-                            ? xhr.responseJSON.message 
+                        const errorMsg = xhr.responseJSON && xhr.responseJSON.message
+                            ? xhr.responseJSON.message
                             : 'Error detaching project';
                         alert(errorMsg);
                         $btn.prop('disabled', false);

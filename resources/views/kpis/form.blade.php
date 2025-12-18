@@ -155,9 +155,9 @@
                                  </div>
                              </span>
                          </label>
-                         <input type="email" class="{{ $isView ? 'form-control-plaintext' : 'form-control' }}" 
+                         <input type="email" class="{{ $isView ? 'form-control-plaintext' : 'form-control' }}"
                                 name="requester_email" id="requester_email"
-                                value="{{ $row->requester_email ?? old('requester_email') }}" 
+                                value="{{ $row->requester_email ?? old('requester_email') }}"
                                 {{ $isView || isset($row) ? 'disabled' : '' }}
                                 placeholder="Enter Requester Email"
                                 style="{{ $isView || isset($row) ? 'background-color: #f3f6f9; opacity: 0.65;' : '' }}">
@@ -310,7 +310,7 @@
                                 @foreach(($projects ?? []) as $project)
                                     <option value="{{ $project->id }}"
                                         {{ in_array($project->id, $selectedProjectIds, true) ? 'selected' : '' }}>
-                                        {{ $project->name }}
+                                        {{ $project->name }} - {{ $project->status }}
                                     </option>
                                 @endforeach
                             </select>
