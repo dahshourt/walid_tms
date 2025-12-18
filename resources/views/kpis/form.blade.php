@@ -97,6 +97,17 @@
                                value="{{ $row->sub_initiative ?? old('sub_initiative') }}" {{ $isDisabled }} placeholder="Enter Sub-Initiative">
                     </div>
                 </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label class="font-weight-bold">Creator</label>
+                        <input type="text" class="form-control-plaintext" 
+                               value="{{ isset($row) ? ($row->creator->user_name ?? 'Unknown') : auth()->user()->user_name }}" 
+                               disabled style="background-color: #f3f6f9; opacity: 0.65;">
+                        @if(!isset($row))
+                            <input type="hidden" name="created_by" value="{{ auth()->id() }}">
+                        @endif
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -224,7 +235,6 @@
         <input type="hidden" name="status" value="{{ $row->status }}">
     @else
         <input type="hidden" name="status" value="Open">
-        <input type="hidden" name="created_by" value="{{ auth()->id() }}">
     @endif
 </div>
 

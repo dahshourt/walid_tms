@@ -192,7 +192,6 @@ class ChangeRequestController extends Controller
      */
     public function dvision_manager_cr()
     {
-        
         try {
             $this->authorize('CR Waiting Approval');
 
@@ -663,10 +662,7 @@ class ChangeRequestController extends Controller
             ->where('active', '1')
             ->value('new_status_id');
 
-        if (!in_array($current_status, [
-            config('change_request.status_ids.business_approval'),
-            config('change_request.status_ids.business_analysis')
-        ])) {
+        if ($current_status != config('change_request.status_ids.business_approval')) {
             // $message = $current_status ==  config('change_request.status_ids.Reject') ? 'You already rejected this CR.' : 'You already approved this CR.';
 
             $rejectStatuses = [
@@ -716,7 +712,6 @@ class ChangeRequestController extends Controller
      */
     public function list_crs_by_user(Request $request)
     {
-       
         $this->authorize('Show My CRs');
 
         $user = auth()->user();
@@ -861,8 +856,9 @@ class ChangeRequestController extends Controller
         $cr_id = $request->query('crId');
         $action = $request->query('action');
         $token = $request->query('token');
+        $workflow = $request->query('workflow');
 
-        if (! $cr_id || ! $action || ! $token) {
+        if (! $cr_id || ! $action || ! $token || ! $workflow) {
             return response()->json([
                 'isSuccess' => false,
                 'message' => 'Invalid request. Missing parameters.',
@@ -898,9 +894,8 @@ class ChangeRequestController extends Controller
 
             // $current_status != config('change_request.status_ids.business_approval')
             ! in_array($current_status, [
-                config('change_request.status_ids.division_manager_approval'),
                 config('change_request.status_ids.business_approval'),
-                config('change_request.status_ids_kam.business_approval_kam')
+                config('change_request.status_ids_kam.business_approval_kam'),
             ])
 
         ) {
@@ -911,7 +906,7 @@ class ChangeRequestController extends Controller
 
             $message = in_array($current_status, $rejectStatuses)
                 ? 'You already rejected this CR.'
-                : 'You already approved this CR.'. $current_status;
+                : 'You already approved this CR.';
 
             return response()->json([
                 'isSuccess' => false,
@@ -919,19 +914,19 @@ class ChangeRequestController extends Controller
             ], 400);
         }
 
-        $workflowIdForAction = $this->getWorkflowIdForAction($cr->workflow_type_id, $action);
-        if (! $workflowIdForAction) {
-            return response()->json([
-                'isSuccess' => false,
-                'message' => 'Unsupported workflow type.',
-            ], 400);
-        }
+        // $workflowIdForAction = $this->getWorkflowIdForAction($cr->workflow_type_id, $action);
+        // if (! $workflowIdForAction) {
+        //     return response()->json([
+        //         'isSuccess' => false,
+        //         'message' => 'Unsupported workflow type.',
+        //     ], 400);
+        // }
 
         try {
             $repo = new ChangeRequestRepository();
             $updateRequest = new Request([
                 'old_status_id' => $current_status,
-                'new_status_id' => $workflowIdForAction,
+                'new_status_id' => $workflow,
             ]);
             $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
 
@@ -947,7 +942,7 @@ class ChangeRequestController extends Controller
         } catch (Exception $e) {
             Log::error('Failed to process division manager action (JSON)', [
                 'cr_id' => $cr_id,
-                'action' => $action . ' - ' . $workflowIdForAction . ' - ' . $current_status,
+                'action' => $action . ' - ' . $workflow . ' - ' . $current_status,
                 'error' => $e,
             ]);
 
@@ -1079,329 +1074,134 @@ class ChangeRequestController extends Controller
         }
     }
 
-    // public function handlePendingCap(Request $request)
-    // {
-    //     $this->authorize('Edit cr pending cap');
-    //     $cr_id = $request->query('crId');
-    //     $action = $request->query('action');
-    //     $token = $request->query('token');
+    public function handlePendingCap(Request $request)
+    {
+        $this->authorize('Edit cr pending cap');
+        $cr_id = $request->query('crId');
+        $workflow = $request->query('workflow');
+        $action = $request->query('action');
+        $token = $request->query('token');
 
-    //     if (! $cr_id || ! $action || ! $token) {
-    //         return response()->json([
-    //             'isSuccess' => false,
-    //             'message' => 'Invalid request. Missing parameters.',
-    //         ], 400);
-    //     }
-
-    //     $cr = Change_request::find($cr_id);
-    //     if (! $cr) {
-    //         return response()->json([
-    //             'isSuccess' => false,
-    //             'message' => 'Change Request not found.',
-    //         ], 404);
-    //     }
-
-    //     $expectedToken = $this->generateSecurityToken($cr);
-    //     if ($token !== $expectedToken) {
-    //         Log::warning('Invalid token used for division manager action (JSON)', [
-    //             'cr_id' => $cr_id,
-    //             'ip' => request()->ip(),
-    //         ]);
-
-    //         return response()->json([
-    //             'isSuccess' => false,
-    //             'message' => 'Unauthorized access. Invalid token.',
-    //         ], 403);
-    //     }
-
-    //     $current_status = Change_request_statuse::where('cr_id', $cr_id)
-    //         ->where('active', '1')
-    //         ->value('new_status_id');
-
-    //     $pendingCabStatuses = [
-    //         config('change_request.status_ids.pending_cab'),
-    //         config('change_request.status_ids.pending_cab_approval') // Add the new status ID
-    //     ];
-        
-    //     if (!in_array($current_status, $pendingCabStatuses)) {
-    //         $rejectedStatuses = [
-    //             config('change_request.status_ids.pending_cab_proceed'),
-    //             config('change_request.status_ids.pending_cab_approval_review'),
-               
-               
-    //         ];
-            
-    //         $message = in_array($current_status, $rejectedStatuses)
-    //             ? 'You already rejected this CR.'
-    //             : 'You already approved this CR.';
-
-    //         return response()->json([
-    //             'isSuccess' => false,
-    //             'message' => $message,
-    //         ], 400);
-    //     }
-
-    //     try {
-
-    //         // $updateRequest = new Request([
-    //         //     'old_status_id' => $current_status,
-    //         //     'new_status_id' => $workflowIdForAction,
-    //         // ]);
-    //         // $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
-    //         if ($action == 'approve') {
-    //             if ($cr->workflow_type_id == 37) { // kam workflow
-    //                 $requestData = new \Illuminate\Http\Request([
-    //                     'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
-    //                     'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),
-    //                     'cab_cr_flag' => '1',
-    //                     'user_id' => auth()->user()->id,
-    //                 ]);
-    //             } else {
-    //                 $oldStatus = in_array($current_status, [
-    //                     config('change_request.status_ids.pending_cab'),
-    //                     config('change_request.status_ids.pending_cab_approval')
-    //                 ]) ? $current_status : config('change_request.status_ids.pending_cab');
-                    
-    //                 $newStatus = ($oldStatus == config('change_request.status_ids.pending_cab_approval'))
-    //                     ? config('change_request.status_ids.pending_update_cr_doc')
-    //                     : config('change_request.status_ids.pending_cab_proceed');
-                    
-    //                 $requestData = new \Illuminate\Http\Request([
-    //                     'old_status_id' => $oldStatus,
-    //                     'new_status_id' => $newStatus,
-    //                     'cab_cr_flag' => '1',
-    //                     'user_id' => auth()->user()->id,
-    //                 ]);
-    //             }
-
-    //         } else {
-
-    //             if ($cr->workflow_type_id == 37) { // kam workflow
-    //                 $requestData = new \Illuminate\Http\Request([
-    //                     'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
-    //                     'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),
-    //                     'cab_cr_flag' => '1',
-    //                     'user_id' => auth()->user()->id,
-    //                 ]);
-    //             } else {
-    //                 $oldStatus = in_array($current_status, [
-    //                     config('change_request.status_ids.pending_cab'),
-    //                     config('change_request.status_ids.pending_cab_approval')
-    //                 ]) ? $current_status : config('change_request.status_ids.pending_cab');
-                    
-    //                 $newStatus = ($oldStatus == config('change_request.status_ids.pending_cab_approval'))
-    //                     ? config('change_request.status_ids.pending_update_cr_doc')
-    //                     : config('change_request.status_ids.pending_cab_review');
-                    
-    //                 $requestData = new \Illuminate\Http\Request([
-    //                     'old_status_id' => $oldStatus,
-    //                     'new_status_id' => $newStatus,
-    //                     'cab_cr_flag' => '1',
-    //                     'user_id' => auth()->user()->id,
-    //                 ]);
-    //             }
-
-    //         }
-    //         $repo = new ChangeRequestRepository();
-            
-    //         // Log the status transition
-    //         Log::info('CR Status Transition', [
-    //             'cr_id' => $cr_id,
-    //             'action' => $action,
-    //             'old_status_id' => $requestData->old_status_id,
-    //             'new_status_id' => $requestData->new_status_id,
-    //             'user_id' => auth()->id(),
-    //             'timestamp' => now()->toDateTimeString()
-    //         ]);
-
-    //         $repo->update($cr_id, $requestData);
-
-    //         $message = $action === 'approve'
-    //             ? "CR #{$cr_id} has been successfully approved."
-    //             : "CR #{$cr_id} has been successfully rejected.";
-    //         $response = [
-    //             'isSuccess' => true,
-    //             'message' => $message,
-    //         ];
-
-    //         return response()->json([
-    //             'status' => 200,
-    //             'isSuccess' => true,
-    //             'message' => $message,
-    //         ], 200);
-
-    //     } catch (Exception $e) {
-    //         Log::error('Failed to process division manager action (JSON)', [
-    //             'cr_id' => $cr_id,
-    //             'action' => $action,
-    //             'error' => $e->getMessage(),
-    //         ]);
-
-    //         return response()->json([
-    //             'isSuccess' => false,
-    //             'message' => 'Failed to process action. Please try again.',
-    //         ], 500);
-    //     }
-    // }
-public function handlePendingCap(Request $request)
-{
-    $this->authorize('Edit cr pending cap');
-    $cr_id = $request->query('crId');
-    $action = $request->query('action');
-    $token = $request->query('token');
-
-    if (! $cr_id || ! $action || ! $token) {
-        return response()->json([
-            'isSuccess' => false,
-            'message' => 'Invalid request. Missing parameters.',
-        ], 400);
-    }
-
-    $cr = Change_request::find($cr_id);
-    if (! $cr) {
-        return response()->json([
-            'isSuccess' => false,
-            'message' => 'Change Request not found.',
-        ], 404);
-    }
-
-    $expectedToken = $this->generateSecurityToken($cr);
-    if ($token !== $expectedToken) {
-        Log::warning('Invalid token used for division manager action (JSON)', [
-            'cr_id' => $cr_id,
-            'ip' => request()->ip(),
-        ]);
-
-        return response()->json([
-            'isSuccess' => false,
-            'message' => 'Unauthorized access. Invalid token.',
-        ], 403);
-    }
-
-    $current_status = Change_request_statuse::where('cr_id', $cr_id)
-        ->where('active', '1')
-        ->value('new_status_id');
-
-    $pendingCabStatuses = [
-        config('change_request.status_ids.pending_cab'),
-        config('change_request.status_ids.pending_cab_approval')
-    ];
-    
-    if (!in_array($current_status, $pendingCabStatuses)) {
-        $rejectedStatuses = [
-            config('change_request.status_ids.pending_cab_proceed'),
-            config('change_request.status_ids.pending_cab_approval_review'),
-            config('change_request.status_ids.pending_cab_review'),
-            config('change_request.status_ids.pending_update_cr_doc'),
-        ];
-        
-        $message = in_array($current_status, $rejectedStatuses)
-            ? 'You already rejected this CR.'
-            : 'You already approved this CR.';
-
-        return response()->json([
-            'isSuccess' => false,
-            'message' => $message,
-        ], 400);
-    }
-
-    try {
-        if ($action == 'approve') {
-            if ($cr->workflow_type_id == 37) { // kam workflow
-                $requestData = new \Illuminate\Http\Request([
-                    'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
-                    'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),
-                    'cab_cr_flag' => '1',
-                    'user_id' => auth()->user()->id,
-                ]);
-            } else {
-                // Determine old and new status based on current status
-                if ($current_status == config('change_request.status_ids.pending_cab_approval')) {
-                    // New workflow: Pending CAB Approval -> Request Vendor MD's
-                    $requestData = new \Illuminate\Http\Request([
-                        'old_status_id' => config('change_request.status_ids.pending_cab_approval'),
-                        'new_status_id' => config('change_request.status_ids.request_vendor_mds'),
-                        'cab_cr_flag' => '1',
-                        'user_id' => auth()->user()->id,
-                    ]);
-                } else {
-                    // Original workflow: Pending CAB -> Pending CAB Proceed
-                    $requestData = new \Illuminate\Http\Request([
-                        'old_status_id' => config('change_request.status_ids.pending_cab'),
-                        'new_status_id' => config('change_request.status_ids.pending_cab_proceed'),
-                        'cab_cr_flag' => '1',
-                        'user_id' => auth()->user()->id,
-                    ]);
-                }
-            }
-        } else { // Need Review action
-            if ($cr->workflow_type_id == 37) { // kam workflow
-                $requestData = new \Illuminate\Http\Request([
-                    'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
-                    'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),
-                    'cab_cr_flag' => '1',
-                    'user_id' => auth()->user()->id,
-                ]);
-            } else {
-                // Determine old and new status based on current status
-                if ($current_status == config('change_request.status_ids.pending_cab_approval')) {
-                    // New workflow: Pending CAB Approval -> Pending Update CR Doc
-                    $requestData = new \Illuminate\Http\Request([
-                        'old_status_id' => config('change_request.status_ids.pending_cab_approval'),
-                        'new_status_id' => config('change_request.status_ids.pending_update_cr_doc'),
-                        'cab_cr_flag' => '1',
-                        'user_id' => auth()->user()->id,
-                    ]);
-                } else {
-                    // Original workflow: Pending CAB -> Pending CAB Review
-                    $requestData = new \Illuminate\Http\Request([
-                        'old_status_id' => config('change_request.status_ids.pending_cab'),
-                        'new_status_id' => config('change_request.status_ids.pending_cab_review'),
-                        'cab_cr_flag' => '1',
-                        'user_id' => auth()->user()->id,
-                    ]);
-                }
-            }
+        if (! $cr_id || ! $action || ! $token || ! $workflow) {
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Invalid request. Missing parameters.',
+            ], 400);
         }
 
-        $repo = new ChangeRequestRepository();
-        
-        // Log the status transition
-        Log::info('CR Status Transition', [
-            'cr_id' => $cr_id,
-            'action' => $action,
-            'old_status_id' => $requestData->old_status_id,
-            'new_status_id' => $requestData->new_status_id,
-            'user_id' => auth()->id(),
-            'workflow_type_id' => $cr->workflow_type_id,
-            'timestamp' => now()->toDateTimeString()
-        ]);
+        $cr = Change_request::find($cr_id);
+        if (! $cr) {
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Change Request not found.',
+            ], 404);
+        }
 
-        $repo->update($cr_id, $requestData);
+        $expectedToken = $this->generateSecurityToken($cr);
+        if ($token !== $expectedToken) {
+            Log::warning('Invalid token used for division manager action (JSON)', [
+                'cr_id' => $cr_id,
+                'ip' => request()->ip(),
+            ]);
 
-        $message = $action === 'approve'
-            ? "CR #{$cr_id} has been successfully approved."
-            : "CR #{$cr_id} has been successfully rejected.";
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Unauthorized access. Invalid token.',
+            ], 403);
+        }
 
-        return response()->json([
-            'status' => 200,
-            'isSuccess' => true,
-            'message' => $message,
-        ], 200);
+        $current_status = Change_request_statuse::where('cr_id', $cr_id)
+            ->where('active', '1')
+            ->value('new_status_id');
 
-    } catch (Exception $e) {
-        Log::error('Failed to process division manager action (JSON)', [
-            'cr_id' => $cr_id,
-            'action' => $action,
-            'error' => $e->getMessage(),
-        ]);
+        if ($current_status != config('change_request.status_ids.pending_cab')) {
+            $message = $current_status == config('change_request.status_ids.pending_cab_proceed')
+                ? 'You already rejected this CR.'
+                : 'You already approved this CR.';
 
-        return response()->json([
-            'isSuccess' => false,
-            'message' => 'Failed to process action. Please try again.',
-        ], 500);
+            return response()->json([
+                'isSuccess' => false,
+                'message' => $message,
+            ], 400);
+        }
+
+        try {
+
+            $updateRequest = new Request([
+                'old_status_id' => $current_status,
+                'new_status_id' => $workflow,
+                'cab_cr_flag' => '1',
+                'user_id' => auth()->user()->id,
+            ]);
+            // $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
+            // if ($action == 'approve') {
+            //     if ($cr->workflow_type_id == 37) { // kam workflow
+            //         $requestData = new \Illuminate\Http\Request([
+            //             'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
+            //             'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),
+            //             'cab_cr_flag' => '1',
+            //             'user_id' => auth()->user()->id,
+            //         ]);
+            //     } else {
+            //         $requestData = new \Illuminate\Http\Request([
+            //             'old_status_id' => config('change_request.status_ids.pending_cab'),
+            //             'new_status_id' => config('change_request.status_ids.pending_cab_proceed'),
+            //             'cab_cr_flag' => '1',
+            //             'user_id' => auth()->user()->id,
+            //         ]);
+            //     }
+
+            // } else {
+
+            //     if ($cr->workflow_type_id == 37) { // kam workflow
+            //         $requestData = new \Illuminate\Http\Request([
+            //             'old_status_id' => config('change_request.status_ids_kam.pending_cab_kam'),
+            //             'new_status_id' => $this->GetCapActionId(37, 'Pending CAB kam', 'Design estimation kam'),
+            //             'cab_cr_flag' => '1',
+            //             'user_id' => auth()->user()->id,
+            //         ]);
+            //     } else {
+            //         $requestData = new \Illuminate\Http\Request([
+            //             'old_status_id' => config('change_request.status_ids.pending_cab'),
+            //             'new_status_id' => config('change_request.status_ids.pending_cab_review'),
+            //             'cab_cr_flag' => '1',
+            //             'user_id' => auth()->user()->id,
+            //         ]);
+            //     }
+
+            // }
+            $repo = new ChangeRequestRepository();
+
+            $repo->update($cr_id, $updateRequest);
+
+            $message = $action === 'approve'
+                ? "CR #{$cr_id} has been successfully approved."
+                : "CR #{$cr_id} has been successfully rejected.";
+            $response = [
+                'isSuccess' => true,
+                'message' => $message,
+            ];
+
+            return response()->json([
+                'status' => 200,
+                'isSuccess' => true,
+                'message' => $message,
+            ], 200);
+
+        } catch (Exception $e) {
+            Log::error('Failed to process division manager action (JSON)', [
+                'cr_id' => $cr_id,
+                'action' => $action,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Failed to process action. Please try again.',
+            ], 500);
+        }
     }
-}
+
     /**
      * Update attachment files
      */
@@ -2101,8 +1901,8 @@ public function handlePendingCap(Request $request)
                 'reject' => $this->GetDivisionManagerActionId(3, 'Business Approval', 'Reject'),
             ],
             5 => [
-                'approve' => $this->GetDivisionManagerActionId(5, 'Division Manager Approval', 'Business Analysis'),
-                'reject' => $this->GetDivisionManagerActionId(5, 'Division Manager Approval', 'Reject'),
+                'approve' => $this->GetDivisionManagerActionId(5, 'Business Approval', 'CR Analysis'),
+                'reject' => $this->GetDivisionManagerActionId(5, 'Business Approval', 'Reject'),
             ],
             37 => [
                 'approve' => $this->GetDivisionManagerActionId(37, 'Business Approval kam', 'Business Validation kam'),

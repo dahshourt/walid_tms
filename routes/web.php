@@ -229,6 +229,7 @@ Route::middleware(['auth'])->group(
         Route::get('/get-groups/{status_id}', [SlaCalculationController::class, 'getGroups'])->name('get.groups');
 
         // KPI Routes
+        Route::get('kpis/export', 'KPIs\\KPIController@export')->name('kpis.export');
         Route::resource('kpis', KPIs\KPIController::class);
         Route::get('kpis/{kpi}/search-cr', 'KPIs\KPIController@searchChangeRequest')->name('kpis.search-cr');
         Route::post('kpis/{kpi}/attach-cr', 'KPIs\KPIController@attachChangeRequest')->name('kpis.attach-cr');

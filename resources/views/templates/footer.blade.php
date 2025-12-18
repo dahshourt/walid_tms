@@ -182,9 +182,10 @@
 
 		$('._approved_active').on('click', function() {
     var id = $(this).attr('data-id');
+    var workflow = $(this).attr('data-workflow');
     var token = $(this).attr('data-token');
 	let baseUrl = '{{ url("/change_request/approved_active") }}';
-let fullUrl = `${baseUrl}?crId=${id}&action=approve&token=${token}`;
+let fullUrl = `${baseUrl}?crId=${id}&action=approve&token=${token}&workflow=${workflow}`;
     Swal.fire({
         title: "Are you sure?",
         icon: "warning",
@@ -218,9 +219,10 @@ let fullUrl = `${baseUrl}?crId=${id}&action=approve&token=${token}`;
 
 $('._approved_active_cab').on('click', function() {
     var id = $(this).attr('data-id');
+    var workflow = $(this).attr('data-workflow');
     var token = $(this).attr('data-token');
 	let baseUrl = '{{ url("/change_request2/approved_active_cab") }}';
-let fullUrl = `${baseUrl}?crId=${id}&action=approve&token=${token}`;
+let fullUrl = `${baseUrl}?crId=${id}&action=approve&token=${token}&workflow=${workflow}`;
     Swal.fire({
         title: "Are you sure?",
         icon: "warning",
@@ -331,9 +333,10 @@ let fullUrl = `${baseUrl}?crId=${id}&action=reject&token=${token}`;
 });
 $('._rejected_active').on('click', function() {
     var id = $(this).attr('data-id');
+    var workflow = $(this).attr('data-workflow');
     var token = $(this).attr('data-token');
 	let baseUrl = '{{ url("/change_request/approved_active") }}';
-let fullUrl = `${baseUrl}?crId=${id}&action=reject&token=${token}`;
+let fullUrl = `${baseUrl}?crId=${id}&action=reject&token=${token}&workflow=${workflow}`;
     Swal.fire({
         title: "Are you sure?",
         icon: "warning",
@@ -366,9 +369,10 @@ let fullUrl = `${baseUrl}?crId=${id}&action=reject&token=${token}`;
 });
 $('._rejected_active_cab').on('click', function() {
     var id = $(this).attr('data-id');
+    var workflow = $(this).attr('data-workflow');
     var token = $(this).attr('data-token');
 	let baseUrl = '{{ url("/change_request2/approved_active_cab") }}';
-let fullUrl = `${baseUrl}?crId=${id}&action=reject&token=${token}`;
+let fullUrl = `${baseUrl}?crId=${id}&action=reject&token=${token}&workflow=${workflow}`;
     Swal.fire({
         title: "Are you sure?",
         icon: "warning",

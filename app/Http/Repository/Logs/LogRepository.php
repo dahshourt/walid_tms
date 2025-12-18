@@ -165,8 +165,13 @@ class LogRepository implements LogRepositoryInterface
         $fields += $customFieldMap;
         foreach ($fields as $field => $info) {
             if (isset($request->$field)) {
-                $oldValue = $change_request->$field ?? null;
-                $newValue = $request->$field;
+                if ($field === 'kpi') {
+                    $oldValue = $change_request->kpis->first()->id ?? null;
+                    $newValue = $request->kpi;
+                } else {
+                    $oldValue = $change_request->$field ?? null;
+                    $newValue = $request->$field;
+                }
 
                 if ($oldValue != $newValue) {
 

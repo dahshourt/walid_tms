@@ -21,6 +21,7 @@ use Auth;
 use Illuminate\Support\Arr;
 use App\Events\ChangeRequestUserAssignment;
 use App\Models\ChangeRequest;
+use App\Http\Repository\KPIs\KPIRepository;
 
 class ChangeRequestUpdateService
 {
@@ -61,7 +62,19 @@ class ChangeRequestUpdateService
 
     public function update($id, $request)
     {
-        $this->changeRequest_old = Change_request::find($id);
+        //$this->changeRequest_old = Change_request::find($id);
+        $this->changeRequest_old = Change_request::with('kpis')->find($id);
+
+        // 0)Link KPI if selected
+        //dd($request->all());
+        if (isset($request['kpi']) && $request['kpi']) {
+            //dd($request['kpi'], $this->changeRequest_old->cr_no);
+             $kpiRepo = new KPIRepository();
+             $kpiResult = $kpiRepo->attachKpiToChangeRequest($request['kpi'], $this->changeRequest_old->cr_no);
+             if(isset($kpiResult['success']) && !$kpiResult['success']){
+                 return true;
+             }
+        }
 
         // 1) CAB CR gate
         if ($this->handleCabCrValidation($id, $request)) {

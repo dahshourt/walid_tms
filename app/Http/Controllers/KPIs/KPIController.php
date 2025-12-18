@@ -8,6 +8,8 @@ use Illuminate\Http\Request;
 use App\Models\Kpi;
 use App\Http\Requests\KPIs\KPIRequest;
 use App\Models\Change_request;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 class KPIController extends Controller
 {
@@ -149,6 +151,16 @@ class KPIController extends Controller
         $this->KPI->delete($id);
 
         return redirect()->back()->with('success', 'KPI deleted successfully!');
+    }
+
+    /**
+     * Export KPIs to Excel.
+     */
+    public function export(): BinaryFileResponse
+    {
+        $this->authorize('Export KPIs');
+
+        return Excel::download(new \App\Exports\KPIsExport(), 'kpis_' . date('Y-m-d_H-i-s') . '.xlsx');
     }
 
     /**
