@@ -146,7 +146,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr>
+                    <tr class="no-projects-row">
                         <td colspan="{{ $isView ? '4' : '5' }}" class="text-center text-muted">No projects linked to this KPI.</td>
                     </tr>
                 @endforelse
@@ -195,6 +195,9 @@
                 if (!project || typeof project.id === 'undefined') {
                     return;
                 }
+
+                // Remove placeholder \"no projects\" row if it exists
+                $tbody.find('tr.no-projects-row').remove();
 
                 // Ensure we don't end up with duplicated rows for the same project
                 $tbody.find('tr.project-row[data-project-id="' + project.id + '"]').remove();
