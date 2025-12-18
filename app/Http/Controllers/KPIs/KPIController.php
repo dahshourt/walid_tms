@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers\KPIs;
 
+use App\Exports\KpiChangeRequestsExport;
 use App\Factories\KPIs\KPIFactory;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\KPIs\KPIRequest;
+use App\Models\Change_request;
+use App\Models\Kpi;
 use App\Services\KpiPillar\KpiPillarService;
 use App\Services\KpiType\KpiTypeService;
 use App\Services\Project\ProjectService;
 use Illuminate\Http\Request;
-use App\Models\Kpi;
-use App\Http\Requests\KPIs\KPIRequest;
-use App\Models\Change_request;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
-use App\Exports\KpiChangeRequestsExport;
+use Validator;
 
 class KPIController extends Controller
 {
@@ -60,7 +61,7 @@ class KPIController extends Controller
         $classifications = Kpi::CLASSIFICATION;
         $types = app(KpiTypeService::class)->getAllActive();
         $pillars = app(KpiPillarService::class)->getAllActive();
-        $projects = app(ProjectService::class)->listAll();
+        $projects = app(ProjectService::class)->listUnlinked();
 
         return view("$this->view.create", compact('priorities', 'quarters', 'types', 'classifications', 'pillars', 'projects'));
     }
@@ -291,7 +292,7 @@ class KPIController extends Controller
         ]);
 
         $pillarId = $request->input('pillar_id');
-        
+
         $initiatives = \App\Models\KpiInitiative::where('pillar_id', $pillarId)
             ->where('status', '1')
             ->orderBy('name', 'asc')
@@ -313,7 +314,7 @@ class KPIController extends Controller
         ]);
 
         $initiativeId = $request->input('initiative_id');
-        
+
         $subInitiatives = \App\Models\KpiSubInitiative::where('initiative_id', $initiativeId)
             ->where('status', '1')
             ->orderBy('name', 'asc')
@@ -330,7 +331,7 @@ class KPIController extends Controller
      */
     public function checkRequesterEmail(Request $request)
     {
-        $validator = \Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [
             'email' => 'required|email:rfc,dns',
         ]);
 
