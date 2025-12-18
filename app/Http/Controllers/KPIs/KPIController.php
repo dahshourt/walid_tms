@@ -4,12 +4,16 @@ namespace App\Http\Controllers\KPIs;
 
 use App\Factories\KPIs\KPIFactory;
 use App\Http\Controllers\Controller;
+use App\Services\KpiPillar\KpiPillarService;
+use App\Services\KpiType\KpiTypeService;
+use App\Services\Project\ProjectService;
 use Illuminate\Http\Request;
 use App\Models\Kpi;
 use App\Http\Requests\KPIs\KPIRequest;
 use App\Models\Change_request;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use App\Exports\KpiChangeRequestsExport;
 
 class KPIController extends Controller
 {
@@ -28,7 +32,7 @@ class KPIController extends Controller
         $view = 'kpis';
         $route = 'kpis';
         $OtherRoute = 'kpis';
-        
+
         $title = 'Strategic KPIs';
         $form_title = 'Strategic KPIs';
         view()->share(compact('view', 'route', 'title', 'form_title', 'OtherRoute'));
@@ -53,10 +57,12 @@ class KPIController extends Controller
         $this->authorize('Create KPIs');
         $priorities = Kpi::PRIORITY;
         $quarters = Kpi::QUARTER;
-        $types = Kpi::TYPE;
         $classifications = Kpi::CLASSIFICATION;
+        $types = app(KpiTypeService::class)->getAllActive();
+        $pillars = app(KpiPillarService::class)->getAllActive();
+        $projects = app(ProjectService::class)->listAll();
 
-        return view("$this->view.create", compact('priorities', 'quarters', 'types', 'classifications'));
+        return view("$this->view.create", compact('priorities', 'quarters', 'types', 'classifications', 'pillars', 'projects'));
     }
 
     /**
@@ -90,13 +96,15 @@ class KPIController extends Controller
 
         $priorities = Kpi::PRIORITY;
         $quarters = Kpi::QUARTER;
-        $types = Kpi::TYPE;
+        $types = app(KpiTypeService::class)->getAllActive();
+        $pillars = app(KpiPillarService::class)->getAllActive();
         $classifications = Kpi::CLASSIFICATION;
+        $projects = app(ProjectService::class)->listAll();
         $logs = $row ? $row->logs : collect();
         $comments = $row ? $row->comments : collect();
         $changeRequests = $row ? $row->changeRequests : collect();
 
-        return view("$this->view.show", compact('row', 'priorities', 'quarters', 'types', 'classifications', 'logs', 'comments', 'changeRequests'));
+        return view("$this->view.show", compact('row', 'priorities', 'quarters', 'types', 'classifications', 'logs', 'comments', 'changeRequests', 'pillars', 'projects'));
     }
 
     /**
@@ -110,15 +118,23 @@ class KPIController extends Controller
         $this->authorize('Edit KPIs');
         $row = $this->KPI->find($id);
 
+        // If the KPI record is not found, return a 404 instead of breaking the view with a null->id error
+        if (! $row) {
+            abort(404);
+        }
+
         $priorities = Kpi::PRIORITY;
         $quarters = Kpi::QUARTER;
-        $types = Kpi::TYPE;
+        $types = app(KpiTypeService::class)->getAllActive();
+        $pillars = app(KpiPillarService::class)->getAllActive();
         $classifications = Kpi::CLASSIFICATION;
-        $logs = $row ? $row->logs : collect();
-        $comments = $row ? $row->comments : collect();
-        $changeRequests = $row ? $row->changeRequests : collect();
+        $projects = app(ProjectService::class)->listAll();
+        $unlinkedProjects = app(ProjectService::class)->listUnlinked();
+        $logs = $row->logs;
+        $comments = $row->comments;
+        $changeRequests = $row->changeRequests;
 
-        return view("$this->view.edit", compact('row', 'priorities', 'quarters', 'types', 'classifications', 'logs', 'comments', 'changeRequests'));
+        return view("$this->view.edit", compact('row', 'priorities', 'quarters', 'types', 'classifications', 'logs', 'comments', 'changeRequests', 'pillars', 'projects', 'unlinkedProjects'));
     }
 
     /**
@@ -133,6 +149,8 @@ class KPIController extends Controller
         $data = array_merge($request->validated(), [
             'kpi_comment' => $request->input('kpi_comment'),
         ]);
+        // Classification is immutable on edit – ensure it cannot be changed
+        unset($data['classification']);
 
         $this->KPI->update($data, $id);
 
@@ -215,6 +233,23 @@ class KPIController extends Controller
     }
 
     /**
+     * Export Change Requests linked to a specific KPI.
+     */
+    public function exportChangeRequests($kpiId): BinaryFileResponse
+    {
+        $this->authorize('Export KPIs');
+
+        $kpi = $this->KPI->find($kpiId);
+        if (! $kpi) {
+            abort(404);
+        }
+
+        $fileName = 'kpi_' . $kpi->id . '_change_requests_' . date('Y-m-d_H-i-s') . '.xlsx';
+
+        return Excel::download(new KpiChangeRequestsExport((int) $kpiId), $fileName);
+    }
+
+    /**
      * AJAX: attach a Change Request to KPI by cr_no.
      */
     public function attachChangeRequest(Request $request, $kpiId)
@@ -244,5 +279,101 @@ class KPIController extends Controller
         $statusCode = $result['success'] ?? false ? 200 : 422;
 
         return response()->json($result, $statusCode);
+    }
+
+    /**
+     * AJAX: Get initiatives by pillar ID
+     */
+    public function getInitiativesByPillar(Request $request)
+    {
+        $request->validate([
+            'pillar_id' => ['required', 'exists:kpi_pillars,id'],
+        ]);
+
+        $pillarId = $request->input('pillar_id');
+        
+        $initiatives = \App\Models\KpiInitiative::where('pillar_id', $pillarId)
+            ->where('status', '1')
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $initiatives,
+        ]);
+    }
+
+    /**
+     * AJAX: Get sub-initiatives by initiative ID
+     */
+    public function getSubInitiativesByInitiative(Request $request)
+    {
+        $request->validate([
+            'initiative_id' => ['required', 'exists:kpi_initiatives,id'],
+        ]);
+
+        $initiativeId = $request->input('initiative_id');
+        
+        $subInitiatives = \App\Models\KpiSubInitiative::where('initiative_id', $initiativeId)
+            ->where('status', '1')
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name']);
+
+        return response()->json([
+            'success' => true,
+            'data' => $subInitiatives,
+        ]);
+    }
+
+    /**
+     * AJAX: Check requester email in Active Directory
+     */
+    public function checkRequesterEmail(Request $request)
+    {
+        $validator = \Validator::make($request->all(), [
+            'email' => 'required|email:rfc,dns',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['valid' => false, 'message' => 'Please enter a valid email address.']);
+        }
+
+        $mail = $request->email;
+
+        // connection details
+        $name = config('constants.active-directory.name');
+        $pwd = config('constants.active-directory.pwd');
+        $ldap_host = config('constants.active-directory.ldap_host');
+        $ldap_binddn = config('constants.active-directory.ldap_binddn') . $name;
+        $ldap_rootdn = config('constants.active-directory.ldap_rootdn');
+
+        // Establish LDAP connection
+        $ldap = ldap_connect($ldap_host);
+
+        if ($ldap) {
+            ldap_set_option($ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
+            ldap_set_option($ldap, LDAP_OPT_REFERRALS, 0);
+
+            // Bind to LDAP server
+            $ldapbind = ldap_bind($ldap, $ldap_binddn, $pwd);
+
+            if ($ldapbind) {
+                // Search for the email in Active Directory
+                $escapedMail = ldap_escape($mail, '', LDAP_ESCAPE_FILTER);
+                $search = "(mail=$escapedMail)";
+                $result = ldap_search($ldap, $ldap_rootdn, $search);
+
+                // If search returns results, the email exists
+                if (ldap_count_entries($ldap, $result) > 0) {
+                    return response()->json(['valid' => true, 'message' => 'Valid email address.']);
+                }
+
+                return response()->json(['valid' => false, 'message' => 'Email not found in Active Directory.']);
+            }
+
+            return response()->json(['valid' => false, 'message' => 'Unable to connect to Active Directory.']);
+        }
+
+        return response()->json(['valid' => false, 'message' => 'Unable to connect to LDAP server.']);
     }
 }

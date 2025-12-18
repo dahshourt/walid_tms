@@ -5,6 +5,7 @@ namespace App\Http\Repository\KPIs;
 use App\Contracts\KPIs\KPIRepositoryInterface;
 use App\Models\Kpi;
 use App\Models\Change_request;
+use App\Models\KpiProject;
 use Illuminate\Support\Facades\DB;
 
 class KPIRepository implements KPIRepositoryInterface
@@ -18,7 +19,6 @@ class KPIRepository implements KPIRepositoryInterface
     
     public function getAll()
     {
-        
         return Kpi::orderByDesc('created_at')->paginate(10);
     } // end method
 
@@ -27,8 +27,8 @@ class KPIRepository implements KPIRepositoryInterface
         return DB::transaction(function () use ($request) {
             $data = collect($request);
 
-            // create KPI record (exclude comment-only)
-            $kpiData = $data->except(['kpi_comment'])->all();
+            // create KPI record (exclude comment-only and projects payload)
+            $kpiData = $data->except(['kpi_comment', 'project_ids'])->all();
             if (! isset($kpiData['status'])) {
                 $kpiData['status'] = 'Open';
             }
@@ -53,13 +53,39 @@ class KPIRepository implements KPIRepositoryInterface
                 ]);
             }
 
+            // attach projects (if provided)
+            if (! empty($request['project_ids'] ?? null) && is_array($request['project_ids'])) {
+                $projectIds = array_filter(array_unique($request['project_ids']));
+
+                foreach ($projectIds as $projectId) {
+                    KpiProject::create([
+                        'kpi_id' => $kpi->id,
+                        'project_id' => $projectId,
+                    ]);
+                }
+
+                if (count($projectIds) > 0) {
+                    $kpi->logs()->create([
+                        'user_id' => auth()->id(),
+                        'log_text' => 'Projects were linked to this KPI at creation.',
+                    ]);
+                }
+            }
+
             return $kpi;
         });
     }  // end method
 
     public function find($id)
     {
-        return Kpi::with(['creator', 'comments.user', 'logs.user', 'changeRequests.workflowType', 'changeRequests.currentStatusRel'])
+        return Kpi::with([
+                'creator',
+                'comments.user',
+                'logs.user',
+                'changeRequests.workflowType',
+                'changeRequests.currentStatusRel',
+                'projects.quarters.milestones',
+            ])
             ->find($id);
     } // end method
 
@@ -71,8 +97,8 @@ class KPIRepository implements KPIRepositoryInterface
 
             $data = collect($request);
 
-            // Update the KPI
-            $kpi->update($data->except(['kpi_comment'])->all());
+            // Update the KPI (exclude comment-only and projects payload)
+            $kpi->update($data->except(['kpi_comment', 'project_ids'])->all());
 
             // Track changes
             $changes = $kpi->getChanges();
@@ -107,9 +133,88 @@ class KPIRepository implements KPIRepositoryInterface
                 ]);
             }
 
+            // Optionally handle projects when coming from non-AJAX update
+            if (array_key_exists('project_ids', $request) && is_array($request['project_ids'])) {
+                $this->syncProjectsForKpi($kpi, $request['project_ids']);
+            }
+
             return $kpi;
         });
     } // end method
+
+    /**
+     * Sync KPI projects for a given KPI.
+     */
+    public function updateProjects($kpiId, array $projectIds): array
+    {
+        return DB::transaction(function () use ($kpiId, $projectIds) {
+            $kpi = Kpi::findOrFail($kpiId);
+
+            $this->syncProjectsForKpi($kpi, $projectIds);
+
+            $kpi->logs()->create([
+                'user_id' => auth()->id(),
+                'log_text' => 'Projects list was updated for this KPI.',
+            ]);
+
+            // Reload projects with required relations so the frontend can update the table without full reload
+            $projects = $kpi->projects()
+                ->with(['quarters.milestones'])
+                ->get();
+
+            $projectsPayload = $projects->map(function ($project) {
+                return [
+                    'id' => $project->id,
+                    'name' => $project->name,
+                    'project_manager_name' => $project->project_manager_name,
+                    'status' => $project->status,
+                    'quarters' => $project->quarters->map(function ($quarter) {
+                        return [
+                            'id' => $quarter->id,
+                            'quarter' => $quarter->quarter,
+                            'milestones' => $quarter->milestones->map(function ($milestone) {
+                                return [
+                                    'id' => $milestone->id,
+                                    'milestone' => $milestone->milestone,
+                                    'status' => $milestone->status,
+                                ];
+                            })->values()->all(),
+                        ];
+                    })->values()->all(),
+                ];
+            })->values()->all();
+
+            return [
+                'success' => true,
+                'message' => 'Projects updated successfully.',
+                'data' => [
+                    'projects' => $projectsPayload,
+                ],
+            ];
+        });
+    }
+
+    /**
+     * Internal helper to sync projects for a KPI.
+     */
+    protected function syncProjectsForKpi(Kpi $kpi, array $projectIds): void
+    {
+        $projectIds = array_filter(array_unique($projectIds));
+
+        // Clear existing
+        KpiProject::where('kpi_id', $kpi->id)->delete();
+
+        if (empty($projectIds)) {
+            return;
+        }
+
+        foreach ($projectIds as $projectId) {
+            KpiProject::create([
+                'kpi_id' => $kpi->id,
+                'project_id' => $projectId,
+            ]);
+        }
+    }
 
     public function delete($id)
     {
