@@ -7,6 +7,7 @@ use App\Models\Project;
 use App\Models\ProjectKpiQuarter;
 use App\Models\ProjectKpiMilestone;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ProjectService
 {
