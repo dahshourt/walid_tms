@@ -247,10 +247,13 @@ Route::middleware(['auth'])->group(
         Route::get('kpis/get-sub-initiatives', 'KPIs\KPIController@getSubInitiativesByInitiative')->name('kpis.get-sub-initiatives');
         Route::post('kpis/check-requester-email', 'KPIs\KPIController@checkRequesterEmail')->name('kpis.check-requester-email');
         Route::resource('kpis', KPIs\KPIController::class);
-        Route::post('kpis/{kpi}/projects', 'KPIs\KPIController@updateProjects')->name('kpis.update-projects');
         Route::get('kpis/{kpi}/search-cr', 'KPIs\KPIController@searchChangeRequest')->name('kpis.search-cr');
         Route::post('kpis/{kpi}/attach-cr', 'KPIs\KPIController@attachChangeRequest')->name('kpis.attach-cr');
         Route::delete('kpis/{kpi}/detach-cr/{cr}', 'KPIs\KPIController@detachChangeRequest')->name('kpis.detach-cr');
+        
+        // KPI Project Routes
+        Route::post('kpis/{kpi}/projects/{project}', 'KpiProject\KpiProjectController@attach')->name('kpi-projects.attach');
+        Route::delete('kpis/{kpi}/projects/{project}', 'KpiProject\KpiProjectController@detach')->name('kpi-projects.detach');
 
         // Project Manager KPI Routes
         Route::resource('projects', Project\ProjectController::class);

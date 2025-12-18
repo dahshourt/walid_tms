@@ -157,9 +157,39 @@ class KPIRepository implements KPIRepositoryInterface
                 'log_text' => 'Projects list was updated for this KPI.',
             ]);
 
+            // Reload projects with required relations so the frontend can update the table without full reload
+            $projects = $kpi->projects()
+                ->with(['quarters.milestones'])
+                ->get();
+
+            $projectsPayload = $projects->map(function ($project) {
+                return [
+                    'id' => $project->id,
+                    'name' => $project->name,
+                    'project_manager_name' => $project->project_manager_name,
+                    'status' => $project->status,
+                    'quarters' => $project->quarters->map(function ($quarter) {
+                        return [
+                            'id' => $quarter->id,
+                            'quarter' => $quarter->quarter,
+                            'milestones' => $quarter->milestones->map(function ($milestone) {
+                                return [
+                                    'id' => $milestone->id,
+                                    'milestone' => $milestone->milestone,
+                                    'status' => $milestone->status,
+                                ];
+                            })->values()->all(),
+                        ];
+                    })->values()->all(),
+                ];
+            })->values()->all();
+
             return [
                 'success' => true,
                 'message' => 'Projects updated successfully.',
+                'data' => [
+                    'projects' => $projectsPayload,
+                ],
             ];
         });
     }

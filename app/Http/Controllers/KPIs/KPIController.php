@@ -117,6 +117,11 @@ class KPIController extends Controller
         $this->authorize('Edit KPIs');
         $row = $this->KPI->find($id);
 
+        // If the KPI record is not found, return a 404 instead of breaking the view with a null->id error
+        if (! $row) {
+            abort(404);
+        }
+
         $priorities = Kpi::PRIORITY;
         $quarters = Kpi::QUARTER;
         $types = app(KpiTypeService::class)->getAllActive();
@@ -124,9 +129,9 @@ class KPIController extends Controller
         $classifications = Kpi::CLASSIFICATION;
         $projects = app(ProjectService::class)->listAll();
         $unlinkedProjects = app(ProjectService::class)->listUnlinked();
-        $logs = $row ? $row->logs : collect();
-        $comments = $row ? $row->comments : collect();
-        $changeRequests = $row ? $row->changeRequests : collect();
+        $logs = $row->logs;
+        $comments = $row->comments;
+        $changeRequests = $row->changeRequests;
 
         return view("$this->view.edit", compact('row', 'priorities', 'quarters', 'types', 'classifications', 'logs', 'comments', 'changeRequests', 'pillars', 'projects', 'unlinkedProjects'));
     }
@@ -149,27 +154,6 @@ class KPIController extends Controller
         $this->KPI->update($data, $id);
 
         return redirect()->route('kpis.edit', $id)->with('status', 'KPI Updated Successfully');
-    }
-
-    /**
-     * AJAX: update projects for a KPI (used on edit page).
-     */
-    public function updateProjects(Request $request, $kpiId)
-    {
-        $this->authorize('Edit KPIs');
-
-        $validated = $request->validate([
-            'project_ids' => ['nullable', 'array'],
-            'project_ids.*' => ['integer', 'exists:projects,id'],
-        ]);
-
-        $projectIds = $validated['project_ids'] ?? [];
-
-        $result = $this->KPI->updateProjects($kpiId, $projectIds);
-
-        $statusCode = $result['success'] ?? false ? 200 : 422;
-
-        return response()->json($result, $statusCode);
     }
 
     /**

@@ -498,40 +498,6 @@
             classificationSelect.on('change', toggleTimelineByClassification);
             toggleTimelineByClassification();
 
-            @if(isset($row) && !$isView)
-            // AJAX save projects on edit
-            const updateProjectsUrl = "{{ route('kpis.update-projects', ['kpi' => $row->id]) }}";
-            const csrfToken = $('meta[name=\"csrf-token\"]').attr('content');
-
-            projectSelect.on('change', function () {
-                if (classificationSelect.val() !== 'PM') {
-                    return;
-                }
-
-                const selectedProjects = $(this).val() || [];
-
-                $.ajax({
-                    url: updateProjectsUrl,
-                    type: 'POST',
-                    data: {
-                        project_ids: selectedProjects,
-                        _token: csrfToken,
-                    },
-                })
-                    .done(function (response) {
-                        if (response && response.success) {
-                            // Optional: show a small toast/notification if desired
-                            console.log('Projects updated successfully');
-                        } else {
-                            console.error(response && response.message ? response.message : 'Unable to update projects');
-                        }
-                    })
-                    .fail(function (xhr) {
-                        console.error('Error updating projects', xhr);
-                    });
-            });
-            @endif
-
             // Cascading Select Logic for Pillar -> Initiative -> Sub-Initiative
             const pillarSelect = $('#pillar_id');
             const initiativeSelect = $('#initiative_id');
