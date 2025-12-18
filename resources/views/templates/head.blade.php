@@ -134,6 +134,12 @@ License: You must have a valid license purchased only from themeforest(the above
 
 		</style>
 
+        <style>
+            html,body{overflow-x:hidden}
+            .select2-container{max-width:100%}
+            .select2-dropdown{max-width:100vw;overflow-x:hidden}
+        </style>
+
         @stack('css')
 
 	</head>

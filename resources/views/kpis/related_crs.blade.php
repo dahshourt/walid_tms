@@ -1,11 +1,26 @@
 @php
     $isView = request()->routeIs('*.show');
+    $linkedCrs = isset($changeRequests) ? $changeRequests : ($row->changeRequests ?? collect());
+    $hasLinkedCrs = $linkedCrs->isNotEmpty();
 @endphp
     <!-- Section: Linked Change Requests -->
     @if(isset($row))
     <div class="card card-custom card-stretch gutter-b">
-        <div class="card-header border-0 pt-5">
+        <div class="card-header border-0 pt-5 d-flex justify-content-between align-items-center">
             <h3 class="card-title font-weight-bolder">Related Change Requests</h3>
+            <a href="{{ $hasLinkedCrs ? route('kpis.export-crs', ['kpi' => $row->id]) : '#' }}"
+               class="btn btn-success font-weight-bolder btn-sm {{ $hasLinkedCrs ? '' : 'disabled' }}"
+               @unless($hasLinkedCrs) aria-disabled="true" tabindex="-1" @endunless>
+                <span class="svg-icon svg-icon-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
+                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                            <rect x="0" y="0" width="24" height="24"/>
+                            <path d="M7,18 L17,18 C18.1045695,18 19,18.8954305 19,20 C19,21.1045695 18.1045695,22 17,22 L7,22 C5.8954305,22 5,21.1045695 5,20 C5,18.8954305 5.8954305,18 7,18 Z M7,20 L17,20 C17.5522847,20 18,20.4477153 18,21 C18,21.5522847 17.5522847,22 17,22 L7,22 C6.44771525,22 6,21.5522847 6,21 C6,20.4477153 6.44771525,20 7,20 Z" fill="#000000" fill-rule="nonzero"/>
+                            <path d="M12,2 C12.5522847,2 13,2.44771525 13,3 L13,13.5857864 L15.2928932,11.2928932 C15.6834175,10.9023689 16.3165825,10.9023689 16.7071068,11.2928932 C17.0976311,11.6834175 17.0976311,12.3165825 16.7071068,12.7071068 L12.7071068,16.7071068 C12.3165825,17.0976311 11.6834175,17.0976311 11.2928932,16.7071068 L7.29289322,12.7071068 C6.90236893,12.3165825 6.90236893,11.6834175 7.29289322,11.2928932 C7.68341751,10.9023689 8.31658249,10.9023689 8.70710678,11.2928932 L11,13.5857864 L11,3 C11,2.44771525 11.4477153,2 12,2 Z" fill="#000000"/>
+                        </g>
+                    </svg>
+                </span>Export Excel
+            </a>
         </div>
         <div class="card-body">
             @if(!$isView)
@@ -52,9 +67,6 @@
                         </tr>
                     </thead>
                     <tbody id="kpi_cr_table_body">
-                        @php
-                            $linkedCrs = isset($changeRequests) ? $changeRequests : ($row->changeRequests ?? collect());
-                        @endphp
                         @forelse($linkedCrs as $cr)
                             <tr data-cr-id="{{ $cr->id }}">
                                 <td class="pl-0 font-weight-bolder">{{ $cr->cr_no }}</td>
