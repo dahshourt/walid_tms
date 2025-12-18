@@ -3,13 +3,12 @@
 namespace App\Http\Repository\Project;
 
 use App\Models\Project;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class ProjectRepository
 {
-    public function getAll(): LengthAwarePaginator
+    public function getAll(): Collection
     {
         return Project::with(['quarters' => function ($query) {
             $query->whereNull('deleted_at');
@@ -17,7 +16,7 @@ class ProjectRepository
             $query->whereNull('deleted_at');
         }])
         ->orderBy('id', 'desc')
-        ->paginate(15);
+        ->get();
     }
 
     /**

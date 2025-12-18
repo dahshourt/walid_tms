@@ -6,8 +6,7 @@ use App\Http\Repository\Project\ProjectRepository;
 use App\Models\Project;
 use App\Models\ProjectKpiQuarter;
 use App\Models\ProjectKpiMilestone;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 class ProjectService
 {
@@ -18,7 +17,7 @@ class ProjectService
         $this->projectRepository = $projectRepository;
     }
 
-    public function getAll(): LengthAwarePaginator
+    public function getAll(): Collection
     {
         return $this->projectRepository->getAll();
     }
@@ -109,7 +108,7 @@ class ProjectService
 
                 foreach ($data['quarters'] as $quarterData) {
                     $quarter = null;
-                    
+
                     if (isset($quarterData['id']) && $quarterData['id']) {
                         // Update existing quarter
                         $quarter = ProjectKpiQuarter::withTrashed()->find($quarterData['id']);
@@ -118,12 +117,12 @@ class ProjectService
                                 'quarter' => $quarterData['quarter'],
                                 'updated_by' => $userId,
                             ]);
-                            
+
                             // Restore if it was soft deleted
                             if ($quarter->trashed()) {
                                 $quarter->restore();
                             }
-                            
+
                             $existingQuarterIds[] = $quarter->id;
                         } else {
                             // If quarter not found or doesn't belong to this project, skip it
@@ -155,12 +154,12 @@ class ProjectService
                                             'status' => $milestoneData['status'] ?? 'Not Started',
                                             'updated_by' => $userId,
                                         ]);
-                                        
+
                                         // Restore if it was soft deleted
                                         if ($milestone->trashed()) {
                                             $milestone->restore();
                                         }
-                                        
+
                                         $existingMilestoneIds[] = $milestone->id;
                                     }
                                 } else {
@@ -183,10 +182,10 @@ class ProjectService
                             ->whereNull('deleted_at')
                             ->pluck('id')
                             ->toArray();
-                        
+
                         // Find milestones that exist in DB but not in the submitted data
                         $milestonesToDelete = array_diff($currentMilestoneIds, $existingMilestoneIds);
-                        
+
                         // Soft delete them
                         if (!empty($milestonesToDelete)) {
                             ProjectKpiMilestone::whereIn('id', $milestonesToDelete)->delete();

@@ -99,7 +99,7 @@
                         ];
                     @endphp
                     <div class="table-responsive">
-                        <table class="table table-bordered table-hover">
+                        <table class="table table-bordered table-hover" id="dfUsageTable">
                             <thead>
                                 <tr>
                                     <th width="50px"></th>
@@ -121,6 +121,43 @@
                                                 aria-expanded="false">
                                             <i class="la la-angle-down"></i>
                                         </button>
+                                        <!-- Hidden details content used by DataTables child rows -->
+                                        <div class="project-details-content d-none">
+                                            <div class="bg-light-primary p-5">
+                                                <h5 class="font-weight-bold mb-4">Quarters & Milestones</h5>
+                                                @forelse($project->quarters as $quarter)
+                                                <div class="mb-4">
+                                                    <div class="d-flex align-items-center mb-2">
+                                                        <button class="btn btn-sm btn-icon btn-light-info js-toggle-quarter-details mr-2"
+                                                                data-quarter-id="{{ $quarter->id }}"
+                                                                aria-expanded="false">
+                                                            <i class="la la-angle-down"></i>
+                                                        </button>
+                                                        <h6 class="font-weight-bold mb-0">{{ $quarter->quarter }}</h6>
+                                                    </div>
+                                                    <div class="quarter-details" data-quarter-id="{{ $quarter->id }}" style="display: none; margin-left: 40px;">
+                                                        @forelse($quarter->milestones as $milestone)
+                                                        <div class="d-flex align-items-center justify-content-between mb-2 p-3 bg-white rounded">
+                                                            <div class="flex-grow-1">
+                                                                <div class="font-weight-bold">{{ $milestone->milestone }}</div>
+                                                                @php
+                                                                    $milestoneClass = $statusClasses[$milestone->status] ?? 'label-light-secondary text-dark';
+                                                                @endphp
+                                                                <span class="label label-inline {{ $milestoneClass }} font-weight-bold mt-1">
+                                                                    {{ $milestone->status }}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        @empty
+                                                        <div class="text-muted p-3">No milestones for this quarter</div>
+                                                        @endforelse
+                                                    </div>
+                                                </div>
+                                                @empty
+                                                <div class="text-muted">No quarters defined for this project</div>
+                                                @endforelse
+                                            </div>
+                                        </div>
                                     </td>
                                     <td>{{ $project->name }}</td>
                                     <td>{{ $project->project_manager_name }}</td>
@@ -141,44 +178,6 @@
                                     </td>
                                     @endcanany
                                 </tr>
-                                <tr class="project-details-row" data-project-id="{{ $project->id }}" style="display: none;">
-                                    <td colspan="6" class="p-0">
-                                        <div class="bg-light-primary p-5">
-                                            <h5 class="font-weight-bold mb-4">Quarters & Milestones</h5>
-                                            @forelse($project->quarters as $quarter)
-                                            <div class="mb-4">
-                                                <div class="d-flex align-items-center mb-2">
-                                                    <button class="btn btn-sm btn-icon btn-light-info js-toggle-quarter-details mr-2"
-                                                            data-quarter-id="{{ $quarter->id }}"
-                                                            aria-expanded="false">
-                                                        <i class="la la-angle-down"></i>
-                                                    </button>
-                                                    <h6 class="font-weight-bold mb-0">{{ $quarter->quarter }}</h6>
-                                                </div>
-                                                <div class="quarter-details" data-quarter-id="{{ $quarter->id }}" style="display: none; margin-left: 40px;">
-                                                    @forelse($quarter->milestones as $milestone)
-                                                    <div class="d-flex align-items-center justify-content-between mb-2 p-3 bg-white rounded">
-                                                        <div class="flex-grow-1">
-                                                            <div class="font-weight-bold">{{ $milestone->milestone }}</div>
-                                                            @php
-                                                                $milestoneClass = $statusClasses[$milestone->status] ?? 'label-light-secondary text-dark';
-                                                            @endphp
-                                                            <span class="label label-inline {{ $milestoneClass }} font-weight-bold mt-1">
-                                                                {{ $milestone->status }}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    @empty
-                                                    <div class="text-muted p-3">No milestones for this quarter</div>
-                                                    @endforelse
-                                                </div>
-                                            </div>
-                                            @empty
-                                            <div class="text-muted">No quarters defined for this project</div>
-                                            @endforelse
-                                        </div>
-                                    </td>
-                                </tr>
                                 @empty
                                 <tr>
                                     <td colspan="6" class="text-center">No projects found</td>
@@ -189,7 +188,6 @@
                     </div>
                     <!--end: Datatable-->
                 </div>
-                {{ $collection->links() }}
             </div>
             <!--end::Card-->
         </div>
@@ -203,26 +201,23 @@
 @push('script')
 <script>
     $(document).ready(function() {
-        // Toggle project details
+        // Toggle project details using DataTables child rows
         $(document).on('click', '.js-toggle-project-details', function(e) {
             e.preventDefault();
             var $btn = $(this);
-            var projectId = $btn.data('project-id');
             var $row = $btn.closest('tr');
-            var $details = $('tr.project-details-row[data-project-id="' + projectId + '"]');
-            var expanded = $btn.attr('aria-expanded') === 'true';
+            var table = $('#dfUsageTable').DataTable();
+            var row = table.row($row);
 
-            if (expanded) {
+            if (row.child.isShown()) {
+                row.child.hide();
                 $btn.attr('aria-expanded', 'false');
                 $btn.find('i.la').removeClass('la-angle-up').addClass('la-angle-down');
-                $details.hide();
             } else {
+                var detailsHtml = $row.find('.project-details-content').html();
+                row.child(detailsHtml).show();
                 $btn.attr('aria-expanded', 'true');
                 $btn.find('i.la').removeClass('la-angle-down').addClass('la-angle-up');
-                if ($details.prev()[0] !== $row[0]) {
-                    $details.insertAfter($row);
-                }
-                $details.show();
             }
         });
 
