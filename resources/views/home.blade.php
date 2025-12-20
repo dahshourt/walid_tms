@@ -163,7 +163,19 @@
             </div>
             <!--end::Card-->
             
-            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            
+        </div>
+        <!--end::Container-->
+    </div>
+    <!--end::Entry-->
+</div>
+<!--end::Content-->
+
+@endsection
+
+@push('script')
+
+<script src="{{ asset('js/charts.js') }}"></script>
             <script>
                 document.addEventListener('DOMContentLoaded', function() {
                     var kpiData = @json($kpiData);
@@ -209,11 +221,5 @@
                     });
                 });
             </script>
-        </div>
-        <!--end::Container-->
-    </div>
-    <!--end::Entry-->
-</div>
-<!--end::Content-->
 
-@endsection
+@endpush
