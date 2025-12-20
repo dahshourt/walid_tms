@@ -149,6 +149,66 @@
                 </div>
             </div>
             <!--end::Card-->
+
+            <!--begin::Card-->
+            <div class="card card-custom gutter-b mt-5">
+                <div class="card-header">
+                    <div class="card-title">
+                        <h3 class="card-label">KPI Status Chart</h3>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <canvas id="kpiChart" style="max-height: 400px;"></canvas>
+                </div>
+            </div>
+            <!--end::Card-->
+            
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    var kpiData = @json($kpiData);
+
+                    var ctx = document.getElementById('kpiChart').getContext('2d');
+                    var kpiChart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: kpiData.labels,
+                            datasets: kpiData.datasets
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'KPI Count by Year and Status'
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        stepSize: 1
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: 'Count'
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Status'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                });
+            </script>
         </div>
         <!--end::Container-->
     </div>
