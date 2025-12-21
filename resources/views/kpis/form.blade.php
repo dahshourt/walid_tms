@@ -286,7 +286,7 @@
                         </div>
                     </div>
                     <div class="col-md-4">
-                        <div class="form-group">
+                        <div id="target-cr-wrapper" class="form-group">
                             <label class="font-weight-bold">Target Numbers of CRs</label>
                             <input
                                 type="number"
@@ -297,24 +297,19 @@
                                 min="0"
                                 placeholder="Enter Target Numbers of CRs">
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="timeline-project-wrapper" style="display: none;">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="font-weight-bold">Project</label>
-                            <select class="form-control kt-select2" name="project_ids[]" id="project_id" multiple {{ $isDisabled }}>
-                                @foreach(($projects ?? []) as $project)
-                                    <option value="{{ $project->id }}"
-                                        {{ in_array($project->id, $selectedProjectIds, true) ? 'selected' : '' }}>
-                                        {{ $project->name }} - {{ $project->status }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            <span class="form-text text-muted">Select one or more projects.</span>
+                        <div id="timeline-project-wrapper" style="display: none;">
+                            <div class="form-group mb-0">
+                                <label class="font-weight-bold">Project <span class="text-danger">*</span></label>
+                                <select class="form-control kt-select2" name="project_ids[]" id="project_id" multiple {{ $isDisabled }}>
+                                    @foreach(($projects ?? []) as $project)
+                                        <option value="{{ $project->id }}"
+                                            {{ in_array($project->id, $selectedProjectIds, true) ? 'selected' : '' }}>
+                                            {{ $project->name }} - {{ $project->status }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <span class="form-text text-muted">Select one or more projects.</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -322,85 +317,7 @@
         </div>
     </div>
 
-    <!-- Section: Projects (PM only) -->
-    <div class="card card-custom card-stretch gutter-b" id="projects-card" style="{{ $isPm ? '' : 'display:none;' }}">
-        <div class="card-header border-0 pt-5">
-            <h3 class="card-title font-weight-bolder">Projects <span class="text-danger">*</span></h3>
-            @if(isset($row) && ($row->classification ?? null) === 'PM')
-                <div class="card-toolbar">
-                    <a href="{{ route('projects.export-by-kpi', ['kpi' => $row->id]) }}" class="btn btn-success font-weight-bolder btn-sm">
-                        <span class="svg-icon svg-icon-md">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                    <rect x="0" y="0" width="24" height="24"/>
-                                    <path d="M7,18 L17,18 C18.1045695,18 19,18.8954305 19,20 C19,21.1045695 18.1045695,22 17,22 L7,22 C5.8954305,22 5,21.1045695 5,20 C5,18.8954305 5.8954305,18 7,18 Z M7,20 L17,20 C17.5522847,20 18,20.4477153 18,21 C18,21.5522847 17.5522847,22 17,22 L7,22 C6.44771525,22 6,21.5522847 6,21 C6,20.4477153 6.44771525,20 7,20 Z" fill="#000000" fill-rule="nonzero"/>
-                                    <path d="M12,2 C12.5522847,2 13,2.44771525 13,3 L13,13.5857864 L15.2928932,11.2928932 C15.6834175,10.9023689 16.3165825,10.9023689 16.7071068,11.2928932 C17.0976311,11.6834175 17.0976311,12.3165825 16.7071068,12.7071068 L12.7071068,16.7071068 C12.3165825,17.0976311 11.6834175,17.0976311 11.2928932,16.7071068 L7.29289322,12.7071068 C6.90236893,12.3165825 6.90236893,11.6834175 7.29289322,11.2928932 C7.68341751,10.9023689 8.31658249,10.9023689 8.70710678,11.2928932 L11,13.5857864 L11,3 C11,2.44771525 11.4477153,2 12,2 Z" fill="#000000"/>
-                                </g>
-                            </svg>
-                        </span>Export Excel
-                    </a>
-                </div>
-            @endif
-        </div>
-        <div class="card-body">
-            @if(isset($row) && ($row->classification ?? null) === 'PM')
-                @php
-                    $kpiProjects = $row->projects ?? collect();
-                    $statusClasses = [
-                        'Delivered'    => 'label-light-success',
-                        'In Progress'  => 'label-light-primary',
-                        'On-Hold'      => 'label-light-warning',
-                        'Canceled'     => 'label-light-danger',
-                        'Not Started'  => 'label-light-secondary text-dark',
-                    ];
-                @endphp
-                @if($kpiProjects->count() > 0)
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-hover">
-                            <thead>
-                            <tr>
-                                <th>Project Name</th>
-                                <th>Project Manager</th>
-                                <th>Status</th>
-                                <th>Linked At</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            @foreach($kpiProjects as $project)
-                                <tr>
-                                    <td>{{ $project->name }}</td>
-                                    <td>{{ $project->project_manager_name }}</td>
-                                    <td>
-                                        @php $statusClass = $statusClasses[$project->status] ?? 'label-light-secondary text-dark'; @endphp
-                                        <span class="label label-inline {{ $statusClass }} font-weight-bold">
-                                            {{ $project->status }}
-                                        </span>
-                                    </td>
-                                    <td>{{ optional($project->pivot->created_at)->format('Y-m-d H:i') }}</td>
-                                </tr>
-                            @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @else
-                    <div class="text-muted">No projects linked to this KPI.</div>
-                @endif
-            @else
-                <div class="form-group">
-                    <label class="font-weight-bold">Select Projects <span class="text-danger">*</span></label>
-                    <select class="form-control kt-select2" name="project_ids[]" id="project_id" multiple {{ $isDisabled }}>
-                        @foreach(($projects ?? []) as $project)
-                            <option value="{{ $project->id }}"
-                                {{ in_array($project->id, $selectedProjectIds, true) ? 'selected' : '' }}>
-                                {{ $project->name }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <span class="form-text text-muted">Choose one or more projects.</span>
-                </div>
-            @endif
-        </div>
-    </div>
+    <!-- Projects section removed: projects are now selected inside the Timeline card when classification is PM -->
 
     <!-- Section: Details -->
     <div class="card card-custom card-stretch gutter-b">
@@ -459,39 +376,34 @@
             });
 
             const classificationSelect = $('#classification');
-            const kpiTimelineWrapper = $('#timeline-kpi-wrapper');
-            const timelineCard = $('#timeline-card');
-            const projectsCard = $('#projects-card');
             const projectSelect = $('#project_id');
-            const quarterSelect = $('select[name="target_launch_quarter"]');
-            const yearSelect = $('select[name="target_launch_year"]');
-            const targetCrInput = $('input[name="target_cr_count"]');
+            const targetCrWrapper = $('#target-cr-wrapper');
+            const projectWrapper = $('#timeline-project-wrapper');
 
             const toggleTimelineByClassification = () => {
                 const value = classificationSelect.val();
+
                 if (value === 'PM') {
-                    timelineCard.hide();
-                    projectsCard.show();
+                    // Show projects multi-select, hide Target CRs
+                    targetCrWrapper.hide();
+                    projectWrapper.show();
                     if (projectSelect.length) {
-                        projectSelect.prop('disabled', false).trigger('change.select2');
+                        projectSelect
+                            .prop('disabled', false)
+                            .prop('required', true)
+                            .trigger('change.select2');
                     }
-
-                    // Disable and remove required from KPI timeline fields when hidden
-                    quarterSelect.prop('disabled', true).prop('required', false);
-                    yearSelect.prop('disabled', true).prop('required', false);
-                    targetCrInput.prop('disabled', true);
                 } else {
-                    projectsCard.hide();
+                    // Show Target CRs, hide projects multi-select
+                    projectWrapper.hide();
                     if (projectSelect.length) {
-                        projectSelect.val(null).trigger('change');
-                        projectSelect.prop('disabled', true).trigger('change.select2');
+                        projectSelect
+                            .val(null)
+                            .prop('required', false)
+                            .prop('disabled', true)
+                            .trigger('change.select2');
                     }
-                    timelineCard.show();
-
-                    // Re-enable and restore required on KPI timeline fields
-                    quarterSelect.prop('disabled', false).prop('required', true);
-                    yearSelect.prop('disabled', false).prop('required', true);
-                    targetCrInput.prop('disabled', false);
+                    targetCrWrapper.show();
                 }
             };
 

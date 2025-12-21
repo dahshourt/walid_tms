@@ -15,8 +15,8 @@ class ProjectRepository
         }, 'quarters.milestones' => function ($query) {
             $query->whereNull('deleted_at');
         }])
-        ->orderBy('id', 'desc')
-        ->get();
+            ->orderBy('id', 'desc')
+            ->get();
     }
 
     /**
@@ -24,7 +24,7 @@ class ProjectRepository
      */
     public function listAll(): Collection
     {
-        return Project::orderBy('name')->get(['id', 'name']);
+        return Project::orderBy('id')->get(['id', 'name', 'status']);
     }
 
     /**
@@ -33,10 +33,10 @@ class ProjectRepository
     public function listUnlinked(): Collection
     {
         return Project::whereNotExists(function ($query) {
-                $query->select(DB::raw(1))
-                    ->from('kpi_projects')
-                    ->whereColumn('kpi_projects.project_id', 'projects.id');
-            })
+            $query->select(DB::raw(1))
+                ->from('kpi_projects')
+                ->whereColumn('kpi_projects.project_id', 'projects.id');
+        })
             ->orderBy('name')
             ->get(['id', 'name', 'status', 'project_manager_name', 'created_at']);
     }
@@ -64,12 +64,10 @@ class ProjectRepository
     {
         $project = $this->find($id);
 
-        if (!$project) {
+        if (! $project) {
             return false;
         }
 
         return $project->delete();
     }
 }
-
-
