@@ -135,6 +135,7 @@ class ChangeRequestSearchService
             && $status->status
             && in_array($status->status->id, [
                 config('change_request.status_ids.pending_cab'),
+                config('change_request.status_ids.pending_cab_approval'),
                 config('change_request.status_ids_kam.pending_cab_kam'),
             ]);
             // return $status && $status->status && $status->status->id == config('change_request.status_ids.pending_cab');
@@ -201,8 +202,9 @@ class ChangeRequestSearchService
             return $status
             && $status->status
             && in_array($status->status->id, [
+                 config('change_request.status_ids.division_manager_approval'),
                 config('change_request.status_ids.business_approval'),
-                config('change_request.status_ids_kam.business_approval_kam'),
+                config('change_request.status_ids_kam.business_approval_kam')
             ]);
             // return $status && $status->status && $status->status->id == config('change_request.status_ids.business_approval');
         });
@@ -280,6 +282,7 @@ class ChangeRequestSearchService
         $groups = array_merge($groups, $promoGroups);
 
         $groupPromo = Group::with('group_statuses')->find(50);
+        
         $statusPromoView = $groupPromo->group_statuses->where('type', \App\Models\GroupStatuses::VIEWBY)->pluck('status.id');
         $viewStatuses = $this->getViewStatuses($groups, $id);
         $viewStatuses = $statusPromoView->merge($viewStatuses)->unique();
@@ -290,6 +293,8 @@ class ChangeRequestSearchService
             $viewStatuses->push(config('change_request.status_ids.business_uat_sign_off'));
             $viewStatuses->push(config('change_request.status_ids.pending_business'));
             $viewStatuses->push(config('change_request.status_ids.pending_business_feedback'));
+            $viewStatuses->push(config('change_request.status_ids.division_manager_approval'));
+
 
         }
 

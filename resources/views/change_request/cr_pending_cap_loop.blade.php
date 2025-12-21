@@ -36,7 +36,10 @@
                         </button>
                         <button type="button" class="btn btn-outline-danger btn-sm _rejected_active_cab ml-5"
                                 data-id="{{ $item->id }}"
-                                data-workflow="{{ $item->getSetStatus()->where('workflow_type', '1')->pluck('id')->first() }}"
+                                data-workflow="{{ $item->getSetStatus()
+     ->where('workflow_type', '0')
+     ->pluck('id')
+     ->last() }}"
                                 data-token="{{ $item->generateActionToken() }}">
                             ❌ Need to review
                         </button>

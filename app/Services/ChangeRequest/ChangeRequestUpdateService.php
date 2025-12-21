@@ -2,6 +2,8 @@
 
 namespace App\Services\ChangeRequest;
 
+use Illuminate\Support\Facades\Log;
+
 use App\Http\Repository\ChangeRequest\ChangeRequestStatusRepository;
 use App\Http\Repository\Logs\LogRepository;
 use App\Models\CabCr;
@@ -220,8 +222,13 @@ class ChangeRequestUpdateService
         $user_id = Auth::user()->id;
         // $cabCr = CabCr::where("cr_id", $id)->where('status', '0')->first();
         $cabCr = CabCr::where('cr_id', $id)->whereRaw('CAST(status AS CHAR) = ?', ['0'])->first();
-        $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
-
+        //$checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
+$workflow = NewWorkFlow::find($request->new_status_id);
+if ($workflow === null) {
+    \Log::error("Workflow not found for status_id: " . $request->new_status_id);
+    return false; // or handle this case appropriately
+}
+$checkWorkflowType = $workflow->workflow_type;
         unset($request['cab_cr_flag']);
 
         if ($checkWorkflowType) { // reject

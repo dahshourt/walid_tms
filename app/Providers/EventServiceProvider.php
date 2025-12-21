@@ -34,6 +34,9 @@ class EventServiceProvider extends ServiceProvider
         \App\Events\ChangeRequestUserAssignment::class => [
             \App\Listeners\SendChangeRequestNotifications::class,
         ],
+        \App\Events\StatusChanged::class => [
+            \App\Listeners\HandleStatusChange::class,
+        ],
     ];
 
     /**
