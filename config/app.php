@@ -177,7 +177,7 @@ return [
         App\Providers\RouteServiceProvider::class,
         App\Providers\TelescopeServiceProvider::class,
         Maatwebsite\Excel\ExcelServiceProvider::class,
-		//App\Providers\WorkflowConfigServiceProvider::class,
+        App\Providers\WorkflowServiceProvider::class,
         App\Services\ChangeRequest\ChangeRequestServiceProvider::class,
         
 
