@@ -198,19 +198,11 @@
                                     @endcan
 
                                     @if(in_array($cr->id, $crs_in_queues->toArray()))
-                                   
                                         @if(!(($cr->workflow_type_id == 5) && (in_array($cr->Req_status()->latest('id')->first()?->new_status_id, [66, 67, 68, 69]))))
-                                           
-                                        @can('Edit ChangeRequest')
+                                            @can('Edit ChangeRequest')
                                                 @if(in_array($status->new_status_id,$user_group->group_statuses->where('type', 2)->pluck('status_id')->toArray()))
-                                               
                                                     @if(!$status->group_id OR $status->current_group_id == $user_group->id )
-                                                    
-                                                     
-                                                     
-                                                   
-                                                    @if($cr->getSetStatus()->count() > 0)
-                                                 
+                                                     @if($cr->getSetStatus()->count() > 0)
                                                         <a href='{{ url("$route") }}/{{ $cr->id }}/edit?reference_status={{ $status->id }}'
                                                            class="btn btn-light-success btn-sm"
                                                            title="Edit"

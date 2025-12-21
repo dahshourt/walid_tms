@@ -141,32 +141,7 @@ private function validateStatusChange($changeRequest, $statusData, $workflow)
             throw $e;
         }
     }
-private function handleParallelWorkflow(ChangeRequest $changeRequest, int $oldStatusId): void
-{
-    // Check if UI/UX checkbox is checked
-    $uiUxField = $changeRequest->changeRequestCustomFields()
-        ->whereHas('custom_field', function($q) {
-            $q->where('name', 'ui_ux');
-        })
-        ->where('custom_field_value', '1')
-        ->first();
 
-    if (!$uiUxField) {
-        return;
-    }
-
-    // Get all statuses that come after the current status
-    $nextStatuses = NewWorkFlow::where('from_status_id', $oldStatusId)
-        ->where('active', 1)
-        ->orderBy('id')
-        ->get();
-
-    if ($nextStatuses->isNotEmpty()) {
-        // Update to the last status in the sequence
-        $lastStatus = $nextStatuses->last();
-        $changeRequest->update(['status_id' => $lastStatus->to_status_id]);
-    }
-}
     /**
      * Extract status data from request
      */
@@ -238,23 +213,24 @@ private function handleParallelWorkflow(ChangeRequest $changeRequest, int $oldSt
     /**
      * Process the main status update logic
      */
-  private function processStatusUpdate(
-    ChangeRequest $changeRequest,
-    array $statusData,
-    NewWorkFlow $workflow,
-    int $userId,
-    $request
-): void {
-    $technicalTeamCounts = $this->getTechnicalTeamCounts($changeRequest->id, $statusData['old_status_id']);
+    private function processStatusUpdate(
+        ChangeRequest $changeRequest,
+        array $statusData,
+        NewWorkFlow $workflow,
+        int $userId,
+        $request
+    ): void {
+        $technicalTeamCounts = $this->getTechnicalTeamCounts($changeRequest->id, $statusData['old_status_id']);
 
-    $this->updateCurrentStatus($changeRequest->id, $statusData, $workflow, $technicalTeamCounts);
+        $this->updateCurrentStatus($changeRequest->id, $statusData, $workflow, $technicalTeamCounts);
 
-    // Handle parallel workflow if needed
-    $this->handleParallelWorkflow($changeRequest, $statusData['old_status_id']);
+        $this->createNewStatuses($changeRequest, $statusData, $workflow, $userId, $request);
 
-    $this->createNewStatuses($changeRequest, $statusData, $workflow, $userId, $request);
-    event(new ChangeRequestStatusUpdated($changeRequest, $statusData, $request, $this->active_flag));
-}
+        //$this->handleNotifications($statusData, $changeRequest->id, $request);
+        event(new ChangeRequestStatusUpdated($changeRequest, $statusData, $request, $this->active_flag));
+
+
+    }
 
     /**
      * Process status update logic specifically for final confirmation
