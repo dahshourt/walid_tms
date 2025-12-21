@@ -39,7 +39,7 @@ class CustomAuthController extends Controller
         $user = User::with('user_groups', 'user_groups.group', 'defualt_group')
             ->where('user_name', $request->user_name)
             ->first();
-        //dd($user);
+
         // User not found in local DB, try LDAP and create if successful
         if (! $user) {
             $ldapResponse = $this->checkLdapAccount($request->user_name, $request->password);
@@ -271,7 +271,6 @@ class CustomAuthController extends Controller
         }
 
         $role = app(RolesRepository::class)->findByName('Viewer');
-        
         $businessGroup = app(GroupRepository::class)->findByName('Business Team');
 
         $data = [

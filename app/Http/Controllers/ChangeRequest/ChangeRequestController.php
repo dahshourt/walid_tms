@@ -192,7 +192,6 @@ class ChangeRequestController extends Controller
      */
     public function dvision_manager_cr()
     {
-        
         try {
             $this->authorize('CR Waiting Approval');
 
@@ -663,10 +662,7 @@ class ChangeRequestController extends Controller
             ->where('active', '1')
             ->value('new_status_id');
 
-        if (!in_array($current_status, [
-            config('change_request.status_ids.business_approval'),
-            config('change_request.status_ids.business_analysis')
-        ])) {
+        if ($current_status != config('change_request.status_ids.business_approval')) {
             // $message = $current_status ==  config('change_request.status_ids.Reject') ? 'You already rejected this CR.' : 'You already approved this CR.';
 
             $rejectStatuses = [
@@ -716,7 +712,6 @@ class ChangeRequestController extends Controller
      */
     public function list_crs_by_user(Request $request)
     {
-       
         $this->authorize('Show My CRs');
 
         $user = auth()->user();
@@ -861,8 +856,9 @@ class ChangeRequestController extends Controller
         $cr_id = $request->query('crId');
         $action = $request->query('action');
         $token = $request->query('token');
+        $workflow = $request->query('workflow');
 
-        if (! $cr_id || ! $action || ! $token) {
+        if (! $cr_id || ! $action || ! $token || ! $workflow) {
             return response()->json([
                 'isSuccess' => false,
                 'message' => 'Invalid request. Missing parameters.',
@@ -898,9 +894,8 @@ class ChangeRequestController extends Controller
 
             // $current_status != config('change_request.status_ids.business_approval')
             ! in_array($current_status, [
-                config('change_request.status_ids.division_manager_approval'),
                 config('change_request.status_ids.business_approval'),
-                config('change_request.status_ids_kam.business_approval_kam')
+                config('change_request.status_ids_kam.business_approval_kam'),
             ])
 
         ) {
@@ -911,7 +906,7 @@ class ChangeRequestController extends Controller
 
             $message = in_array($current_status, $rejectStatuses)
                 ? 'You already rejected this CR.'
-                : 'You already approved this CR.'. $current_status;
+                : 'You already approved this CR.';
 
             return response()->json([
                 'isSuccess' => false,
@@ -919,19 +914,19 @@ class ChangeRequestController extends Controller
             ], 400);
         }
 
-        $workflowIdForAction = $this->getWorkflowIdForAction($cr->workflow_type_id, $action);
-        if (! $workflowIdForAction) {
-            return response()->json([
-                'isSuccess' => false,
-                'message' => 'Unsupported workflow type.',
-            ], 400);
-        }
+        // $workflowIdForAction = $this->getWorkflowIdForAction($cr->workflow_type_id, $action);
+        // if (! $workflowIdForAction) {
+        //     return response()->json([
+        //         'isSuccess' => false,
+        //         'message' => 'Unsupported workflow type.',
+        //     ], 400);
+        // }
 
         try {
             $repo = new ChangeRequestRepository();
             $updateRequest = new Request([
                 'old_status_id' => $current_status,
-                'new_status_id' => $workflowIdForAction,
+                'new_status_id' => $workflow,
             ]);
             $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
 
@@ -947,7 +942,7 @@ class ChangeRequestController extends Controller
         } catch (Exception $e) {
             Log::error('Failed to process division manager action (JSON)', [
                 'cr_id' => $cr_id,
-                'action' => $action . ' - ' . $workflowIdForAction . ' - ' . $current_status,
+                'action' => $action . ' - ' . $workflow . ' - ' . $current_status,
                 'error' => $e,
             ]);
 
@@ -1079,7 +1074,7 @@ class ChangeRequestController extends Controller
         }
     }
 
-   public function handlePendingCap(Request $request)
+    public function handlePendingCap(Request $request)
     {
         $this->authorize('Edit cr pending cap');
         $cr_id = $request->query('crId');
@@ -1119,17 +1114,9 @@ class ChangeRequestController extends Controller
             ->where('active', '1')
             ->value('new_status_id');
 
-        // if ($current_status != config('change_request.status_ids.pending_cab'))
-            
-            if(!in_array($current_status, [
-    config('change_request.status_ids.pending_cab'),
-    config('change_request.status_ids.pending_cab_approval')
-])){
-           
-            $message = in_array($current_status, [
-    config('change_request.status_ids.pending_cab_proceed'),
-    config('change_request.status_ids.request_vendor_mds')
-])   ? 'You already rejected this CR.'
+        if ($current_status != config('change_request.status_ids.pending_cab')) {
+            $message = $current_status == config('change_request.status_ids.pending_cab_proceed')
+                ? 'You already rejected this CR.'
                 : 'You already approved this CR.';
 
             return response()->json([
@@ -1214,7 +1201,6 @@ class ChangeRequestController extends Controller
             ], 500);
         }
     }
-
 
     /**
      * Update attachment files
@@ -1915,8 +1901,8 @@ class ChangeRequestController extends Controller
                 'reject' => $this->GetDivisionManagerActionId(3, 'Business Approval', 'Reject'),
             ],
             5 => [
-                'approve' => $this->GetDivisionManagerActionId(5, 'Division Manager Approval', 'Business Analysis'),
-                'reject' => $this->GetDivisionManagerActionId(5, 'Division Manager Approval', 'Reject'),
+                'approve' => $this->GetDivisionManagerActionId(5, 'Business Approval', 'CR Analysis'),
+                'reject' => $this->GetDivisionManagerActionId(5, 'Business Approval', 'Reject'),
             ],
             37 => [
                 'approve' => $this->GetDivisionManagerActionId(37, 'Business Approval kam', 'Business Validation kam'),
