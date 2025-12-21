@@ -3,20 +3,20 @@
 namespace App\Http\Repository\KPIs;
 
 use App\Contracts\KPIs\KPIRepositoryInterface;
-use App\Models\Kpi;
 use App\Models\Change_request;
+use App\Models\Kpi;
 use App\Models\KpiProject;
 use Illuminate\Support\Facades\DB;
 
 class KPIRepository implements KPIRepositoryInterface
 {
-    Public $finalStatuses;
+    public $finalStatuses;
 
     public function __construct()
     {
         $this->finalStatuses = [config('change_request.status_ids.Delivered'), config('change_request.status_ids.Closed'), config('change_request.status_ids.Cancel'), config('change_request.status_ids.Reject')];
     }
-    
+
     public function getAll()
     {
         return Kpi::orderByDesc('created_at')->paginate(10);
@@ -79,13 +79,13 @@ class KPIRepository implements KPIRepositoryInterface
     public function find($id)
     {
         return Kpi::with([
-                'creator',
-                'comments.user',
-                'logs.user',
-                'changeRequests.workflowType',
-                'changeRequests.currentStatusRel',
-                'projects.quarters.milestones',
-            ])
+            'creator',
+            'comments.user',
+            'logs.user',
+            'changeRequests.workflowType',
+            'changeRequests.currentStatusRel',
+            'projects.quarters.milestones',
+        ])
             ->find($id);
     } // end method
 
@@ -110,7 +110,7 @@ class KPIRepository implements KPIRepositoryInterface
                 }
 
                 $oldValue = $oldData->$field;
-                
+
                 $oldValStr = $oldValue ?? 'Empty';
                 $newValStr = $newValue ?? 'Empty';
 
@@ -129,7 +129,7 @@ class KPIRepository implements KPIRepositoryInterface
 
                 $kpi->logs()->create([
                     'user_id' => auth()->id(),
-                    'log_text' => "Comment added",
+                    'log_text' => 'Comment added',
                 ]);
             }
 
@@ -194,28 +194,6 @@ class KPIRepository implements KPIRepositoryInterface
         });
     }
 
-    /**
-     * Internal helper to sync projects for a KPI.
-     */
-    protected function syncProjectsForKpi(Kpi $kpi, array $projectIds): void
-    {
-        $projectIds = array_filter(array_unique($projectIds));
-
-        // Clear existing
-        KpiProject::where('kpi_id', $kpi->id)->delete();
-
-        if (empty($projectIds)) {
-            return;
-        }
-
-        foreach ($projectIds as $projectId) {
-            KpiProject::create([
-                'kpi_id' => $kpi->id,
-                'project_id' => $projectId,
-            ]);
-        }
-    }
-
     public function delete($id)
     {
         return Kpi::find($id)->delete();
@@ -229,10 +207,10 @@ class KPIRepository implements KPIRepositoryInterface
             $kpi = Kpi::findOrFail($kpiId);
             $cr = Change_request::where('cr_no', $crNo)->firstOrFail();
 
-            //check if already linked to this cr
+            // check if already linked to this cr
             $alreadyLinked = $kpi->changeRequests()
-                                ->where('change_request.id', $cr->id)
-                                ->exists();
+                ->where('change_request.id', $cr->id)
+                ->exists();
 
             if ($alreadyLinked) {
                 return [
@@ -240,42 +218,41 @@ class KPIRepository implements KPIRepositoryInterface
                     'kpi_status' => $kpi->status,
                     'cr' => $cr,
                 ];
-            } else {
-
-                // check if this cr already linked to another kpi
-                $crAlreadyLinkedToAnotherKpi = $cr->kpis()->exists();
-                if ($crAlreadyLinkedToAnotherKpi) {
-
-                    // get the kpi id of the cr
-                    $kpiIdOfCr = $cr->kpis()->first()->id;
-
-                    $this->detachChangeRequest($kpiIdOfCr, $cr->id);
-                    $kpi->changeRequests()->attach($cr->id);
-
-                    $this->recalculateStatusFromChangeRequests($kpi);
-
-                    $kpi->logs()->create([
-                        'user_id' => auth()->id(),
-                        'log_text' => "Change Request #{$cr->cr_no} was linked to this KPI.",
-                    ]);
-
-                    return [
-                        'success' => true,
-                        'kpi_status' => $kpi->status,
-                        'cr' => $cr,
-                    ];
-                } else {
-
-                    $kpi->changeRequests()->attach($cr->id);
-
-                    $this->recalculateStatusFromChangeRequests($kpi);
-
-                    $kpi->logs()->create([
-                        'user_id' => auth()->id(),
-                        'log_text' => "Change Request #{$cr->cr_no} was linked to this KPI.",
-                    ]);
-                } 
             }
+
+            // check if this cr already linked to another kpi
+            $crAlreadyLinkedToAnotherKpi = $cr->kpis()->exists();
+            if ($crAlreadyLinkedToAnotherKpi) {
+
+                // get the kpi id of the cr
+                $kpiIdOfCr = $cr->kpis()->first()->id;
+
+                $this->detachChangeRequest($kpiIdOfCr, $cr->id);
+                $kpi->changeRequests()->attach($cr->id);
+
+                $this->recalculateStatusFromChangeRequests($kpi);
+
+                $kpi->logs()->create([
+                    'user_id' => auth()->id(),
+                    'log_text' => "Change Request #{$cr->cr_no} was linked to this KPI.",
+                ]);
+
+                return [
+                    'success' => true,
+                    'kpi_status' => $kpi->status,
+                    'cr' => $cr,
+                ];
+            }
+
+            $kpi->changeRequests()->attach($cr->id);
+
+            $this->recalculateStatusFromChangeRequests($kpi);
+
+            $kpi->logs()->create([
+                'user_id' => auth()->id(),
+                'log_text' => "Change Request #{$cr->cr_no} was linked to this KPI.",
+            ]);
+
             return [
                 'success' => true,
                 'kpi_status' => $kpi->status,
@@ -283,7 +260,6 @@ class KPIRepository implements KPIRepositoryInterface
             ];
         });
     }
-
 
     // attach cr to kpi (from kpi page)
     public function attachChangeRequestByNumber($kpiId, $crNo)
@@ -359,13 +335,44 @@ class KPIRepository implements KPIRepositoryInterface
         });
     }
 
+    /**
+     * Internal helper to sync projects for a KPI.
+     */
+    protected function syncProjectsForKpi(Kpi $kpi, array $projectIds): void
+    {
+        $projectIds = array_filter(array_unique($projectIds));
+
+        // Clear existing
+        KpiProject::whereNotIn('project_id', $projectIds)
+            ->where('kpi_id', $kpi->id)
+            ->delete();
+
+        if (empty($projectIds)) {
+            return;
+        }
+
+        $kpi_project_data = [];
+
+        foreach ($projectIds as $projectId) {
+            $kpi_project_data[] = [
+                'kpi_id' => $kpi->id,
+                'project_id' => $projectId,
+            ];
+        }
+
+        KpiProject::upsert(
+            $kpi_project_data,
+            ['project_id', 'kpi_id']
+        );
+    }
+
     private function recalculateStatusFromChangeRequests(KPI $kpi): void
     {
         $kpi->loadMissing(['changeRequests.currentStatusRel']);
 
         if ($kpi->changeRequests->isEmpty()) {
             $newStatus = 'Open';
-        } else{
+        } else {
             $newStatus = 'Delivered';
 
             foreach ($kpi->changeRequests as $cr) {

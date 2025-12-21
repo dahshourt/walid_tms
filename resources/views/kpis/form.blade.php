@@ -249,8 +249,8 @@
         </div>
     </div>
 
-    <!-- Section: Timeline (CR only) -->
-    <div class="card card-custom card-stretch gutter-b" id="timeline-card" style="{{ $isPm ? 'display:none;' : '' }}">
+    <!-- Section: Timeline (Always visible for both PM and CR) -->
+    <div class="card card-custom card-stretch gutter-b" id="timeline-card">
         <div class="card-header border-0 pt-5">
             <h3 class="card-title font-weight-bolder">Timeline</h3>
         </div>
@@ -393,6 +393,9 @@
                             .prop('required', true)
                             .trigger('change.select2');
                     }
+                    // Timeline fields (Quarter/Year) are visible but not required for PM
+                    quarterSelect.prop('required', false);
+                    yearSelect.prop('required', false);
                 } else {
                     // Show Target CRs, hide projects multi-select
                     projectWrapper.hide();
@@ -404,6 +407,9 @@
                             .trigger('change.select2');
                     }
                     targetCrWrapper.show();
+                    // Timeline fields (Quarter/Year) are required for CR
+                    quarterSelect.prop('required', true);
+                    yearSelect.prop('required', true);
                 }
             };
 
