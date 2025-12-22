@@ -107,7 +107,6 @@
                                                 <tr>
                                                     <th>ID#</th>
                                                     <th>Title</th>
-                                                    {{--<th>Status</th>--}}
                                                     @if(!empty($roles_name) && isset($roles_name[0]) && $roles_name[0] != "Viewer")
                                                         <th>Design Duration</th>
                                                         <th>Start Design Time</th>
@@ -122,9 +121,6 @@
                                                         <th>Start CR Time</th>
                                                         <th>End CR Time</th>
                                                     @endif
-                                                    @canany(['Edit ChangeRequest' , 'Show ChangeRequest'])
-                                                        {{--<th>Actions</th>--}}
-                                                    @endcanany
                                                 </tr>
                                                 </thead>
                                                 <tbody>
