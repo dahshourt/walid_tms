@@ -376,9 +376,11 @@
             });
 
             const classificationSelect = $('#classification');
-            const projectSelect = $('#project_id');
-            const targetCrWrapper = $('#target-cr-wrapper');
-            const projectWrapper = $('#timeline-project-wrapper');
+            const projectSelect       = $('#project_id');
+            const targetCrWrapper     = $('#target-cr-wrapper');
+            const projectWrapper      = $('#timeline-project-wrapper');
+            const quarterSelect       = $('select[name="target_launch_quarter"]');
+            const yearSelect          = $('select[name="target_launch_year"]');
 
             const toggleTimelineByClassification = () => {
                 const value = classificationSelect.val();
