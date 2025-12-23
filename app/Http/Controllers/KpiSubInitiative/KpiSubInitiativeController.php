@@ -14,7 +14,9 @@ use Illuminate\View\View;
 class KpiSubInitiativeController extends Controller
 {
     protected $kpiSubInitiativeService;
+
     protected $kpiInitiativeService;
+
     protected $view;
 
     public function __construct(
@@ -79,7 +81,7 @@ class KpiSubInitiativeController extends Controller
         $this->authorize('Edit KPI Sub-Initiatives');
         $row = $this->kpiSubInitiativeService->find($id);
 
-        if (!$row) {
+        if (! $row) {
             abort(404, 'KPI Sub-Initiative not found');
         }
 
@@ -97,7 +99,7 @@ class KpiSubInitiativeController extends Controller
         try {
             $updated = $this->kpiSubInitiativeService->update($request->validated(), $id);
 
-            if (!$updated) {
+            if (! $updated) {
                 return redirect()->back()
                     ->withInput()
                     ->with('error', 'KPI Sub-Initiative not found');
@@ -117,12 +119,12 @@ class KpiSubInitiativeController extends Controller
      */
     public function updateStatus(): JsonResponse
     {
-        $this->authorize('Active KPI Sub-Initiatives');
+        $this->authorize('Edit KPI Sub-Initiatives');
         try {
             $id = request()->post('id');
             $updated = $this->kpiSubInitiativeService->toggleStatus($id);
 
-            if (!$updated) {
+            if (! $updated) {
                 return response()->json([
                     'message' => 'KPI Sub-Initiative not found',
                     'status' => 'error',
@@ -141,4 +143,3 @@ class KpiSubInitiativeController extends Controller
         }
     }
 }
-
