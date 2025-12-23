@@ -296,20 +296,22 @@
                                 min="0"
                                 placeholder="Enter Target Numbers of CRs">
                         </div>
-                        <div id="timeline-project-wrapper" style="display: none;">
-                            <div class="form-group mb-0">
-                                <label class="font-weight-bold">Project <span class="text-danger">*</span></label>
-                                <select class="form-control kt-select2" name="project_ids[]" id="project_id" multiple {{ $isDisabled }}>
-                                    @foreach(($projects ?? []) as $project)
-                                        <option value="{{ $project->id }}"
-                                            {{ in_array($project->id, $selectedProjectIds, true) ? 'selected' : '' }}>
-                                            {{ $project->name }} - {{ $project->status }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <span class="form-text text-muted">Select one or more projects.</span>
+                        @if(! $isEdit)
+                            <div id="timeline-project-wrapper" style="display: none;">
+                                <div class="form-group mb-0">
+                                    <label class="font-weight-bold">Project <span class="text-danger">*</span></label>
+                                    <select class="form-control kt-select2" name="project_ids[]" id="project_id" multiple {{ $isDisabled }}>
+                                        @foreach(($projects ?? []) as $project)
+                                            <option value="{{ $project->id }}"
+                                                {{ in_array($project->id, $selectedProjectIds, true) ? 'selected' : '' }}>
+                                                {{ $project->name }} - {{ $project->status }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <span class="form-text text-muted">Select one or more projects.</span>
+                                </div>
                             </div>
-                        </div>
+                        @endif
                     </div>
                 </div>
             </div>

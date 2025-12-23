@@ -59,12 +59,15 @@ class KPIRepository implements KPIRepositoryInterface
             if (! empty($request['project_ids'] ?? null) && is_array($request['project_ids'])) {
                 $projectIds = array_filter(array_unique($request['project_ids']));
 
+                $kpi_projects_data = [];
                 foreach ($projectIds as $projectId) {
-                    KpiProject::create([
+                    $kpi_projects_data[] = [
                         'kpi_id' => $kpi->id,
                         'project_id' => $projectId,
-                    ]);
+                    ];
                 }
+
+                KpiProject::insert($kpi_projects_data);
 
                 if (count($projectIds) > 0) {
                     $linked_projects = Project::whereIn('id', $projectIds)->pluck('name')->implode(', ');
@@ -161,66 +164,9 @@ class KPIRepository implements KPIRepositoryInterface
                 ]);
             }
 
-            // Optionally handle projects when coming from non-AJAX update
-            if (array_key_exists('project_ids', $request) && is_array($request['project_ids'])) {
-                $this->syncProjectsForKpi($kpi, $request['project_ids']);
-            }
-
             return $kpi;
         });
     } // end method
-
-    /**
-     * Sync KPI projects for a given KPI.
-     */
-    public function updateProjects($kpiId, array $projectIds): array
-    {
-        return DB::transaction(function () use ($kpiId, $projectIds) {
-            $kpi = Kpi::findOrFail($kpiId);
-
-            $this->syncProjectsForKpi($kpi, $projectIds);
-
-            $kpi->logs()->create([
-                'user_id' => auth()->id(),
-                'log_text' => 'Projects list was updated for this KPI.',
-            ]);
-
-            // Reload projects with required relations so the frontend can update the table without full reload
-            $projects = $kpi->projects()
-                ->with(['quarters.milestones'])
-                ->get();
-
-            $projectsPayload = $projects->map(function ($project) {
-                return [
-                    'id' => $project->id,
-                    'name' => $project->name,
-                    'project_manager_name' => $project->project_manager_name,
-                    'status' => $project->status,
-                    'quarters' => $project->quarters->map(function ($quarter) {
-                        return [
-                            'id' => $quarter->id,
-                            'quarter' => $quarter->quarter,
-                            'milestones' => $quarter->milestones->map(function ($milestone) {
-                                return [
-                                    'id' => $milestone->id,
-                                    'milestone' => $milestone->milestone,
-                                    'status' => $milestone->status,
-                                ];
-                            })->values()->all(),
-                        ];
-                    })->values()->all(),
-                ];
-            })->values()->all();
-
-            return [
-                'success' => true,
-                'message' => 'Projects updated successfully.',
-                'data' => [
-                    'projects' => $projectsPayload,
-                ],
-            ];
-        });
-    }
 
     public function delete($id)
     {
@@ -361,37 +307,6 @@ class KPIRepository implements KPIRepositoryInterface
                 'kpi_status' => $kpi->status,
             ];
         });
-    }
-
-    /**
-     * Internal helper to sync projects for a KPI.
-     */
-    protected function syncProjectsForKpi(Kpi $kpi, array $projectIds): void
-    {
-        $projectIds = array_filter(array_unique($projectIds));
-
-        // Clear existing
-        KpiProject::whereNotIn('project_id', $projectIds)
-            ->where('kpi_id', $kpi->id)
-            ->delete();
-
-        if (empty($projectIds)) {
-            return;
-        }
-
-        $kpi_project_data = [];
-
-        foreach ($projectIds as $projectId) {
-            $kpi_project_data[] = [
-                'kpi_id' => $kpi->id,
-                'project_id' => $projectId,
-            ];
-        }
-
-        KpiProject::upsert(
-            $kpi_project_data,
-            ['project_id', 'kpi_id']
-        );
     }
 
     private function recalculateStatusFromChangeRequests(KPI $kpi): void

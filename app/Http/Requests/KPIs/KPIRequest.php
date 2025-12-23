@@ -72,9 +72,6 @@ class KPIRequest extends FormRequest
             'target_launch_year' => ['required_if:classification,CR', 'nullable', 'integer', 'min:2000', 'max:2100'],
             // Target CRs are used only for CR classification (optional/required_if)
             'target_cr_count' => ['nullable', 'integer', 'min:0', 'required_if:classification,CR'],
-            // Projects are used only for PM classification
-            'project_ids' => ['required_if:classification,PM', 'nullable', 'array'],
-            'project_ids.*' => ['integer', 'exists:projects,id'],
             'type_id' => ['required', 'exists:kpi_types,id'],
             'kpi_brief' => ['required', 'string'],
             'classification' => ['required', 'in:CR,PM'],
