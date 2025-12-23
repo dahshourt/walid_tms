@@ -6,6 +6,7 @@ use App\Contracts\KPIs\KPIRepositoryInterface;
 use App\Models\Change_request;
 use App\Models\Kpi;
 use App\Models\KpiProject;
+use App\Models\Project;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -66,9 +67,11 @@ class KPIRepository implements KPIRepositoryInterface
                 }
 
                 if (count($projectIds) > 0) {
+                    $linked_projects = Project::whereIn('id', $projectIds)->pluck('name')->implode(', ');
+
                     $kpi->logs()->create([
                         'user_id' => auth()->id(),
-                        'log_text' => 'Projects were linked to this KPI at creation.',
+                        'log_text' => "< $linked_projects > were linked to this KPI at creation.",
                     ]);
                 }
             }
