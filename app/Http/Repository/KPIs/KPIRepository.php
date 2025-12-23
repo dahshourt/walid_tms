@@ -92,13 +92,14 @@ class KPIRepository implements KPIRepositoryInterface
     public function update($request, $id)
     {
         return DB::transaction(function () use ($request, $id) {
-            $kpi = Kpi::findOrFail($id);
+            $kpi = Kpi::with(['pillar', 'initiative', 'subInitiative'])->findOrFail($id);
             $oldData = $kpi->replicate(); // Keep a copy of old data
 
             $data = collect($request);
 
             // Update the KPI (exclude comment-only and projects payload)
             $kpi->update($data->except(['kpi_comment', 'project_ids'])->all());
+            $kpi->refresh();
 
             // Track changes
             $changes = $kpi->getChanges();
@@ -113,6 +114,24 @@ class KPIRepository implements KPIRepositoryInterface
 
                 $oldValStr = $oldValue ?? 'Empty';
                 $newValStr = $newValue ?? 'Empty';
+
+                if (in_array($field, ['pillar_id', 'initiative_id', 'sub_initiative_id'], true)) {
+                    if ($oldValue) {
+                        $oldValStr = match ($field) {
+                            'pillar_id' => $oldData->pillar->name,
+                            'initiative_id' => $oldData->initiative->name,
+                            'sub_initiative_id' => $oldData->subInitiative->name,
+                        };
+                    }
+
+                    if ($newValue) {
+                        $newValStr = match ($field) {
+                            'pillar_id' => $kpi->pillar->name,
+                            'initiative_id' => $kpi->initiative->name,
+                            'sub_initiative_id' => $kpi->subInitiative->name,
+                        };
+                    }
+                }
 
                 $kpi->logs()->create([
                     'user_id' => auth()->id(),
