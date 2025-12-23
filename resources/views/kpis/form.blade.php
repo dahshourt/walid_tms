@@ -526,7 +526,7 @@
              pillarSelect.trigger('change');
              @endif
 
-            // Email validation for Requester Email (only on create page)
+            // Email validation for Requester Email
 
             const submitButton = $('button[type="submit"]');
             const emailFeedback = $('#requester_email_feedback');
