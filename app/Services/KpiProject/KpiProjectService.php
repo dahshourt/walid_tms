@@ -51,7 +51,7 @@ class KpiProjectService
             // Create log entry
             $kpi->logs()->create([
                 'user_id' => auth()->id(),
-                'log_text' => "Project '{$project->name}' was attached to this KPI.",
+                'log_text' => "Project < $project->name > was attached to this KPI.",
             ]);
 
             // Load the attached project with its quarters & milestones
@@ -91,7 +91,7 @@ class KpiProjectService
 
             // Get project before detaching for log
             $project = $this->repository->getProject($projectId);
-            $projectName = $project ? $project->name : 'Unknown Project';
+            $projectName = $project->name ?? 'Unknown Project';
 
             // Check if attached
             if (! $this->repository->isAttached($kpiId, $projectId)) {
@@ -107,7 +107,7 @@ class KpiProjectService
             // Create log entry
             $kpi->logs()->create([
                 'user_id' => auth()->id(),
-                'log_text' => "Project '{$projectName}' was detached from this KPI.",
+                'log_text' => "Project < $projectName > was detached from this KPI.",
             ]);
 
             return [
