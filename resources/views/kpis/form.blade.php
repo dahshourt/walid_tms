@@ -155,12 +155,11 @@
                                  </div>
                              </span>
                          </label>
-                         <input type="email" class="{{ $isView ? 'form-control-plaintext' : 'form-control' }}"
+                         <input type="email" class="form-control"
                                 name="requester_email" id="requester_email"
                                 value="{{ $row->requester_email ?? old('requester_email') }}"
-                                {{ $isView || isset($row) ? 'disabled' : '' }}
                                placeholder="Enter Requester Email (optional)"
-                                style="{{ $isView || isset($row) ? 'background-color: #f3f6f9; opacity: 0.65;' : '' }}">
+                                >
                          <div id="requester_email_feedback" class="form-control-feedback mt-1"></div>
                      </div>
                  </div>

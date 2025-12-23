@@ -79,6 +79,7 @@ class KPIRequest extends FormRequest
             'kpi_brief' => ['required', 'string'],
             'classification' => ['required', 'in:CR,PM'],
             // 'status' => ['required', 'in:Open,In Progress,Delivered'],
+            'requester_email' => ['nullable', 'email', 'max:255'],
             'created_by' => ['nullable', 'exists:users,id'],
         ];
     }
