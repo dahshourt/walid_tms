@@ -536,7 +536,7 @@ class ChangeRequestController extends Controller
      */
     public function update(changeRequest_Requests $request, int $id)
     {
-        // dd($request->all());
+        //dd($request->all());
         $this->authorize('Edit ChangeRequest');
         if ($request->man_days and ! empty($request->man_days)) {
             // $group_name = Group::where('id',auth()->user()->default_group )->first();
@@ -1698,6 +1698,11 @@ class ChangeRequestController extends Controller
         //  echo "<pre>";
         //  print_r( $rejects);
         //  echo "</pre>"; die;
+
+        // Get CRs that can be depended upon
+        // Excludes current CR and CRs in final statuses (Delivered, Closed, Cancel, Reject)
+        $dependableCrs = Change_request::getDependableCrs($cr->id);
+
         return compact('rejects', 'form_title', 'title',
             'selected_technical_teams', 'man_day', 'technical_team_disabled', 'status_name',
             'ApplicationImpact', 'cap_users', 'CustomFields', 'cr', 'workflow_type_id',
@@ -1706,7 +1711,8 @@ class ChangeRequestController extends Controller
             'reminder_promo_tech_teams_text', 'technical_groups', 'man_days',
             'relevantCrsData',
             'relevantNotPending',
-            'pendingProductionId'
+            'pendingProductionId',
+            'dependableCrs'
 
         );
     }
