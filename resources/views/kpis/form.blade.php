@@ -147,8 +147,8 @@
                  </div>
                  <div class="col-md-6">
                      <div class="form-group">
-                         <label class="font-weight-bold">
-                             Requester Email <span class="text-danger">*</span>
+                        <label class="font-weight-bold">
+                            Requester Email
                              <span id="requester-email-loader" class="ml-2" style="display: none;">
                                  <div class="spinner-border spinner-border-sm text-primary" role="status">
                                      <span class="sr-only">Checking...</span>
@@ -159,7 +159,7 @@
                                 name="requester_email" id="requester_email"
                                 value="{{ $row->requester_email ?? old('requester_email') }}"
                                 {{ $isView || isset($row) ? 'disabled' : '' }}
-                                placeholder="Enter Requester Email"
+                               placeholder="Enter Requester Email (optional)"
                                 style="{{ $isView || isset($row) ? 'background-color: #f3f6f9; opacity: 0.65;' : '' }}">
                          <div id="requester_email_feedback" class="form-control-feedback mt-1"></div>
                      </div>
@@ -536,43 +536,54 @@
              const kpiForm = requesterEmailInput.closest('form');
              let currentRequest = null;
 
-             // Check email on input change with debouncing
-             let emailTimeout;
-             requesterEmailInput.on('paste blur', function () {
-                 clearTimeout(emailTimeout);
-                 abortCurrentRequest();
-                 resetEmailState();
+            // Check email on input change with debouncing (only if there is a value)
+            let emailTimeout;
+            requesterEmailInput.on('paste blur', function () {
+                clearTimeout(emailTimeout);
+                abortCurrentRequest();
+                resetEmailState();
 
-                 emailTimeout = setTimeout(function () {
-                     check_requester_email();
-                 }, 500);
-             });
+                if (!requesterEmailInput.val().trim()) {
+                    return; // optional field: skip validation if empty
+                }
 
-             if (kpiForm.length) {
-                 kpiForm.on('submit', function (event) {
-                     clearTimeout(emailTimeout);
-                     abortCurrentRequest();
-                     resetEmailState();
+                emailTimeout = setTimeout(function () {
+                    check_requester_email();
+                }, 500);
+            });
 
-                     event.preventDefault();
+            if (kpiForm.length) {
+                kpiForm.on('submit', function (event) {
+                    clearTimeout(emailTimeout);
+                    abortCurrentRequest();
+                    resetEmailState();
 
-                     const request = check_requester_email({requireEmail: true});
+                    const emailVal = requesterEmailInput.val().trim();
 
-                     if (!request || typeof request.done !== 'function') {
-                         return;
-                     }
+                    // If no email provided, allow submit immediately (optional field)
+                    if (!emailVal) {
+                        return;
+                    }
 
-                     request.done(function (data) {
-                         if (data && data.valid) {
-                             event.currentTarget.submit();
-                         }
-                     });
+                    event.preventDefault();
 
-                     request.fail(function () {
-                         submitButton.prop("disabled", true);
-                     });
-                 });
-             }
+                    const request = check_requester_email({requireEmail: false});
+
+                    if (!request || typeof request.done !== 'function') {
+                        return;
+                    }
+
+                    request.done(function (data) {
+                        if (data && data.valid) {
+                            event.currentTarget.submit();
+                        }
+                    });
+
+                    request.fail(function () {
+                        submitButton.prop("disabled", true);
+                    });
+                });
+            }
 
              function abortCurrentRequest() {
                  if (currentRequest) {
@@ -591,19 +602,14 @@
                  submitButton.prop("disabled", false);
              }
 
-             function check_requester_email(options = {}) {
-                 const {requireEmail = false} = options;
-                 const email = requesterEmailInput.val().trim();
+            function check_requester_email(options = {}) {
+                const {requireEmail = false} = options;
+                const email = requesterEmailInput.val().trim();
 
-                 if (!email) {
-                     resetEmailState();
-                     if (requireEmail) {
-                         requesterEmailInput.removeClass('is-valid').addClass('is-invalid');
-                         emailFeedback.text('Requester email is required');
-                         emailFeedback.removeClass('text-success').addClass('text-danger');
-                     }
-                     return;
-                 }
+                if (!email) {
+                    resetEmailState();
+                    return $.Deferred().resolve({valid: true});
+                }
 
                  // Basic email format validation
                  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
