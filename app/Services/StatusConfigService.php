@@ -167,6 +167,7 @@ class StatusConfigService
             'Cancel_kam' => 'Cancel',
             'Closed' => 'Closed',
             'Delivered' => 'Delivered',
+            'pending_design' => 'Pending Design',
         ];
     }
 
