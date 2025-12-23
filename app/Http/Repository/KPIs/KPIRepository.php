@@ -7,6 +7,7 @@ use App\Models\Change_request;
 use App\Models\Kpi;
 use App\Models\KpiProject;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class KPIRepository implements KPIRepositoryInterface
 {
@@ -133,9 +134,14 @@ class KPIRepository implements KPIRepositoryInterface
                     }
                 }
 
+                $column_name = Str::of($field)
+                    ->remove('_id')
+                    ->replace('_', ' ')
+                    ->title();
+
                 $kpi->logs()->create([
                     'user_id' => auth()->id(),
-                    'log_text' => ucfirst(str_replace('_', ' ', $field)) . " changed from < {$oldValStr} > to < {$newValStr} >",
+                    'log_text' => $column_name . " changed from < $oldValStr > to < $newValStr >",
                 ]);
             }
 
