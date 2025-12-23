@@ -16,11 +16,13 @@
         </span>
     </td>
     <td>
+        @can('Edit KPI Initiatives')
         <a href="{{ route('kpi-initiatives.edit', $row->id) }}" 
            class="btn btn-sm btn-clean btn-icon" 
            title="Edit">
             <i class="la la-edit"></i>
         </a>
+        @endcan
     </td>
 </tr>
 @empty
