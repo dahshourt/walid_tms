@@ -526,14 +526,18 @@
              pillarSelect.trigger('change');
              @endif
 
-             // Email validation for Requester Email (only on create page)
-             @if(!isset($row))
-             const submitButton = $('button[type="submit"]');
-             const emailFeedback = $('#requester_email_feedback');
-             const emailLoader = $('#requester-email-loader');
-             const requesterEmailInput = $("#requester_email");
-             const kpiForm = requesterEmailInput.closest('form');
-             let currentRequest = null;
+            // Email validation for Requester Email (only on create page)
+
+            const submitButton = $('button[type="submit"]');
+            const emailFeedback = $('#requester_email_feedback');
+            const emailLoader = $('#requester-email-loader');
+            const requesterEmailInput = $("#requester_email");
+            const kpiForm = requesterEmailInput.closest('form');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            let currentRequest = null;
+
+            // If the email input is not on the page, skip binding
+            if (requesterEmailInput.length) {
 
             // Check email on input change with debouncing (only if there is a value)
             let emailTimeout;
@@ -564,6 +568,17 @@
                         return;
                     }
 
+                    // Basic format check before AJAX
+                    if (!emailRegex.test(emailVal)) {
+                        event.preventDefault();
+                        requesterEmailInput.removeClass('is-valid').addClass('is-invalid');
+                        emailFeedback.text('Please enter a valid email format');
+                        emailFeedback.removeClass('text-success').addClass('text-danger');
+                        submitButton.prop("disabled", true);
+                        return;
+                    }
+
+                    // Has a value and format looks ok -> run async check, then submit on success
                     event.preventDefault();
 
                     const request = check_requester_email({requireEmail: false});
@@ -610,17 +625,16 @@
                     return $.Deferred().resolve({valid: true});
                 }
 
-                 // Basic email format validation
-                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                     if (!emailRegex.test(email)) {
-                     resetEmailState();
-                     emailFeedback.text('Please enter a valid email format');
-                     emailFeedback.addClass('text-danger');
-                     requesterEmailInput.addClass('is-invalid');
-                     // Keep submit disabled only for obvious format errors
-                     submitButton.prop("disabled", true);
-                     return;
-                 }
+                // Basic email format validation
+                if (!emailRegex.test(email)) {
+                    resetEmailState();
+                    emailFeedback.text('Please enter a valid email format');
+                    emailFeedback.addClass('text-danger');
+                    requesterEmailInput.addClass('is-invalid');
+                    // Keep submit disabled only for obvious format errors
+                    submitButton.prop("disabled", true);
+                    return;
+                }
 
                  // Start validation process
                  startValidation();
@@ -647,7 +661,7 @@
                              emailFeedback.addClass('text-success');
                          } else {
                              // Treat directory/connection failures as warning, not a hard block
-                             submitButton.prop("disabled", false);
+                             submitButton.prop("disabled", true);
                              requesterEmailInput.removeClass('is-valid');
                              requesterEmailInput.addClass('is-invalid');
                              emailFeedback.text(data.message);
@@ -661,7 +675,7 @@
                              endValidation();
 
                              // On AJAX failure, allow submit but show warning
-                             submitButton.prop("disabled", false);
+                             submitButton.prop("disabled", true);
                              requesterEmailInput.removeClass('is-valid');
                              requesterEmailInput.addClass('is-invalid');
                              emailFeedback.text('Error checking email. Please try again.');
@@ -686,8 +700,9 @@
              function endValidation() {
                  emailLoader.hide();
                  requesterEmailInput.prop('disabled', false);
-             }
-             @endif
+            }
+            } // end if requesterEmailInput exists
+
 
              @if(isset($row) && !$isView)
             var kpiId = {{ (int) $row->id }};
