@@ -74,7 +74,7 @@ class Change_request extends Model
         'man_days' => 'decimal:2',
     ];
 
-    public static function getHoldRequests()
+    public static function getHoldRequests(): Collection
     {
         return self::where('hold', 1)->get();
     }
@@ -593,23 +593,18 @@ class Change_request extends Model
     /**
      * Get current status for list view with enhanced error handling.
      */
-    /**
-     * Get current status for list view with enhanced error handling.
-     */
-    public function listCurrentStatus()
+    public function listCurrentStatus(): ?Change_request_statuse
     {
         try {
             $group = $this->getCurrentGroupId();
-            $view_statuses = GroupStatuses::where('group_id', $group)
+            $viewStatuses = GroupStatuses::where('group_id', $group)
                 ->where('type', 2)
                 ->pluck('status_id');
 
-            $status = Change_request_statuse::where('cr_id', $this->id)
-                ->whereIn('new_status_id', $view_statuses)
+            return Change_request_statuse::where('cr_id', $this->id)
+                ->whereIn('new_status_id', $viewStatuses)
                 ->where('active', '1')
                 ->first();
-
-            return $status;
         } catch (Exception $e) {
             \Log::error("Error getting list current status for CR {$this->id}: " . $e->getMessage());
 
@@ -644,7 +639,7 @@ class Change_request extends Model
     /**
      * Get current status (old method) with better error handling.
      */
-    public function getCurrentStatusOld()
+    public function getCurrentStatusOld(): ?Change_request_statuse
     {
         try {
             $status = Change_request_statuse::where('cr_id', $this->id)
@@ -671,27 +666,24 @@ class Change_request extends Model
     /**
      * Get technical team current status with enhanced logic.
      */
-    /**
-     * Get technical team current status with enhanced logic.
-     */
     public function getTechnicalTeamCurrentStatus()
     {
         try {
             $group = $this->getCurrentGroupId();
-            $technical_cr_team_status = null;
+            $technicalCrTeamStatus = null;
 
-            $TechnicalCr = TechnicalCr::where('cr_id', $this->id)
+            $technicalCr = TechnicalCr::where('cr_id', $this->id)
                 ->where('status', '0')
                 ->first();
 
-            if ($TechnicalCr) {
-                $technical_cr_team_status = $TechnicalCr->technical_cr_team()
+            if ($technicalCr) {
+                $technicalCrTeamStatus = $technicalCr->technical_cr_team()
                     ->where('group_id', $group)
                     ->where('status', '0')
                     ->first();
             }
 
-            return $technical_cr_team_status;
+            return $technicalCrTeamStatus;
         } catch (Exception $e) {
             \Log::error("Error getting technical team status for CR {$this->id}: " . $e->getMessage());
 
@@ -704,56 +696,51 @@ class Change_request extends Model
     /**
      * Get current status with enhanced workflow logic and better error handling.
      */
-    public function getCurrentStatus()
+    public function getCurrentStatus(): ?Change_request_statuse
     {
         try {
-
             if (request()->reference_status) {
                 $statusInfo = Change_request_statuse::find(request()->reference_status);
-                $status = $this->attachWorkflowInfo($statusInfo);
 
-            } else {
-                $group = $this->getCurrentGroupId();
-                $view_statuses = GroupStatuses::where('group_id', $group)
-                    ->where('type', 2)
-                    ->pluck('status_id')
-                    ->toArray();
-
-                $technical_cr_team_status = $this->getTechnicalTeamCurrentStatus();
-
-                if ($technical_cr_team_status) {
-                    if (in_array($technical_cr_team_status->current_status_id, $view_statuses)) {
-                        $view_statuses = [$technical_cr_team_status->current_status_id];
-                    }
-                }
-
-                $status = Change_request_statuse::where('cr_id', $this->id)
-                    ->whereIn('new_status_id', $view_statuses)
-                    ->where('active', '1')
-                    ->first();
-
-                if ($status) {
-                    $status = $this->attachWorkflowInfo($status);
-                } else {
-                    // Fallback logic
-                    $status = Change_request_statuse::where('cr_id', $this->id)
-                        ->where('active', '1')
-                        ->first();
-
-                    if ($status) {
-                        $status = $this->attachWorkflowInfo($status);
-                    } else {
-                        $status = Change_request_statuse::where('cr_id', $this->id)
-                            ->orderBy('id', 'desc')
-                            ->first();
-                        if ($status) {
-                            $status = $this->attachWorkflowInfo($status);
-                        }
-                    }
-                }
+                return $this->attachWorkflowInfo($statusInfo);
             }
 
-            return $status;
+            $group = $this->getCurrentGroupId();
+            $viewStatuses = GroupStatuses::where('group_id', $group)
+                ->where('type', 2)
+                ->pluck('status_id')
+                ->toArray();
+
+            $technicalCrTeamStatus = $this->getTechnicalTeamCurrentStatus();
+
+            if ($technicalCrTeamStatus && in_array($technicalCrTeamStatus->current_status_id, $viewStatuses)) {
+                $viewStatuses = [$technicalCrTeamStatus->current_status_id];
+            }
+
+            $status = Change_request_statuse::where('cr_id', $this->id)
+                ->whereIn('new_status_id', $viewStatuses)
+                ->where('active', '1')
+                ->first();
+
+            if ($status) {
+                return $this->attachWorkflowInfo($status);
+            }
+
+            // Fallback logic
+            $status = Change_request_statuse::where('cr_id', $this->id)
+                ->where('active', '1')
+                ->first();
+
+            if ($status) {
+                return $this->attachWorkflowInfo($status);
+            }
+
+            $status = Change_request_statuse::where('cr_id', $this->id)
+                ->orderBy('id', 'desc')
+                ->first();
+
+            return $this->attachWorkflowInfo($status);
+
         } catch (Exception $e) {
             \Log::error("Error getting current status for CR {$this->id}: " . $e->getMessage());
 
@@ -761,11 +748,9 @@ class Change_request extends Model
         }
     }
 
-    public function getAllCurrentStatus()
+    public function getAllCurrentStatus(): Collection
     {
-        $statuses = Change_request_statuse::where('cr_id', $this->id)->where('active', '1')->get();
-
-        return $statuses;
+        return Change_request_statuse::where('cr_id', $this->id)->where('active', '1')->get();
     }
 
 
@@ -862,7 +847,10 @@ class Change_request extends Model
     /**
      * Get current status for division page with better error handling.
      */
-    public function getCurrentStatusForDivision()
+    /**
+     * Get current status for division page with better error handling.
+     */
+    public function getCurrentStatusForDivision(): ?Change_request_statuse
     {
         try {
             $status = Change_request_statuse::where('cr_id', $this->id)
@@ -944,7 +932,7 @@ class Change_request extends Model
     /**
      * Attach workflow information to status object.
      */
-    private function attachWorkflowInfo($status)
+    private function attachWorkflowInfo(?Change_request_statuse $status): ?Change_request_statuse
     {
         if (! $status) {
             return null;
@@ -968,7 +956,7 @@ class Change_request extends Model
         }
     }
 
-    private function attachWorkflowInfoById($status)
+    private function attachWorkflowInfoById(?Change_request_statuse $status): ?Change_request_statuse
     {
         if (! $status) {
             return null;
@@ -1014,46 +1002,30 @@ class Change_request extends Model
         return $this->hold === 1;
     }
 
-    // public function getSetStatus()
-    // {
+    public function getSetStatus()
+    {
         
-    //   $currentStatus = $this->getCurrentStatus();
-    //   // die;
+      $currentStatus = $this->getCurrentStatus();
+      // die;
 
-    //     $statusId = $currentStatus->new_status_id;
-    //     $previousStatusId = $currentStatus->old_status_id;
+        $statusId = $currentStatus->new_status_id;
+        $previousStatusId = $currentStatus->old_status_id;
 
-    //     return NewWorkFlow::where('from_status_id', $statusId)
-    //         ->where(function ($query) use ($previousStatusId) {
-    //             $query->whereNull('previous_status_id')
-    //                 ->orWhere('previous_status_id', 0)
-    //                 ->orWhere('previous_status_id', $previousStatusId);
-    //         })
-    //         ->whereHas('workflowstatus', function ($q) {
-    //             $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
-    //         })
-    //         ->where('type_id', $this->workflow_type_id)
-    //         ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
-    //         ->orderBy('id', 'DESC')
-    //         ->get();
-    // }
-public function getSetStatus() {
-    $currentStatus = $this->getCurrentStatus();
-    $oldStatusId = $currentStatus->old_status_id; // الـ Status الحالي
-    
-    // Get the status name
-    $status = \App\Models\Status::find($oldStatusId);
-    
-  
-    
-   
-    $workflows = NewWorkFlow::where('from_status_id', $oldStatusId)
-        ->where('type_id', $this->workflow_type_id)
-        ->where('active', '1')
-        ->get();
-    
-    return $workflows;
-}
+        return NewWorkFlow::where('from_status_id', $statusId)
+            ->where(function ($query) use ($previousStatusId) {
+                $query->whereNull('previous_status_id')
+                    ->orWhere('previous_status_id', 0)
+                    ->orWhere('previous_status_id', $previousStatusId);
+            })
+            ->whereHas('workflowstatus', function ($q) {
+                $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
+            })
+            ->where('type_id', $this->workflow_type_id)
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            ->orderBy('id', 'DESC')
+            ->get();
+    }
+
 
     /**
      * Check if the change request should be shown to the user based on technical team flags.

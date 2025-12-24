@@ -3,10 +3,11 @@
 namespace App\Console\Commands;
 
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
+use App\Models\CabCrUser;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class AutoApproveCabUsers extends Command
@@ -17,7 +18,49 @@ class AutoApproveCabUsers extends Command
 
     public function handle()
     {
-        $daysToSubtract = 2;
+        $thresholdDate = $this->getThresholdDate(2);
+
+        // Get users who are not approved and older than 2 days
+        $users = CabCrUser::where('status', '0')
+            ->whereHas('cabCr', function ($query) {
+                $query->where('status', '0');
+            })
+            ->where('created_at', '<=', $thresholdDate)
+            ->get();
+
+        $repo = new ChangeRequestRepository();
+        $approvedCount = 0;
+
+        foreach ($users as $user) {
+            $crId = $user->cabCr->cr_id ?? null;
+
+            if (! $crId) {
+                Log::warning("CabCrUser ID {$user->id} has no associated CR ID.");
+
+                continue;
+            }
+
+            $requestData = new Request([
+                'old_status_id' => '38',
+                'new_status_id' => '160',
+                'cab_cr_flag' => '1',
+                'user_id' => $user->user_id,
+            ]);
+
+            try {
+                Log::info('Auto-approved user for CR ID: ' . $crId);
+                $repo->update($crId, $requestData);
+                $approvedCount++;
+            } catch (Exception $e) {
+                Log::error("Failed to update CR ID {$crId}: " . $e->getMessage());
+            }
+        }
+
+        $this->info("Auto-approved $approvedCount user(s).");
+    }
+
+    private function getThresholdDate(int $daysToSubtract): Carbon
+    {
         $thresholdDate = Carbon::now();
 
         while ($daysToSubtract > 0) {
@@ -29,46 +72,6 @@ class AutoApproveCabUsers extends Command
             }
         }
 
-        // Get users who are not approved and older than 2 days
-        $users = DB::table('cab_cr_users')
-            ->join('cab_crs', 'cab_crs.id', '=', 'cab_cr_users.cab_cr_id')
-            ->where('cab_cr_users.status', '0')
-            ->where('cab_crs.status', '0')
-            ->where('cab_cr_users.created_at', '<=', $thresholdDate)
-            ->get();
-
-        $repo = new ChangeRequestRepository();
-        // Log::info("Auto-approved users: " . $users);
-        $approvedCount = 0;
-
-        foreach ($users as $user) {
-            $crId = $user->cr_id;
-
-            $user_id = $user->user_id;
-
-            /*  $requestData = [
-                 'old_status_id' => '38',
-                 'new_status_id' => '160',
-                 'cab_cr_flag' => '1',
-                 'user_id' => $user_id,
-             ];
-              dd((object)$requestData);
-               */
-            $requestData = new \Illuminate\Http\Request([
-                'old_status_id' => '38',
-                'new_status_id' => '160',
-                'cab_cr_flag' => '1',
-                'user_id' => $user_id,
-            ]);
-            try {
-                Log::info('Auto-approved user: ' . $crId);
-                $repo->update($crId, $requestData);
-                $approvedCount++;
-            } catch (Exception $e) {
-                Log::error("Failed to update CR ID {$crId}: " . $e->getMessage());
-            }
-        }
-
-        $this->info("Auto-approved $approvedCount user(s).");
+        return $thresholdDate;
     }
 }
