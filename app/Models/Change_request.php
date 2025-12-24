@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Collection;
+use App\Models\CrDependency;
 
 class Change_request extends Model
 {
@@ -1002,30 +1003,46 @@ class Change_request extends Model
         return $this->hold === 1;
     }
 
-    public function getSetStatus()
-    {
+    // public function getSetStatus()
+    // {
         
-      $currentStatus = $this->getCurrentStatus();
-      // die;
+    //   $currentStatus = $this->getCurrentStatus();
+    //   // die;
 
-        $statusId = $currentStatus->new_status_id;
-        $previousStatusId = $currentStatus->old_status_id;
+    //     $statusId = $currentStatus->new_status_id;
+    //     $previousStatusId = $currentStatus->old_status_id;
 
-        return NewWorkFlow::where('from_status_id', $statusId)
-            ->where(function ($query) use ($previousStatusId) {
-                $query->whereNull('previous_status_id')
-                    ->orWhere('previous_status_id', 0)
-                    ->orWhere('previous_status_id', $previousStatusId);
-            })
-            ->whereHas('workflowstatus', function ($q) {
-                $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
-            })
-            ->where('type_id', $this->workflow_type_id)
-            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
-            ->orderBy('id', 'DESC')
-            ->get();
-    }
-
+    //     return NewWorkFlow::where('from_status_id', $statusId)
+    //         ->where(function ($query) use ($previousStatusId) {
+    //             $query->whereNull('previous_status_id')
+    //                 ->orWhere('previous_status_id', 0)
+    //                 ->orWhere('previous_status_id', $previousStatusId);
+    //         })
+    //         ->whereHas('workflowstatus', function ($q) {
+    //             $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
+    //         })
+    //         ->where('type_id', $this->workflow_type_id)
+    //         ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+    //         ->orderBy('id', 'DESC')
+    //         ->get();
+    // }
+public function getSetStatus() {
+    $currentStatus = $this->getCurrentStatus();
+    $oldStatusId = $currentStatus->old_status_id; // الـ Status الحالي
+    
+    // Get the status name
+    $status = \App\Models\Status::find($oldStatusId);
+    
+  
+    
+   
+    $workflows = NewWorkFlow::where('from_status_id', $oldStatusId)
+        ->where('type_id', $this->workflow_type_id)
+        ->where('active', '1')
+        ->get();
+    
+    return $workflows;
+}
 
     /**
      * Check if the change request should be shown to the user based on technical team flags.

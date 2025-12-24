@@ -315,6 +315,10 @@
                                         @php
                                             if ($item->isOnHold()) {
                                                 $statuses_names = ['On Hold'];
+                                            } elseif ($item->isDependencyHold()) {
+                                                $blockingCrs = $item->getBlockingCrNumbers();
+                                                $crList = !empty($blockingCrs) ? ' (CR#' . implode(', CR#', $blockingCrs) . ')' : '';
+                                                $statuses_names = ['Design Estimation - Pending Dependency' . $crList];
                                             } else {
                                                 $statuses_names = $item->RequestStatuses->pluck('status.name');
                                             }

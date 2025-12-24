@@ -32,6 +32,7 @@
                         <h3 class="card-label">{{ $title }}</h3>
                     </div>
                     <div class="card-toolbar">
+                        @can('Create KPI Pillars')
                         <!--begin::Button-->
                         <a href='{{ route("kpi-pillars.create") }}' class="btn btn-primary font-weight-bolder">
                             <span class="svg-icon svg-icon-md">
@@ -47,6 +48,7 @@
                             </span>New {{ $form_title }}
                         </a>
                         <!--end::Button-->
+                        @endcan
                     </div>
                 </div>
                 <div class="card-body">
@@ -78,6 +80,7 @@
 @endsection
 
 @push('script')
+@can('Edit KPI Pillars')
 <script>
 $(document).ready(function() {
     // Handle status toggle
@@ -154,6 +157,7 @@ $(document).ready(function() {
     });
 });
 </script>
+@endcan
 @endpush
 
 

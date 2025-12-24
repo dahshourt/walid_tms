@@ -14,7 +14,9 @@ use Illuminate\View\View;
 class KpiInitiativeController extends Controller
 {
     protected $kpiInitiativeService;
+
     protected $kpiPillarService;
+
     protected $view;
 
     public function __construct(
@@ -79,7 +81,7 @@ class KpiInitiativeController extends Controller
         $this->authorize('Edit KPI Initiatives');
         $row = $this->kpiInitiativeService->find($id);
 
-        if (!$row) {
+        if (! $row) {
             abort(404, 'KPI Initiative not found');
         }
 
@@ -97,7 +99,7 @@ class KpiInitiativeController extends Controller
         try {
             $updated = $this->kpiInitiativeService->update($request->validated(), $id);
 
-            if (!$updated) {
+            if (! $updated) {
                 return redirect()->back()
                     ->withInput()
                     ->with('error', 'KPI Initiative not found');
@@ -117,12 +119,12 @@ class KpiInitiativeController extends Controller
      */
     public function updateStatus(): JsonResponse
     {
-        $this->authorize('Active KPI Initiatives');
+        $this->authorize('Edit KPI Initiatives');
         try {
             $id = request()->post('id');
             $updated = $this->kpiInitiativeService->toggleStatus($id);
 
-            if (!$updated) {
+            if (! $updated) {
                 return response()->json([
                     'message' => 'KPI Initiative not found',
                     'status' => 'error',
@@ -141,4 +143,3 @@ class KpiInitiativeController extends Controller
         }
     }
 }
-

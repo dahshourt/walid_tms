@@ -20,6 +20,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Events\ChangeRequestStatusUpdated;
+use App\Events\CrDeliveredEvent;
+use App\Services\ChangeRequest\CrDependencyService;
 
 class ChangeRequestStatusService
 {
@@ -36,11 +38,22 @@ class ChangeRequestStatusService
     // flag to determine if the workflow is active or not to send email to the dev team.
     private $active_flag = '0';
 
+    // Status IDs for dependency checking
+    private static int $PENDING_CAB_STATUS_ID;
+    private static int $DELIVERED_STATUS_ID;
+    private static int $PENDING_DESIGN_STATUS_ID;
+    //private const PENDING_CAB_STATUS_ID = 38;
+    //private const DELIVERED_STATUS_ID = 27;
+
     private $statusRepository;
     private $mailController;
+    private ?CrDependencyService $dependencyService = null;
 
     public function __construct()
     {
+        self::$PENDING_CAB_STATUS_ID = config('change_request.status_ids.pending_cab');
+        self::$DELIVERED_STATUS_ID = config('change_request.status_ids.Delivered');
+        self::$PENDING_DESIGN_STATUS_ID = config('change_request.status_ids.pending_design');
         $this->statusRepository = new ChangeRequestStatusRepository();
         $this->mailController = new MailController();
     }
@@ -54,6 +67,14 @@ class ChangeRequestStatusService
             $workflow = $this->getWorkflow($statusData);
             $changeRequest = $this->getChangeRequest($changeRequestId);
             $userId = $this->getUserId($changeRequest, $request);
+
+            Log::info('ChangeRequestStatusService: updateChangeRequestStatus', [
+                'changeRequestId' => $changeRequestId,
+                'statusData' => $statusData,
+                'workflow' => $workflow,
+                'changeRequest' => $changeRequest,
+                'userId' => $userId,
+            ]);
             
             if (!$workflow) {
                 $newStatusId = $statusData['new_status_id'] ?? 'not set';
@@ -68,8 +89,26 @@ class ChangeRequestStatusService
                 DB::commit();
                 return true;
             }
+
+            // Check for dependency hold when transitioning from Pending CAB to pending design
+            if ($this->isTransitionFromPendingCab($changeRequest,$statusData)) {
+                $depService = $this->getDependencyService();
+                if ($depService->shouldHoldCr($changeRequestId)) {
+                    // Apply dependency hold instead of transitioning
+                    $depService->applyDependencyHold($changeRequestId);
+                    Log::info('CR held due to unresolved dependencies', [
+                        'cr_id' => $changeRequestId,
+                        'cr_no' => $changeRequest->cr_no,
+                    ]);
+                    DB::commit();
+                    return true; // Block the transition
+                }
+            }
     
             $this->processStatusUpdate($changeRequest, $statusData, $workflow, $userId, $request);
+
+            // Fire CrDeliveredEvent if CR reached Delivered status
+            $this->checkAndFireDeliveredEvent($changeRequest, $statusData);
     
             DB::commit();
             return true;
@@ -141,32 +180,7 @@ private function validateStatusChange($changeRequest, $statusData, $workflow)
             throw $e;
         }
     }
-private function handleParallelWorkflow(ChangeRequest $changeRequest, int $oldStatusId): void
-{
-    // Check if UI/UX checkbox is checked
-    $uiUxField = $changeRequest->changeRequestCustomFields()
-        ->whereHas('custom_field', function($q) {
-            $q->where('name', 'ui_ux');
-        })
-        ->where('custom_field_value', '1')
-        ->first();
 
-    if (!$uiUxField) {
-        return;
-    }
-
-    // Get all statuses that come after the current status
-    $nextStatuses = NewWorkFlow::where('from_status_id', $oldStatusId)
-        ->where('active', 1)
-        ->orderBy('id')
-        ->get();
-
-    if ($nextStatuses->isNotEmpty()) {
-        // Update to the last status in the sequence
-        $lastStatus = $nextStatuses->last();
-        $changeRequest->update(['status_id' => $lastStatus->to_status_id]);
-    }
-}
     /**
      * Extract status data from request
      */
@@ -238,23 +252,24 @@ private function handleParallelWorkflow(ChangeRequest $changeRequest, int $oldSt
     /**
      * Process the main status update logic
      */
-  private function processStatusUpdate(
-    ChangeRequest $changeRequest,
-    array $statusData,
-    NewWorkFlow $workflow,
-    int $userId,
-    $request
-): void {
-    $technicalTeamCounts = $this->getTechnicalTeamCounts($changeRequest->id, $statusData['old_status_id']);
+    private function processStatusUpdate(
+        ChangeRequest $changeRequest,
+        array $statusData,
+        NewWorkFlow $workflow,
+        int $userId,
+        $request
+    ): void {
+        $technicalTeamCounts = $this->getTechnicalTeamCounts($changeRequest->id, $statusData['old_status_id']);
 
-    $this->updateCurrentStatus($changeRequest->id, $statusData, $workflow, $technicalTeamCounts);
+        $this->updateCurrentStatus($changeRequest->id, $statusData, $workflow, $technicalTeamCounts);
 
-    // Handle parallel workflow if needed
-    $this->handleParallelWorkflow($changeRequest, $statusData['old_status_id']);
+        $this->createNewStatuses($changeRequest, $statusData, $workflow, $userId, $request);
 
-    $this->createNewStatuses($changeRequest, $statusData, $workflow, $userId, $request);
-    event(new ChangeRequestStatusUpdated($changeRequest, $statusData, $request, $this->active_flag));
-}
+        //$this->handleNotifications($statusData, $changeRequest->id, $request);
+        event(new ChangeRequestStatusUpdated($changeRequest, $statusData, $request, $this->active_flag));
+
+
+    }
 
     /**
      * Process status update logic specifically for final confirmation
@@ -837,6 +852,59 @@ private function handleParallelWorkflow(ChangeRequest $changeRequest, int $oldSt
         ];
 
         $this->statusRepository->create($payload);
+    }
+
+    // Get the dependency service (lazy loaded)
+    private function getDependencyService(): CrDependencyService
+    {
+        if (!$this->dependencyService) {
+            $this->dependencyService = new CrDependencyService();
+        }
+        return $this->dependencyService;
+    }
+
+    
+    // Check if this is a transition from Pending CAB status to pending design status workflow 160
+    private function isTransitionFromPendingCab(ChangeRequest $changeRequest, array $statusData): bool
+    {
+        $workflow = NewWorkFlow::where('from_status_id', self::$PENDING_CAB_STATUS_ID)
+            ->where('type_id', $changeRequest->workflow_type_id)
+            ->where('workflow_type', '0') // Normal workflow (not reject)
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            ->first();
+        /*return isset($statusData['old_status_id']) && 
+               (int)$statusData['old_status_id'] === self::$PENDING_CAB_STATUS_ID;*/
+        return isset($statusData['new_status_id']) && 
+               (int)$statusData['new_status_id'] === $workflow->id;
+    }
+
+    // Check if CR has reached Delivered status and fire event
+    private function checkAndFireDeliveredEvent(ChangeRequest $changeRequest, array $statusData): void
+    {
+        $newWorkflowId = $statusData['new_status_id'] ?? null;
+        if (!$newWorkflowId) {
+            return; // no workflow do nothing
+        }
+
+        $workflow = NewWorkFlow::with('workflowstatus')->find($newWorkflowId);
+        if (!$workflow) {
+            return; // no workflow do nothing
+        }
+
+        foreach ($workflow->workflowstatus as $wfStatus) {
+            if ((int)$wfStatus->to_status_id === self::$DELIVERED_STATUS_ID) {
+                // Refresh the CR to ensure we have the latest data
+                $changeRequest->refresh();
+                
+                Log::info('Firing CrDeliveredEvent', [
+                    'cr_id' => $changeRequest->id,
+                    'cr_no' => $changeRequest->cr_no,
+                ]);
+                // the status delivered fire the event
+                event(new CrDeliveredEvent($changeRequest));
+                return;
+            }
+        }
     }
 
 }

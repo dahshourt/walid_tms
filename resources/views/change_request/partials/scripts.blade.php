@@ -1,7 +1,7 @@
 @push('script')
 
 <script>
-   
+    
     window.pendingProductionId = "{{ $pendingProductionId }}";
     window.relevantNotPending = "{{ $relevantNotPending }}";
 
@@ -113,7 +113,6 @@ $(window).on("load", function () {
 
 
  $(window).on("load", function () {
-    
     $(".field_cap_users").hide();
     
     const statusField = document.querySelector('select[name="new_status_id"]');
@@ -121,31 +120,19 @@ $(window).on("load", function () {
     function isStatusReject() {
         if (statusField) {
             const selectedText = statusField.options[statusField.selectedIndex].text;
-            const cabStatuses = [
-                "Pending CAB",
-                "Pending CAB kam",
-                "Pending CAB Approval",
-                "CR Doc Valid",
-            ];
-            return cabStatuses.includes(selectedText);
+            return selectedText === "Pending CAB" || selectedText === "Pending CAB kam";
         }
         return false;
     }
 
     // Function to handle the visibility of rejection reasons field and label
     function handlecapusersVisibility() {
-        
-        const statusText = statusField ? statusField.options[statusField.selectedIndex].text : 'No status field';
-        //alert("Current status: " + statusText);
-        
         if (isStatusReject()) {
             $(".field_cap_users").show();
 			$('select[name="cap_users[]"]').prop('required', true);
-           // alert("Showing CAP users");
         } else {
             $(".field_cap_users").hide();
 			$('select[name="cap_users[]"]').prop('required', false);
-           // alert("Hiding CAP users");
         }
     }
 	

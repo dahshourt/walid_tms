@@ -13,6 +13,7 @@ use Illuminate\View\View;
 class KpiTypeController extends Controller
 {
     protected $kpiTypeService;
+
     protected $view;
 
     public function __construct(KpiTypeService $kpiTypeService)
@@ -43,6 +44,7 @@ class KpiTypeController extends Controller
     public function create(): View
     {
         $this->authorize('Create KPI Types');
+
         return view("$this->view.create");
     }
 
@@ -72,7 +74,7 @@ class KpiTypeController extends Controller
         $this->authorize('Edit KPI Types');
         $row = $this->kpiTypeService->find($id);
 
-        if (!$row) {
+        if (! $row) {
             abort(404, 'KPI Type not found');
         }
 
@@ -88,7 +90,7 @@ class KpiTypeController extends Controller
         try {
             $updated = $this->kpiTypeService->update($request->validated(), $id);
 
-            if (!$updated) {
+            if (! $updated) {
                 return redirect()->back()
                     ->withInput()
                     ->with('error', 'KPI Type not found');
@@ -108,12 +110,12 @@ class KpiTypeController extends Controller
      */
     public function updateStatus(): JsonResponse
     {
-        $this->authorize('Active KPI Types');
+        $this->authorize('Edit KPI Types');
         try {
             $id = request()->post('id');
             $updated = $this->kpiTypeService->toggleStatus($id);
 
-            if (!$updated) {
+            if (! $updated) {
                 return response()->json([
                     'message' => 'KPI Type not found',
                     'status' => 'error',
@@ -132,4 +134,3 @@ class KpiTypeController extends Controller
         }
     }
 }
-
