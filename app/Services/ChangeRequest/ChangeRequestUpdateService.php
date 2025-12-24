@@ -24,6 +24,7 @@ use App\Models\ChangeRequest;
 use App\Http\Repository\KPIs\KPIRepository;
 use App\Services\ChangeRequest\CrDependencyService;
 
+
 class ChangeRequestUpdateService
 {
     use ChangeRequestConstants;

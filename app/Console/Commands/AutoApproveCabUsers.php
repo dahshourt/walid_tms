@@ -16,6 +16,7 @@ class AutoApproveCabUsers extends Command
 
     protected $description = 'Automatically approve cab_cr_users after 2 days if not approved';
 
+    
     public function handle()
     {
         $thresholdDate = $this->getThresholdDate(2);

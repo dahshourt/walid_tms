@@ -1087,3 +1087,5 @@ public function getSetStatus() {
         return md5($this->id . $this->created_at . env('APP_KEY'));
     }
 }
+
+
