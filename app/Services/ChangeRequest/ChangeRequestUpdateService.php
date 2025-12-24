@@ -24,6 +24,7 @@ use App\Models\ChangeRequest;
 use App\Http\Repository\KPIs\KPIRepository;
 use App\Services\ChangeRequest\CrDependencyService;
 
+
 class ChangeRequestUpdateService
 {
     use ChangeRequestConstants;
@@ -221,7 +222,8 @@ class ChangeRequestUpdateService
             return false;
         }
 
-        $user_id = Auth::user()->id;
+        //$user_id = Auth::user()->id;
+		$user_id = $request->input('user_id') ?? Auth::user()->id;
         // $cabCr = CabCr::where("cr_id", $id)->where('status', '0')->first();
         $cabCr = CabCr::where('cr_id', $id)->whereRaw('CAST(status AS CHAR) = ?', ['0'])->first();
         $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
