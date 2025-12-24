@@ -4,6 +4,21 @@
     @php
         $user_group = session()->has('current_group') ? session('current_group') : auth()->user()->defualt_group->id;
         $user_group =\App\Models\Group::find($user_group);
+
+        $columns_per_workflow_type = [
+            3 => [
+                
+            ],
+            5 => [
+
+            ],
+            9 => [
+
+            ],
+            13 => [
+
+            ]
+        ];
     @endphp
 
         <!--begin::Content-->
