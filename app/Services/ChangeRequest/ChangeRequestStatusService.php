@@ -39,9 +39,9 @@ class ChangeRequestStatusService
     private $active_flag = '0';
 
     // Status IDs for dependency checking
-    private static int $PENDING_CAB_STATUS_ID;
-    private static int $DELIVERED_STATUS_ID;
-    private static int $PENDING_DESIGN_STATUS_ID;
+    private static ?int $PENDING_CAB_STATUS_ID = null;
+    private static ?int $DELIVERED_STATUS_ID = null;
+    private static ?int $PENDING_DESIGN_STATUS_ID = null;
     //private const PENDING_CAB_STATUS_ID = 38;
     //private const DELIVERED_STATUS_ID = 27;
 
@@ -867,11 +867,20 @@ private function validateStatusChange($changeRequest, $statusData, $workflow)
     // Check if this is a transition from Pending CAB status to pending design status workflow 160
     private function isTransitionFromPendingCab(ChangeRequest $changeRequest, array $statusData): bool
     {
+        if (self::$PENDING_CAB_STATUS_ID === null) {
+            return false;
+        }
+
         $workflow = NewWorkFlow::where('from_status_id', self::$PENDING_CAB_STATUS_ID)
             ->where('type_id', $changeRequest->workflow_type_id)
             ->where('workflow_type', '0') // Normal workflow (not reject)
             ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->first();
+
+        if (!$workflow) {
+            return false;
+        }
+
         /*return isset($statusData['old_status_id']) && 
                (int)$statusData['old_status_id'] === self::$PENDING_CAB_STATUS_ID;*/
         return isset($statusData['new_status_id']) && 
@@ -892,7 +901,7 @@ private function validateStatusChange($changeRequest, $statusData, $workflow)
         }
 
         foreach ($workflow->workflowstatus as $wfStatus) {
-            if ((int)$wfStatus->to_status_id === self::$DELIVERED_STATUS_ID) {
+            if (self::$DELIVERED_STATUS_ID !== null && (int)$wfStatus->to_status_id === self::$DELIVERED_STATUS_ID) {
                 // Refresh the CR to ensure we have the latest data
                 $changeRequest->refresh();
                 

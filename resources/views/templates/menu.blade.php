@@ -1087,11 +1087,11 @@
                                 @if(isset($userGroups))
                                     @foreach ($userGroups as $group)
                                         @if(Session::has('current_group') && Session::get('current_group') == $group->group->id)
-                                            <a class="dropdown-item {{ Session::has('current_group') && Session::get('current_group') == $group->group->id ? 'active' : '' }}" href="{{route('change_request.asd',['group'=>$group->group->id])}}">
+                                            <a class="dropdown-item {{ Session::has('current_group') && Session::get('current_group') == $group->group->id ? 'active' : '' }}" href="{{route('change_request.selectUserGroup',['group'=>$group->group->id])}}">
                                                 {{ $group->group->name }}
                                             </a>
                                         @else
-                                            <a class="dropdown-item {{ auth()->user()->defualt_group->id == $group->group->id ? 'active' : '' }} " href="{{route('change_request.asd',['group'=>$group->group->id])}}">
+                                            <a class="dropdown-item {{ auth()->user()->defualt_group->id == $group->group->id ? 'active' : '' }} " href="{{route('change_request.selectUserGroup',['group'=>$group->group->id])}}">
                                                 {{ $group->group->name }}
                                             </a>
                                         @endif
@@ -1099,11 +1099,11 @@
                                 @else
                                     @foreach (auth()->user()->user_groups()->with('group')->get() as $group)
                                         @if(Session::has('current_group') && Session::get('current_group') == $group->group->id)
-                                            <a class="dropdown-item {{ Session::has('current_group') && Session::get('current_group') == $group->group->id ? 'active' : '' }}" href="{{route('change_request.asd',['group'=>$group->group->id])}}">
+                                            <a class="dropdown-item {{ Session::has('current_group') && Session::get('current_group') == $group->group->id ? 'active' : '' }}" href="{{route('change_request.selectUserGroup',['group'=>$group->group->id])}}">
                                                 {{ Session::get('current_group_name') }}
                                             </a>
                                         @else
-                                            <a class="dropdown-item " href="{{route('change_request.asd',['group'=>$group->group->id])}}">
+                                            <a class="dropdown-item " href="{{route('change_request.selectUserGroup',['group'=>$group->group->id])}}">
                                                 {{ $group->group->name }}
                                             </a>
                                         @endif
