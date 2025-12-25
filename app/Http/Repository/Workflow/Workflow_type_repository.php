@@ -42,7 +42,7 @@ class Workflow_type_repository implements workflow_type_contracts
     {
         return WorkFlowType::active()->select(['id', 'name'])
             ->WhereNotNull('parent_id')
-            ->whereIn('id', [3, 5, 9, 13])
+            ->whereIn('id', [3, 5, 9])
             ->get();
     }
 }

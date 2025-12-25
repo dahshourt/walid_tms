@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Support\Collection;
 
 class Change_request extends Model
@@ -319,8 +320,6 @@ class Change_request extends Model
             ->orderBy('id', 'DESC');
     }
 
-
-
     public function requestStatusesDone(): HasMany
     {
         return $this->hasMany(Change_request_statuse::class, 'cr_id', 'id')
@@ -328,14 +327,10 @@ class Change_request extends Model
             ->orderBy('id', 'desc');
     }
 
-
-
     public function allRequestStatuses(): HasMany
     {
         return $this->hasMany(Change_request_statuse::class, 'cr_id', 'id')->orderBy('id', 'DESC');
     }
-
-
 
     /**
      * Get the current request status.
@@ -344,8 +339,6 @@ class Change_request extends Model
     {
         return $this->hasOne(Change_request_statuse::class, 'cr_id', 'id')->where('active', '1');
     }
-
-
 
     public function currentRequestStatusesLast(): HasOne
     {
@@ -617,8 +610,6 @@ class Change_request extends Model
         }
     }
 
-
-
     /**
      * Get available releases with enhanced filtering.
      */
@@ -699,8 +690,6 @@ class Change_request extends Model
         }
     }
 
-
-
     /**
      * Get current status with enhanced workflow logic and better error handling.
      */
@@ -767,8 +756,6 @@ class Change_request extends Model
 
         return $statuses;
     }
-
-
 
     /**
      * Check if the change request is completed.
@@ -925,6 +912,91 @@ class Change_request extends Model
         return 'cr_no';
     }
 
+    public function isOnHold(): bool
+    {
+        return $this->hold === 1;
+    }
+
+    public function isOnGoing(): bool
+    {
+        return (bool) $this->parent_id;
+    }
+
+    public function getSetStatus()
+    {
+        $currentStatus = $this->getCurrentStatus();
+
+        $statusId = $currentStatus->new_status_id;
+        $previousStatusId = $currentStatus->old_status_id;
+
+        return NewWorkFlow::where('from_status_id', $statusId)
+            ->where(function ($query) use ($previousStatusId) {
+                $query->whereNull('previous_status_id')
+                    ->orWhere('previous_status_id', 0)
+                    ->orWhere('previous_status_id', $previousStatusId);
+            })
+            ->whereHas('workflowstatus', function ($q) {
+                $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
+            })
+            ->where('type_id', $this->workflow_type_id)
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            ->orderBy('id', 'DESC')
+            ->get();
+    }
+
+    public function crCustomField(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            User::class,
+            ChangeRequestCustomField::class,
+            'cr_id', // FK on custom fields table
+            'id',                // PK on users table
+            'id',                // PK on change requests table
+            'custom_field_value'            // FK on custom fields table
+        );
+    }
+
+    public function member(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            User::class,
+            ChangeRequestCustomField::class,
+            'cr_id', // FK on custom fields table
+            'id',                // PK on users table
+            'id',                // PK on change requests table
+            'custom_field_value'            // FK on custom fields table
+        )->where('change_request_custom_fields.custom_field_name', 'cr_member');
+    }
+
+    public function parentCR(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    public function rejectionReason(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            RejectionReasons::class,
+            ChangeRequestCustomField::class,
+            'cr_id',
+            'id',
+            'id',
+            'custom_field_value'
+        )->where('change_request_custom_fields.custom_field_name', 'rejection_reason');
+    }
+
+    public function accumulativeMDs(): HasOne
+    {
+        return $this->hasOne(ChangeRequestCustomField::class, 'cr_id')
+            ->where('change_request_custom_fields.custom_field_name', 'accumulative_mds');
+    }
+
+    public function deploymentDate(): HasOne
+    {
+        return $this->hasOne(ChangeRequestCustomField::class, 'cr_id')
+            ->where('change_request_custom_fields.custom_field_name', 'deployment_date');
+    }
+
     // ===================================
     // HELPER METHODS
     // ===================================
@@ -1007,32 +1079,5 @@ class Change_request extends Model
         $approvalStatusIds = [/* Add your approval status IDs */];
 
         return in_array($currentStatus->new_status_id, $approvalStatusIds);
-    }
-
-    public function isOnHold(): bool
-    {
-        return $this->hold === 1;
-    }
-
-    public function getSetStatus()
-    {
-        $currentStatus = $this->getCurrentStatus();
-
-        $statusId = $currentStatus->new_status_id;
-        $previousStatusId = $currentStatus->old_status_id;
-
-        return NewWorkFlow::where('from_status_id', $statusId)
-            ->where(function ($query) use ($previousStatusId) {
-                $query->whereNull('previous_status_id')
-                    ->orWhere('previous_status_id', 0)
-                    ->orWhere('previous_status_id', $previousStatusId);
-            })
-            ->whereHas('workflowstatus', function ($q) {
-                $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
-            })
-            ->where('type_id', $this->workflow_type_id)
-            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
-            ->orderBy('id', 'DESC')
-            ->get();
     }
 }

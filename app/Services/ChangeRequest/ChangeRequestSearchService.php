@@ -11,6 +11,7 @@ use App\Models\TechnicalCr;
 use App\Models\User;
 use Auth;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 
 class ChangeRequestSearchService
 {
@@ -76,7 +77,25 @@ class ChangeRequestSearchService
         $groupApplications = $groupData->group_applications->pluck('application_id')->toArray();
         $viewStatuses = $this->getViewStatuses($group);
 
-        $changeRequests = Change_request::where('workflow_type_id', $workflow_type_id)->with('RequestStatuses.status');
+        $work_flow_relations = match ($workflow_type_id) {
+            3,5 => ['member', 'application'],
+            9 => ['requester', 'rejectionReason', 'accumulativeMDs', 'deploymentDate'],
+            default => []
+        };
+
+        $changeRequests = Change_request::where(static function (Builder $query) use ($workflow_type_id) {
+            $query->where('workflow_type_id', $workflow_type_id)
+                // Workflow is in [Vendor, In-House] check if it's On-Going CR and parent has the workflow
+                ->when(in_array($workflow_type_id, [3, 5], true), function (Builder $query) use ($workflow_type_id) {
+                    $query->orWhereRelation('parentCR', 'workflow_type_id', $workflow_type_id);
+                });
+        })
+            ->with(
+                [
+                    'RequestStatuses.status',
+                    ...$work_flow_relations,
+                ]
+            );
 
         if ($groupApplications) {
             $changeRequests = $changeRequests->whereIn('application_id', $groupApplications);
