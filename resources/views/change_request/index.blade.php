@@ -2,8 +2,10 @@
 
 @section('content')
     @php
+        $roles_name = auth()->user()->roles->pluck('name');
         $user_group = session()->has('current_group') ? session('current_group') : auth()->user()->defualt_group->id;
         $user_group =\App\Models\Group::find($user_group);
+        $user_is_not_viewer = ! ($roles_name->count() === 1 && $roles_name->doesntContain('Viewer'));
 
         $columns_per_workflow_type = [
             3 => [
@@ -109,37 +111,14 @@
                                             $collection = $crs_by_work_flow_types[$workflow->id];
                                         @endphp
 
-                                            <!--begin: Datatable-->
-                                        <div class="table-responsive">
-                                            <table class="table table-bordered">
-                                                <thead>
-                                                <tr>
-                                                    <th>ID#</th>
-                                                    <th>Title</th>
-                                                    @if(!empty($roles_name) && isset($roles_name[0]) && $roles_name[0] != "Viewer")
-                                                        <th>Design Duration</th>
-                                                        <th>Start Design Time</th>
-                                                        <th>End Design Time</th>
-                                                        <th>Development Duration</th>
-                                                        <th>Start Development Time</th>
-                                                        <th>End Development Time</th>
-                                                        <th>Test Duration</th>
-                                                        <th>Start Test Time</th>
-                                                        <th>End Test Time</th>
-                                                        <th>CR Duration</th>
-                                                        <th>Start CR Time</th>
-                                                        <th>End CR Time</th>
-                                                    @endif
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                                @include("$view.loop")
-                                                </tbody>
-                                            </table>
-                                            <!--end: Datatable-->
-                                        </div>
-
-                                        <!--begin: Pagination-->
+                                        @if($workflow->id === 3)
+                                            <x-c-rs.in-house :is-not-viewer="$user_is_not_viewer" :user-group="$user_group"  :collection="$collection" />
+                                        @elseif($workflow->id === 5)
+                                            <x-c-rs.vendor :is-not-viewer="$user_is_not_viewer" :user-group="$user_group"  :collection="$collection" />
+                                        @elseif($workflow->id === 9)
+                                            <div>ffff</div>
+                                        @endif
+                                            <!--begin: Pagination-->
                                         <div class="d-flex justify-content-center mt-5">
                                             {{ $collection->links() }}
                                         </div>

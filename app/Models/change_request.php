@@ -949,10 +949,10 @@ class Change_request extends Model
         return $this->hasOneThrough(
             User::class,
             ChangeRequestCustomField::class,
-            'cr_id', // FK on custom fields table
-            'id',                // PK on users table
-            'id',                // PK on change requests table
-            'custom_field_value'            // FK on custom fields table
+            'cr_id',
+            'id',
+            'id',
+            'custom_field_value'
         );
     }
 
@@ -961,10 +961,10 @@ class Change_request extends Model
         return $this->hasOneThrough(
             User::class,
             ChangeRequestCustomField::class,
-            'cr_id', // FK on custom fields table
-            'id',                // PK on users table
-            'id',                // PK on change requests table
-            'custom_field_value'            // FK on custom fields table
+            'cr_id',
+            'id',
+            'id',
+            'custom_field_value'
         )->where('change_request_custom_fields.custom_field_name', 'cr_member');
     }
 
