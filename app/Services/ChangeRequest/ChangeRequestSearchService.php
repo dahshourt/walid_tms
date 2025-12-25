@@ -79,7 +79,7 @@ class ChangeRequestSearchService
 
         $work_flow_relations = match ($workflow_type_id) {
             3,5 => ['member', 'application'],
-            9 => ['requester', 'rejectionReason', 'accumulativeMDs', 'deploymentDate'],
+            9 => ['requester','department' , 'rejectionReason', 'accumulativeMDs', 'deploymentDate'],
             default => []
         };
 

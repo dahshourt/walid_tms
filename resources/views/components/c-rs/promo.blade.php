@@ -8,25 +8,19 @@
     <table class="table table-bordered">
         <thead>
         <tr>
-            <th>ID#</th>
-            <th>Title</th>
+            <th>Promo ID</th>
+            <th>Promo Subject</th>
             @if($isNotViewer)
+                <th>Promo Description</th>
                 <th>Status</th>
-                <th>CR Manager</th>
-                <th>Target System</th>
-                <th>Design Duration</th>
-                <th>Start Design Time</th>
-                <th>End Design Time</th>
-                <th>Development Duration</th>
-                <th>Start Development Time</th>
-                <th>End Development Time</th>
-                <th>Test Duration</th>
-                <th>Start Test Time</th>
-                <th>End Test Time</th>
-                <th>CR Duration</th>
-                <th>Start CR Time</th>
-                <th>End CR Time</th>
-                <th>CR Workload</th>
+                <th>Sub Status</th>
+                <th>Requester</th>
+                <th>Requester Department</th>
+                <th>Rejection Reason</th>
+                <th>Accumulative MD's</th>
+                <th>Deployment Date</th>
+                <th>Creation Date</th>
+                <th>Last Update Date</th>
             @endif
         </tr>
         </thead>
@@ -69,21 +63,16 @@
 
                         <th scope="row">{{ $item->title }}</th>
                         @if($isNotViewer)
+                            <td>{{ $item->description }}</td>
                             <td>{{ $current_status?->name }}</td>
-                            <td>{{ $item->member?->user_name }}</td>
-                            <td>{{ $item->application?->name }}</td>
-                            <td>{{ $item->design_duration }}</td>
-                            <td>{{ $item->start_design_time }}</td>
-                            <td>{{ $item->end_design_time }}</td>
-                            <td>{{ $item->develop_duration }}</td>
-                            <td>{{ $item->start_develop_time }}</td>
-                            <td>{{ $item->end_develop_time }}</td>
-                            <td>{{ $item->test_duration }}</td>
-                            <td>{{ $item->start_test_time }}</td>
-                            <td>{{ $item->end_test_time }}</td>
-                            <td>{{ $item->CR_duration }}</td>
-                            <td>{{ $item->start_CR_time }}</td>
-                            <td>{{ $item->end_CR_time }}</td>
+                            <td></td>
+                            <td>{{ $item->requester?->user_name }}</td>
+                            <td>{{ $item->department?->name }}</td>
+                            <td>{{ $item->rejectionReason?->name }}</td>
+                            <td>{{ $item->accumulativeMDs?->custom_field_value }}</td>
+                            <td>{{ $item->deploymentDate?->custom_field_value }}</td>
+                            <td>{{ $item->created_at }}</td>
+                            <td>{{ $item->updated_at }}</td>
                             <td></td>
                         @endif
                     </tr>

@@ -116,8 +116,9 @@
                                         @elseif($workflow->id === 5)
                                             <x-c-rs.vendor :is-not-viewer="$user_is_not_viewer" :user-group="$user_group"  :collection="$collection" />
                                         @elseif($workflow->id === 9)
-                                            <div>ffff</div>
+                                            <x-c-rs.promo :is-not-viewer="$user_is_not_viewer" :user-group="$user_group"  :collection="$collection" />
                                         @endif
+                                        
                                             <!--begin: Pagination-->
                                         <div class="d-flex justify-content-center mt-5">
                                             {{ $collection->links() }}
