@@ -944,18 +944,6 @@ class Change_request extends Model
             ->get();
     }
 
-    public function crCustomField(): HasOneThrough
-    {
-        return $this->hasOneThrough(
-            User::class,
-            ChangeRequestCustomField::class,
-            'cr_id',
-            'id',
-            'id',
-            'custom_field_value'
-        );
-    }
-
     public function member(): HasOneThrough
     {
         return $this->hasOneThrough(
