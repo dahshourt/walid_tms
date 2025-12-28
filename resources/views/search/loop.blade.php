@@ -37,7 +37,7 @@
             <td>{{ $cr->title }} </td>
             <td>
                 <span class="description-preview text-primary"
-                      data-description="{{ e($cr->description) }}"
+                      data-description="{{ e(json_encode($cr->description, JSON_UNESCAPED_UNICODE)) }}"
                       role="button">
                     {{ \Illuminate\Support\Str::limit($cr->description, 50) }}
                 </span>
@@ -58,7 +58,7 @@
             <td>{{ $cr->title }}</td>
             <td>
                 <span class="description-preview text-primary"
-                      data-description="{{ e($cr->description) }}"
+                      data-description="{{ e(json_encode($cr->description, JSON_UNESCAPED_UNICODE)) }}"
                       role="button">
                     {{ \Illuminate\Support\Str::limit($cr->description, 50) }}
                 </span>
@@ -266,7 +266,5 @@
             border-color: #1ec96f;
         }
     </style>
-    </table>
-    </div>
 
 @endif
