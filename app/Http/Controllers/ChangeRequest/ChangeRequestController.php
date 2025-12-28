@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\ChangeRequest;
 
 use App\Factories\Applications\ApplicationFactory;

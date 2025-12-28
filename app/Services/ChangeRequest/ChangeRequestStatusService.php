@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Services\ChangeRequest;
-
 use App\Http\Repository\Logs\LogRepository;
 use App\Models\Change_request as ChangeRequest;
 use App\Models\Group;

@@ -4,7 +4,7 @@
                                 <tr>
                                     <th scope="row">{{ $item->id }}</th>
                                     <td>{{ $item->name }}</td>  
-                                    <!-- Disabled permissions actions.
+                                    
                                     <td>
                                         <div class="d-inline-flex">
 
@@ -44,7 +44,7 @@
                                     
                                         
                                     </td>
-                                    -->
+                                    
                                 </div>
                                 </tr>
                             @endforeach

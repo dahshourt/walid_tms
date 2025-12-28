@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\FinalConfirmation;
-
 use App\Http\Controllers\Controller;
 use App\Http\Repository\FinalConfirmation\FinalConfirmationRepository;
 use App\Services\FinalConfirmation\FinalConfirmationService;

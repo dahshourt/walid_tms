@@ -90,7 +90,7 @@ class PermissionsController extends Controller
         return redirect()->back()->with('permission', 'Created Successfully');
     }
     // Back to the administrator to edit or delete permissions
-    /*
+    
     public function edit($id)
     {
         $this->authorize('Edit Permission'); // permission check
@@ -115,7 +115,7 @@ class PermissionsController extends Controller
         $this->authorize('Delete Permission'); // permission check
         $this->permission->delete($id);
         return redirect()->back()->with('success', 'Permission deleted successfully!');
-    } //end method  */
+    } //end method  
 
     /**
      * Send or resend the verification code.

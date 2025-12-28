@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Repository\KPIs;
-
 use App\Contracts\KPIs\KPIRepositoryInterface;
 use App\Models\Change_request;
 use App\Models\Kpi;
