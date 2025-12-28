@@ -13,7 +13,6 @@
             @if($isNotViewer)
                 <th>Promo Description</th>
                 <th>Status</th>
-                <th>Sub Status</th>
                 <th>Requester</th>
                 <th>Requester Department</th>
                 <th>Rejection Reason</th>
