@@ -55,7 +55,10 @@ class HomeController extends Controller
            // dd($crs_group_by_applications);
 
          }*/
-        return view('home', compact('statuses', 'applications', 'workflow_type', 'route'));
+        // Fetch aggregated KPI counts per status and year
+        $kpiData = $this->getKpiStatistics();
+        
+        return view('home', compact('statuses', 'applications', 'workflow_type', 'route', 'kpiData'));
     }
 
     public function dashboard(Request $request)
@@ -132,5 +135,66 @@ class HomeController extends Controller
         $vendor_apps = (new ApplicationRepository)->application_based_on_workflow(5);
 
         return view('statistics_dashboard', compact('inhouse_crs', 'vendor_crs', 'status_crs', 'inhouse_crs_per_status_system', 'inhouse_apps', 'vendor_crs_per_status_system', 'vendor_apps'));
+    }
+    private function getKpiStatistics()
+    {
+        // 1. Fetch raw counts grouped by year and status
+        $rawCounts = \App\Models\Kpi::select('target_launch_year', 'status', \DB::raw('count(*) as count'))
+            ->groupBy('target_launch_year', 'status')
+            ->get();
+
+        // 2. Normalize data types for consistent matching
+        $rawCounts = $rawCounts->map(function ($item) {
+            $item->target_launch_year = (string) ($item->target_launch_year ?: 'Unknown');
+            return $item;
+        });
+
+        // 3. Extract unique statuses and years
+        $statuses = $rawCounts->pluck('status')->unique()->sort()->values()->all();
+        $years = $rawCounts->pluck('target_launch_year')->unique()->sort()->values()->all();
+
+        // 4. Build datasets per year
+        $datasets = [];
+        $colorPalette = [
+            'rgb(255, 99, 132)',   // Red
+            'rgb(54, 162, 235)',   // Blue
+            'rgb(255, 205, 86)',   // Yellow
+            'rgb(75, 192, 192)',   // Teal
+            'rgb(153, 102, 255)',  // Purple
+            'rgb(255, 159, 64)',   // Orange
+            'rgb(201, 203, 207)'   // Grey
+        ];
+
+        foreach ($years as $index => $year) {
+            $yearLabel = $year;
+            $dataForYear = [];
+
+            // For each status, find the count for this year, or 0
+            foreach ($statuses as $status) {
+                // Strict-ish matching on string comparison
+                $record = $rawCounts->first(function ($item) use ($year, $status) {
+                    return $item->target_launch_year === $year && $item->status === $status;
+                });
+                
+                $dataForYear[] = $record ? $record->count : 0;
+            }
+
+            // Cycle through colors if we have more years than colors
+            $color = $colorPalette[$index % count($colorPalette)];
+
+            $datasets[] = [
+                'label' => (string) $yearLabel,
+                'data' => $dataForYear,
+                'borderColor' => $color,
+                'backgroundColor' => str_replace('rgb', 'rgba', str_replace(')', ', 0.2)', $color)),
+                'tension' => 0.1,
+                'fill' => false,
+            ];
+        }
+
+        return [
+            'labels' => $statuses,
+            'datasets' => $datasets
+        ];
     }
 }

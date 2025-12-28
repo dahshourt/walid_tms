@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Kpi extends Model
 {
@@ -17,18 +18,20 @@ class Kpi extends Model
     protected $fillable = [
         'name',
         'priority',
-        'strategic_pillar',
-        'initiative',
-        'sub_initiative',
+        'pillar_id',
+        'initiative_id',
+        'sub_initiative_id',
         'bu',
         'sub_bu',
         'target_launch_quarter',
         'target_launch_year',
-        'type',
+        'target_cr_count',
+        'type_id',
         'classification',
         'kpi_brief',
         'status',
         'created_by',
+        'requester_email',
     ];
     
     const PRIORITY = ['Critical', 'High', 'Medium', 'Low'];
@@ -54,6 +57,41 @@ class Kpi extends Model
     public function changeRequests(): BelongsToMany
     {
         return $this->belongsToMany(Change_request::class, 'kpi_change_request', 'kpi_id', 'cr_id');
+    }
+
+    public function type(): BelongsTo
+    {
+        return $this->belongsTo(KpiType::class, 'type_id');
+    }
+
+    public function pillar(): BelongsTo
+    {
+        return $this->belongsTo(KpiPillar::class, 'pillar_id');
+    }
+
+    public function initiative(): BelongsTo
+    {
+        return $this->belongsTo(KpiInitiative::class, 'initiative_id');
+    }
+
+    public function subInitiative(): BelongsTo
+    {
+        return $this->belongsTo(KpiSubInitiative::class, 'sub_initiative_id');
+    }
+
+    public function kpiProjects(): HasMany
+    {
+        return $this->hasMany(KpiProject::class);
+    }
+
+    /**
+     * Convenience relation to access related projects directly.
+     */
+    public function projects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class, 'kpi_projects', 'kpi_id', 'project_id')
+            ->withPivot('created_at')
+            ->withTimestamps();
     }
 
     /**

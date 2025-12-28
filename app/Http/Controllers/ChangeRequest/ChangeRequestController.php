@@ -861,9 +861,8 @@ class ChangeRequestController extends Controller
         $cr_id = $request->query('crId');
         $action = $request->query('action');
         $token = $request->query('token');
-        $workflow = $request->query('workflow');
 
-        if (! $cr_id || ! $action || ! $token || ! $workflow) {
+        if (! $cr_id || ! $action || ! $token) {
             return response()->json([
                 'isSuccess' => false,
                 'message' => 'Invalid request. Missing parameters.',
@@ -920,19 +919,19 @@ class ChangeRequestController extends Controller
             ], 400);
         }
 
-        // $workflowIdForAction = $this->getWorkflowIdForAction($cr->workflow_type_id, $action);
-        // if (! $workflowIdForAction) {
-        //     return response()->json([
-        //         'isSuccess' => false,
-        //         'message' => 'Unsupported workflow type.',
-        //     ], 400);
-        // }
+        $workflowIdForAction = $this->getWorkflowIdForAction($cr->workflow_type_id, $action);
+        if (! $workflowIdForAction) {
+            return response()->json([
+                'isSuccess' => false,
+                'message' => 'Unsupported workflow type.',
+            ], 400);
+        }
 
         try {
             $repo = new ChangeRequestRepository();
             $updateRequest = new Request([
                 'old_status_id' => $current_status,
-                'new_status_id' => $workflow,
+                'new_status_id' => $workflowIdForAction,
             ]);
             $repo->UpateChangeRequestStatus($cr_id, $updateRequest);
 
@@ -948,7 +947,7 @@ class ChangeRequestController extends Controller
         } catch (Exception $e) {
             Log::error('Failed to process division manager action (JSON)', [
                 'cr_id' => $cr_id,
-                'action' => $action . ' - ' . $workflow . ' - ' . $current_status,
+                'action' => $action . ' - ' . $workflowIdForAction . ' - ' . $current_status,
                 'error' => $e,
             ]);
 
@@ -1080,20 +1079,19 @@ class ChangeRequestController extends Controller
         }
     }
 
-    public function handlePendingCap(Request $request)
-    {
-        $this->authorize('Edit cr pending cap');
-        $cr_id = $request->query('crId');
-        $workflow = $request->query('workflow');
-        $action = $request->query('action');
-        $token = $request->query('token');
+    // public function handlePendingCap(Request $request)
+    // {
+    //     $this->authorize('Edit cr pending cap');
+    //     $cr_id = $request->query('crId');
+    //     $action = $request->query('action');
+    //     $token = $request->query('token');
 
-        if (! $cr_id || ! $action || ! $token || ! $workflow) {
-            return response()->json([
-                'isSuccess' => false,
-                'message' => 'Invalid request. Missing parameters.',
-            ], 400);
-        }
+    //     if (! $cr_id || ! $action || ! $token) {
+    //         return response()->json([
+    //             'isSuccess' => false,
+    //             'message' => 'Invalid request. Missing parameters.',
+    //         ], 400);
+    //     }
 
     //     $cr = Change_request::find($cr_id);
     //     if (! $cr) {
@@ -1245,19 +1243,19 @@ class ChangeRequestController extends Controller
     //         ], 500);
     //     }
     // }
-// public function handlePendingCap(Request $request)
-// {
-//     $this->authorize('Edit cr pending cap');
-//     $cr_id = $request->query('crId');
-//     $action = $request->query('action');
-//     $token = $request->query('token');
+public function handlePendingCap(Request $request)
+{
+    $this->authorize('Edit cr pending cap');
+    $cr_id = $request->query('crId');
+    $action = $request->query('action');
+    $token = $request->query('token');
 
-//     if (! $cr_id || ! $action || ! $token) {
-//         return response()->json([
-//             'isSuccess' => false,
-//             'message' => 'Invalid request. Missing parameters.',
-//         ], 400);
-//     }
+    if (! $cr_id || ! $action || ! $token) {
+        return response()->json([
+            'isSuccess' => false,
+            'message' => 'Invalid request. Missing parameters.',
+        ], 400);
+    }
 
     $cr = Change_request::find($cr_id);
     if (! $cr) {

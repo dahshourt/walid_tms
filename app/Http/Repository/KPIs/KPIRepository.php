@@ -3,22 +3,24 @@
 namespace App\Http\Repository\KPIs;
 
 use App\Contracts\KPIs\KPIRepositoryInterface;
-use App\Models\Kpi;
 use App\Models\Change_request;
+use App\Models\Kpi;
+use App\Models\KpiProject;
+use App\Models\Project;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class KPIRepository implements KPIRepositoryInterface
 {
-    Public $finalStatuses;
+    public $finalStatuses;
 
     public function __construct()
     {
         $this->finalStatuses = [config('change_request.status_ids.Delivered'), config('change_request.status_ids.Closed'), config('change_request.status_ids.Cancel'), config('change_request.status_ids.Reject')];
     }
-    
+
     public function getAll()
     {
-        
         return Kpi::orderByDesc('created_at')->paginate(10);
     } // end method
 
@@ -27,8 +29,8 @@ class KPIRepository implements KPIRepositoryInterface
         return DB::transaction(function () use ($request) {
             $data = collect($request);
 
-            // create KPI record (exclude comment-only)
-            $kpiData = $data->except(['kpi_comment'])->all();
+            // create KPI record (exclude comment-only and projects payload)
+            $kpiData = $data->except(['kpi_comment', 'project_ids'])->all();
             if (! isset($kpiData['status'])) {
                 $kpiData['status'] = 'Open';
             }
@@ -53,26 +55,58 @@ class KPIRepository implements KPIRepositoryInterface
                 ]);
             }
 
+            // attach projects (if provided)
+            if (! empty($request['project_ids'] ?? null) && is_array($request['project_ids'])) {
+                $projectIds = array_filter(array_unique($request['project_ids']));
+
+                $kpi_projects_data = [];
+                foreach ($projectIds as $projectId) {
+                    $kpi_projects_data[] = [
+                        'kpi_id' => $kpi->id,
+                        'project_id' => $projectId,
+                    ];
+                }
+
+                KpiProject::insert($kpi_projects_data);
+
+                if (count($projectIds) > 0) {
+                    $linked_projects = Project::whereIn('id', $projectIds)->pluck('name')->implode(', ');
+
+                    $kpi->logs()->create([
+                        'user_id' => auth()->id(),
+                        'log_text' => "< $linked_projects > were linked to this KPI at creation.",
+                    ]);
+                }
+            }
+
             return $kpi;
         });
     }  // end method
 
     public function find($id)
     {
-        return Kpi::with(['creator', 'comments.user', 'logs.user', 'changeRequests.workflowType', 'changeRequests.currentStatusRel'])
+        return Kpi::with([
+            'creator',
+            'comments.user',
+            'logs.user',
+            'changeRequests.workflowType',
+            'changeRequests.currentStatusRel',
+            'projects.quarters.milestones',
+        ])
             ->find($id);
     } // end method
 
     public function update($request, $id)
     {
         return DB::transaction(function () use ($request, $id) {
-            $kpi = Kpi::findOrFail($id);
+            $kpi = Kpi::with(['pillar', 'initiative', 'subInitiative'])->findOrFail($id);
             $oldData = $kpi->replicate(); // Keep a copy of old data
 
             $data = collect($request);
 
-            // Update the KPI
-            $kpi->update($data->except(['kpi_comment'])->all());
+            // Update the KPI (exclude comment-only and projects payload)
+            $kpi->update($data->except(['kpi_comment', 'project_ids'])->all());
+            $kpi->refresh();
 
             // Track changes
             $changes = $kpi->getChanges();
@@ -84,13 +118,36 @@ class KPIRepository implements KPIRepositoryInterface
                 }
 
                 $oldValue = $oldData->$field;
-                
+
                 $oldValStr = $oldValue ?? 'Empty';
                 $newValStr = $newValue ?? 'Empty';
 
+                if (in_array($field, ['pillar_id', 'initiative_id', 'sub_initiative_id'], true)) {
+                    if ($oldValue) {
+                        $oldValStr = match ($field) {
+                            'pillar_id' => $oldData->pillar->name,
+                            'initiative_id' => $oldData->initiative->name,
+                            'sub_initiative_id' => $oldData->subInitiative->name,
+                        };
+                    }
+
+                    if ($newValue) {
+                        $newValStr = match ($field) {
+                            'pillar_id' => $kpi->pillar->name,
+                            'initiative_id' => $kpi->initiative->name,
+                            'sub_initiative_id' => $kpi->subInitiative->name,
+                        };
+                    }
+                }
+
+                $column_name = Str::of($field)
+                    ->remove('_id')
+                    ->replace('_', ' ')
+                    ->title();
+
                 $kpi->logs()->create([
                     'user_id' => auth()->id(),
-                    'log_text' => ucfirst(str_replace('_', ' ', $field)) . " changed from < {$oldValStr} > to < {$newValStr} >",
+                    'log_text' => $column_name . " changed from < $oldValStr > to < $newValStr >",
                 ]);
             }
 
@@ -103,7 +160,7 @@ class KPIRepository implements KPIRepositoryInterface
 
                 $kpi->logs()->create([
                     'user_id' => auth()->id(),
-                    'log_text' => "Comment added",
+                    'log_text' => 'Comment added',
                 ]);
             }
 
@@ -124,10 +181,10 @@ class KPIRepository implements KPIRepositoryInterface
             $kpi = Kpi::findOrFail($kpiId);
             $cr = Change_request::where('cr_no', $crNo)->firstOrFail();
 
-            //check if already linked to this cr
+            // check if already linked to this cr
             $alreadyLinked = $kpi->changeRequests()
-                                ->where('change_request.id', $cr->id)
-                                ->exists();
+                ->where('change_request.id', $cr->id)
+                ->exists();
 
             if ($alreadyLinked) {
                 return [
@@ -135,42 +192,41 @@ class KPIRepository implements KPIRepositoryInterface
                     'kpi_status' => $kpi->status,
                     'cr' => $cr,
                 ];
-            } else {
-
-                // check if this cr already linked to another kpi
-                $crAlreadyLinkedToAnotherKpi = $cr->kpis()->exists();
-                if ($crAlreadyLinkedToAnotherKpi) {
-
-                    // get the kpi id of the cr
-                    $kpiIdOfCr = $cr->kpis()->first()->id;
-
-                    $this->detachChangeRequest($kpiIdOfCr, $cr->id);
-                    $kpi->changeRequests()->attach($cr->id);
-
-                    $this->recalculateStatusFromChangeRequests($kpi);
-
-                    $kpi->logs()->create([
-                        'user_id' => auth()->id(),
-                        'log_text' => "Change Request #{$cr->cr_no} was linked to this KPI.",
-                    ]);
-
-                    return [
-                        'success' => true,
-                        'kpi_status' => $kpi->status,
-                        'cr' => $cr,
-                    ];
-                } else {
-
-                    $kpi->changeRequests()->attach($cr->id);
-
-                    $this->recalculateStatusFromChangeRequests($kpi);
-
-                    $kpi->logs()->create([
-                        'user_id' => auth()->id(),
-                        'log_text' => "Change Request #{$cr->cr_no} was linked to this KPI.",
-                    ]);
-                } 
             }
+
+            // check if this cr already linked to another kpi
+            $crAlreadyLinkedToAnotherKpi = $cr->kpis()->exists();
+            if ($crAlreadyLinkedToAnotherKpi) {
+
+                // get the kpi id of the cr
+                $kpiIdOfCr = $cr->kpis()->first()->id;
+
+                $this->detachChangeRequest($kpiIdOfCr, $cr->id);
+                $kpi->changeRequests()->attach($cr->id);
+
+                $this->recalculateStatusFromChangeRequests($kpi);
+
+                $kpi->logs()->create([
+                    'user_id' => auth()->id(),
+                    'log_text' => "Change Request #{$cr->cr_no} was linked to this KPI.",
+                ]);
+
+                return [
+                    'success' => true,
+                    'kpi_status' => $kpi->status,
+                    'cr' => $cr,
+                ];
+            }
+
+            $kpi->changeRequests()->attach($cr->id);
+
+            $this->recalculateStatusFromChangeRequests($kpi);
+
+            $kpi->logs()->create([
+                'user_id' => auth()->id(),
+                'log_text' => "Change Request #{$cr->cr_no} was linked to this KPI.",
+            ]);
+
             return [
                 'success' => true,
                 'kpi_status' => $kpi->status,
@@ -178,7 +234,6 @@ class KPIRepository implements KPIRepositoryInterface
             ];
         });
     }
-
 
     // attach cr to kpi (from kpi page)
     public function attachChangeRequestByNumber($kpiId, $crNo)
@@ -260,7 +315,7 @@ class KPIRepository implements KPIRepositoryInterface
 
         if ($kpi->changeRequests->isEmpty()) {
             $newStatus = 'Open';
-        } else{
+        } else {
             $newStatus = 'Delivered';
 
             foreach ($kpi->changeRequests as $cr) {

@@ -167,6 +167,7 @@ class StatusConfigService
             'Cancel_kam' => 'Cancel',
             'Closed' => 'Closed',
             'Delivered' => 'Delivered',
+            'pending_design' => 'Pending Design',
             'division_manager_approval' => 'Division Manager Approval',
             'division_manager_approval_kam' => 'Division Manager Approval',
             'business_analysis' => 'Business Analysis',
@@ -176,6 +177,8 @@ class StatusConfigService
             'pending_update_cr_doc'=>'Pending Update CR Doc',
             'request_vendor_mds'=>'Request Vendor MDS',
             'pending_agreed_business'=>'Pending Agreed Scope Approval-Business',
+            'pending_agreed_business_kam'=>'Pending Agreed Scope Approval-Business',
+            'pending_agreed_business_kam'=>'Pending Agreed Scope Approval-Business',
         ];
     }
 

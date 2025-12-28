@@ -100,6 +100,19 @@ Route::middleware(['auth'])->group(
         Route::resource('hold-reasons', 'HoldReasonController')->except(['show', 'destroy']);
         Route::post('hold-reasons/update-status', 'HoldReasonController@updateStatus')->name('hold-reasons.update-status');
 
+        // KPI Configuration Routes
+        Route::resource('kpi-types', 'KpiType\KpiTypeController')->except(['show', 'destroy']);
+        Route::post('kpi-types/update-status', 'KpiType\KpiTypeController@updateStatus')->name('kpi-types.update-status');
+
+        Route::resource('kpi-pillars', 'KpiPillar\KpiPillarController')->except(['show', 'destroy']);
+        Route::post('kpi-pillars/update-status', 'KpiPillar\KpiPillarController@updateStatus')->name('kpi-pillars.update-status');
+
+        Route::resource('kpi-initiatives', 'KpiInitiative\KpiInitiativeController')->except(['show', 'destroy']);
+        Route::post('kpi-initiatives/update-status', 'KpiInitiative\KpiInitiativeController@updateStatus')->name('kpi-initiatives.update-status');
+
+        Route::resource('kpi-sub-initiatives', 'KpiSubInitiative\KpiSubInitiativeController')->except(['show', 'destroy']);
+        Route::post('kpi-sub-initiatives/update-status', 'KpiSubInitiative\KpiSubInitiativeController@updateStatus')->name('kpi-sub-initiatives.update-status');
+
         Route::resource('units', 'Units\UnitController')->except(['show', 'destroy']);
         Route::post('units/updateactive', 'Units\UnitController@updateStatus')->name('units.updateStatus');
 
@@ -165,7 +178,7 @@ Route::middleware(['auth'])->group(
         Route::get('change_request2/cr_pending_cap', 'ChangeRequest\ChangeRequestController@cr_pending_cap')->name('cr_pending_cap');
 
         Route::get('dvision_manager_cr/unreadNotifications', 'ChangeRequest\ChangeRequestController@unreadNotifications');
-        Route::get('change_request1/asd/{group?}', 'ChangeRequest\ChangeRequestController@asd')->name('change_request.asd');
+        Route::get('change_request1/selectUserGroup/{group?}', 'ChangeRequest\ChangeRequestController@selectUserGroup')->name('change_request.selectUserGroup');
         Route::post('/select-group/{group}', 'ChangeRequest\ChangeRequestController@selectGroup')->name('select_group');
 
 
@@ -230,10 +243,24 @@ Route::middleware(['auth'])->group(
 
         // KPI Routes
         Route::get('kpis/export', 'KPIs\\KPIController@export')->name('kpis.export');
+        Route::get('kpis/get-initiatives', 'KPIs\KPIController@getInitiativesByPillar')->name('kpis.get-initiatives');
+        Route::get('kpis/get-sub-initiatives', 'KPIs\KPIController@getSubInitiativesByInitiative')->name('kpis.get-sub-initiatives');
+        Route::post('kpis/check-requester-email', 'KPIs\KPIController@checkRequesterEmail')->name('kpis.check-requester-email');
         Route::resource('kpis', KPIs\KPIController::class);
         Route::get('kpis/{kpi}/search-cr', 'KPIs\KPIController@searchChangeRequest')->name('kpis.search-cr');
         Route::post('kpis/{kpi}/attach-cr', 'KPIs\KPIController@attachChangeRequest')->name('kpis.attach-cr');
         Route::delete('kpis/{kpi}/detach-cr/{cr}', 'KPIs\KPIController@detachChangeRequest')->name('kpis.detach-cr');
+        Route::get('kpis/{kpi}/export-crs', 'KPIs\KPIController@exportChangeRequests')->name('kpis.export-crs');
+        
+        // KPI Project Routes
+        Route::post('kpis/{kpi}/projects/{project}', 'KpiProject\KpiProjectController@attach')->name('kpi-projects.attach');
+        Route::delete('kpis/{kpi}/projects/{project}', 'KpiProject\KpiProjectController@detach')->name('kpi-projects.detach');
+
+        // Project Manager KPI Routes
+        Route::resource('projects', Project\ProjectController::class);
+        Route::post('projects/delete-milestone', 'Project\ProjectController@deleteMilestone')->name('projects.delete-milestone');
+        Route::get('projects-export', 'Project\ProjectController@export')->name('projects.export');
+        Route::get('projects-export/kpi/{kpi}', 'Project\ProjectController@exportByKpi')->name('projects.export-by-kpi');
 
         Route::prefix('reports')->group(function () {
 

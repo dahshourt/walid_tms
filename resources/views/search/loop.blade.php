@@ -3,6 +3,10 @@
     @php
         if ($cr->isOnHold()) {
             $cr_status_name = 'On Hold';
+        } elseif ($cr->isDependencyHold()) {
+            $blockingCrs = $cr->getBlockingCrNumbers();
+            $crList = !empty($blockingCrs) ? ' (CR#' . implode(', CR#', $blockingCrs) . ')' : '';
+            $cr_status_name = 'Design Estimation - Pending Dependency' . $crList;
         } else {
             $cr_status = $cr->getCurrentStatus()?->status;
             $cr_status_name = $cr_status?->status_name;
@@ -160,6 +164,10 @@
                         @php
                             if ($cr->isOnHold()) {
                                 $cr_status_name = 'On Hold';
+                            } elseif ($cr->isDependencyHold()) {
+                                $blockingCrs = $cr->getBlockingCrNumbers();
+                                $crList = !empty($blockingCrs) ? ' (CR#' . implode(', CR#', $blockingCrs) . ')' : '';
+                                $cr_status_name = 'Design Estimation - Pending Dependency' . $crList;
                             } else {
                                 $cr_status = $status->status;
                                 $cr_status_name = $cr_status?->status_name;
