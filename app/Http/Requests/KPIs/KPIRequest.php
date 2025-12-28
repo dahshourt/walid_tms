@@ -3,7 +3,6 @@
 namespace App\Http\Requests\KPIs;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class KPIRequest extends FormRequest
 {
@@ -26,16 +25,25 @@ class KPIRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255', 'unique:kpis,name'],
             'priority' => ['required', 'in:Critical,High,Medium,Low'],
-            'strategic_pillar' => ['required', 'string', 'max:255'],
-            'initiative' => ['required', 'string', 'max:255'],
-            'sub_initiative' => ['nullable', 'string', 'max:255'],
+            'pillar_id' => ['required', 'exists:kpi_pillars,id'],
+            'initiative_id' => ['required', 'exists:kpi_initiatives,id'],
+            'sub_initiative_id' => ['nullable', 'exists:kpi_sub_initiatives,id'],
             'bu' => ['required', 'string', 'max:255'],
             'sub_bu' => ['nullable', 'string', 'max:255'],
-            'target_launch_quarter' => ['required', 'in:Q1,Q2,Q3,Q4'],
-            'target_launch_year' => ['required', 'integer', 'min:2000', 'max:2100'],
-            'type' => ['required', 'in:Test Type 1,Test Type 2,Test Type 3,Test Type 4'],
+            // Timeline fields are shown for both classifications,
+            // but only required when classification is CR
+            'target_launch_quarter' => ['required_if:classification,CR', 'nullable', 'in:Q1,Q2,Q3,Q4'],
+            'target_launch_year' => ['required_if:classification,CR', 'nullable', 'integer', 'min:2000', 'max:2100'],
+            // Target CRs are used only for CR classification (optional/required_if)
+            'target_cr_count' => ['nullable', 'integer', 'min:0', 'required_if:classification,CR'],
+            // Projects are used only for PM classification
+            'project_ids' => ['required_if:classification,PM', 'nullable', 'array'],
+            'project_ids.*' => ['integer', 'exists:projects,id'],
+            'type_id' => ['required', 'exists:kpi_types,id'],
             'kpi_brief' => ['required', 'string'],
             'classification' => ['required', 'in:CR,PM'],
+            // Requester email is optional; validate only if present
+            'requester_email' => ['nullable', 'email', 'max:255'],
             // 'status' => ['required', 'in:Open,In Progress,Delivered'],
             'created_by' => ['nullable', 'exists:users,id'],
         ];
@@ -50,20 +58,25 @@ class KPIRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                'unique:kpis,name,'.$kpiId,
+                'unique:kpis,name,' . $kpiId,
             ],
             'priority' => ['required', 'in:Critical,High,Medium,Low'],
-            'strategic_pillar' => ['required', 'string', 'max:255'],
-            'initiative' => ['required', 'string', 'max:255'],
-            'sub_initiative' => ['nullable', 'string', 'max:255'],
+            'pillar_id' => ['required', 'exists:kpi_pillars,id'],
+            'initiative_id' => ['required', 'exists:kpi_initiatives,id'],
+            'sub_initiative_id' => ['nullable', 'exists:kpi_sub_initiatives,id'],
             'bu' => ['required', 'string', 'max:255'],
             'sub_bu' => ['nullable', 'string', 'max:255'],
-            'target_launch_quarter' => ['required', 'in:Q1,Q2,Q3,Q4'],
-            'target_launch_year' => ['required', 'integer', 'min:2000', 'max:2100'],
-            'type' => ['required', 'in:Test Type 1,Test Type 2,Test Type 3,Test Type 4'],
+            // Timeline fields are shown for both classifications,
+            // but only required when classification is CR
+            'target_launch_quarter' => ['required_if:classification,CR', 'nullable', 'in:Q1,Q2,Q3,Q4'],
+            'target_launch_year' => ['required_if:classification,CR', 'nullable', 'integer', 'min:2000', 'max:2100'],
+            // Target CRs are used only for CR classification (optional/required_if)
+            'target_cr_count' => ['nullable', 'integer', 'min:0', 'required_if:classification,CR'],
+            'type_id' => ['required', 'exists:kpi_types,id'],
             'kpi_brief' => ['required', 'string'],
             'classification' => ['required', 'in:CR,PM'],
             // 'status' => ['required', 'in:Open,In Progress,Delivered'],
+            'requester_email' => ['nullable', 'email', 'max:255'],
             'created_by' => ['nullable', 'exists:users,id'],
         ];
     }

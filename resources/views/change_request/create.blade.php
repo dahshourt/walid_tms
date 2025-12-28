@@ -82,6 +82,11 @@
 @endsection
 
 @push('script')
+
+
+
+
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const form = document.querySelector("form");
@@ -89,7 +94,7 @@
         form.addEventListener("submit", function (event) {
         
             const submitButton = form.querySelector("button[type='submit']");
-            submitButton.disabled = true;
+            //submitButton.disabled = true;
         });
     });
 </script>
@@ -145,7 +150,7 @@
 					dataType: 'JSON',
 					type: 'POST',
 					success: function ( data ) {
-						if (data.valid) {
+						if (data.valid) { 
 							//submitButton.disabled = false;
 							submitButton.prop("disabled", false);
 							divisionManagerInput.removeClass('is-invalid');
@@ -155,7 +160,7 @@
 							emailFeedback.addClass('text-success');
 						}
 						else {
-								
+								 
 							submitButton.prop("disabled", true);
 							divisionManagerInput.removeClass('is-valid');
 							divisionManagerInput.addClass('is-invalid');
@@ -173,6 +178,35 @@
 	
 	
 </script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const applicationIdField = document.querySelector('[name="application_id"]');
+    const divisionManagerField = document.getElementById("division_manager");
+
+    function handleApplicationId() {
+
+        const selectedText =
+            applicationIdField.options[applicationIdField.selectedIndex].text;
+
+        if (selectedText === "TMS") {
+            divisionManagerField.value = "tarek.tolba@te.eg";
+            divisionManagerField.readOnly = true;    
+        } else {
+            divisionManagerField.value = "";
+            divisionManagerField.readOnly = false;
+        }
+    }
+
+    // Run on page load
+    handleApplicationId();
+
+    // Run when application_id changes
+    applicationIdField.addEventListener("change", handleApplicationId);
+});
+</script>
+
 @endpush
 
 

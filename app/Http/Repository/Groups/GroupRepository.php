@@ -73,15 +73,16 @@ class GroupRepository implements GroupRepositoryInterface
     public function update($request, $id)
     {
      
+      
         $group = Group::where('id', $id)->update($request->except('application_id','_method','_token'));
         if(isset($request['application_id']) && !empty($request['application_id']))
         {
-            $this->StoreApplicationGroup($id,$request['application_id']);
+            $this->StoreApplicationGroup($id, $request['application_id']);
         }
-		else
-		{
-			GroupApplications::where('group_id',$group_id)->delete();
-		}
+        else
+        {
+            GroupApplications::where('group_id', $id)->delete();
+        }
         return $group;
     }
 

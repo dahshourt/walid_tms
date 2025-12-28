@@ -21,6 +21,9 @@ use Auth;
 use Illuminate\Support\Arr;
 use App\Events\ChangeRequestUserAssignment;
 use App\Models\ChangeRequest;
+use App\Http\Repository\KPIs\KPIRepository;
+use App\Services\ChangeRequest\CrDependencyService;
+
 
 class ChangeRequestUpdateService
 {
@@ -61,7 +64,19 @@ class ChangeRequestUpdateService
 
     public function update($id, $request)
     {
-        $this->changeRequest_old = Change_request::find($id);
+        //$this->changeRequest_old = Change_request::find($id);
+        $this->changeRequest_old = Change_request::with('kpis')->find($id);
+
+        // 0)Link KPI if selected
+        //dd($request->all());
+        if (isset($request['kpi']) && $request['kpi']) {
+            //dd($request['kpi'], $this->changeRequest_old->cr_no);
+             $kpiRepo = new KPIRepository();
+             $kpiResult = $kpiRepo->attachKpiToChangeRequest($request['kpi'], $this->changeRequest_old->cr_no);
+             if(isset($kpiResult['success']) && !$kpiResult['success']){
+                 return true;
+             }
+        }
 
         // 1) CAB CR gate
         if ($this->handleCabCrValidation($id, $request)) {
@@ -97,6 +112,9 @@ class ChangeRequestUpdateService
 
         // 8) Update CR data (custom fields + main cols)
         $this->updateCRData($id, $request);
+
+        // CR Dependencies (depend_on field - stored in cr_dependencies table not cr custom field)
+        $this->handleDependOn($id, $request);
 
         // 9) Update assignment on current CR status row
         $this->updateStatusAssignments($id, $request);
@@ -139,7 +157,7 @@ class ChangeRequestUpdateService
     public function updateCRData($id, $request)
     {
         $arr = Arr::only($request->all(), $this->getRequiredFields());
-        $fileFields = ['technical_attachments', 'business_attachments', 'cap_users', 'technical_teams'];
+        $fileFields = ['technical_attachments', 'business_attachments', 'cap_users', 'technical_teams', 'depend_on'];
         $data = Arr::except($request->all(), array_merge(['_method'], $fileFields));
 
         $this->handleCustomFieldUpdates($id, $data);
@@ -204,7 +222,8 @@ class ChangeRequestUpdateService
             return false;
         }
 
-        $user_id = Auth::user()->id;
+        //$user_id = Auth::user()->id;
+		$user_id = $request->input('user_id') ?? Auth::user()->id;
         // $cabCr = CabCr::where("cr_id", $id)->where('status', '0')->first();
         $cabCr = CabCr::where('cr_id', $id)->whereRaw('CAST(status AS CHAR) = ?', ['0'])->first();
         $checkWorkflowType = NewWorkFlow::find($request->new_status_id)->workflow_type;
@@ -417,6 +436,13 @@ class ChangeRequestUpdateService
         if ($fieldValue === null) {
             return;
         }
+
+        /*
+        no need will be store on the dependencies table
+        if ($fieldName === 'depend_on') {
+            $this->syncCrDependencies($crId, $fieldValue);
+        }
+        */
     
         $customField = CustomField::where('name', $fieldName)->first();
         
@@ -434,6 +460,43 @@ class ChangeRequestUpdateService
             
             $this->insertOrUpdateChangeRequestCustomField($changeRequestCustomField);
         }
+    }
+
+    /**
+     * Handle depend_on field - syncs CR dependencies to cr_dependencies table
+     * Handles empty array to clear all dependencies
+     */
+    protected function handleDependOn(int $crId, $request): void
+    {
+        // Check if depend_on field was in the form via hidden marker field
+        // This allows clearing dependencies when user deselects all options
+        if ($request->has('depend_on_exists')) {
+            $dependOnValues = $request->input('depend_on', []);
+            
+            // Ensure it's an array
+            if (!is_array($dependOnValues)) {
+                $dependOnValues = empty($dependOnValues) ? [] : [$dependOnValues];
+            }
+            
+            $this->syncCrDependencies($crId, $dependOnValues);
+        }
+    }
+
+    protected function syncCrDependencies(int $crId, $fieldValue): void
+    {
+        $dependsOnCrNos = [];
+        if (is_array($fieldValue)) {
+            $dependsOnCrNos = $fieldValue;
+        } elseif (is_string($fieldValue) && !empty($fieldValue)) {
+            $decoded = json_decode($fieldValue, true);
+            $dependsOnCrNos = is_array($decoded) ? $decoded : [$fieldValue];
+        }
+
+        // Filter out empty values and convert to integers
+        $dependsOnCrNos = array_filter(array_map('intval', $dependsOnCrNos));
+
+        $dependencyService = new CrDependencyService();
+        $dependencyService->syncDependencies($crId, $dependsOnCrNos);
     }
 
     protected function insertOrUpdateChangeRequestCustomField(array $data): void

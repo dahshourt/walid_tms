@@ -13,6 +13,7 @@ use App\Models\CustomField;
 use App\Traits\ChangeRequest\ChangeRequestConstants;
 use Auth;
 use Illuminate\Support\Arr;
+use App\Http\Repository\KPIs\KPIRepository;
 
 class ChangeRequestCreationService
 {
@@ -31,12 +32,19 @@ class ChangeRequestCreationService
 
     public function create(array $data): array
     {
+
         $customFieldData = $data;
         $workflow = new NewWorkflowRepository();
         $defaultStatus = $workflow->getFirstCreationStatus($data['workflow_type_id'])->from_status_id;
 
         $preparedData = $this->prepareCreateData($data, $defaultStatus);
         $changeRequest = Change_request::create($preparedData);
+
+        // Link KPI if selected
+        if (isset($data['kpi']) && $data['kpi']) {
+             $kpiRepo = new KPIRepository();
+             $kpiRepo->attachKpiToChangeRequest($data['kpi'], $changeRequest->cr_no);
+        }
 
         $statusData = $this->prepareStatusData($customFieldData, $defaultStatus);
 
