@@ -155,11 +155,11 @@
                                  </div>
                              </span>
                          </label>
-                         <input type="email" class="form-control"
+                        <input type="email" class="{{ $inputClass }}"
                                 name="requester_email" id="requester_email"
                                 value="{{ $row->requester_email ?? old('requester_email') }}"
-                               placeholder="Enter Requester Email (optional)"
-                                >
+                                {{ $isDisabled }}
+                                placeholder="Enter Requester Email (optional)">
                          <div id="requester_email_feedback" class="form-control-feedback mt-1"></div>
                      </div>
                  </div>
@@ -332,12 +332,14 @@
                           placeholder="Enter KPI Brief">{{ $row->kpi_brief ?? old('kpi_brief') }}</textarea>
             </div>
 
-            <div class="form-group">
-                <label class="font-weight-bold">KPI Comment</label>
-                <textarea class="{{ $inputClass }}" name="kpi_comment" rows="4"
-                          {{ $isDisabled }} placeholder="Add a comment (optional)">{{ old('kpi_comment') }}</textarea>
-                <span class="form-text text-muted">This comment will be added to the history logs.</span>
-            </div>
+            @if(! $isView)
+                <div class="form-group">
+                    <label class="font-weight-bold">KPI Comment</label>
+                    <textarea class="{{ $inputClass }}" name="kpi_comment" rows="4"
+                              {{ $isDisabled }} placeholder="Add a comment (optional)">{{ old('kpi_comment') }}</textarea>
+                    <span class="form-text text-muted">This comment will be added to the history logs.</span>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -375,6 +377,10 @@
                 allowClear: true,
                 width: '100%'
             });
+
+            @if($isView)
+                return;
+            @endif
 
             const classificationSelect = $('#classification');
             const projectSelect       = $('#project_id');
