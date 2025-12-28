@@ -66,7 +66,13 @@
 
                         <th scope="row">{{ $item->title }}</th>
                         @if($isNotViewer)
-                            <td>{{ $item->description }}</td>
+                            <td>
+                                <span class="description-preview text-primary"
+                                      data-description="{{ e(json_encode($item->description, JSON_UNESCAPED_UNICODE)) }}"
+                                      role="button">
+                                    {{ \Illuminate\Support\Str::limit($item->description, 50) }}
+                                </span>
+                            </td>
                             <td>{{ $current_status?->name }}</td>
                             <td>{{ $item->requester?->user_name }}</td>
                             <td>{{ $item->department?->name }}</td>
@@ -179,3 +185,53 @@
     </table>
     <!--end: Datatable-->
 </div>
+
+<!-- Description Modal -->
+<div class="modal fade" id="descriptionModal" tabindex="-1" role="dialog" aria-labelledby="descriptionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="descriptionModalLabel">Full Description</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="white-space: pre-wrap;"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light-primary font-weight-bold" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@push('script')
+<script>
+$(document).on('click', '.description-preview', function (event) {
+    event.preventDefault();
+    let fullDescription = $(this).attr('data-description') || '';
+    try {
+        // Decode HTML entities and parse JSON
+        fullDescription = $('<div>').html(fullDescription).text();
+        fullDescription = JSON.parse(fullDescription);
+    } catch (e) {
+        // If parsing fails, use the raw value
+        console.warn('Failed to parse description JSON:', e);
+    }
+    $('#descriptionModal .modal-body').text(fullDescription);
+    $('#descriptionModal').modal('show');
+});
+</script>
+@endpush
+
+@push('css')
+<style>
+.description-preview {
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.description-preview:hover {
+    color: #0056b3 !important;
+}
+</style>
+@endpush
