@@ -970,7 +970,7 @@ class Change_request extends Model
             'id',
             'id',
             'custom_field_value'
-        )->where('change_request_custom_fields.custom_field_name', 'rejection_reason');
+        )->where('change_request_custom_fields.custom_field_name', 'rejection_reason_id');
     }
 
     public function accumulativeMDs(): HasOne

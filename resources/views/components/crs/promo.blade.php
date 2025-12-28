@@ -64,7 +64,6 @@
                         @if($isNotViewer)
                             <td>{{ $item->description }}</td>
                             <td>{{ $current_status?->name }}</td>
-                            <td></td>
                             <td>{{ $item->requester?->user_name }}</td>
                             <td>{{ $item->department?->name }}</td>
                             <td>{{ $item->rejectionReason?->name }}</td>
