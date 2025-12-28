@@ -60,7 +60,7 @@ trait ChangeRequestConstants
      */
     protected function getStatusIds(): array
     {
-        return config('change_request.status_ids', []);
+        return \App\Services\StatusConfigService::loadStatusIds();
     }
 
     /**

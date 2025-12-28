@@ -16,7 +16,12 @@ class KPIRepository implements KPIRepositoryInterface
 
     public function __construct()
     {
-        $this->finalStatuses = [config('change_request.status_ids.Delivered'), config('change_request.status_ids.Closed'), config('change_request.status_ids.Cancel'), config('change_request.status_ids.Reject')];
+        $this->finalStatuses = [
+            \App\Services\StatusConfigService::getStatusId('Delivered'),
+            \App\Services\StatusConfigService::getStatusId('Closed'),
+            \App\Services\StatusConfigService::getStatusId('Cancel'),
+            \App\Services\StatusConfigService::getStatusId('Reject')
+        ];
     }
 
     public function getAll()

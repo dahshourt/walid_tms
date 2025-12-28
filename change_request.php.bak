@@ -71,6 +71,8 @@ return [
     
     // For KAM workflow, you can add a separate key:
     // 'status_ids_kam' => StatusConfigService::loadStatusIdsKam(),
+    
+    'status_ids_check' => 'I am here',
 
     'man_days_status' => [
         "id" => 112,

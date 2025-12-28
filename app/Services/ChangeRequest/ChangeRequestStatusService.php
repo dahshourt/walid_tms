@@ -51,9 +51,9 @@ class ChangeRequestStatusService
 
     public function __construct()
     {
-        self::$PENDING_CAB_STATUS_ID = config('change_request.status_ids.pending_cab');
-        self::$DELIVERED_STATUS_ID = config('change_request.status_ids.Delivered');
-        self::$PENDING_DESIGN_STATUS_ID = config('change_request.status_ids.pending_design');
+        self::$PENDING_CAB_STATUS_ID = \App\Services\StatusConfigService::getStatusId('pending_cab');
+        self::$DELIVERED_STATUS_ID = \App\Services\StatusConfigService::getStatusId('Delivered');
+        self::$PENDING_DESIGN_STATUS_ID = \App\Services\StatusConfigService::getStatusId('pending_design');
         $this->statusRepository = new ChangeRequestStatusRepository();
         $this->mailController = new MailController();
     }
@@ -750,7 +750,7 @@ private function validateStatusChange($changeRequest, $statusData, $workflow)
             $request->new_status_id)->get()->pluck('to_status_id')->toArray();
         //dd($newStatusId);
         $userToNotify = [];
-        if (in_array(config('change_request.status_ids.pending_cd_analysis'), $newStatusId)) {
+        if (in_array(\App\Services\StatusConfigService::getStatusId('pending_cd_analysis'), $newStatusId)) {
             if (!empty($request->cr_member)) {
                 $userToNotify = [$request->cr_member];
             }

@@ -103,12 +103,12 @@ class FinalConfirmationService
 
     private function getRejectStatusId(): int
     {
-        return config('change_request.status_ids.Reject');
+        return \App\Services\StatusConfigService::getStatusId('Reject');
     }
 
     private function getCancelStatusId(): int
     {
-        return config('change_request.status_ids.Cancel');
+        return \App\Services\StatusConfigService::getStatusId('Cancel');
     }
 
     /**

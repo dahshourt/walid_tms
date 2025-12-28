@@ -134,10 +134,10 @@ class ChangeRequestSearchService
             return $status
             && $status->status
             && in_array($status->status->id, [
-                config('change_request.status_ids.pending_cab'),
-                config('change_request.status_ids_kam.pending_cab_kam'),
+                \App\Services\StatusConfigService::getStatusId('pending_cab'),
+                \App\Services\StatusConfigService::getStatusId('pending_cab', ' kam'),
             ]);
-            // return $status && $status->status && $status->status->id == config('change_request.status_ids.pending_cab');
+            // return $status && $status->status && $status->status->id == \App\Services\StatusConfigService::getStatusId('pending_cab');
         });
 
         // Manual pagination
@@ -201,10 +201,10 @@ class ChangeRequestSearchService
             return $status
             && $status->status
             && in_array($status->status->id, [
-                config('change_request.status_ids.business_approval'),
-                config('change_request.status_ids_kam.business_approval_kam'),
+                \App\Services\StatusConfigService::getStatusId('business_approval'),
+                \App\Services\StatusConfigService::getStatusId('business_approval', ' kam'),
             ]);
-            // return $status && $status->status && $status->status->id == config('change_request.status_ids.business_approval');
+            // return $status && $status->status && $status->status->id == \App\Services\StatusConfigService::getStatusId('business_approval');
         });
 
         // Manual pagination
@@ -227,7 +227,7 @@ class ChangeRequestSearchService
         $userId = Auth::user()->id;
         $group = $this->resolveGroup();
         $viewStatuses = $this->getViewStatuses();
-        $viewStatuses[] = config('change_request.status_ids.cr_manager_review');
+        $viewStatuses[] = \App\Services\StatusConfigService::getStatusId('cr_manager_review');
         if ($group == config('change_request.group_ids.promo')) {
             $crs = Change_request::with('Req_status.status')
                 ->whereHas('Req_status', function ($query) use ($viewStatuses) {
@@ -284,12 +284,12 @@ class ChangeRequestSearchService
         $viewStatuses = $this->getViewStatuses($groups, $id);
         $viewStatuses = $statusPromoView->merge($viewStatuses)->unique();
 
-        $viewStatuses->push(config('change_request.status_ids.cr_manager_review'));
+        $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('cr_manager_review'));
         if (request()->has('check_business')) {
-            $viewStatuses->push(config('change_request.status_ids.business_test_case_approval'));
-            $viewStatuses->push(config('change_request.status_ids.business_uat_sign_off'));
-            $viewStatuses->push(config('change_request.status_ids.pending_business'));
-            $viewStatuses->push(config('change_request.status_ids.pending_business_feedback'));
+            $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('business_test_case_approval'));
+            $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('business_uat_sign_off'));
+            $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('pending_business'));
+            $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('pending_business_feedback'));
 
         }
 
@@ -451,7 +451,7 @@ class ChangeRequestSearchService
         $group = $this->resolveGroup($group);
 
         // Check if user is division manager and status is business approval
-        if ($userEmail === $divisionManager && $currentStatus == config('change_request.status_ids.business_approval')) {
+        if ($userEmail === $divisionManager && $currentStatus == \App\Services\StatusConfigService::getStatusId('business_approval')) {
             $group = Group::pluck('id')->toArray();
         }
 

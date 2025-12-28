@@ -736,14 +736,14 @@ class ChangeRequestValidationService
     protected function getStatusIds(): array
     {
         return [
-            'pending_production_deployment' => config('change_request.status_ids.pending_production_deployment', 6),
-            'production_deployment' => config('change_request.status_ids.production_deployment', 7),
-            'approved' => config('change_request.status_ids.approved', 8),
-            'rejected' => config('change_request.status_ids.rejected', 9),
-            'in_progress' => config('change_request.status_ids.in_progress', 3),
-            'completed' => config('change_request.status_ids.completed', 10),
-            'cancelled' => config('change_request.status_ids.cancelled', 11),
-            'approved_implementation_plan' => config('change_request.status_ids.approved_implementation_plan', 116),
+            'pending_production_deployment' => \App\Services\StatusConfigService::getStatusId('pending_production_deployment') ?? 6,
+            'production_deployment' => \App\Services\StatusConfigService::getStatusId('production_deployment') ?? 7,
+            'approved' => \App\Services\StatusConfigService::getStatusId('approved') ?? 8,
+            'rejected' => \App\Services\StatusConfigService::getStatusId('rejected') ?? 9,
+            'in_progress' => \App\Services\StatusConfigService::getStatusId('in_progress') ?? 3,
+            'completed' => \App\Services\StatusConfigService::getStatusId('completed') ?? 10,
+            'cancelled' => \App\Services\StatusConfigService::getStatusId('cancelled') ?? 11,
+            'approved_implementation_plan' => \App\Services\StatusConfigService::getStatusId('approved_implementation_plan') ?? 116,
             'pending_uat' => config('change_request.parked_status_ids.pending_uat', 78),
             'promo_closure' => config('change_request.parked_status_ids.cancelled', 129),
         ];
