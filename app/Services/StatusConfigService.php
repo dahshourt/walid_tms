@@ -67,17 +67,7 @@ class StatusConfigService
                 }
             }
 
-            if (! empty($notFound)) {
-                self::safeLog('warning', 'The following statuses were not found in the database', [
-                    'statuses' => $notFound,
-                    'suffix'   => $suffix,
-                ]);
-            }
-
-            self::safeLog('info', 'Successfully loaded statuses', [
-                'count'  => count($found),
-                'suffix' => $suffix,
-            ]);
+            
 
             return $result;
         } catch (\Throwable $e) {
