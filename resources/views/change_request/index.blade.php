@@ -6,15 +6,6 @@
         $user_group = session()->has('current_group') ? session('current_group') : auth()->user()->defualt_group->id;
         $user_group =\App\Models\Group::find($user_group);
         $user_is_not_viewer = ! ($roles_name->count() === 1 && $roles_name->doesntContain('Viewer'));
-
-        $columns_per_workflow_type = [
-            3 => [
-
-            ],
-            5 => [
-
-            ]
-        ];
     @endphp
 
         <!--begin::Content-->
