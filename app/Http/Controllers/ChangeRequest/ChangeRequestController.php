@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Http\Controllers\ChangeRequest;
 
 use App\Factories\Applications\ApplicationFactory;
@@ -441,10 +440,10 @@ class ChangeRequestController extends Controller
 
         $current_status = $cr->getCurrentStatus()->new_status_id;
 
-        if ($current_status != config('change_request.status_ids.business_approval')) {
+        if ($current_status != \App\Services\StatusConfigService::getStatusId('business_approval')) {
             $rejectStatuses = [
-                config('change_request.status_ids.Reject'),
-                config('change_request.status_ids_kam.Reject_kam'),
+                \App\Services\StatusConfigService::getStatusId('Reject'),
+                \App\Services\StatusConfigService::getStatusId('Reject', ' kam'),
             ];
 
             $message = in_array($current_status, $rejectStatuses)
@@ -641,12 +640,12 @@ class ChangeRequestController extends Controller
             ->value('new_status_id');
 
         if (!in_array($current_status, [
-                config('change_request.status_ids.business_approval'),
-                config('change_request.status_ids_kam.business_approval_kam'),
+                \App\Services\StatusConfigService::getStatusId('business_approval'),
+                \App\Services\StatusConfigService::getStatusId('business_approval', ' kam'),
             ])) {
             $rejectStatuses = [
-                config('change_request.status_ids.Reject'),
-                config('change_request.status_ids_kam.Reject_kam'),
+                \App\Services\StatusConfigService::getStatusId('Reject'),
+                \App\Services\StatusConfigService::getStatusId('Reject', ' kam'),
             ];
 
             $message = in_array($current_status, $rejectStatuses)

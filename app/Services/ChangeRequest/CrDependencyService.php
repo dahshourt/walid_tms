@@ -1,7 +1,7 @@
 <?php
 
-namespace App\Services\ChangeRequest;
 
+namespace App\Services\ChangeRequest;
 use App\Models\Change_request;
 use App\Models\CrDependency;
 use App\Models\NewWorkFlow;
@@ -36,8 +36,8 @@ class CrDependencyService
 
     public function __construct()
     {
-        self::$PENDING_CAB_STATUS_ID = config('change_request.status_ids.pending_cab');
-        self::$DELIVERED_STATUS_ID = config('change_request.status_ids.Delivered');
+        self::$PENDING_CAB_STATUS_ID = \App\Services\StatusConfigService::getStatusId('pending_cab');
+        self::$DELIVERED_STATUS_ID = \App\Services\StatusConfigService::getStatusId('Delivered');
         $this->statusService = new ChangeRequestStatusService();
     }
 

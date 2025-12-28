@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Models;
-
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -83,7 +82,7 @@ class Change_request extends Model
     public function scopeNotInFinalState(Builder $query): Builder
     {
         return $query->whereHas('currentRequestStatuses', function ($query) {
-            return $query->whereNotIn('new_status_id', [config('change_request.status_ids.Reject'), config('change_request.status_ids.Cancel'), config('change_request.parked_status_ids.promo_closure')]);
+            return $query->whereNotIn('new_status_id', [\App\Services\StatusConfigService::getStatusId('Reject'), \App\Services\StatusConfigService::getStatusId('Cancel'), config('change_request.parked_status_ids.promo_closure')]);
         });
     }
 
@@ -898,7 +897,7 @@ class Change_request extends Model
     {
         $current_status = $this->currentRequestStatuses->new_status_id;
 
-        return in_array($current_status, [config('change_request.status_ids.Reject'), config('change_request.status_ids.Cancel')]);
+        return in_array($current_status, [\App\Services\StatusConfigService::getStatusId('Reject'), \App\Services\StatusConfigService::getStatusId('Cancel')]);
     }
 
     public function resDeveloper()
@@ -1078,10 +1077,10 @@ class Change_request extends Model
     {
         // Get final status IDs from config (same as KPIRepository)
         $finalStatuses = [
-            config('change_request.status_ids.Delivered'),
-            config('change_request.status_ids.Closed'),
-            config('change_request.status_ids.Cancel'),
-            config('change_request.status_ids.Reject'),
+            \App\Services\StatusConfigService::getStatusId('Delivered'),
+            \App\Services\StatusConfigService::getStatusId('Closed'),
+            \App\Services\StatusConfigService::getStatusId('Cancel'),
+            \App\Services\StatusConfigService::getStatusId('Reject'),
         ];
         
         $targetWorkflowTypeId = 3;
