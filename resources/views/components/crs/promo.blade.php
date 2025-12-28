@@ -8,7 +8,7 @@
     <table class="table table-bordered">
         <thead>
         <tr>
-            <th>Promo ID</th>
+            <th class="text-center">Promo ID</th>
             <th>Promo Subject</th>
             @if($isNotViewer)
                 <th>Promo Description</th>
@@ -43,21 +43,25 @@
                 @if(!$view_technical_team_flag || ($view_technical_team_flag && in_array($default_group, $assigned_technical_teams) && $check_if_status_active))
 
                     <tr class="cr-row" data-toggle-details="1" data-cr-id="{{ $item->id }}">
-                        <th scope="row" class="align-middle">
-                            <button type="button" class="btn btn-clean btn-icon btn-sm mr-2 js-toggle-cr-details"
-                                    data-cr-id="{{ $item->id }}" aria-expanded="false" title="Toggle row details">
-                                <i class="la la-angle-down"></i>
-                            </button>
+                        <th scope="row" class="align-middle text-center">
+                            <div class="d-flex flex-column align-items-center justify-content-center">
+                                <button type="button" class="btn btn-clean btn-icon btn-sm mb-1 js-toggle-cr-details"
+                                        data-cr-id="{{ $item->id }}" aria-expanded="false" title="Toggle row details">
+                                    <i class="la la-angle-down"></i>
+                                </button>
 
-                            @can('Edit ChangeRequest')
-                                <a href='{{ url("$route") }}/{{ $item->id }}/edit'>{{ $item->cr_no }}</a>
-                            @else
-                                @can('Show ChangeRequest')
-                                    <a href='{{ url("$route") }}/{{ $item->id }}'>{{ $item->cr_no }} </a>
-                                @else
-                                    {{ $item->cr_no }}
-                                @endcan
-                            @endcan
+                                <div class="d-flex flex-column align-items-center">
+                                    @can('Edit ChangeRequest')
+                                        <a href='{{ url("$route") }}/{{ $item->id }}/edit'>{{ $item->cr_no }}</a>
+                                    @else
+                                        @can('Show ChangeRequest')
+                                            <a href='{{ url("$route") }}/{{ $item->id }}'>{{ $item->cr_no }} </a>
+                                        @else
+                                            {{ $item->cr_no }}
+                                        @endcan
+                                    @endcan
+                                </div>
+                            </div>
                         </th>
 
                         <th scope="row">{{ $item->title }}</th>

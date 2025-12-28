@@ -8,7 +8,7 @@
     <table class="table table-bordered">
         <thead>
         <tr>
-            <th>ID#</th>
+            <th class="text-center">ID#</th>
             <th>Title</th>
             @if($isNotViewer)
                 <th>Status</th>
@@ -67,7 +67,7 @@
                                         @endcan
                                     @endcan
                                     @if($item->isOnGoing())
-                                        <span class="badge badge-success mt-1" 
+                                        <span class="badge badge-success mt-1"
                                               style="font-size: 0.7rem; padding: 0.35rem 0.65rem; font-weight: 500; border-radius: 0.375rem; background: linear-gradient(135deg, #50cd89 0%, #47be7d 100%); box-shadow: 0 2px 4px rgba(80, 205, 137, 0.2);">
                                             On Going
                                         </span>
