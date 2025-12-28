@@ -695,7 +695,7 @@ class ChangeRequestController extends Controller
         $collection = $this->changerequest->my_assignments_crs();
         $title = 'My Assignments';
 
-        return view("{$this->view}.index", compact('collection', 'title'));
+        return view("{$this->view}.my_assignments", compact('collection', 'title'));
     }
 
     /**
