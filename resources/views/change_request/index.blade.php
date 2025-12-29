@@ -69,6 +69,20 @@
                         @php
                             // Filter workflows to only show those with CRs
                             $workflows_with_crs = $active_work_flows->whereIn('id', array_keys($crs_by_work_flow_types));
+                            
+                            // Determine active tab from request query parameters
+                            $active_tab_id = null;
+                            foreach (request()->query() as $key => $value) {
+                                if (str_starts_with($key, 'type_')) {
+                                    $active_tab_id = (int) str_replace('type_', '', $key);
+                                    break;
+                                }
+                            }
+                            
+                            // If no active tab from query, default to first workflow
+                            if ($active_tab_id === null && $workflows_with_crs->count() > 0) {
+                                $active_tab_id = $workflows_with_crs->first()->id;
+                            }
                         @endphp
 
                         @if($workflows_with_crs->count() > 0)
@@ -76,12 +90,15 @@
                             <ul class="nav nav-tabs nav-tabs-line nav-tabs-line-3x nav-tabs-line-primary mb-5"
                                 role="tablist">
                                 @foreach($workflows_with_crs as $index => $workflow)
+                                    @php
+                                        $is_active = $workflow->id === $active_tab_id;
+                                    @endphp
                                     <li class="nav-item">
-                                        <a class="nav-link {{ $index === 0 ? 'active' : '' }}"
+                                        <a class="nav-link {{ $is_active ? 'active' : '' }}"
                                            data-toggle="tab"
                                            href="#workflow_tab_{{ $workflow->id }}"
                                            role="tab"
-                                           aria-selected="{{ $index === 0 ? 'true' : 'false' }}">
+                                           aria-selected="{{ $is_active ? 'true' : 'false' }}">
                                             <span class="nav-text font-weight-bold">{{ $workflow->name }}</span>
                                         </a>
                                     </li>
@@ -92,7 +109,10 @@
                             <!--begin: Tab Content-->
                             <div class="tab-content">
                                 @foreach($workflows_with_crs as $index => $workflow)
-                                    <div class="tab-pane fade {{ $index === 0 ? 'show active' : '' }}"
+                                    @php
+                                        $is_active = $workflow->id === $active_tab_id;
+                                    @endphp
+                                    <div class="tab-pane fade {{ $is_active ? 'show active' : '' }}"
                                          id="workflow_tab_{{ $workflow->id }}"
                                          role="tabpanel">
 
