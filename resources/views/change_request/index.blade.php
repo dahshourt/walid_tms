@@ -141,20 +141,44 @@
 @push('css')
     <style>
         /* Enhanced Tab Styling */
+        .nav-tabs-line-3x {
+            padding: 0.5rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .nav-tabs-line-3x .nav-item {
+            margin-right: 0.75rem;
+        }
+
         .nav-tabs-line-3x .nav-link {
             font-size: 1rem;
-            padding: 1rem 1.5rem;
+            padding: 1rem !important;
             color: #7e8299;
             transition: all 0.3s ease;
+            background-color: transparent;
+            border-radius: 0.5rem 0.5rem 0 0;
+            margin-bottom: -1px;
         }
 
         .nav-tabs-line-3x .nav-link:hover {
             color: #3699ff;
+            background-color: #f1f8ff;
+            transform: translateY(-2px);
         }
 
         .nav-tabs-line-3x .nav-link.active {
-            color: #3699ff;
+            color: #ffffff !important;
             font-weight: 600;
+            background-color: #3699ff !important;
+            border-radius: 0.5rem 0.5rem 0 0;
+            box-shadow: 0 4px 12px rgba(54, 153, 255, 0.25);
+            border-color: #3699ff;
+            padding: 1.5rem 3.5rem;
+            transform: translateY(-2px);
+        }
+
+        .nav-tabs-line-3x .nav-link.active .nav-text {
+            color: #ffffff !important;
         }
 
         .nav-tabs-line-3x .nav-link .badge {
