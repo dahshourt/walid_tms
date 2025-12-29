@@ -153,9 +153,9 @@
         .nav-tabs-line-3x .nav-link {
             font-size: 1rem;
             padding: 1rem !important;
-            color: #7e8299;
+            color: #000000 !important;
             transition: all 0.3s ease;
-            background-color: transparent;
+            background-color: #e4e6ef !important;
             border-radius: 0.5rem 0.5rem 0 0;
             margin-bottom: -1px;
         }
