@@ -9,6 +9,7 @@ use App\Factories\Defect\DefectFactory;
 use App\Factories\NewWorkFlow\NewWorkFlowFactory;
 use App\Factories\Workflow\Workflow_type_factory;
 use App\Http\Controllers\Controller;
+use App\Http\Repository\Workflow\Workflow_type_repository;
 use App\Http\Requests\Change_Request\Api\attachments_CRS_Request;
 use App\Http\Requests\Change_Request\Api\changeRequest_Requests;
 use App\Http\Requests\Change_Request\HoldCRRequest;
@@ -80,9 +81,13 @@ class ChangeRequestController extends Controller
     {
         try {
             $this->authorize('List change requests');
-            $collection = $this->changerequest->getAll();
 
-            return view("{$this->view}.index", compact('collection'));
+            $active_work_flows = app(Workflow_type_repository::class)->getWorkflowsForListCRs();
+            $active_workflows_type_ids = $active_work_flows->pluck('id');
+
+            $crs_by_work_flow_types = $this->changerequest->getAllForLisCRs($active_workflows_type_ids->toArray());
+
+            return view("{$this->view}.index", compact('crs_by_work_flow_types', 'active_work_flows'));
         } catch (AuthorizationException $e) {
             Log::warning('Unauthorized access attempt to change requests list', [
                 'user_id' => auth()->id(),
@@ -332,7 +337,7 @@ class ChangeRequestController extends Controller
         if ($cab_cr_flag) {
             request()->request->add(['cab_cr_flag' => true]);
         }
-        
+
         if (request()->has('check_dm')) {
             $validation = $this->validateDivisionManagerAccess($id);
             if ($validation) {
@@ -386,7 +391,7 @@ class ChangeRequestController extends Controller
     public function update(changeRequest_Requests $request, int $id)
     {
         $this->authorize('Edit ChangeRequest');
-        
+
         DB::beginTransaction();
         try {
             $this->attachmentService->validateAttachments($request);
@@ -455,7 +460,7 @@ class ChangeRequestController extends Controller
 
         try {
             $this->changeRequestService->processDivisionManagerAction($cr, $action, $current_status);
-            
+
             $message = $action === 'approve'
                 ? "CR #{$cr->id} has been successfully approved."
                 : "CR #{$cr->id} has been successfully rejected.";
@@ -474,7 +479,7 @@ class ChangeRequestController extends Controller
         $collection = $this->changerequest->my_assignments_crs();
         $title = 'My Assignments';
 
-        return view("{$this->view}.index", compact('collection', 'title'));
+        return view("{$this->view}.my_assignments", compact('collection', 'title'));
     }
 
     public function my_crs()
@@ -542,7 +547,7 @@ class ChangeRequestController extends Controller
         if ($result['status']) {
             return redirect()->back()->with('success', $result['message']);
         }
-        
+
         return redirect()->back()->with('error', $result['message']);
     }
 
@@ -598,7 +603,7 @@ class ChangeRequestController extends Controller
 
     public function search_result(int $id)
     {
-        $cr = '39390'; 
+        $cr = '39390';
 
         return response()->json(['data' => $cr], 200);
     }
@@ -659,21 +664,21 @@ class ChangeRequestController extends Controller
         }
 
         try {
-            // Note: The original code used a direct update here instead of the helper method in some cases, 
+            // Note: The original code used a direct update here instead of the helper method in some cases,
             // but the service method should handle it if we pass the right params.
             // However, the original code had specific logic for this method.
             // For now, I'll use the service method which encapsulates the logic.
-            
+
             // Wait, the original handleDivisionManagerAction1 used 'workflow' param as new_status_id directly.
             // The service method processDivisionManagerAction calculates the new status ID.
             // I should probably use a dedicated method or update the service to support this.
             // But looking at the code, it seems this method is for "approved_active" route which might be different.
-            
+
             // Let's use the repo directly here as it was in the original, or add a specific method to service.
             // Since I didn't add a specific method for this exact logic (which takes 'workflow' as ID), I'll implement it here using repo for now
             // or better, add it to service?
             // The logic is simple enough: update status to $workflow.
-            
+
             $repo = new \App\Http\Repository\ChangeRequest\ChangeRequestRepository();
             $updateRequest = new Request([
                 'old_status_id' => $current_status,
@@ -822,7 +827,7 @@ class ChangeRequestController extends Controller
         DB::beginTransaction();
         try {
             $id = Change_request::where('cr_no', $request->cr_number)->firstOrFail()->id;
-            
+
             $cr_id = $this->changerequest->updateTestableFlag($id, $request);
 
             if ($cr_id === false) {
@@ -902,7 +907,7 @@ class ChangeRequestController extends Controller
         DB::beginTransaction();
         try {
             $id = Change_request::where('cr_no', $request->cr_number)->firstOrFail()->id;
-            
+
             $cr_id = $this->changerequest->addFeedback($id, $request);
 
             if ($cr_id === false) {
