@@ -57,7 +57,7 @@ class HomeController extends Controller
          }*/
 
         $kpiData = [];
-        $user_has_kpi_chart_permission = auth()->user()->can('view kpi chart');
+        $user_has_kpi_chart_permission = auth()->user()->can('View kpi chart');
         if ($user_has_kpi_chart_permission) {
             // Fetch aggregated KPI counts per status and year
             $kpiData = $this->getKpiStatistics();
