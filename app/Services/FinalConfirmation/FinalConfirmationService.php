@@ -121,14 +121,11 @@ class FinalConfirmationService
 
             $action_name = $newStatusId === 19 ? 'rejected' : 'cancelled';
 
-            $workflows_reject_and_cancel_ids = [
-                19 => 35,
-                82 => 161,
-            ];
+            $workflows_reject_and_cancel_id = config('change_request.workflows_reject_and_cancel_id');
 
             $updateRequest = new Request([
                 'old_status_id' => $oldStatusId,
-                'new_status_id' => $workflows_reject_and_cancel_ids[$newStatusId],
+                'new_status_id' => $workflows_reject_and_cancel_id[$newStatusId],
                 'user_id' => $userId,
                 'is_final_confirmation' => true,
                 'action' => $action_name,

@@ -68,13 +68,13 @@ return [
     |
     */
     // 'status_ids' => StatusConfigService::loadStatusIds(),
-    
+
     // For KAM workflow, you can add a separate key:
     // 'status_ids_kam' => StatusConfigService::loadStatusIdsKam(),
 
     'man_days_status' => [
-        "id" => 112,
-        "name" => "Set MD's  & Prerequisites" 
+        'id' => 112,
+        'name' => "Set MD's  & Prerequisites",
     ],
 
     'parked_status_ids' => [
@@ -107,10 +107,10 @@ return [
         'rollback' => 134,
     ],
 
-    'need_technical_attachments_statuses' =>[
-        'pending_testing' => "Pending Testing",
-        'test_case_approval' => "Test Case Approval",
-        'uat_sign_off' => "UAT Sign Off",
+    'need_technical_attachments_statuses' => [
+        'pending_testing' => 'Pending Testing',
+        'test_case_approval' => 'Test Case Approval',
+        'uat_sign_off' => 'UAT Sign Off',
     ],
 
     /*
@@ -349,5 +349,8 @@ return [
         'chunk_size' => 1000,
     ],
 
+    'workflows_reject_and_cancel_id' => [
+        19 => 35,
+        82 => 161,
+    ],
 ];
-
