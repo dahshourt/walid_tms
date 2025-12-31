@@ -12,12 +12,12 @@ use App\Models\DivisionManagers;
 use App\Models\Log;
 use App\Models\NeedDownTime;
 use App\Models\NewWorkFlow;
+use App\Models\NewWorkFlowStatuses;
 use App\Models\Priority;
 use App\Models\Rejection_reason;
+use App\Models\Status;
 use App\Models\Unit;
 use App\Models\User;
-use App\Models\NewWorkFlowStatuses;
-use App\Models\Status;
 use Auth;
 use Illuminate\Support\Str;
 
@@ -119,7 +119,7 @@ class LogRepository implements LogRepositoryInterface
 
         $customFieldMap = $customFields->mapWithKeys(function ($cf) use ($request) {
 
-            if(! $request->{$cf->name} || ! array_key_exists($cf->name, $request->all())) {
+            if (! $request->{$cf->name} || ! array_key_exists($cf->name, $request->all())) {
                 return [];
             }
 
@@ -130,15 +130,8 @@ class LogRepository implements LogRepositoryInterface
             $base = [];
 
             if ($cf->type === 'multiselect') {
-
-                // if ($cf->name === 'cap_users') {
-                //     $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name}, 'user_id')?->load('user');
-                //     $rest_of_message = $data?->pluck('user.name')?->unique()?->implode(', ');
-                // } else {
-                    $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name});
-                    $rest_of_message = $data?->implode(', ');
-                //}
-
+                $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name});
+                $rest_of_message = $data?->implode(', ');
                 $message .= " '$rest_of_message'";
                 $base['already_has_message'] = true;
             } elseif ($cf->type === 'select') {
@@ -184,7 +177,9 @@ class LogRepository implements LogRepositoryInterface
                         } elseif (array_key_exists('already_has_message', $info)) {
                             $message = $info['message'];
                         } else {
-							if(is_array($newValue))  $newValue = implode(' , ', $newValue);
+                            if (is_array($newValue)) {
+                                $newValue = implode(' , ', $newValue);
+                            }
 
                             if ($field === 'testable') {
                                 $newValue = $request->get('testable') === '1' ? 'Testable' : 'Not Testable';
@@ -193,7 +188,7 @@ class LogRepository implements LogRepositoryInterface
                             $message = $info['message'] . " \"$newValue\"";
                         }
 
-                    }  else {
+                    } else {
                         if ($info['message']) {
                             $message = $info['message'] . " \"$newValue\"";
                         } else {
@@ -246,7 +241,7 @@ class LogRepository implements LogRepositoryInterface
             $workflow = NewWorkFlow::find($request->new_status_id);
 
             $status_title = null;
-            if ($workflow && !empty($workflow->to_status_label)) {
+            if ($workflow && ! empty($workflow->to_status_label)) {
                 $status_title = $workflow->to_status_label;
             }
 
@@ -254,10 +249,16 @@ class LogRepository implements LogRepositoryInterface
             $newStatusesNames = Status::whereIn('id', $newStatusesIds)->pluck('status_name')->toArray();
             $actualStatuses = implode(', ', $newStatusesNames);
 
-            if ($status_title && $request->missing('hold')) {
+            if ($status_title && $request->missing('hold') && $request->missing('is_final_confirmation')) {
                 $this->createLog($log, $id, $user->id, "Change Request Status changed to '$status_title' by {$user->user_name} (Actual Status: $actualStatuses)");
             } else {
-                $this->createLog($log, $id, $user->id, "Change Request Status changed to '$actualStatuses' by {$user->user_name}");
+                $log_message = "Change Request Status changed to '$actualStatuses' by '$user->user_name'";
+
+                if ($request->has('is_final_confirmation')) {
+                    $log_message .= ' from Administration';
+                }
+
+                $this->createLog($log, $id, $user->id, $log_message);
             }
             /*
             $workflow = NewWorkFlow::find($request->new_status_id);
@@ -265,12 +266,12 @@ class LogRepository implements LogRepositoryInterface
                 ? $workflow->to_status_label
                 : $workflow->workflowstatus[0]->to_status->status_name;
             */
-            //$this->createLog($log, $id, $user->id, "Change Request Status changed to '$status_title' by {$user->user_name}");
+            // $this->createLog($log, $id, $user->id, "Change Request Status changed to '$status_title' by {$user->user_name}");
         }
 
         if ($request->hold === 1) {
             $this->createLog($log, $id, $user->id, "CR Held by $user->user_name");
-        } else if ($request->hold === 0) {
+        } elseif ($request->hold === 0) {
             $this->createLog($log, $id, $user->id, "CR unheld by $user->user_name");
         }
 
@@ -307,12 +308,10 @@ class LogRepository implements LogRepositoryInterface
             $this->createLog($logRepo, $crId, $user->id, "Issue $durationField manually set to '{$request->$durationField} H' by {$user->user_name}");
         }
 
-        if(isset($request->$startField) && isset($request->$endField))
-        {
+        if (isset($request->$startField) && isset($request->$endField)) {
             $startLabel = Str::of($startField)->replace('_', ' ')->title();
             $endLabel = Str::of($endField)->replace('_', ' ')->title();
             $this->createLog($logRepo, $crId, $user->id, "Issue $startLabel set to '{$request->$startField}' and $endLabel set to '{$request->$endField}' by {$user->user_name}");
         }
     }
-
 }
