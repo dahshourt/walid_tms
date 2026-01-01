@@ -153,13 +153,59 @@ class ChangeRequestUpdateService
      * ====================================================================== */
     public function updateCRData($id, $request)
     {
+        // Get only the required fields for direct update
         $arr = Arr::only($request->all(), $this->getRequiredFields());
         $fileFields = ['technical_attachments', 'business_attachments', 'cap_users', 'technical_teams'];
+        
+        // Get all data except method and file fields for custom field processing
         $data = Arr::except($request->all(), array_merge(['_method'], $fileFields));
 
+        // Filter out disabled fields
+        $data = $this->filterDisabledFields($data);
+
+        // Update the main CR record with required fields
+        $result = Change_request::where('id', $id)->update($arr);
+
+        // Handle custom field updates (including need_bi)
         $this->handleCustomFieldUpdates($id, $data);
 
-        return Change_request::where('id', $id)->update($arr);
+        return $result;
+    }
+    
+    /**
+     * Filter out disabled fields from the request data
+     */
+    protected function filterDisabledFields($data)
+    {
+        // Get all custom fields that are disabled
+        $disabledFields = [];
+        
+        // Check for disabled fields in the request
+        if (isset($data['custom_fields']) && is_array($data['custom_fields'])) {
+            foreach ($data['custom_fields'] as $fieldName => $value) {
+                $field = CustomField::where('name', $fieldName)->first();
+                if ($field && $field->type === 'checkbox') {
+                    $fieldConfig = $field->custom_field_group->first();
+                    if ($fieldConfig && $fieldConfig->enable == 0) {
+                        $disabledFields[] = $fieldName;
+                    }
+                }
+            }
+            
+            // Remove disabled fields from the custom_fields array
+            foreach ($disabledFields as $field) {
+                unset($data['custom_fields'][$field]);
+            }
+        }
+        
+        // Also check direct fields (legacy support)
+        foreach ($data as $key => $value) {
+            if (in_array($key, $disabledFields)) {
+                unset($data[$key]);
+            }
+        }
+        
+        return $data;
     }
 
     /**

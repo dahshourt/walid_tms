@@ -49,8 +49,10 @@ class ChangeRequestStatusService
     {
         try {
             DB::beginTransaction();
+          
 
             $statusData = $this->extractStatusData($request);
+            
             $workflow = $this->getWorkflow($statusData);
             $changeRequest = $this->getChangeRequest($changeRequestId);
             $userId = $this->getUserId($changeRequest, $request);

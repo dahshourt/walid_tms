@@ -459,11 +459,13 @@ class ChangeRequestController extends Controller
      */
     public function edit(int $id, bool $cab_cr_flag = false)
     {
+       
         $this->authorize('Edit ChangeRequest');
 
         if ($cab_cr_flag) {
             request()->request->add(['cab_cr_flag' => true]);
         }
+       
         // Validate division manager access if requested
         if (request()->has('check_dm')) {
             $validation = $this->validateDivisionManagerAccess($id);
@@ -473,6 +475,7 @@ class ChangeRequestController extends Controller
         } else {
             if (! $cab_cr_flag) {
                 $cr = $this->changerequest->find($id);
+             
                 if (! $cr) {
                     return redirect()->to('/change_request')->with('status', 'You have no access to edit this CR');
                 }
@@ -1660,7 +1663,19 @@ class ChangeRequestController extends Controller
             ->where('type', '2')
             ->pluck('group_id')
             ->toArray();
-        $assignment_users = UserFactory::index()->GetAssignmentUsersByViewGroups($view_by_groups);
+            
+        // Check if any of the custom fields is 'ui_ux_member'
+        $customFieldName = null;
+        if (isset($CustomFields)) {
+            foreach ($CustomFields as $field) {
+                if ($field->CustomField->name === 'ui_ux_member') {
+                    $customFieldName = 'ui_ux_member';
+                    break;
+                }
+            }
+        }
+        
+        $assignment_users = UserFactory::index()->GetAssignmentUsersByViewGroups($view_by_groups, $customFieldName);
 
         $man_day = $cr->change_request_custom_fields
             ->where('custom_field_name', 'man_days')

@@ -35,6 +35,31 @@
         @endforeach
     @endif
 
+@if($item->CustomField->name == "ui_ux_member")
+    @php
+        $userRepository = app()->make(\App\Http\Repository\Users\UserRepository::class);
+        $uxItUsers = $userRepository->getUxItGroupUsers();
+        $values = collect(); // Empty collection to prevent other users from being shown
+    @endphp
+    
+    @foreach($uxItUsers as $user)
+        <option value="{{ $user->id }}" {{ old($user->user_name, $custom_field_value) == $user->id ? 'selected' : '' }}>
+            {{ $user->name }} ({{ $user->user_name }})
+        </option>
+    @endforeach
+@else
+    @php
+        $values = $item->CustomField->getCustomFieldValue();
+        
+        // Filter to show only active requester departments
+        if ($item->CustomField->name === 'requester_department') {
+            $values = $values->filter(function($value) {
+                return $value->active == 1;
+            });
+        }
+    @endphp
+@endif
+
     @php
         $values = $item->CustomField->getCustomFieldValue();
         

@@ -114,7 +114,34 @@ $(window).on("load", function () {
 
  $(window).on("load", function () {
     
-    $(".field_cap_users").hide();
+    function updateCapUsersVisibility() {
+        const statusField = document.querySelector('select[name="new_status_id"]');
+        if (statusField) {
+            const selectedText = statusField.options[statusField.selectedIndex].text;
+            
+            // Show CAP users for "Request Vendor MDS" status
+            if (selectedText === "Request Vendor MDS") {
+                $(".field_cap_users").show();
+            } else {
+                $(".field_cap_users").hide();
+            }
+        }
+    }
+
+    // Initialize visibility
+    updateCapUsersVisibility();
+    
+    // Update on status change
+    const statusField = document.querySelector('select[name="new_status_id"]');
+    if (statusField) {
+        statusField.addEventListener("change", updateCapUsersVisibility);
+    }
+    
+    // Update on status change
+    const statusField = document.querySelector('select[name="new_status_id"]');
+    if (statusField) {
+        statusField.addEventListener("change", updateCapUsersVisibility);
+    }
     
     const statusField = document.querySelector('select[name="new_status_id"]');
     // Function to check if the status is "Reject"
