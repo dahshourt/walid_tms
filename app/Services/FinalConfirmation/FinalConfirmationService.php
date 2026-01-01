@@ -1,8 +1,10 @@
 <?php
 
 namespace App\Services\FinalConfirmation;
+
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use App\Http\Repository\FinalConfirmation\FinalConfirmationRepository;
+use App\Services\ChangeRequest\ChangeRequestUpdateService;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -116,17 +118,30 @@ class FinalConfirmationService
     private function updateChangeRequestStatus(int $crId, int $oldStatusId, int $newStatusId, int $userId, string $technical_feedback): bool
     {
         try {
-            // Create request object similar to handleDivisionManagerAction1
+
+            $action_name = $newStatusId === 19 ? 'rejected' : 'cancelled';
+
+            $workflows_reject_and_cancel_id = config('change_request.workflows_reject_and_cancel_id');
+
             $updateRequest = new Request([
                 'old_status_id' => $oldStatusId,
-                'new_status_id' => $newStatusId,
+                'new_status_id' => $workflows_reject_and_cancel_id[$newStatusId],
                 'user_id' => $userId,
+                'is_final_confirmation' => true,
+                'action' => $action_name,
             ]);
 
-            // Use the new final confirmation method
-            $result = $this->changeRequestRepository->updateChangeRequestStatusForFinalConfirmation($crId, $updateRequest, $technical_feedback);
+            app(ChangeRequestRepository::class)->UpateChangeRequestStatus($crId, $updateRequest);
 
-            return $result !== false;
+            $cr_update_service = app(ChangeRequestUpdateService::class);
+
+            $request_data = new Request([
+                'technical_feedback' => $technical_feedback,
+            ]);
+
+            $cr_update_service->updateCRData($crId, $request_data);
+
+            return true;
 
         } catch (Exception $e) {
             Log::error('Error updating change request status in final confirmation', [
