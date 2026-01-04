@@ -1146,7 +1146,7 @@ class Change_request extends Model
                 $query->where('id', '!=', $excludeCrId);
 
                 // to exclude CRs that already depend on this CR
-                $dependentCrIds = CrDependency::where('depends_on_cr_id', $excludeCrId)
+                $dependentCrIds = CrDependency::where('depends_on_cr_id', $excludeCrId)->where('status', '0')
                     ->pluck('cr_id')
                     ->toArray();
 

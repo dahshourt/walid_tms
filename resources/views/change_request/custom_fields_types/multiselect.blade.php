@@ -202,7 +202,7 @@
                         @foreach($dependableCrsList as $dependCr)
                             <option value="{{ $dependCr->cr_no }}" 
                                 {{ in_array((int)$dependCr->cr_no, $selectedDependencies) ? 'selected' : '' }}>
-                                CR#{{ $dependCr->cr_no }}
+                                CR#{{ $dependCr->cr_no }} - {{ $dependCr->title }}
                             </option>
                         @endforeach
                         @break

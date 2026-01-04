@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * 
  * Represents a dependency relationship between two Change Requests.
  * When CR A depends on CR B, CR A cannot progress to Design Estimation
- * until CR B reaches Delivered status.
+ * until CR B reaches Delivered OR Reject status.
  *
  * @property int $id
  * @property int $cr_id The CR that has the dependency
