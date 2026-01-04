@@ -17,6 +17,7 @@ return [
         'maintenance' => 3,
         'enhancement' => 4,
         'release' => 5,
+        'vendor' => 11,
     ],
 
     /*
@@ -67,12 +68,12 @@ return [
     | and business logic.
     |
     */
-    'status_ids' => function() {
+    'status_ids' => function () {
         return app()->bound('db') ? app(\App\Services\StatusConfigService::class)::loadStatusIds() : [];
     },
-    
+
     // For KAM workflow, you can add a separate key:
-    'status_ids_kam' => function() {
+    'status_ids_kam' => function () {
         return app()->bound('db') ? app(\App\Services\StatusConfigService::class)::loadStatusIdsKam() : [];
     },
 
@@ -95,6 +96,9 @@ return [
         'promo_closure' => 129,
         'review_uat_results_fb' => 168,
     ],
+    'vendor_parked_status_ids' => [
+        // Add vendor specific parked statuses here
+    ],
     'promo_depend_statuses' => [
         // 'pending_uat' => 78,
         'uat_in_progress' => 173,
@@ -105,7 +109,6 @@ return [
         'pending_uat' => 78,
     ],
     'promo_special_flow_ids' => [
-        'resume_implementation' => 156,
         'resume_implementation' => 156,
         'fix_defect_on_production' => 171,
         'rollback' => 134,
@@ -247,8 +250,20 @@ return [
     'uploads' => [
         'max_file_size' => 10240, // 10MB in KB
         'allowed_extensions' => [
-            'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
-            'jpg', 'jpeg', 'png', 'gif', 'txt', 'zip', 'rar',
+            'pdf',
+            'doc',
+            'docx',
+            'xls',
+            'xlsx',
+            'ppt',
+            'pptx',
+            'jpg',
+            'jpeg',
+            'png',
+            'gif',
+            'txt',
+            'zip',
+            'rar',
         ],
         'storage_disk' => 'local',
         'storage_path' => 'change_requests',
@@ -266,8 +281,16 @@ return [
         'enabled' => true,
         'max_per_request' => 20,
         'types' => [
-            'text', 'textarea', 'select', 'checkbox', 'radio',
-            'date', 'datetime', 'number', 'email', 'url',
+            'text',
+            'textarea',
+            'select',
+            'checkbox',
+            'radio',
+            'date',
+            'datetime',
+            'number',
+            'email',
+            'url',
         ],
     ],
 

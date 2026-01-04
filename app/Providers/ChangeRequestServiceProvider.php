@@ -8,7 +8,7 @@ use App\Services\ChangeRequest\ChangeRequestCreationService;
 use App\Services\ChangeRequest\ChangeRequestEstimationService;
 use App\Services\ChangeRequest\ChangeRequestSchedulingService;
 use App\Services\ChangeRequest\ChangeRequestSearchService;
-use App\Services\ChangeRequest\ChangeRequestStatusService;
+use App\Services\ChangeRequest\Status\ChangeRequestStatusService;
 use App\Services\ChangeRequest\ChangeRequestUpdateService;
 use App\Services\ChangeRequest\ChangeRequestValidationService;
 use Illuminate\Support\ServiceProvider;

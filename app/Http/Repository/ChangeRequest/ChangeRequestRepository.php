@@ -9,7 +9,7 @@ use App\Models\Change_request_statuse;
 use App\Services\ChangeRequest\ChangeRequestCreationService;
 use App\Services\ChangeRequest\ChangeRequestSchedulingService;
 use App\Services\ChangeRequest\ChangeRequestSearchService;
-use App\Services\ChangeRequest\ChangeRequestStatusService;
+use App\Services\ChangeRequest\Status\ChangeRequestStatusService;
 use App\Services\ChangeRequest\ChangeRequestUpdateService;
 use App\Services\ChangeRequest\ChangeRequestValidationService;
 
@@ -33,7 +33,7 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
     {
         $this->creationService = new ChangeRequestCreationService();
         $this->updateService = new ChangeRequestUpdateService();
-        $this->statusService = new ChangeRequestStatusService();
+        $this->statusService = app(ChangeRequestStatusService::class);
         $this->schedulingService = new ChangeRequestSchedulingService();
         $this->searchService = new ChangeRequestSearchService();
         $this->validationService = new ChangeRequestValidationService();

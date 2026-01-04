@@ -23,6 +23,7 @@ use App\Events\ChangeRequestUserAssignment;
 use App\Models\ChangeRequest;
 use App\Http\Repository\KPIs\KPIRepository;
 use App\Services\ChangeRequest\CrDependencyService;
+use App\Services\ChangeRequest\Status\ChangeRequestStatusService;
 
 
 class ChangeRequestUpdateService
@@ -59,7 +60,7 @@ class ChangeRequestUpdateService
         $this->statusRepository = new ChangeRequestStatusRepository();
         $this->estimationService = new ChangeRequestEstimationService();
         $this->validationService = new ChangeRequestValidationService();
-        $this->statusService = new ChangeRequestStatusService();
+        $this->statusService = app(ChangeRequestStatusService::class);
     }
 
     public function update($id, $request)
@@ -175,7 +176,7 @@ class ChangeRequestUpdateService
 
         return $result;
     }
-    
+
     /**
      * Filter out disabled fields from the request data
      */
@@ -183,7 +184,7 @@ class ChangeRequestUpdateService
     {
         // Get all custom fields that are disabled
         $disabledFields = [];
-        
+
         // Check for disabled fields in the request
         if (isset($data['custom_fields']) && is_array($data['custom_fields'])) {
             foreach ($data['custom_fields'] as $fieldName => $value) {
@@ -195,20 +196,20 @@ class ChangeRequestUpdateService
                     }
                 }
             }
-            
+
             // Remove disabled fields from the custom_fields array
             foreach ($disabledFields as $field) {
                 unset($data['custom_fields'][$field]);
             }
         }
-        
+
         // Also check direct fields (legacy support)
         foreach ($data as $key => $value) {
             if (in_array($key, $disabledFields)) {
                 unset($data[$key]);
             }
         }
-        
+
         return $data;
     }
 
