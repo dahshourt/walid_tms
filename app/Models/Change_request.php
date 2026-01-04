@@ -531,6 +531,12 @@ class Change_request extends Model
                 $query->whereHas('currentRequestStatuses', function (Builder $query) use ($value) {
                     $query->whereIn('new_status_id', (array) $value);
                 });
+            })
+            ->when(request()->query('cr_type'), function (Builder $query, $value) {
+                $query->whereHas('changeRequestCustomFields', function ($q) use ($value) {
+                    $q->where('custom_field_name', 'cr_type')
+                      ->whereIn('custom_field_value', (array) $value);
+                });
             });
     }
 

@@ -139,6 +139,13 @@
                                                         @endforeach
                                                     @endif
 
+                                                    @if($customField->name=="cr_type")
+                                                        @foreach ($cr_types as $value)
+                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
+                                                        @endforeach
+                                                    @endif
+
                                                     @if($customField->name=="category_id")
                                                         @foreach ($categories as $value)
                                                             @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
