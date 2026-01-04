@@ -147,20 +147,19 @@
                  </div>
                  <div class="col-md-6">
                      <div class="form-group">
-                         <label class="font-weight-bold">
-                             Requester Email <span class="text-danger">*</span>
+                        <label class="font-weight-bold">
+                            Requester Email
                              <span id="requester-email-loader" class="ml-2" style="display: none;">
                                  <div class="spinner-border spinner-border-sm text-primary" role="status">
                                      <span class="sr-only">Checking...</span>
                                  </div>
                              </span>
                          </label>
-                         <input type="email" class="{{ $isView ? 'form-control-plaintext' : 'form-control' }}"
+                        <input type="email" class="{{ $inputClass }}"
                                 name="requester_email" id="requester_email"
                                 value="{{ $row->requester_email ?? old('requester_email') }}"
-                                {{ $isView || isset($row) ? 'disabled' : '' }}
-                                placeholder="Enter Requester Email"
-                                style="{{ $isView || isset($row) ? 'background-color: #f3f6f9; opacity: 0.65;' : '' }}">
+                                {{ $isDisabled }}
+                                placeholder="Enter Requester Email (optional)">
                          <div id="requester_email_feedback" class="form-control-feedback mt-1"></div>
                      </div>
                  </div>
@@ -249,8 +248,8 @@
         </div>
     </div>
 
-    <!-- Section: Timeline (CR only) -->
-    <div class="card card-custom card-stretch gutter-b" id="timeline-card" style="{{ $isPm ? 'display:none;' : '' }}">
+    <!-- Section: Timeline (Always visible for both PM and CR) -->
+    <div class="card card-custom card-stretch gutter-b" id="timeline-card">
         <div class="card-header border-0 pt-5">
             <h3 class="card-title font-weight-bolder">Timeline</h3>
         </div>
@@ -297,20 +296,22 @@
                                 min="0"
                                 placeholder="Enter Target Numbers of CRs">
                         </div>
-                        <div id="timeline-project-wrapper" style="display: none;">
-                            <div class="form-group mb-0">
-                                <label class="font-weight-bold">Project <span class="text-danger">*</span></label>
-                                <select class="form-control kt-select2" name="project_ids[]" id="project_id" multiple {{ $isDisabled }}>
-                                    @foreach(($projects ?? []) as $project)
-                                        <option value="{{ $project->id }}"
-                                            {{ in_array($project->id, $selectedProjectIds, true) ? 'selected' : '' }}>
-                                            {{ $project->name }} - {{ $project->status }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <span class="form-text text-muted">Select one or more projects.</span>
+                        @if(! $isEdit)
+                            <div id="timeline-project-wrapper" style="display: none;">
+                                <div class="form-group mb-0">
+                                    <label class="font-weight-bold">Project <span class="text-danger">*</span></label>
+                                    <select class="form-control kt-select2" name="project_ids[]" id="project_id" multiple {{ $isDisabled }}>
+                                        @foreach(($projects ?? []) as $project)
+                                            <option value="{{ $project->id }}"
+                                                {{ in_array($project->id, $selectedProjectIds, true) ? 'selected' : '' }}>
+                                                {{ $project->name }} - {{ $project->status }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <span class="form-text text-muted">Select one or more projects.</span>
+                                </div>
                             </div>
-                        </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -331,12 +332,14 @@
                           placeholder="Enter KPI Brief">{{ $row->kpi_brief ?? old('kpi_brief') }}</textarea>
             </div>
 
-            <div class="form-group">
-                <label class="font-weight-bold">KPI Comment</label>
-                <textarea class="{{ $inputClass }}" name="kpi_comment" rows="4"
-                          {{ $isDisabled }} placeholder="Add a comment (optional)">{{ old('kpi_comment') }}</textarea>
-                <span class="form-text text-muted">This comment will be added to the history logs.</span>
-            </div>
+            @if(! $isView)
+                <div class="form-group">
+                    <label class="font-weight-bold">KPI Comment</label>
+                    <textarea class="{{ $inputClass }}" name="kpi_comment" rows="4"
+                              {{ $isDisabled }} placeholder="Add a comment (optional)">{{ old('kpi_comment') }}</textarea>
+                    <span class="form-text text-muted">This comment will be added to the history logs.</span>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -375,10 +378,16 @@
                 width: '100%'
             });
 
+            @if($isView)
+                return;
+            @endif
+
             const classificationSelect = $('#classification');
-            const projectSelect = $('#project_id');
-            const targetCrWrapper = $('#target-cr-wrapper');
-            const projectWrapper = $('#timeline-project-wrapper');
+            const projectSelect       = $('#project_id');
+            const targetCrWrapper     = $('#target-cr-wrapper');
+            const projectWrapper      = $('#timeline-project-wrapper');
+            const quarterSelect       = $('select[name="target_launch_quarter"]');
+            const yearSelect          = $('select[name="target_launch_year"]');
 
             const toggleTimelineByClassification = () => {
                 const value = classificationSelect.val();
@@ -393,6 +402,9 @@
                             .prop('required', true)
                             .trigger('change.select2');
                     }
+                    // Timeline fields (Quarter/Year) are visible but not required for PM
+                    quarterSelect.prop('required', false);
+                    yearSelect.prop('required', false);
                 } else {
                     // Show Target CRs, hide projects multi-select
                     projectWrapper.hide();
@@ -404,6 +416,9 @@
                             .trigger('change.select2');
                     }
                     targetCrWrapper.show();
+                    // Timeline fields (Quarter/Year) are required for CR
+                    quarterSelect.prop('required', true);
+                    yearSelect.prop('required', true);
                 }
             };
 
@@ -519,52 +534,78 @@
              pillarSelect.trigger('change');
              @endif
 
-             // Email validation for Requester Email (only on create page)
-             @if(!isset($row))
-             const submitButton = $('button[type="submit"]');
-             const emailFeedback = $('#requester_email_feedback');
-             const emailLoader = $('#requester-email-loader');
-             const requesterEmailInput = $("#requester_email");
-             const kpiForm = requesterEmailInput.closest('form');
-             let currentRequest = null;
+            // Email validation for Requester Email
 
-             // Check email on input change with debouncing
-             let emailTimeout;
-             requesterEmailInput.on('paste blur', function () {
-                 clearTimeout(emailTimeout);
-                 abortCurrentRequest();
-                 resetEmailState();
+            const submitButton = $('button[type="submit"]');
+            const emailFeedback = $('#requester_email_feedback');
+            const emailLoader = $('#requester-email-loader');
+            const requesterEmailInput = $("#requester_email");
+            const kpiForm = requesterEmailInput.closest('form');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            let currentRequest = null;
 
-                 emailTimeout = setTimeout(function () {
-                     check_requester_email();
-                 }, 500);
-             });
+            // If the email input is not on the page, skip binding
+            if (requesterEmailInput.length) {
 
-             if (kpiForm.length) {
-                 kpiForm.on('submit', function (event) {
-                     clearTimeout(emailTimeout);
-                     abortCurrentRequest();
-                     resetEmailState();
+            // Check email on input change with debouncing (only if there is a value)
+            let emailTimeout;
+            requesterEmailInput.on('paste blur', function () {
+                clearTimeout(emailTimeout);
+                abortCurrentRequest();
+                resetEmailState();
 
-                     event.preventDefault();
+                if (!requesterEmailInput.val().trim()) {
+                    return; // optional field: skip validation if empty
+                }
 
-                     const request = check_requester_email({requireEmail: true});
+                emailTimeout = setTimeout(function () {
+                    check_requester_email();
+                }, 500);
+            });
 
-                     if (!request || typeof request.done !== 'function') {
-                         return;
-                     }
+            if (kpiForm.length) {
+                kpiForm.on('submit', function (event) {
+                    clearTimeout(emailTimeout);
+                    abortCurrentRequest();
+                    resetEmailState();
 
-                     request.done(function (data) {
-                         if (data && data.valid) {
-                             event.currentTarget.submit();
-                         }
-                     });
+                    const emailVal = requesterEmailInput.val().trim();
 
-                     request.fail(function () {
-                         submitButton.prop("disabled", true);
-                     });
-                 });
-             }
+                    // If no email provided, allow submit immediately (optional field)
+                    if (!emailVal) {
+                        return;
+                    }
+
+                    // Basic format check before AJAX
+                    if (!emailRegex.test(emailVal)) {
+                        event.preventDefault();
+                        requesterEmailInput.removeClass('is-valid').addClass('is-invalid');
+                        emailFeedback.text('Please enter a valid email format');
+                        emailFeedback.removeClass('text-success').addClass('text-danger');
+                        submitButton.prop("disabled", true);
+                        return;
+                    }
+
+                    // Has a value and format looks ok -> run async check, then submit on success
+                    event.preventDefault();
+
+                    const request = check_requester_email({requireEmail: false});
+
+                    if (!request || typeof request.done !== 'function') {
+                        return;
+                    }
+
+                    request.done(function (data) {
+                        if (data && data.valid) {
+                            event.currentTarget.submit();
+                        }
+                    });
+
+                    request.fail(function () {
+                        submitButton.prop("disabled", true);
+                    });
+                });
+            }
 
              function abortCurrentRequest() {
                  if (currentRequest) {
@@ -583,31 +624,25 @@
                  submitButton.prop("disabled", false);
              }
 
-             function check_requester_email(options = {}) {
-                 const {requireEmail = false} = options;
-                 const email = requesterEmailInput.val().trim();
+            function check_requester_email(options = {}) {
+                const {requireEmail = false} = options;
+                const email = requesterEmailInput.val().trim();
 
-                 if (!email) {
-                     resetEmailState();
-                     if (requireEmail) {
-                         requesterEmailInput.removeClass('is-valid').addClass('is-invalid');
-                         emailFeedback.text('Requester email is required');
-                         emailFeedback.removeClass('text-success').addClass('text-danger');
-                     }
-                     return;
-                 }
+                if (!email) {
+                    resetEmailState();
+                    return $.Deferred().resolve({valid: true});
+                }
 
-                 // Basic email format validation
-                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                     if (!emailRegex.test(email)) {
-                     resetEmailState();
-                     emailFeedback.text('Please enter a valid email format');
-                     emailFeedback.addClass('text-danger');
-                     requesterEmailInput.addClass('is-invalid');
-                     // Keep submit disabled only for obvious format errors
-                     submitButton.prop("disabled", true);
-                     return;
-                 }
+                // Basic email format validation
+                if (!emailRegex.test(email)) {
+                    resetEmailState();
+                    emailFeedback.text('Please enter a valid email format');
+                    emailFeedback.addClass('text-danger');
+                    requesterEmailInput.addClass('is-invalid');
+                    // Keep submit disabled only for obvious format errors
+                    submitButton.prop("disabled", true);
+                    return;
+                }
 
                  // Start validation process
                  startValidation();
@@ -634,7 +669,7 @@
                              emailFeedback.addClass('text-success');
                          } else {
                              // Treat directory/connection failures as warning, not a hard block
-                             submitButton.prop("disabled", false);
+                             submitButton.prop("disabled", true);
                              requesterEmailInput.removeClass('is-valid');
                              requesterEmailInput.addClass('is-invalid');
                              emailFeedback.text(data.message);
@@ -648,7 +683,7 @@
                              endValidation();
 
                              // On AJAX failure, allow submit but show warning
-                             submitButton.prop("disabled", false);
+                             submitButton.prop("disabled", true);
                              requesterEmailInput.removeClass('is-valid');
                              requesterEmailInput.addClass('is-invalid');
                              emailFeedback.text('Error checking email. Please try again.');
@@ -673,8 +708,9 @@
              function endValidation() {
                  emailLoader.hide();
                  requesterEmailInput.prop('disabled', false);
-             }
-             @endif
+            }
+            } // end if requesterEmailInput exists
+
 
              @if(isset($row) && !$isView)
             var kpiId = {{ (int) $row->id }};

@@ -3,6 +3,10 @@
     @php
         if ($cr->isOnHold()) {
             $cr_status_name = 'On Hold';
+        } elseif ($cr->isDependencyHold()) {
+            $blockingCrs = $cr->getBlockingCrNumbers();
+            $crList = !empty($blockingCrs) ? ' (CR#' . implode(', CR#', $blockingCrs) . ')' : '';
+            $cr_status_name = 'Design Estimation - Pending Dependency' . $crList;
         } else {
             $cr_status = $cr->getCurrentStatus()?->status;
             $cr_status_name = $cr_status?->status_name;
@@ -37,7 +41,7 @@
             <td>{{ $cr->title }} </td>
             <td>
                 <span class="description-preview text-primary"
-                      data-description="{{ e($cr->description) }}"
+                      data-description="{{ e(json_encode($cr->description, JSON_UNESCAPED_UNICODE)) }}"
                       role="button">
                     {{ \Illuminate\Support\Str::limit($cr->description, 50) }}
                 </span>
@@ -58,7 +62,7 @@
             <td>{{ $cr->title }}</td>
             <td>
                 <span class="description-preview text-primary"
-                      data-description="{{ e($cr->description) }}"
+                      data-description="{{ e(json_encode($cr->description, JSON_UNESCAPED_UNICODE)) }}"
                       role="button">
                     {{ \Illuminate\Support\Str::limit($cr->description, 50) }}
                 </span>
@@ -160,6 +164,10 @@
                         @php
                             if ($cr->isOnHold()) {
                                 $cr_status_name = 'On Hold';
+                            } elseif ($cr->isDependencyHold()) {
+                                $blockingCrs = $cr->getBlockingCrNumbers();
+                                $crList = !empty($blockingCrs) ? ' (CR#' . implode(', CR#', $blockingCrs) . ')' : '';
+                                $cr_status_name = 'Design Estimation - Pending Dependency' . $crList;
                             } else {
                                 $cr_status = $status->status;
                                 $cr_status_name = $cr_status?->status_name;
@@ -198,19 +206,11 @@
                                     @endcan
 
                                     @if(in_array($cr->id, $crs_in_queues->toArray()))
-                                   
                                         @if(!(($cr->workflow_type_id == 5) && (in_array($cr->Req_status()->latest('id')->first()?->new_status_id, [66, 67, 68, 69]))))
-                                           
-                                        @can('Edit ChangeRequest')
+                                            @can('Edit ChangeRequest')
                                                 @if(in_array($status->new_status_id,$user_group->group_statuses->where('type', 2)->pluck('status_id')->toArray()))
-                                               
                                                     @if(!$status->group_id OR $status->current_group_id == $user_group->id )
-                                                    
-                                                     
-                                                     
-                                                   
-                                                    @if($cr->getSetStatus()->count() > 0)
-                                                 
+                                                     @if($cr->getSetStatus()->count() > 0)
                                                         <a href='{{ url("$route") }}/{{ $cr->id }}/edit?reference_status={{ $status->id }}'
                                                            class="btn btn-light-success btn-sm"
                                                            title="Edit"
@@ -274,7 +274,5 @@
             border-color: #1ec96f;
         }
     </style>
-    </table>
-    </div>
 
 @endif

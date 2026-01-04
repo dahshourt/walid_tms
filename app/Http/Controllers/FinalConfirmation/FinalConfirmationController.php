@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Http\Controllers\FinalConfirmation;
-
 use App\Http\Controllers\Controller;
 use App\Http\Repository\FinalConfirmation\FinalConfirmationRepository;
 use App\Services\FinalConfirmation\FinalConfirmationService;
@@ -167,8 +166,8 @@ class FinalConfirmationController extends Controller
      */
     private function validateRequest(Request $request)
     {
-        $rejectStatusId = config('change_request.status_ids.Reject');
-        $cancelStatusId = config('change_request.status_ids.Cancel');
+        $rejectStatusId = \App\Services\StatusConfigService::getStatusId('Reject');
+        $cancelStatusId = \App\Services\StatusConfigService::getStatusId('Cancel');
 
         return Validator::make($request->all(), [
             'cr_number' => 'required|string',

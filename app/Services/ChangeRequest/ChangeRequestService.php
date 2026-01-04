@@ -1,69 +1,114 @@
 <?php
 
 namespace App\Services\ChangeRequest;
-
 use App\Factories\Applications\ApplicationFactory;
 use App\Factories\ChangeRequest\AttachmetsCRSFactory;
 use App\Factories\ChangeRequest\ChangeRequestFactory;
+use App\Factories\ChangeRequest\ChangeRequestStatusFactory;
 use App\Factories\CustomField\CustomFieldGroupTypeFactory;
 use App\Factories\Defect\DefectFactory;
 use App\Factories\Groups\GroupFactory;
+use App\Factories\NewWorkFlow\NewWorkFlowFactory;
 use App\Factories\Users\UserFactory;
+use App\Factories\Workflow\Workflow_type_factory;
 use App\Http\Controllers\Mail\MailController;
+use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use App\Http\Repository\RejectionReasons\RejectionReasonsRepository;
 use App\Models\ApplicationImpact;
 use App\Models\Change_request;
+use App\Models\Change_request_statuse;
 use App\Models\ChangeRequestTechnicalTeam;
 use App\Models\Group;
 use App\Models\ManDaysLog;
+use App\Models\NewWorkFlow;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
+use Throwable;
 
 class ChangeRequestService
 {
-    private const ATTACHMENT_TYPE_TECHNICAL = 1;
-    private const ATTACHMENT_TYPE_BUSINESS = 2;
-    private const FORM_TYPE_EDIT = 2;
-
     private $changerequest;
+    private $changerequeststatus;
+    private $workflow;
+    private $workflow_type;
     private $attachments;
     private $custom_field_group_type;
+    private $applications;
     private $defects;
 
     public function __construct(
+        DefectFactory $defect,
         ChangeRequestFactory $changerequest,
+        ChangeRequestStatusFactory $changerequeststatus,
+        NewWorkFlowFactory $workflow,
         AttachmetsCRSFactory $attachments,
+        Workflow_type_factory $workflow_type,
         CustomFieldGroupTypeFactory $custom_field_group_type,
-        DefectFactory $defect
+        ApplicationFactory $applications
     ) {
         $this->changerequest = $changerequest::index();
+        $this->defects = $defect::index();
+        $this->changerequeststatus = $changerequeststatus::index();
+        $this->workflow = $workflow::index();
+        $this->workflow_type = $workflow_type::index();
         $this->attachments = $attachments::index();
         $this->custom_field_group_type = $custom_field_group_type::index();
-        $this->defects = $defect::index();
+        $this->applications = $applications::index();
     }
 
-    public function handleFileUploads(Request $request, int $cr_id): void
+    public function createChangeRequest(array $data)
     {
-        if ($request->hasFile('technical_attachments')) {
-            $this->attachments->add_files(
-                $request->file('technical_attachments'),
-                $cr_id,
-                self::ATTACHMENT_TYPE_TECHNICAL
-            );
-        }
-
-        if ($request->hasFile('business_attachments')) {
-            $this->attachments->add_files(
-                $request->file('business_attachments'),
-                $cr_id,
-                self::ATTACHMENT_TYPE_BUSINESS
-            );
-        }
+        return $this->changerequest->create($data);
     }
 
-    public function assignTechnicalTeams(Request $request, int $id): void
+    public function updateChangeRequest(int $id, Request $request)
+    {
+        if ($request->man_days && !empty($request->man_days)) {
+            ManDaysLog::create([
+                'group_id' => Session::get('current_group'),
+                'user_id' => auth()->user()->id,
+                'cr_id' => $id,
+                'man_day' => $request->man_days,
+            ]);
+        }
+
+        if ($request->cap_users) {
+            $cap_users = array_unique($request->cap_users);
+            
+            if ($request->cr) {
+                $requesterId = $request->cr->requester_id;
+                $requester = User::find($requesterId);
+                $requesterGroupId = $requester->default_group;
+                $crTeamGroup = Group::where('title', config('constants.group_names.cr_team'))->first();
+
+                if ($requesterGroupId == $crTeamGroup->id) {
+                    if (in_array($requesterId, $cap_users)) {
+                        if (count($cap_users) < 2) {
+                            throw new Exception('You cannot be the only CAB user. Please select at least one additional CAB user.');
+                        }
+                    }
+                } 
+            }
+        }
+
+        $this->assignTechnicalTeams($request, $id);
+        
+        $cr_id = $this->changerequest->update($id, $request);
+
+        if ($cr_id === false) {
+            throw new Exception('Failed to update change request');
+        }
+
+        $this->handleCapUsersNotification($request, $id);
+
+        return $cr_id;
+    }
+
+    private function assignTechnicalTeams(Request $request, int $id): void
     {
         if (!isset($request->technical_teams) || empty($request->technical_teams)) {
             return;
@@ -74,12 +119,12 @@ class ChangeRequestService
                 'cr_id' => $id,
                 'technical_team_id' => $teamId,
                 'created_at' => now(),
-                'updated_at' => now()
+                'updated_at' => now(),
             ]);
         }
     }
 
-    public function handleCapUsersNotification(Request $request, int $id): void
+    private function handleCapUsersNotification(Request $request, int $id): void
     {
         if (empty($request->cap_users)) {
             return;
@@ -92,7 +137,6 @@ class ChangeRequestService
                 $emails[] = $user->email;
             }
         }
-        
         $cr = Change_request::find($id);
 
         if (!empty($emails)) {
@@ -121,10 +165,10 @@ class ChangeRequestService
         $status_name = $cr->getCurrentStatus()->status->name;
         $CustomFields = $this->custom_field_group_type->CustomFieldsByWorkFlowTypeAndStatus(
             $workflow_type_id,
-            self::FORM_TYPE_EDIT,
+            2, // FORM_TYPE_EDIT
             $status_id
         );
-        
+
         $logs_ers = $cr->logs;
         $all_defects = $this->defects->all_defects($id);
         $ApplicationImpact = ApplicationImpact::where('application_id', $cr->application_id)
@@ -133,9 +177,9 @@ class ChangeRequestService
 
         // Get technical team data
         $selected_technical_teams = $this->getSelectedTechnicalTeams($cr);
+
         $reminder_promo_tech_teams = $this->getReminderPromoTechTeams($cr);
         $reminder_promo_tech_teams_text = implode(',', $reminder_promo_tech_teams);
-        
         // Get assignment users
         $view_by_groups = $cr->getCurrentStatus()->status->group_statuses
             ->where('type', '2')
@@ -147,25 +191,15 @@ class ChangeRequestService
             ->where('custom_field_name', 'man_days')
             ->values()
             ->toArray();
-            
         $reject = new RejectionReasonsRepository();
         $rejects = $reject->workflows($workflow_type_id);
         
-        $form_title = (!empty($workflow_type_id) && $workflow_type_id == 9)
-            ? "Promo"
-            : view()->shared('form_title');
-
-        $title = (!empty($workflow_type_id) && $workflow_type_id == 9)
-            ? "List Promo"
-            : view()->shared('title');
-            
         $man_days = ManDaysLog::where('cr_id', $id)->with('user')->get();
-        
-        // Relevant CRs logic
         $relevantField = $cr->change_request_custom_fields
             ->where('custom_field_name', 'relevant')
             ->first();
-    
+
+        // Step 2: decode the JSON values into selected CR IDs
         $selectedRelevant = [];
         if ($relevantField && !empty($relevantField->custom_field_value)) {
             $decoded = json_decode($relevantField->custom_field_value, true);
@@ -173,28 +207,35 @@ class ChangeRequestService
                 $selectedRelevant = array_map('intval', $decoded);
             }
         }
-    
-        $relevantCrsData = Change_request::whereIn('id', $selectedRelevant)
+
+        // Step 3: load these CRs with status
+        $relevantCrsData = \App\Models\Change_request::whereIn('id', $selectedRelevant)
             ->with('CurrentRequestStatuses')
             ->get(['id', 'cr_no', 'title']);
 
-        $pendingProductionId = config('change_request.status_ids.pending_production_deployment');
+        // Step 4: check if any relevant CR is not in Pending Production Deployment
+        $pendingProductionId = \App\Services\StatusConfigService::getStatusId('pending_production_deployment');
         $relevantNotPending = $relevantCrsData->filter(function ($item) use ($pendingProductionId) {
             return $item->CurrentRequestStatuses_last?->new_status_id != $pendingProductionId;
         })->count();
 
-        return compact(
-            'rejects', 'form_title', 'title',
+        // Get CRs that can be depended upon
+        $dependableCrs = Change_request::getDependableCrs($cr->id);
+
+        return compact('rejects',
             'selected_technical_teams', 'man_day', 'technical_team_disabled', 'status_name',
             'ApplicationImpact', 'cap_users', 'CustomFields', 'cr', 'workflow_type_id',
             'logs_ers', 'developer_users', 'sa_users', 'testing_users', 'technical_teams',
             'all_defects', 'reminder_promo_tech_teams', 'rtm_members', 'assignment_users',
             'reminder_promo_tech_teams_text', 'technical_groups', 'man_days',
-            'relevantCrsData', 'relevantNotPending', 'pendingProductionId'
+            'relevantCrsData',
+            'relevantNotPending',
+            'pendingProductionId',
+            'dependableCrs'
         );
     }
 
-    public function getDeveloperUsers($cr)
+    private function getDeveloperUsers($cr)
     {
         if ($cr->workflow_type_id == 13) {
             $parentCR = DB::table('parents_crs')
@@ -205,36 +246,35 @@ class ChangeRequestService
                 ->value('application_name');
 
             $res = ApplicationFactory::index()->get_app_id_by_name($parentCR);
+
             return $res
                 ? UserFactory::index()->get_user_by_group($res->id)
                 : UserFactory::index()->get_user_by_group($cr->application_id);
         }
-        
-        $tech_group = $cr->change_request_custom_fields->where('custom_field_name','tech_group_id')->first();
+        $tech_group = $cr->change_request_custom_fields->where('custom_field_name', 'tech_group_id')->first();
         $tech_group_id = $tech_group ? $tech_group->custom_field_value : null;
-        
-        if($tech_group_id) {
+        if ($tech_group_id) {
             return UserFactory::index()->get_user_by_group_id($tech_group_id);
-        } else {
-            return UserFactory::index()->get_user_by_group($cr->application_id);
         }
+
+        return UserFactory::index()->get_user_by_group($cr->application_id);
     }
 
-    public function getTechnicalGroups($cr)
+    private function getTechnicalGroups($cr)
     {
         return GroupFactory::index()->get_tech_groups_by_application($cr->application_id);
     }
 
-    public function getSelectedTechnicalTeams($cr): array
+    private function getSelectedTechnicalTeams($cr): array
     {
         try {
             return $cr->technical_Cr_first->technical_cr_team->pluck('group')->toArray();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return [];
         }
     }
 
-    public function getReminderPromoTechTeams($cr): array
+    private function getReminderPromoTechTeams($cr): array
     {
         return $cr->technical_Cr
             ? $cr->technical_Cr->technical_cr_team
@@ -244,16 +284,216 @@ class ChangeRequestService
                 ->toArray()
             : [];
     }
-    
-    public function logManDays(Request $request, int $id): void
+
+    public function generateSecurityToken($cr): string
     {
-        if ($request->man_days && !empty($request->man_days)) {
-            ManDaysLog::create([
-                'group_id' => Session::get('current_group'),
-                'user_id' => auth()->user()->id,
-                'cr_id' => $id,
-                'man_day' => $request->man_days,
-            ]);
+        return md5($cr->id . $cr->created_at . env('APP_KEY'));
+    }
+
+    public function processDivisionManagerAction($cr, string $action, int $current_status)
+    {
+        $workflow_type_id = $cr->workflow_type_id;
+
+        // Determine workflow ID based on action and workflow type
+        $workflowIdForAction = $this->getWorkflowIdForAction($workflow_type_id, $action);
+
+        if (!$workflowIdForAction) {
+            throw new Exception('Unsupported workflow type.');
         }
+
+        $repository = new ChangeRequestRepository();
+        $updateRequest = new Request([
+            'old_status_id' => $current_status,
+            'new_status_id' => $workflowIdForAction,
+        ]);
+
+        $repository->UpateChangeRequestStatus($cr->id, $updateRequest);
+
+        return $workflowIdForAction;
+    }
+
+    private function getWorkflowIdForAction(int $workflow_type_id, string $action): ?int
+    {
+        $workflowMap = [
+            3 => [
+                'approve' => $this->GetDivisionManagerActionId(3, 'Business Approval', 'Business Validation'),
+                'reject' => $this->GetDivisionManagerActionId(3, 'Business Approval', 'Reject'),
+            ],
+            5 => [
+                'approve' => $this->GetDivisionManagerActionId(5, 'Business Approval', 'CR Analysis'),
+                'reject' => $this->GetDivisionManagerActionId(5, 'Business Approval', 'Reject'),
+            ],
+            37 => [
+                'approve' => $this->GetDivisionManagerActionId(37, 'Business Approval kam', 'Business Validation kam'),
+                'reject' => $this->GetDivisionManagerActionId(37, 'Business Approval kam', 'Reject kam'),
+            ],
+        ];
+
+        return $workflowMap[$workflow_type_id][$action] ?? null;
+    }
+
+    private function GetDivisionManagerActionId(int $workflow_type_id, string $from_action, string $to_action): ?int
+    {
+        return NewWorkflow::query()
+            ->select('new_workflow.id')
+            ->join('statuses as s1', function ($join) use ($from_action) {
+                $join->on('s1.id', '=', 'new_workflow.from_status_id')
+                    ->where('s1.status_name', 'like', '%' . $from_action . '%');
+            })
+            ->join('new_workflow_statuses as nws', 'nws.new_workflow_id', '=', 'new_workflow.id')
+            ->join('statuses as s2', function ($join) use ($to_action) {
+                $join->on('s2.id', '=', 'nws.to_status_id')
+                    ->where('s2.status_name', 'like', '%' . $to_action . '%');
+            })
+            ->where('new_workflow.type_id', $workflow_type_id)
+            ->orderBy('new_workflow.id', 'desc')
+            ->value('new_workflow.id');
+    }
+
+    public function approvedActive(Request $request)
+    {
+        $id = $request->get('id');
+        $this->changerequest->UpateChangeRequestStatus($id, $request);
+    }
+
+    public function approvedContinue(Request $request)
+    {
+        $cr_id = $request->query('crId');
+        $action = $request->query('action');
+        $token = $request->query('token');
+
+        if (!$cr_id || !$action || !$token) {
+            throw new Exception('Invalid request. Missing parameters.');
+        }
+
+        $cr = Change_request::find($cr_id);
+        if (!$cr) {
+            throw new Exception('Change Request not found.');
+        }
+
+        $expectedToken = $this->generateSecurityToken($cr);
+        if ($token !== $expectedToken) {
+            throw new Exception('Unauthorized access. Invalid token.');
+        }
+
+        $cr_repo = app(ChangeRequestRepository::class);
+
+        if ($action === 'approve') {
+            Change_request_statuse::where('cr_id', $cr->id)
+                ->where('active', '3')
+                ->update(['active' => '1']);
+        } else {
+            Change_request_statuse::where('cr_id', $cr->id)
+                ->where('active', '3')
+                ->update(['active' => '2']);
+
+            // CR is In-House work flow
+            if ($cr->workflow_type_id === 3) {
+                $second_status = Change_request_statuse::where('cr_id', $cr->id)
+                    ->orderBy('id')
+                    ->skip(1)
+                    ->first();
+
+                if ($second_status) {
+                    $new_status_work_flow_id = $this->getNewStatusWorkFlowId($cr->workflow_type_id, $second_status->old_status_id, $second_status->new_status_id);
+
+                    $request->merge(['new_status_id' => $new_status_work_flow_id]);
+                    $request->merge(['old_status_id' => $second_status->old_status_id]);
+
+                    // Duplicate the row
+                    $newStatus = $second_status->replicate();
+                    $newStatus->active = '1';
+                    $newStatus->save();
+                }
+            } else {
+                $firstStatus = Change_request_statuse::where('cr_id', $cr->id)
+                    ->orderBy('id', 'asc')
+                    ->first();
+
+                if ($firstStatus) {
+                    $new_status_work_flow_id = $this->getNewStatusWorkFlowId($cr->workflow_type_id, $firstStatus->old_status_id, $firstStatus->new_status_id);
+
+                    $request->merge(['new_status_id' => $new_status_work_flow_id]);
+                    $request->merge(['old_status_id' => $firstStatus->old_status_id]);
+
+                    // Duplicate the row
+                    $newStatus = $firstStatus->replicate();
+                    $newStatus->active = '1';
+                    $newStatus->save();
+                }
+            }
+        }
+
+        $request->merge(['hold' => 0]);
+        $cr_repo->update($cr->id, $request);
+
+        return $action === 'approve'
+            ? "CR #{$cr_id} has been successfully re hold."
+            : "CR #{$cr_id} has been successfully rejected.";
+    }
+
+    public function handlePendingCap(Request $request)
+    {
+        $cr_id = $request->query('crId');
+        $workflow = $request->query('workflow');
+        $action = $request->query('action');
+        $token = $request->query('token');
+
+        if (!$cr_id || !$action || !$token || !$workflow) {
+            throw new Exception('Invalid request. Missing parameters.');
+        }
+
+        $cr = Change_request::find($cr_id);
+        if (!$cr) {
+            throw new Exception('Change Request not found.');
+        }
+
+        $expectedToken = $this->generateSecurityToken($cr);
+        if ($token !== $expectedToken) {
+            throw new Exception('Unauthorized access. Invalid token.');
+        }
+
+        $current_status = Change_request_statuse::where('cr_id', $cr_id)
+            ->where('active', '1')
+            ->value('new_status_id');
+
+        if ($current_status != \App\Services\StatusConfigService::getStatusId('pending_cab')) {
+            $message = $current_status == \App\Services\StatusConfigService::getStatusId('pending_cab_proceed')
+                ? 'You already rejected this CR.'
+                : 'You already approved this CR.';
+            throw new Exception($message);
+        }
+
+        $updateRequest = new Request([
+            'old_status_id' => $current_status,
+            'new_status_id' => $workflow,
+            'cab_cr_flag' => '1',
+            'user_id' => auth()->user()->id,
+        ]);
+
+        $repo = new ChangeRequestRepository();
+        $repo->update($cr_id, $updateRequest);
+
+        return $action === 'approve'
+            ? "CR #{$cr_id} has been successfully approved."
+            : "CR #{$cr_id} has been successfully rejected.";
+    }
+
+    private function getNewStatusWorkFlowId(int $workflow_type_id, int $from, int $to): ?int
+    {
+        return NewWorkflow::query()
+            ->select('new_workflow.id')
+            ->join('statuses as s1', function ($join) use ($from) {
+                $join->on('s1.id', '=', 'new_workflow.from_status_id')
+                    ->where('s1.id', '=', $from);
+            })
+            ->join('new_workflow_statuses as nws', 'nws.new_workflow_id', '=', 'new_workflow.id')
+            ->join('statuses as s2', function ($join) use ($to) {
+                $join->on('s2.id', '=', 'nws.to_status_id')
+                    ->where('s2.id', '=', $to);
+            })
+            ->where('new_workflow.type_id', $workflow_type_id)
+            ->orderBy('new_workflow.id', 'desc')
+            ->value('new_workflow.id');
     }
 }

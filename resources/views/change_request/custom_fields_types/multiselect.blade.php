@@ -178,6 +178,35 @@
     @endforeach
 @break
 
+                    @case('depend_on')
+                        <option value="">Select CRs to depend on</option>
+
+                        @php
+                            $dependableCrsList = $dependableCrs ?? collect();
+
+                            // Get selected dependencies from cr_dependencies table via model
+                            $selectedDependencies = [];
+                            if (isset($cr) && $cr->id) {
+                                $selectedDependencies = $cr->getBlockingCrNumbers();
+                            }
+                            
+                            // check for old input (form validation errors)
+                            $oldDependOnValues = old('depend_on');
+                            if ($oldDependOnValues) {
+                                $selectedDependencies = is_array($oldDependOnValues) 
+                                    ? array_map('intval', $oldDependOnValues) 
+                                    : [$oldDependOnValues];
+                            }
+                        @endphp
+
+                        @foreach($dependableCrsList as $dependCr)
+                            <option value="{{ $dependCr->cr_no }}" 
+                                {{ in_array((int)$dependCr->cr_no, $selectedDependencies) ? 'selected' : '' }}>
+                                CR#{{ $dependCr->cr_no }} - {{ $dependCr->title }}
+                            </option>
+                        @endforeach
+                        @break
+
                     @case('technical_teams')
                         @if(count($selected_technical_teams) > 0)
                             @php
@@ -220,6 +249,11 @@
                         @endif
                 @endswitch
             </select>
+
+            {{-- Hidden marker for depend_on field to allow empty submissions --}}
+            @if($fieldName === 'depend_on')
+                <input type="hidden" name="depend_on_exists" value="1">
+            @endif
 
             {{-- Hidden inputs to preserve POST data when disabled --}}
             @if(!$isEnabled && count($selected_technical_teams) > 0)

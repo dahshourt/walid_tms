@@ -178,7 +178,7 @@ Route::middleware(['auth'])->group(
         Route::get('change_request2/cr_pending_cap', 'ChangeRequest\ChangeRequestController@cr_pending_cap')->name('cr_pending_cap');
 
         Route::get('dvision_manager_cr/unreadNotifications', 'ChangeRequest\ChangeRequestController@unreadNotifications');
-        Route::get('change_request1/asd/{group?}', 'ChangeRequest\ChangeRequestController@asd')->name('change_request.asd');
+        Route::get('change_request1/selectUserGroup/{group?}', 'ChangeRequest\ChangeRequestController@selectUserGroup')->name('change_request.selectUserGroup');
         Route::post('/select-group/{group}', 'ChangeRequest\ChangeRequestController@selectGroup')->name('select_group');
 
 

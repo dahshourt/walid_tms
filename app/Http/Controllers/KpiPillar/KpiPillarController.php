@@ -13,6 +13,7 @@ use Illuminate\View\View;
 class KpiPillarController extends Controller
 {
     protected $kpiPillarService;
+
     protected $view;
 
     public function __construct(KpiPillarService $kpiPillarService)
@@ -43,6 +44,7 @@ class KpiPillarController extends Controller
     public function create(): View
     {
         $this->authorize('Create KPI Pillars');
+
         return view("$this->view.create");
     }
 
@@ -72,7 +74,7 @@ class KpiPillarController extends Controller
         $this->authorize('Edit KPI Pillars');
         $row = $this->kpiPillarService->find($id);
 
-        if (!$row) {
+        if (! $row) {
             abort(404, 'KPI Pillar not found');
         }
 
@@ -88,7 +90,7 @@ class KpiPillarController extends Controller
         try {
             $updated = $this->kpiPillarService->update($request->validated(), $id);
 
-            if (!$updated) {
+            if (! $updated) {
                 return redirect()->back()
                     ->withInput()
                     ->with('error', 'KPI Pillar not found');
@@ -108,12 +110,12 @@ class KpiPillarController extends Controller
      */
     public function updateStatus(): JsonResponse
     {
-        $this->authorize('Active KPI Pillars');
+        $this->authorize('Edit KPI Pillars');
         try {
             $id = request()->post('id');
             $updated = $this->kpiPillarService->toggleStatus($id);
 
-            if (!$updated) {
+            if (! $updated) {
                 return response()->json([
                     'message' => 'KPI Pillar not found',
                     'status' => 'error',
@@ -132,4 +134,3 @@ class KpiPillarController extends Controller
         }
     }
 }
-

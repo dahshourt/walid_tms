@@ -36,57 +36,57 @@ class StatusConfigService
      * @param string $suffix The suffix to append to status names (e.g., ' kam', ' promo')
      * @return array Array of status key => status ID mappings
      */
+    /**
+     * Map status names to IDs from database
+     *
+     * @param string $suffix The suffix to append to status names (e.g., ' kam', ' promo')
+     * @return array Array of status key => status ID mappings
+     */
     private static function mapStatuses(string $suffix): array
     {
-        // Check if we're in a context where we can access the database
-        if (! self::canAccessDatabase()) {
-            self::safeLog('error', 'Cannot access database when loading statuses with suffix: ' . $suffix);
-            return [];
-        }
-
-        $names = self::getStatusNameMappings();
-        $result = [];
-        $found = [];
-        $notFound = [];
-
-        try {
-            foreach ($names as $key => $baseName) {
-                $searchName = $baseName . $suffix;
-
-                // Use DB facade directly with query builder
-                $status = DB::table('statuses')
-                    ->where('status_name', $searchName)
-                    ->where('active', '1')
-                    ->first();
-
-                if ($status) {
-                    $result[$key] = $status->id;
-                    $found[] = $searchName;
-                } else {
-                    $notFound[] = $searchName;
+        // Use a cache key based on the suffix
+        $cacheKey = 'status_config_ids_' . md5($suffix);
+        
+        // Try to get from cache first (cache for 24 hours)
+        return \Illuminate\Support\Facades\Cache::remember($cacheKey, 86400, function () use ($suffix) {
+            // Check if we're in a context where we can access the database
+            if (! self::canAccessDatabase()) {
+                self::safeLog('error', 'Cannot access database when loading statuses with suffix: ' . $suffix);
+                return [];
+            }
+    
+            $names = self::getStatusNameMappings();
+            $result = [];
+            $found = [];
+            $notFound = [];
+    
+            try {
+                foreach ($names as $key => $baseName) {
+                    $searchName = $baseName . $suffix;
+    
+                    // Use DB facade directly with query builder
+                    $status = DB::table('statuses')
+                        ->where('status_name', $searchName)
+                        ->where('active', '1')
+                        ->first();
+    
+                    if ($status) {
+                        $result[$key] = $status->id;
+                        $found[] = $searchName;
+                    } else {
+                        $notFound[] = $searchName;
+                    }
                 }
-            }
-
-            if (! empty($notFound)) {
-                self::safeLog('warning', 'The following statuses were not found in the database', [
-                    'statuses' => $notFound,
-                    'suffix'   => $suffix,
+    
+                return $result;
+            } catch (\Throwable $e) {
+                self::safeLog('error', 'Error loading statuses: ' . $e->getMessage(), [
+                    'exception' => $e,
+                    'suffix'    => $suffix,
                 ]);
+                return [];
             }
-
-            self::safeLog('info', 'Successfully loaded statuses', [
-                'count'  => count($found),
-                'suffix' => $suffix,
-            ]);
-
-            return $result;
-        } catch (\Throwable $e) {
-            self::safeLog('error', 'Error loading statuses: ' . $e->getMessage(), [
-                'exception' => $e,
-                'suffix'    => $suffix,
-            ]);
-            return [];
-        }
+        });
     }
 
     /**
@@ -167,6 +167,7 @@ class StatusConfigService
             'Cancel_kam' => 'Cancel',
             'Closed' => 'Closed',
             'Delivered' => 'Delivered',
+            'pending_design' => 'Pending Design',
             'division_manager_approval' => 'Division Manager Approval',
             'division_manager_approval_kam' => 'Division Manager Approval',
             'business_analysis' => 'Business Analysis',
@@ -176,32 +177,15 @@ class StatusConfigService
             'pending_update_cr_doc'=>'Pending Update CR Doc',
             'request_vendor_mds'=>'Request Vendor MDS',
             'pending_agreed_business'=>'Pending Agreed Scope Approval-Business',
+            'pending_agreed_business_kam'=>'Pending Agreed Scope Approval-Business',
+            'pending_agreed_business_kam'=>'Pending Agreed Scope Approval-Business',
         ];
     }
 
     public static function getStatusId(string $key, string $suffix = ''): ?int
     {
-        if (! self::canAccessDatabase()) {
-            return null;
-        }
-
-        $mappings = self::getStatusNameMappings();
-        if (! isset($mappings[$key])) {
-            return null;
-        }
-
-        $searchName = $mappings[$key] . $suffix;
-
-        try {
-            $status = DB::table('statuses')
-                ->where('status_name', $searchName)
-                ->where('active', '1')
-                ->first();
-
-            return $status ? $status->id : null;
-        } catch (\Throwable $e) {
-            return null;
-        }
+        $statuses = self::loadStatusIdsBySuffix($suffix);
+        return $statuses[$key] ?? null;
     }
 
     public static function loadAllStatusVariations(array $suffixes = ['', ' kam']): array
