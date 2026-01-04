@@ -181,16 +181,22 @@ class changeRequest_Requests extends FormRequest
         $id = $this->route('change_request');
         $repo = new ChangeRequestRepository();
         $cr = $repo->find($id);
-        if (! $cr) {
+        if (!$cr) {
 
             $cr = $repo->findCr($id);
         }
-        $this->merge([
-            'active' => $this->has('active') ? '1' : '0', // testable
-            'testable' => $this->has('testable') ? '1' : '0', // need_ux_ui
+        $mergeData = [
+            'active' => $this->has('active') ? '1' : '0',
             'need_ux_ui' => $this->has('need_ux_ui') ? 1 : 0,
             'cr' => $cr,
+        ];
 
-        ]);
+        // testable: Only set to 1/0 if it was actually in the input (meaning it was enabled and submitted, possibly via hidden field)
+        // If it's missing (disabled), we don't put it in the merge data, so it stays missing from valid data
+        if ($this->has('testable')) {
+            $mergeData['testable'] = $this->input('testable') == '1' ? '1' : '0';
+        }
+
+        $this->merge($mergeData);
     }
 }
