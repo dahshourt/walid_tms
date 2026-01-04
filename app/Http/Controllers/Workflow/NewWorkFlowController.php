@@ -36,7 +36,6 @@ class NewWorkFlowController extends Controller
 
     public function index()
     {
-       
         $this->authorize('List Workflows'); // permission check
 
         $collection = $this->NewWorkflow->ListAllWorkflowWithoutRelease();

@@ -67,14 +67,10 @@ return [
     | and business logic.
     |
     */
-    'status_ids' => function() {
-        return app()->bound('db') ? app(\App\Services\StatusConfigService::class)::loadStatusIds() : [];
-    },
-    
+    // 'status_ids' => StatusConfigService::loadStatusIds(),
+
     // For KAM workflow, you can add a separate key:
-    'status_ids_kam' => function() {
-        return app()->bound('db') ? app(\App\Services\StatusConfigService::class)::loadStatusIdsKam() : [];
-    },
+    // 'status_ids_kam' => StatusConfigService::loadStatusIdsKam(),
 
     'man_days_status' => [
         'id' => 112,
