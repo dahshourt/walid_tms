@@ -268,7 +268,7 @@ class UserRepository implements UserRepositoryInterface
         })->get();
     }
 
-    public function GetAssignmentUsersByViewGroups($group_ids)
+    public function GetAssignmentUsersByViewGroups($group_ids, $customFieldName = null)
     {
         $users = User::where(function ($query) use ($group_ids) {
             $query->whereIn('default_group', $group_ids);
@@ -280,5 +280,33 @@ class UserRepository implements UserRepositoryInterface
 
         return $users;
         // return User::where('default_group', $id)->where('active', '1')->get();
+    }
+    
+    /**
+     * Get users based on custom field name
+     * 
+     * @param string $customFieldName The name of the custom field
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getUxItGroupUsers($customFieldName = null)
+    {
+       $query = User::from('users as u')
+    ->select([
+        'u.id',
+        'u.name',
+        'u.user_name',
+        'u.email',
+        'u.active',
+        'u.created_at'
+    ])
+    ->join('user_groups as ug', 'u.id', '=', 'ug.user_id')
+    ->join('groups as g', 'ug.group_id', '=', 'g.id')
+    ->where('g.title', 'ux.it')
+    ->where('u.active', '1')
+    ->orderBy('u.name', 'asc');
+
+
+
+        return $query->get();
     }
 }

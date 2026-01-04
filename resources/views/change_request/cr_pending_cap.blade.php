@@ -56,7 +56,7 @@
 												</tr>
 											</thead>
 											<tbody>
-											@include("$view.loop2")
+											@include("$view.cr_pending_cap_loop")
 											</tbody>
 										</table>
 										<div class="modal fade" id="descriptionModal" tabindex="-1" role="dialog" aria-labelledby="descriptionModalLabel" aria-hidden="true">

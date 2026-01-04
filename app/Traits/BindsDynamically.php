@@ -30,18 +30,25 @@ trait BindsDynamically
         return $this;
     }
 
-    public function getDataByDynamicTable()
-    {
-        $model = $this->getModelFromTable();
+public function getDataByDynamicTable()
+{
+    // Check if this is for the ui_ux_member field
+    if (request()->has('custom_field_name') && request('custom_field_name') === 'ui_ux_member') {
+        return $this->getUxItGroupUsers();
+    }
+    
+    // Original logic for other cases
+    $model = $this->getModelFromTable();
+    if ($model) {
         $model = new $model();
         if ($this->tableName == 'users') {
-            $data = $model::where('active', '1')->get();
-        } else {
-            $data = $model::get();
+            return $model::where('active', '1')->get();
         }
-
-        return $data;
+        return $model::get();
     }
+    
+    return collect();
+}
 
     public function getCustomDataByDynamicTable(array $selectedValues, ?string $columnName = null,  ?string $pluckColumn = null)
     {
