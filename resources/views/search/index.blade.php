@@ -219,10 +219,18 @@ $(document).on('click', 'tr.cr-row', function(e) {
 });
 
 $(document).on('click', '.description-preview', function (event) {
-  event.preventDefault();
-  var fullDescription = $(this).data('description') || '';
-  $('#descriptionModal .modal-body').text(fullDescription);
-  $('#descriptionModal').modal('show');
+    event.preventDefault();
+    let fullDescription = $(this).attr('data-description') || '';
+    try {
+        // Decode HTML entities and parse JSON
+        fullDescription = $('<div>').html(fullDescription).text();
+        fullDescription = JSON.parse(fullDescription);
+    } catch (e) {
+        // If parsing fails, use the raw value
+        console.warn('Failed to parse description JSON:', e);
+    }
+    $('#descriptionModal .modal-body').text(fullDescription);
+    $('#descriptionModal').modal('show');
 });
 
 $(function() {

@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Services\ChangeRequest;
-
 use App\Models\Change_request;
 use App\Models\Change_request_statuse;
 use App\Models\Group;
@@ -10,6 +9,8 @@ use App\Models\NewWorkFlow;
 use App\Models\TechnicalCr;
 use App\Models\User;
 use Auth;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 
 class ChangeRequestSearchService
 {
@@ -66,6 +67,82 @@ class ChangeRequestSearchService
         })->orderBy('id', 'DESC')->paginate(20);
 
         return $changeRequests;
+    }
+
+    public function getAllByWorkFlow(int $workflow_type_id, $group = null): LengthAwarePaginator
+    {
+        $group = $this->resolveGroup($group);
+        $groupData = Group::find($group);
+        $groupApplications = $groupData->group_applications->pluck('application_id')->toArray();
+        $viewStatuses = $this->getViewStatuses($group);
+
+        $work_flow_relations = match ($workflow_type_id) {
+            3,5 => ['member', 'application'],
+            9 => ['requester','department' , 'rejectionReason', 'accumulativeMDs', 'deploymentDate'],
+            default => []
+        };
+
+        $changeRequests = Change_request::where(static function (Builder $query) use ($workflow_type_id) {
+            $query->where('workflow_type_id', $workflow_type_id)
+                // Workflow is in [Vendor, In-House] check if it's On-Going CR and parent has the workflow
+                ->when(in_array($workflow_type_id, [3, 5], true), function (Builder $query) use ($workflow_type_id) {
+                    $query->orWhereRelation('parentCR', 'workflow_type_id', $workflow_type_id);
+                });
+        })
+            ->with(
+                [
+                    'RequestStatuses.status',
+                    ...$work_flow_relations,
+                ]
+            );
+
+        if ($groupApplications) {
+            $changeRequests = $changeRequests->whereIn('application_id', $groupApplications);
+            /* $changeRequests = $changeRequests->whereHas('change_request_custom_fields', function ($q) use ($groupApplications) {
+                $q->whereIn('change_request_custom_fields.custom_field_name', ['application_id', 'sub_application_id'])->whereIn('change_request_custom_fields.custom_field_value', $groupApplications);
+            }); */
+
+            $changeRequests = $changeRequests->where(function ($query) use ($groupData) {
+                // Case 1: Where unit_id matches in custom fields
+                $query->whereHas('change_request_custom_fields', function ($q) use ($groupData) {
+                    $q->where('custom_field_name', 'tech_group_id')
+                        ->where('custom_field_value', $groupData->id);
+                })
+                    // Case 2: OR unit_id does NOT exist in custom fields
+                    ->orWhereDoesntHave('change_request_custom_fields', function ($q) {
+                        $q->where('custom_field_name', 'tech_group_id');
+                    });
+            });
+        }
+
+        return $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
+            $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($group) {
+                $qq->where('group_id', $group)->orWhereNull('group_id');
+            })
+                ->whereIn('new_status_id', $viewStatuses)
+                ->whereHas('status.group_statuses', function ($query) use ($group) {
+                    $query->where('group_id', $group)
+                        ->where('type', 2);
+                });
+        })->orderBy('id', 'DESC')
+            ->paginate(20, pageName: "type_$workflow_type_id");
+    }
+
+    public function getAllForLisCRs(array $workflow_type_ids, $group = null): array
+    {
+        $data = [];
+
+        foreach ($workflow_type_ids as $workflow_type_id) {
+            $crs = $this->getAllByWorkFlow($workflow_type_id, $group);
+
+            if ($crs->isEmpty()) {
+                continue;
+            }
+
+            $data[$workflow_type_id] = $crs;
+        }
+
+        return $data;
     }
 
     public function getAllWithoutPagination($group = null)
@@ -134,11 +211,10 @@ class ChangeRequestSearchService
             return $status
             && $status->status
             && in_array($status->status->id, [
-                config('change_request.status_ids.pending_cab'),
-                config('change_request.status_ids.pending_cab_approval'),
-                config('change_request.status_ids_kam.pending_cab_kam'),
+                \App\Services\StatusConfigService::getStatusId('pending_cab'),
+                \App\Services\StatusConfigService::getStatusId('pending_cab', ' kam'),
             ]);
-            // return $status && $status->status && $status->status->id == config('change_request.status_ids.pending_cab');
+            // return $status && $status->status && $status->status->id == \App\Services\StatusConfigService::getStatusId('pending_cab');
         });
 
         // Manual pagination
@@ -202,11 +278,10 @@ class ChangeRequestSearchService
             return $status
             && $status->status
             && in_array($status->status->id, [
-                 config('change_request.status_ids.division_manager_approval'),
-                config('change_request.status_ids.business_approval'),
-                config('change_request.status_ids_kam.business_approval_kam')
+                \App\Services\StatusConfigService::getStatusId('business_approval'),
+                \App\Services\StatusConfigService::getStatusId('business_approval', ' kam'),
             ]);
-            // return $status && $status->status && $status->status->id == config('change_request.status_ids.business_approval');
+            // return $status && $status->status && $status->status->id == \App\Services\StatusConfigService::getStatusId('business_approval');
         });
 
         // Manual pagination
@@ -229,7 +304,7 @@ class ChangeRequestSearchService
         $userId = Auth::user()->id;
         $group = $this->resolveGroup();
         $viewStatuses = $this->getViewStatuses();
-        $viewStatuses[] = config('change_request.status_ids.cr_manager_review');
+        $viewStatuses[] = \App\Services\StatusConfigService::getStatusId('cr_manager_review');
         if ($group == config('change_request.group_ids.promo')) {
             $crs = Change_request::with('Req_status.status')
                 ->whereHas('Req_status', function ($query) use ($viewStatuses) {
@@ -282,19 +357,16 @@ class ChangeRequestSearchService
         $groups = array_merge($groups, $promoGroups);
 
         $groupPromo = Group::with('group_statuses')->find(50);
-        
         $statusPromoView = $groupPromo->group_statuses->where('type', \App\Models\GroupStatuses::VIEWBY)->pluck('status.id');
         $viewStatuses = $this->getViewStatuses($groups, $id);
         $viewStatuses = $statusPromoView->merge($viewStatuses)->unique();
 
-        $viewStatuses->push(config('change_request.status_ids.cr_manager_review'));
+        $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('cr_manager_review'));
         if (request()->has('check_business')) {
-            $viewStatuses->push(config('change_request.status_ids.business_test_case_approval'));
-            $viewStatuses->push(config('change_request.status_ids.business_uat_sign_off'));
-            $viewStatuses->push(config('change_request.status_ids.pending_business'));
-            $viewStatuses->push(config('change_request.status_ids.pending_business_feedback'));
-            $viewStatuses->push(config('change_request.status_ids.division_manager_approval'));
-
+            $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('business_test_case_approval'));
+            $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('business_uat_sign_off'));
+            $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('pending_business'));
+            $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('pending_business_feedback'));
 
         }
 
@@ -456,7 +528,7 @@ class ChangeRequestSearchService
         $group = $this->resolveGroup($group);
 
         // Check if user is division manager and status is business approval
-        if ($userEmail === $divisionManager && $currentStatus == config('change_request.status_ids.business_approval')) {
+        if ($userEmail === $divisionManager && $currentStatus == \App\Services\StatusConfigService::getStatusId('business_approval')) {
             $group = Group::pluck('id')->toArray();
         }
 

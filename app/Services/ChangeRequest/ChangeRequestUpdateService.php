@@ -65,7 +65,7 @@ class ChangeRequestUpdateService
     public function update($id, $request)
     {
         //$this->changeRequest_old = Change_request::find($id);
-        $this->changeRequest_old = Change_request::with('kpis')->find($id);
+        $this->changeRequest_old = Change_request::with('kpis', 'changeRequestCustomFields', 'dependencies')->find($id);
 
         // 0)Link KPI if selected
         //dd($request->all());
@@ -115,6 +115,9 @@ class ChangeRequestUpdateService
 
         // CR Dependencies (depend_on field - stored in cr_dependencies table not cr custom field)
         $this->handleDependOn($id, $request);
+        
+        // this to ensure that the cr has the correct cr_type and only one cr type (normal, depend on or relevant)
+        $this->enforceCrTypeIntegrity($id, $request);
 
         // 9) Update assignment on current CR status row
         $this->updateStatusAssignments($id, $request);
@@ -497,6 +500,55 @@ class ChangeRequestUpdateService
 
         $dependencyService = new CrDependencyService();
         $dependencyService->syncDependencies($crId, $dependsOnCrNos);
+    }
+
+   
+    // If cr_type is "Normal": Clear both depend_on and relevant fields
+    // If cr_type is "Depend On": Clear relevant field (keep depend_on) and vice versa
+    protected function enforceCrTypeIntegrity(int $crId, $request): void
+    {
+        // Get the cr_type value from the request
+        $crTypeValue = $request->input('cr_type');
+        
+        if (!$crTypeValue) {
+            return; // No cr_type submitted, skip enforcement
+        }
+        // Get the CrType name
+        $crType = \App\Models\CrType::find($crTypeValue);
+        $crTypeName = $crType ? $crType->name : null;
+        if (!$crTypeName) {
+            return;
+        }
+        switch ($crTypeName) {
+            case 'Normal':
+                // Clear both depend_on and relevant fields
+                $this->clearDependencies($crId);
+                $this->clearRelevantCustomField($crId);
+                break;
+            case 'Depend On':
+                // Clear relevant field (keep depend_on)
+                $this->clearRelevantCustomField($crId);
+                break;
+            case 'Relevant':
+                // Clear depend_on field (keep relevant)
+                $this->clearDependencies($crId);
+                break;
+        }
+    }
+    
+    // Clear all CR dependencies (depend_on field) (already handled from the fronend no need for it)
+    protected function clearDependencies(int $crId): void
+    {
+        $dependencyService = new CrDependencyService();
+        $dependencyService->syncDependencies($crId, []);
+    }
+    
+    // Clear the 'relevant' custom field value
+    protected function clearRelevantCustomField(int $crId): void
+    {
+        ChangeRequestCustomField::where('cr_id', $crId)
+            ->where('custom_field_name', 'relevant')
+            ->update(['custom_field_value' => '[]']);
     }
 
     protected function insertOrUpdateChangeRequestCustomField(array $data): void

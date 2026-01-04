@@ -191,7 +191,7 @@ document.addEventListener("DOMContentLoaded", function () {
             applicationIdField.options[applicationIdField.selectedIndex].text;
 
         if (selectedText === "TMS") {
-            divisionManagerField.value = "tarek.tolba@te.eg";
+            divisionManagerField.value = "sara.mostafa@te.eg";
             divisionManagerField.readOnly = true;    
         } else {
             divisionManagerField.value = "";

@@ -55,10 +55,15 @@ class HomeController extends Controller
            // dd($crs_group_by_applications);
 
          }*/
-        // Fetch aggregated KPI counts per status and year
-        $kpiData = $this->getKpiStatistics();
-        
-        return view('home', compact('statuses', 'applications', 'workflow_type', 'route', 'kpiData'));
+
+        $kpiData = [];
+        $user_has_kpi_chart_permission = auth()->user()->can('View kpi chart');
+        if ($user_has_kpi_chart_permission) {
+            // Fetch aggregated KPI counts per status and year
+            $kpiData = $this->getKpiStatistics();
+        }
+
+        return view('home', compact('statuses', 'applications', 'workflow_type', 'route', 'kpiData', 'user_has_kpi_chart_permission'));
     }
 
     public function dashboard(Request $request)
@@ -175,7 +180,7 @@ class HomeController extends Controller
                 $record = $rawCounts->first(function ($item) use ($year, $status) {
                     return $item->target_launch_year === $year && $item->status === $status;
                 });
-                
+
                 $dataForYear[] = $record ? $record->count : 0;
             }
 

@@ -1,7 +1,7 @@
 <?php
 
-namespace App\Services\ChangeRequest;
 
+namespace App\Services\ChangeRequest;
 use App\Models\Change_request;
 use App\Models\CrDependency;
 use App\Models\NewWorkFlow;
@@ -36,8 +36,8 @@ class CrDependencyService
 
     public function __construct()
     {
-        self::$PENDING_CAB_STATUS_ID = config('change_request.status_ids.pending_cab');
-        self::$DELIVERED_STATUS_ID = config('change_request.status_ids.Delivered');
+        self::$PENDING_CAB_STATUS_ID = \App\Services\StatusConfigService::getStatusId('pending_cab');
+        self::$DELIVERED_STATUS_ID = \App\Services\StatusConfigService::getStatusId('Delivered');
         $this->statusService = new ChangeRequestStatusService();
     }
 
@@ -353,9 +353,23 @@ class CrDependencyService
             'old_status_id' => self::$PENDING_CAB_STATUS_ID,
             //'new_status_id' => 160, //temporary (this is the workflow id of the next status (design estimation))
             'new_status_id' => $workflow->id,
+            'released_from_hold' => true,
+        ]);
+
+        // DEBUG: Log the request being sent
+        Log::debug('CrDependencyService: About to call UpateChangeRequestStatus', [
+            'cr_id' => $cr->id,
+            'cr_no' => $cr->cr_no,
+            'old_status_id' => self::$PENDING_CAB_STATUS_ID,
+            'new_status_id_workflow' => $workflow->id,
+            'workflow_from_status' => $workflow->from_status_id,
+            'workflow_type' => $workflow->workflow_type,
         ]);
 
         try {
+            // CRITICAL: to clear reference_status from the request before calling update
+            request()->merge(['reference_status' => null]);
+            
             $repo = new ChangeRequestRepository();
             $repo->UpateChangeRequestStatus($cr->id, $request);
             //$this->statusService->updateChangeRequestStatus($cr->id, $request);

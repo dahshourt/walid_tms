@@ -1,7 +1,6 @@
 <?php
 
 namespace App\Services\ChangeRequest;
-
 use App\Factories\Applications\ApplicationFactory;
 use App\Factories\ChangeRequest\AttachmetsCRSFactory;
 use App\Factories\ChangeRequest\ChangeRequestFactory;
@@ -215,7 +214,7 @@ class ChangeRequestService
             ->get(['id', 'cr_no', 'title']);
 
         // Step 4: check if any relevant CR is not in Pending Production Deployment
-        $pendingProductionId = config('change_request.status_ids.pending_production_deployment');
+        $pendingProductionId = \App\Services\StatusConfigService::getStatusId('pending_production_deployment');
         $relevantNotPending = $relevantCrsData->filter(function ($item) use ($pendingProductionId) {
             return $item->CurrentRequestStatuses_last?->new_status_id != $pendingProductionId;
         })->count();
@@ -458,8 +457,8 @@ class ChangeRequestService
             ->where('active', '1')
             ->value('new_status_id');
 
-        if ($current_status != config('change_request.status_ids.pending_cab')) {
-            $message = $current_status == config('change_request.status_ids.pending_cab_proceed')
+        if ($current_status != \App\Services\StatusConfigService::getStatusId('pending_cab')) {
+            $message = $current_status == \App\Services\StatusConfigService::getStatusId('pending_cab_proceed')
                 ? 'You already rejected this CR.'
                 : 'You already approved this CR.';
             throw new Exception($message);
