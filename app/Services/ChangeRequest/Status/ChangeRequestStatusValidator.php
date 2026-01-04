@@ -9,6 +9,13 @@ use Exception;
 
 class ChangeRequestStatusValidator
 {
+    private static ?int $PENDING_CAB_STATUS_ID = null;
+
+    public static function init()
+    {
+        self::$PENDING_CAB_STATUS_ID = \App\Services\StatusConfigService::getStatusId('pending_cab');
+    }
+
     /**
      * Validate the status change
      */
@@ -71,10 +78,25 @@ class ChangeRequestStatusValidator
             ->exists();
     }
 
-    public function isTransitionFromPendingCab(ChangeRequestStatusContext $context): bool
+    public function isTransitionFromPendingCab(ChangeRequest $changeRequest, array $statusData): bool
     {
-        // 75 is Pending CAB, 74 is Pending Design (usually)
-        return $context->statusData['old_status_id'] == 75
-            && $context->statusData['new_status_id'] == 74;
+        if (self::$PENDING_CAB_STATUS_ID === null) {
+            return false;
+        }
+
+        $workflow = NewWorkFlow::where('from_status_id', self::$PENDING_CAB_STATUS_ID)
+            ->where('type_id', $changeRequest->workflow_type_id)
+            ->where('workflow_type', '0') // Normal workflow (not reject)
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            ->first();
+
+        if (!$workflow) {
+            return false;
+        }
+
+        /*return isset($statusData['old_status_id']) &&
+               (int)$statusData['old_status_id'] === self::$PENDING_CAB_STATUS_ID;*/
+        return isset($statusData['new_status_id']) &&
+            (int) $statusData['new_status_id'] === $workflow->id;
     }
 }

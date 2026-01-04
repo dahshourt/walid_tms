@@ -59,7 +59,7 @@ class ChangeRequestStatusService
             }
 
             // 3. Check for dependency hold
-            if ($this->validator->isTransitionFromPendingCab($context)) {
+            if ($this->validator->isTransitionFromPendingCab($context->changeRequest, $context->statusData)) {
                 $depService = $this->getDependencyService();
                 if ($depService->shouldHoldCr($changeRequestId)) {
                     $depService->applyDependencyHold($changeRequestId);
