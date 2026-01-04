@@ -107,6 +107,96 @@ $(window).on("load", function () {
 
     statusField.addEventListener("change", handleTechnicalAttachmentsVisibility);
 
+    // Select Elements
+    const crTypeField = document.querySelector('select[name="cr_type"]');
+    const dependOnContainer = document.querySelector('.field_depend_on');
+    const relevantContainer = document.querySelector('.field_relevant');
+    const dependOnSelect = document.querySelector('select[name="depend_on[]"]');
+    const relevantSelect = document.querySelector('select[name="relevant[]"]');
+
+    // Helper to clear values properly 
+    function clearField(field) {
+        if (!field) return;
+        
+        if (field.type === 'select-multiple') {
+            Array.from(field.options).forEach(option => option.selected = false);
+        } else {
+            field.value = '';
+        }
+        
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+        if (typeof $ !== 'undefined') { $(field).trigger('change'); }
+    }
+
+    // Helper to toggle visibility and requirements
+    function toggleFieldState(container, field, shouldShow) {
+        if (!container) return;
+        
+        const label = container.querySelector('label');
+
+        if (shouldShow) {
+            // Show: Use jQuery show() to ensure it overrides any CSS properly
+            $(container).show();
+            
+            if (field) field.setAttribute('required', 'required');
+            
+            // Add Asterisk for required fields
+            if (label && !label.querySelector('.cr-type-required-mark')) {
+                const span = document.createElement('span');
+                span.className = 'cr-type-required-mark';
+                span.style.color = 'red';
+                span.textContent = ' *';
+                label.appendChild(span);
+            }
+        } else {
+            // Hide: Use jQuery hide()
+            $(container).hide();
+            
+            if (field) field.removeAttribute('required');
+            
+            // Remove Asterisk
+            if (label) {
+                const asterisk = label.querySelector('.cr-type-required-mark');
+                if (asterisk) asterisk.remove();
+            }
+            
+            // CRITICAL: Clear the value when hiding
+            clearField(field);
+        }
+    }
+
+    // Main Handler Function
+    function handleCrTypeVisibility() {
+        if (!crTypeField) return;
+        
+        const selectedOption = crTypeField.options[crTypeField.selectedIndex];
+        const selectedText = selectedOption ? selectedOption.text.trim() : '';
+        
+        // Logic Switch
+        if (selectedText === 'Depend On') {
+            toggleFieldState(dependOnContainer, dependOnSelect, true);  // Show Depend On
+            toggleFieldState(relevantContainer, relevantSelect, false); // Hide & Clear Relevant
+        } 
+        else if (selectedText === 'Relevant') {
+            toggleFieldState(dependOnContainer, dependOnSelect, false); // Hide & Clear Depend On
+            toggleFieldState(relevantContainer, relevantSelect, true);  // Show Relevant
+        } 
+        else {
+            // Normal / Empty: Hide & Clear BOTH
+            toggleFieldState(dependOnContainer, dependOnSelect, false);
+            toggleFieldState(relevantContainer, relevantSelect, false);
+        }
+    }
+    
+   
+    if (crTypeField) {
+        // Run immediately to handle page load / old values
+        handleCrTypeVisibility();
+        
+        // Listen for user changes
+        crTypeField.addEventListener('change', handleCrTypeVisibility);
+    }
+
 
 }); 
 

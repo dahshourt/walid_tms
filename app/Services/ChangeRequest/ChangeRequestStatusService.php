@@ -50,6 +50,7 @@ class ChangeRequestStatusService
     private static ?int $DELIVERED_STATUS_ID = null;
 
     private static ?int $PENDING_DESIGN_STATUS_ID = null;
+    private static ?int $REJECTED_STATUS_ID = null;
     // private const PENDING_CAB_STATUS_ID = 38;
     // private const DELIVERED_STATUS_ID = 27;
 
@@ -64,6 +65,7 @@ class ChangeRequestStatusService
         self::$PENDING_CAB_STATUS_ID = \App\Services\StatusConfigService::getStatusId('pending_cab');
         self::$DELIVERED_STATUS_ID = \App\Services\StatusConfigService::getStatusId('Delivered');
         self::$PENDING_DESIGN_STATUS_ID = \App\Services\StatusConfigService::getStatusId('pending_design');
+        self::$REJECTED_STATUS_ID = \App\Services\StatusConfigService::getStatusId('Reject');
         $this->statusRepository = new ChangeRequestStatusRepository();
         $this->mailController = new MailController();
     }
@@ -120,9 +122,11 @@ class ChangeRequestStatusService
             $this->processStatusUpdate($changeRequest, $statusData, $workflow, $userId, $request);
 
             // Fire CrDeliveredEvent if CR reached Delivered status
-            $this->checkAndFireDeliveredEvent($changeRequest, $statusData);
+            //$this->checkAndFireDeliveredEvent($changeRequest, $statusData);
 
             DB::commit();
+            // Fire CrDeliveredEvent if CR reached Delivered status
+            $this->checkAndFireDeliveredEvent($changeRequest, $statusData);
 
             return true;
 
@@ -287,16 +291,28 @@ class ChangeRequestStatusService
         NewWorkFlow $workflow,
         array $technicalTeamCounts
     ): void {
-        if (request()->reference_status) {
-            $currentStatus = ChangeRequestStatus::find(request()->reference_status);
-        } else {
-            $currentStatus = ChangeRequestStatus::where('cr_id', $changeRequestId)
-                ->where('new_status_id', $statusData['old_status_id'])
-            // ->where('active', self::ACTIVE_STATUS)
-            // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+		if(request()->reference_status)
+		{
+			$currentStatus = ChangeRequestStatus::find(request()->reference_status);
+		}
+		else
+		{
+			$currentStatus = ChangeRequestStatus::where('cr_id', $changeRequestId)
+            ->where('new_status_id', $statusData['old_status_id'])
+            //->where('active', self::ACTIVE_STATUS)
+			//->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+			->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            ->first();
+
+            //to check all the active statuses for this CR
+            $allActiveStatuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
                 ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
-                ->first();
-        }
+                ->get(['id', 'new_status_id', 'old_status_id', 'active']);
+            Log::debug('updateCurrentStatus: All active statuses for this CR', [
+                'cr_id' => $changeRequestId,
+                'active_statuses' => $allActiveStatuses->toArray()
+            ]);
+		}
 
         if (! $currentStatus) {
             Log::warning('Current status not found for update', [
@@ -307,18 +323,43 @@ class ChangeRequestStatusService
             return;
         }
 
+        // the current record
+        Log::debug('updateCurrentStatus: Found current status', [
+            'cr_id' => $changeRequestId,
+            'status_record_id' => $currentStatus->id,
+            'current_active_value' => $currentStatus->active,
+            'new_status_id' => $currentStatus->new_status_id
+        ]);
+
         $workflowActive = $workflow->workflow_type == self::WORKFLOW_NORMAL
             ? self::INACTIVE_STATUS
             : self::COMPLETED_STATUS;
         $slaDifference = $this->calculateSlaDifference($currentStatus->created_at);
+
+        $shouldUpdate = $this->shouldUpdateCurrentStatus($statusData['old_status_id'], $technicalTeamCounts);
+
         // Only update if conditions are met
-        if ($this->shouldUpdateCurrentStatus($statusData['old_status_id'], $technicalTeamCounts)) {
-            $currentStatus->update([
+        if ($shouldUpdate) {
+            $updateResult = $currentStatus->update([
                 'sla_dif' => $slaDifference,
-                'active' => self::COMPLETED_STATUS,
+                'active' => self::COMPLETED_STATUS
+            ]);
+
+            // to check update result
+            Log::debug('updateCurrentStatus: Update executed', [
+                'cr_id' => $changeRequestId,
+                'status_record_id' => $currentStatus->id,
+                'update_result' => $updateResult,
+                'new_active_value' => self::COMPLETED_STATUS,
+                'verify_after_update' => $currentStatus->fresh()->active ?? 'failed'
             ]);
 
             $this->handleDependentStatuses($changeRequestId, $currentStatus, $workflowActive);
+        } else {
+            Log::warning('updateCurrentStatus: Skipped update due to shouldUpdateCurrentStatus=false', [
+                'cr_id' => $changeRequestId,
+                'status_record_id' => $currentStatus->id
+            ]);
         }
     }
 
@@ -785,6 +826,10 @@ class ChangeRequestStatusService
         if (! $newWorkflowId) {
             return; // no workflow do nothing
         }
+        Log::info('Checking for delivered event', [
+            'change_request_id' => $changeRequest->id,
+            'new_workflow_id' => $newWorkflowId,
+        ]);
 
         $workflow = NewWorkFlow::with('workflowstatus')->find($newWorkflowId);
         if (! $workflow) {
@@ -792,7 +837,7 @@ class ChangeRequestStatusService
         }
 
         foreach ($workflow->workflowstatus as $wfStatus) {
-            if (self::$DELIVERED_STATUS_ID !== null && (int) $wfStatus->to_status_id === self::$DELIVERED_STATUS_ID) {
+            if (in_array((int) $wfStatus->to_status_id, [self::$DELIVERED_STATUS_ID, self::$REJECTED_STATUS_ID], true)) {
                 // Refresh the CR to ensure we have the latest data
                 $changeRequest->refresh();
 

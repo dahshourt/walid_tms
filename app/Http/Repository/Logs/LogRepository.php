@@ -161,6 +161,18 @@ class LogRepository implements LogRepositoryInterface
                 if ($field === 'kpi') {
                     $oldValue = $change_request->kpis->first()->id ?? null;
                     $newValue = $request->kpi;
+                } elseif ($field === 'depend_on') {
+                     $oldValue = $change_request->dependencies
+                         ->where('pivot.status', '0') 
+                         ->pluck('id')
+                         ->toArray();
+                     $newValue = $request->depend_on;                     
+                     // Normalize to arrays
+                     if (!is_array($oldValue)) $oldValue = [];
+                     if (!is_array($newValue)) $newValue = [];
+                } elseif ($field === 'cr_type') {
+                     $oldValue = $change_request->changeRequestCustomFields->where('custom_field_name', 'cr_type')->first()?->custom_field_value;
+                     $newValue = $request->cr_type;
                 } else {
                     $oldValue = $change_request->$field ?? null;
                     $newValue = $request->$field;
@@ -175,7 +187,13 @@ class LogRepository implements LogRepositoryInterface
                             $valueName = $modelName::find($newValue)?->$fieldName;
                             $message = $info['message'] . " \"$valueName\"";
                         } elseif (array_key_exists('already_has_message', $info)) {
-                            $message = $info['message'];
+                            if ($field === 'depend_on') {
+                                // For depend_on, use the CR Numbers directly
+                                $displayValue = is_array($request->depend_on) ? implode(', ', array_filter($request->depend_on)) : $request->depend_on;
+                                $message = "Depend On CR Changed To '$displayValue'";
+                            } else {
+                                $message = $info['message'];
+                            }
                         } else {
                             if (is_array($newValue)) {
                                 $newValue = implode(' , ', $newValue);
@@ -250,7 +268,26 @@ class LogRepository implements LogRepositoryInterface
             $actualStatuses = implode(', ', $newStatusesNames);
 
             if ($status_title && $request->missing('hold') && $request->missing('is_final_confirmation')) {
-                $this->createLog($log, $id, $user->id, "Change Request Status changed to '$status_title' by {$user->user_name} (Actual Status: $actualStatuses)");
+                // Dependency Release Log (when the depend cr reach to the status delivered or reject)
+                if ($request->released_from_hold) {
+                    $this->createLog($log, $id, $user->id, "Change request status has been released by {$user->user_name} and the current status is $actualStatuses");
+                } 
+                // Dependency Hold Log
+                elseif ($change_request->fresh()->is_dependency_hold) {
+                    $blockingCrs = \App\Models\CrDependency::where('cr_id', $id)
+                        ->active()
+                        ->with('dependsOnCr:id,cr_no')
+                        ->get()
+                        ->pluck('dependsOnCr.cr_no')
+                        ->filter()
+                        ->implode(', ');
+                        
+                    $this->createLog($log, $id, $user->id, "Change Request Status changed to '$status_title' by {$user->user_name} (Actual Status: $actualStatuses - Pending Dependency (CR#$blockingCrs))");
+                } 
+                // Normal Status Log
+                else {
+                    $this->createLog($log, $id, $user->id, "Change Request Status changed to '$status_title' by {$user->user_name} (Actual Status: $actualStatuses)");
+                }
             } else {
                 $log_message = "Change Request Status changed to '$actualStatuses' by '$user->user_name'";
 
