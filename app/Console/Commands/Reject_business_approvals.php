@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use App\Models\Configuration;
+use App\Models\User;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Console\Command;
@@ -30,6 +31,14 @@ class Reject_business_approvals extends Command
     public function handle(ChangeRequestRepository $repo)
     {
         Log::info('=== Auto Reject CR job started ===');
+
+        $adminUser = User::where('email', 'admin@te.eg')->first();
+
+        if (!$adminUser) {
+            Log::error("Auto-Reject CR job aborted: Admin user 'admin@te.eg' not found.");
+            return;
+        }
+
         $configuration = Configuration::where('configuration_name', 'Division Manager Approval')->first();
         $configurationValue = (int) ($configuration->configuration_value ?? 0);
         $sevenDaysAgo = Carbon::now()->subDays($configurationValue);
@@ -50,7 +59,7 @@ class Reject_business_approvals extends Command
             $requestData = new \Illuminate\Http\Request([
                 'old_status_id' => '22',
                 'new_status_id' => '35',
-                'user_id' => $user_id,
+                'user_id' => $adminUser->id,
             ]);
 
             try {
