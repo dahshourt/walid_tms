@@ -88,7 +88,7 @@ class ChangeRequestStatusService
                 'userId' => $userId,
             ]);
 
-            if (! $workflow) {
+            if (!$workflow) {
                 $newStatusId = $statusData['new_status_id'] ?? 'not set';
                 throw new Exception("Workflow not found for status: {$newStatusId}");
             }
@@ -97,7 +97,7 @@ class ChangeRequestStatusService
             $statusChanged = $this->validateStatusChange($changeRequest, $statusData, $workflow);
 
             // If status hasn't changed, just return true without throwing an error
-            if (! $statusChanged) {
+            if (!$statusChanged) {
                 DB::commit();
 
                 return true;
@@ -173,7 +173,7 @@ class ChangeRequestStatusService
         $oldStatusId = $request['old_status_id'] ?? $request->old_status_id ?? null;
         $newWorkflowId = $request['new_workflow_id'] ?? null;
 
-        if (! $newStatusId || ! $oldStatusId) {
+        if (!$newStatusId || !$oldStatusId) {
             throw new InvalidArgumentException('Missing required status IDs');
         }
 
@@ -201,7 +201,7 @@ class ChangeRequestStatusService
     {
         $changeRequest = ChangeRequest::find($id);
 
-        if (! $changeRequest) {
+        if (!$changeRequest) {
             throw new Exception("Change request not found: {$id}");
         }
 
@@ -226,7 +226,7 @@ class ChangeRequestStatusService
 
         // Fallback to assigned user
         $assignedTo = $request['assign_to'] ?? null;
-        if (! $assignedTo) {
+        if (!$assignedTo) {
             throw new Exception('Unable to determine user for status update');
         }
 
@@ -264,7 +264,7 @@ class ChangeRequestStatusService
             ->whereRaw('CAST(status AS CHAR) = ?', ['1'])
             ->first();
 
-        if (! $technicalCr) {
+        if (!$technicalCr) {
             return ['total' => 0, 'approved' => 0];
         }
 
@@ -291,18 +291,15 @@ class ChangeRequestStatusService
         NewWorkFlow $workflow,
         array $technicalTeamCounts
     ): void {
-		if(request()->reference_status)
-		{
-			$currentStatus = ChangeRequestStatus::find(request()->reference_status);
-		}
-		else
-		{
-			$currentStatus = ChangeRequestStatus::where('cr_id', $changeRequestId)
-            ->where('new_status_id', $statusData['old_status_id'])
-            //->where('active', self::ACTIVE_STATUS)
-			//->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-			->whereRaw('CAST(active AS CHAR) = ?', ['1'])
-            ->first();
+        if (request()->reference_status) {
+            $currentStatus = ChangeRequestStatus::find(request()->reference_status);
+        } else {
+            $currentStatus = ChangeRequestStatus::where('cr_id', $changeRequestId)
+                ->where('new_status_id', $statusData['old_status_id'])
+                //->where('active', self::ACTIVE_STATUS)
+                //->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
+                ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+                ->first();
 
             //to check all the active statuses for this CR
             $allActiveStatuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
@@ -312,9 +309,9 @@ class ChangeRequestStatusService
                 'cr_id' => $changeRequestId,
                 'active_statuses' => $allActiveStatuses->toArray()
             ]);
-		}
+        }
 
-        if (! $currentStatus) {
+        if (!$currentStatus) {
             Log::warning('Current status not found for update', [
                 'cr_id' => $changeRequestId,
                 'old_status_id' => $statusData['old_status_id'],
@@ -400,7 +397,7 @@ class ChangeRequestStatusService
             ->get();
         // dd($dependentStatuses,$workflowActive);
         // if ($workflowActive == self::COMPLETED_STATUS) {
-        if (! $workflowActive) {
+        if (!$workflowActive) {
             // Abnormal workflow - deactivate all dependent statuses
             $dependentStatuses->each(function ($status) {
                 $status->update(['active' => self::INACTIVE_STATUS]);
@@ -422,8 +419,10 @@ class ChangeRequestStatusService
         if (request()->reference_status) {
             $currentStatus = ChangeRequestStatus::find(request()->reference_status);
         } else {
-            $currentStatus = ChangeRequestStatus::where('cr_id', $changeRequest->id)->where('new_status_id',
-                $statusData['old_status_id'])->first();
+            $currentStatus = ChangeRequestStatus::where('cr_id', $changeRequest->id)->where(
+                'new_status_id',
+                $statusData['old_status_id']
+            )->first();
         }
 
         foreach ($workflow->workflowstatus as $workflowStatus) {
@@ -452,7 +451,7 @@ class ChangeRequestStatusService
                     $previous_technical_teams = $changeRequest->technical_Cr_first->technical_cr_team ? $changeRequest->technical_Cr_first->technical_cr_team->pluck('group_id')->toArray() : [];
                 }
                 $teams = $request->technical_teams ?? $request['technical_teams'] ?? $previous_technical_teams;
-                if (! empty($teams) && is_iterable($teams)) {
+                if (!empty($teams) && is_iterable($teams)) {
                     foreach ($teams as $teamGroupId) {
                         $payload = $this->buildStatusData(
                             $changeRequest->id,
@@ -531,11 +530,15 @@ class ChangeRequestStatusService
             $query->where('workflow_type_id', '!=', 9);
         })->get();
 
-        $depend_active_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where('old_status_id',
-            $cr_status->old_status_id)->whereRaw('CAST(active AS CHAR) = ?',
-                ['1'])->whereNULL('group_id')->whereHas('change_request_data', function ($query) {
-                    $query->where('workflow_type_id', '!=', 9);
-                })->get();
+        $depend_active_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)->where(
+            'old_status_id',
+            $cr_status->old_status_id
+        )->whereRaw(
+                'CAST(active AS CHAR) = ?',
+                ['1']
+            )->whereNULL('group_id')->whereHas('change_request_data', function ($query) {
+                $query->where('workflow_type_id', '!=', 9);
+            })->get();
 
         /* if ($depend_statuses->count() == $all_depend_statuses->count()) {
             foreach ($depend_statuses as $status) {
@@ -563,8 +566,10 @@ class ChangeRequestStatusService
         if ($changeRequest->workflow_type_id == 9) {
             $NextStatusWorkflow = NewWorkFlow::find($newStatusId);
             if (in_array($NextStatusWorkflow->workflowstatus[0]->to_status_id, $parkedIds, true)) {
-                $depend_active_statuses = ChangeRequestStatus::where('cr_id',
-                    $changeRequestId)->whereRaw('CAST(active AS CHAR) = ?', ['1'])->count();
+                $depend_active_statuses = ChangeRequestStatus::where(
+                    'cr_id',
+                    $changeRequestId
+                )->whereRaw('CAST(active AS CHAR) = ?', ['1'])->count();
                 $active = $depend_active_statuses > 0 ? self::INACTIVE_STATUS : self::ACTIVE_STATUS;
             } else {
                 $active = self::ACTIVE_STATUS;
@@ -584,7 +589,7 @@ class ChangeRequestStatusService
      */
     private function checkWorkflowDependencies(int $changeRequestId, $workflowStatus): bool
     {
-        if (! $workflowStatus->dependency_ids) {
+        if (!$workflowStatus->dependency_ids) {
             return true;
         }
 
@@ -594,7 +599,7 @@ class ChangeRequestStatusService
         );
 
         foreach ($dependencyIds as $workflowId) {
-            if (! $this->isDependencyMet($changeRequestId, $workflowId)) {
+            if (!$this->isDependencyMet($changeRequestId, $workflowId)) {
                 return false;
             }
         }
@@ -609,7 +614,7 @@ class ChangeRequestStatusService
     {
         $dependentWorkflow = NewWorkFlow::find($workflowId);
 
-        if (! $dependentWorkflow) {
+        if (!$dependentWorkflow) {
             return false;
         }
 
@@ -689,8 +694,10 @@ class ChangeRequestStatusService
     {
         // dd($request->all());
         // Notify CR Manager when status changes from 99 to 101
-        if ($statusData['old_status_id'] == 99 &&
-            $this->hasStatusTransition($changeRequestId, 101)) {
+        if (
+            $statusData['old_status_id'] == 99 &&
+            $this->hasStatusTransition($changeRequestId, 101)
+        ) {
 
             try {
                 $this->mailController->notifyCrManager($changeRequestId);
@@ -724,12 +731,14 @@ class ChangeRequestStatusService
 
         // Notify group when status changes.
         // dd($request->all(), $statusData);
-        $newStatusId = NewWorkFlowStatuses::where('new_workflow_id',
-            $request->new_status_id)->get()->pluck('to_status_id')->toArray();
+        $newStatusId = NewWorkFlowStatuses::where(
+            'new_workflow_id',
+            $request->new_status_id
+        )->get()->pluck('to_status_id')->toArray();
         // dd($newStatusId);
         $userToNotify = [];
         if (in_array(\App\Services\StatusConfigService::getStatusId('pending_cd_analysis'), $newStatusId)) {
-            if (! empty($request->cr_member)) {
+            if (!empty($request->cr_member)) {
                 $userToNotify = [$request->cr_member];
             }
         }
@@ -737,8 +746,10 @@ class ChangeRequestStatusService
         $cr = ChangeRequest::find($changeRequestId);
         $targetStatus = Status::with('group_statuses')->whereIn('id', $newStatusId)->first();
         // $group_id = $targetStatus->group_statuses->first()->group_id ?? null;
-        $viewGroup = GroupStatuses::where('status_id', $targetStatus->id)->where('type',
-            '2')->pluck('group_id')->toArray();
+        $viewGroup = GroupStatuses::where('status_id', $targetStatus->id)->where(
+            'type',
+            '2'
+        )->pluck('group_id')->toArray();
         $group_id = $cr->application->group_applications->first()->group_id ?? null;
         // will check if group_id is in viewGroup then we will send the notification to this group is only
         // dd($group_id,$viewGroup);
@@ -758,11 +769,16 @@ class ChangeRequestStatusService
         }
         // dd($groupToNotify);
 
-        if ($this->active_flag == '1' && ! empty($groupToNotify)) {
+        if ($this->active_flag == '1' && !empty($groupToNotify)) {
             foreach ($groupToNotify as $groupId) {
                 try {
-                    $this->mailController->notifyGroup($changeRequestId, $statusData['old_status_id'], $newStatusId,
-                        $groupId, $userToNotify);
+                    $this->mailController->notifyGroup(
+                        $changeRequestId,
+                        $statusData['old_status_id'],
+                        $newStatusId,
+                        $groupId,
+                        $userToNotify
+                    );
                 } catch (Exception $e) {
                     Log::error('Failed to send Group notification', [
                         'change_request_id' => $changeRequestId,
@@ -789,7 +805,7 @@ class ChangeRequestStatusService
     // Get the dependency service (lazy loaded)
     private function getDependencyService(): CrDependencyService
     {
-        if (! $this->dependencyService) {
+        if (!$this->dependencyService) {
             $this->dependencyService = new CrDependencyService();
         }
 
@@ -809,21 +825,21 @@ class ChangeRequestStatusService
             ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->first();
 
-        if (! $workflow) {
+        if (!$workflow) {
             return false;
         }
 
         /*return isset($statusData['old_status_id']) &&
                (int)$statusData['old_status_id'] === self::$PENDING_CAB_STATUS_ID;*/
         return isset($statusData['new_status_id']) &&
-               (int) $statusData['new_status_id'] === $workflow->id;
+            (int) $statusData['new_status_id'] === $workflow->id;
     }
 
     // Check if CR has reached Delivered status and fire event
     private function checkAndFireDeliveredEvent(ChangeRequest $changeRequest, array $statusData): void
     {
         $newWorkflowId = $statusData['new_status_id'] ?? null;
-        if (! $newWorkflowId) {
+        if (!$newWorkflowId) {
             return; // no workflow do nothing
         }
         Log::info('Checking for delivered event', [
@@ -832,7 +848,7 @@ class ChangeRequestStatusService
         ]);
 
         $workflow = NewWorkFlow::with('workflowstatus')->find($newWorkflowId);
-        if (! $workflow) {
+        if (!$workflow) {
             return; // no workflow do nothing
         }
 

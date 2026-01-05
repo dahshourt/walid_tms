@@ -243,8 +243,20 @@ return [
     'uploads' => [
         'max_file_size' => 10240, // 10MB in KB
         'allowed_extensions' => [
-            'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx',
-            'jpg', 'jpeg', 'png', 'gif', 'txt', 'zip', 'rar',
+            'pdf',
+            'doc',
+            'docx',
+            'xls',
+            'xlsx',
+            'ppt',
+            'pptx',
+            'jpg',
+            'jpeg',
+            'png',
+            'gif',
+            'txt',
+            'zip',
+            'rar',
         ],
         'storage_disk' => 'local',
         'storage_path' => 'change_requests',
@@ -262,8 +274,16 @@ return [
         'enabled' => true,
         'max_per_request' => 20,
         'types' => [
-            'text', 'textarea', 'select', 'checkbox', 'radio',
-            'date', 'datetime', 'number', 'email', 'url',
+            'text',
+            'textarea',
+            'select',
+            'checkbox',
+            'radio',
+            'date',
+            'datetime',
+            'number',
+            'email',
+            'url',
         ],
     ],
 
@@ -354,3 +374,5 @@ return [
         82 => 161,
     ],
 ];
+
+
