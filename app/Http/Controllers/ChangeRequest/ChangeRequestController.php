@@ -650,6 +650,8 @@ class ChangeRequestController extends Controller
         if (!in_array($current_status, [
                 \App\Services\StatusConfigService::getStatusId('business_approval'),
                 \App\Services\StatusConfigService::getStatusId('business_approval', ' kam'),
+                \App\Services\StatusConfigService::getStatusId('division_manager_approval'),
+
             ])) {
             $rejectStatuses = [
                 \App\Services\StatusConfigService::getStatusId('Reject'),

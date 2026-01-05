@@ -280,6 +280,8 @@ class ChangeRequestSearchService
             && in_array($status->status->id, [
                 \App\Services\StatusConfigService::getStatusId('business_approval'),
                 \App\Services\StatusConfigService::getStatusId('business_approval', ' kam'),
+                \App\Services\StatusConfigService::getStatusId('division_manager_approval'),
+                //\App\Services\StatusConfigService::getStatusId('division_manager_approval', ' kam'),
             ]);
             // return $status && $status->status && $status->status->id == \App\Services\StatusConfigService::getStatusId('business_approval');
         });
