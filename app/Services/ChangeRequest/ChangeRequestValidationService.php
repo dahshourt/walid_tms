@@ -42,14 +42,14 @@ class ChangeRequestValidationService
         $newStatusId = $request->new_status_id ?? null;
         $oldStatusId = $request->old_status_id ?? null;
 
-        if (! $newStatusId || ! $oldStatusId) {
+        if (!$newStatusId || !$oldStatusId) {
             return false;
         }
 
         $workflow = NewWorkFlow::find($newStatusId);
         $oldStatusData = Status::find($oldStatusId);
 
-        if (! $oldStatusData || ! $oldStatusData->view_technical_team_flag) {
+        if (!$oldStatusData || !$oldStatusData->view_technical_team_flag) {
             return false;
         }
 
@@ -57,7 +57,7 @@ class ChangeRequestValidationService
         $cr = Change_request::find($id);
         $technicalCr = TechnicalCr::where('cr_id', $id)->whereRaw('CAST(status AS CHAR) = ?', ['0'])->first();
 
-        if (! $technicalCr) {
+        if (!$technicalCr) {
             return false;
         }
         $updateService = new ChangeRequestUpdateService();
@@ -78,7 +78,7 @@ class ChangeRequestValidationService
         $cr = Change_request::find($crId);
         $user = User::find($userId);
 
-        if (! $cr || ! $user) {
+        if (!$cr || !$user) {
             return false;
         }
 
@@ -157,13 +157,13 @@ class ChangeRequestValidationService
             if (is_array($fileArray)) {
                 foreach ($fileArray as $index => $file) {
                     $fileErrors = $this->validateSingleFile($file, $uploadConfig);
-                    if (! empty($fileErrors)) {
+                    if (!empty($fileErrors)) {
                         $errors["{$key}.{$index}"] = $fileErrors;
                     }
                 }
             } else {
                 $fileErrors = $this->validateSingleFile($fileArray, $uploadConfig);
-                if (! empty($fileErrors)) {
+                if (!empty($fileErrors)) {
                     $errors[$key] = $fileErrors;
                 }
             }
@@ -180,7 +180,7 @@ class ChangeRequestValidationService
         $errors = [];
         $customFieldConfig = $this->getCustomFieldConfiguration();
 
-        if (! $customFieldConfig['enabled']) {
+        if (!$customFieldConfig['enabled']) {
             return ['custom_fields' => 'Custom fields are not enabled.'];
         }
 
@@ -196,7 +196,7 @@ class ChangeRequestValidationService
 
             // Validate field value based on type (if type information is available)
             $fieldErrors = $this->validateCustomFieldValue($fieldName, $fieldValue);
-            if (! empty($fieldErrors)) {
+            if (!empty($fieldErrors)) {
                 $errors[$fieldName] = $fieldErrors;
             }
         }
@@ -425,7 +425,7 @@ class ChangeRequestValidationService
 
         $userGroups = $user->user_groups->pluck('group_id')->toArray();
 
-        return ! empty(array_intersect($adminGroups, $userGroups));
+        return !empty(array_intersect($adminGroups, $userGroups));
     }
 
     /**
@@ -441,7 +441,7 @@ class ChangeRequestValidationService
         $adminGroups = [$this->getGroupIds()['admin']];
         $userGroups = $user->user_groups->pluck('group_id')->toArray();
 
-        return ! empty(array_intersect($adminGroups, $userGroups));
+        return !empty(array_intersect($adminGroups, $userGroups));
     }
 
     /**
@@ -457,7 +457,7 @@ class ChangeRequestValidationService
 
         $userGroups = $user->user_groups->pluck('group_id')->toArray();
 
-        return ! empty(array_intersect($managerGroups, $userGroups));
+        return !empty(array_intersect($managerGroups, $userGroups));
     }
 
     /**
@@ -478,7 +478,7 @@ class ChangeRequestValidationService
 
         $userGroups = $user->user_groups->pluck('group_id')->toArray();
 
-        return ! empty(array_intersect($technicalGroups, $userGroups));
+        return !empty(array_intersect($technicalGroups, $userGroups));
     }
 
     /**
@@ -517,7 +517,7 @@ class ChangeRequestValidationService
 
         // Validate workflow type
         if (isset($data['workflow_type_id'])) {
-            if (! $this->isValidWorkflowType($data['workflow_type_id'])) {
+            if (!$this->isValidWorkflowType($data['workflow_type_id'])) {
                 $errors['workflow_type_id'] = 'Invalid workflow type selected.';
             }
         }
@@ -526,7 +526,7 @@ class ChangeRequestValidationService
         $estimationFields = ['design_duration', 'develop_duration', 'test_duration', 'CR_duration'];
         foreach ($estimationFields as $field) {
             if (isset($data[$field]) && $data[$field] !== null) {
-                if (! is_numeric($data[$field]) || $data[$field] < 0) {
+                if (!is_numeric($data[$field]) || $data[$field] < 0) {
                     $errors[$field] = "The {$field} must be a positive number.";
                 }
                 if ($data[$field] > 2000) {
@@ -536,13 +536,13 @@ class ChangeRequestValidationService
         }
 
         // Validate email format for division manager
-        if (isset($data['division_manager']) && ! filter_var($data['division_manager'], FILTER_VALIDATE_EMAIL)) {
+        if (isset($data['division_manager']) && !filter_var($data['division_manager'], FILTER_VALIDATE_EMAIL)) {
             $errors['division_manager'] = 'Division manager must be a valid email address.';
         }
 
         // Validate mobile number format
-        if (isset($data['creator_mobile_number']) && ! empty($data['creator_mobile_number'])) {
-            if (! preg_match('/^[0-9\-\+\s\(\)]+$/', $data['creator_mobile_number'])) {
+        if (isset($data['creator_mobile_number']) && !empty($data['creator_mobile_number'])) {
+            if (!preg_match('/^[0-9\-\+\s\(\)]+$/', $data['creator_mobile_number'])) {
                 $errors['creator_mobile_number'] = 'Invalid mobile number format.';
             }
         }
@@ -577,7 +577,7 @@ class ChangeRequestValidationService
         $userFields = ['developer_id', 'tester_id', 'designer_id'];
         foreach ($userFields as $field) {
             if (isset($data[$field]) && $data[$field]) {
-                if (! User::where('id', $data[$field])->where('active', 1)->exists()) {
+                if (!User::where('id', $data[$field])->where('active', 1)->exists()) {
                     $errors[$field] = 'Selected user does not exist or is inactive.';
                 }
             }
@@ -598,7 +598,7 @@ class ChangeRequestValidationService
         }
 
         // Validate calendar date for scheduled CRs
-        if (isset($data['calendar']) && ! empty($data['calendar'])) {
+        if (isset($data['calendar']) && !empty($data['calendar'])) {
             $calendarDate = \Carbon\Carbon::parse($data['calendar']);
             if ($calendarDate->isPast()) {
                 $errors['calendar'] = 'Calendar date cannot be in the past.';
@@ -644,7 +644,7 @@ class ChangeRequestValidationService
     {
         $errors = [];
 
-        if (! $file || ! $file->isValid()) {
+        if (!$file || !$file->isValid()) {
             $errors[] = 'Invalid file upload.';
 
             return $errors;
@@ -657,13 +657,13 @@ class ChangeRequestValidationService
 
         // Check file extension
         $extension = strtolower($file->getClientOriginalExtension());
-        if (! in_array($extension, $config['allowed_extensions'])) {
+        if (!in_array($extension, $config['allowed_extensions'])) {
             $errors[] = "File type '{$extension}' is not allowed. Allowed types: " . implode(', ', $config['allowed_extensions']);
         }
 
         // Check MIME type for additional security
         $mimeType = $file->getMimeType();
-        if (! $this->isAllowedMimeType($mimeType, $extension)) {
+        if (!$this->isAllowedMimeType($mimeType, $extension)) {
             $errors[] = 'File type does not match its content.';
         }
 
@@ -708,20 +708,20 @@ class ChangeRequestValidationService
         }
 
         // Validate specific field types based on field name patterns
-        if (strpos($fieldName, 'email') !== false && ! empty($fieldValue)) {
-            if (! filter_var($fieldValue, FILTER_VALIDATE_EMAIL)) {
+        if (strpos($fieldName, 'email') !== false && !empty($fieldValue)) {
+            if (!filter_var($fieldValue, FILTER_VALIDATE_EMAIL)) {
                 $errors[] = 'Invalid email format.';
             }
         }
 
-        if (strpos($fieldName, 'url') !== false && ! empty($fieldValue)) {
-            if (! filter_var($fieldValue, FILTER_VALIDATE_URL)) {
+        if (strpos($fieldName, 'url') !== false && !empty($fieldValue)) {
+            if (!filter_var($fieldValue, FILTER_VALIDATE_URL)) {
                 $errors[] = 'Invalid URL format.';
             }
         }
 
-        if (strpos($fieldName, 'phone') !== false && ! empty($fieldValue)) {
-            if (! preg_match('/^[0-9\-\+\s\(\)]+$/', $fieldValue)) {
+        if (strpos($fieldName, 'phone') !== false && !empty($fieldValue)) {
+            if (!preg_match('/^[0-9\-\+\s\(\)]+$/', $fieldValue)) {
                 $errors[] = 'Invalid phone number format.';
             }
         }
@@ -806,7 +806,18 @@ class ChangeRequestValidationService
             'max_file_size' => config('change_request.file_upload.max_file_size', 10240), // KB
             'max_files_per_request' => config('change_request.file_upload.max_files_per_request', 10),
             'allowed_extensions' => config('change_request.file_upload.allowed_extensions', [
-                'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'rar',
+                'pdf',
+                'doc',
+                'docx',
+                'xls',
+                'xlsx',
+                'txt',
+                'jpg',
+                'jpeg',
+                'png',
+                'gif',
+                'zip',
+                'rar',
             ]),
             'upload_path' => config('change_request.file_upload.upload_path', 'uploads/change_requests/'),
         ];
@@ -822,7 +833,13 @@ class ChangeRequestValidationService
             'max_per_request' => config('change_request.custom_fields.max_per_request', 20),
             'max_field_length' => config('change_request.custom_fields.max_field_length', 1000),
             'allowed_field_types' => config('change_request.custom_fields.allowed_types', [
-                'text', 'number', 'email', 'url', 'phone', 'date', 'textarea',
+                'text',
+                'number',
+                'email',
+                'url',
+                'phone',
+                'date',
+                'textarea',
             ]),
         ];
     }
@@ -848,6 +865,7 @@ class ChangeRequestValidationService
      */
     private function updateCurrentStatusByGroup(int $changeRequestId, array $statusData, int $groupId): void
     {
+
         $currentStatus = ChangeRequestStatus::where('cr_id', $changeRequestId)
             ->where('new_status_id', $statusData['id'])
             ->where('group_id', $groupId)
@@ -855,13 +873,17 @@ class ChangeRequestValidationService
             // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
             ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->first();
-
-        if (! $currentStatus) {
-            Log::warning('Current status not found for update', [
-                'cr_id' => $changeRequestId,
-                'old_status_id' => $statusData['old_status_id'],
-            ]);
-
+        if (!$currentStatus) {
+            if (isset($currentStatus->old_status_id)) {
+                Log::warning('Current status not found for update', [
+                    'cr_id' => $changeRequestId,
+                    'old_status_id' => $currentStatus->old_status_id,
+                ]);
+            } else {
+                Log::warning('Current status not found for update', [
+                    'cr_id' => $changeRequestId
+                ]);
+            }
             return;
         }
 

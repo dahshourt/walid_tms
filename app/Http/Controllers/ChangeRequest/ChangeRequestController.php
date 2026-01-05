@@ -321,7 +321,8 @@ class ChangeRequestController extends Controller
             'status_name',
             'title',
             'logs_ers',
-            'technical_teams', 'form_title'
+            'technical_teams',
+            'form_title'
         ));
     }
 
@@ -415,7 +416,7 @@ class ChangeRequestController extends Controller
             DB::rollBack();
             Log::error('Failed to update change request', [
                 'cr_id' => $id,
-                'error' => $e->getMessage(),
+                'error' => $e,
                 'user_id' => auth()->id(),
             ]);
 
@@ -644,10 +645,12 @@ class ChangeRequestController extends Controller
             ->where('active', '1')
             ->value('new_status_id');
 
-        if (!in_array($current_status, [
+        if (
+            !in_array($current_status, [
                 \App\Services\StatusConfigService::getStatusId('business_approval'),
                 \App\Services\StatusConfigService::getStatusId('business_approval', ' kam'),
-            ])) {
+            ])
+        ) {
             $rejectStatuses = [
                 \App\Services\StatusConfigService::getStatusId('Reject'),
                 \App\Services\StatusConfigService::getStatusId('Reject', ' kam'),
@@ -847,7 +850,7 @@ class ChangeRequestController extends Controller
             DB::rollBack();
             Log::error('Failed to update change request', [
                 'cr_id' => $id ?? null,
-                'error' => $e->getMessage(),
+                'error' => $e,
                 'user_id' => auth()->id(),
             ]);
 
@@ -893,10 +896,12 @@ class ChangeRequestController extends Controller
 
             $status_id = $status->new_status_id ?? null;
             if ($changeRequest->workflow_type_id == 3) {
-                if (!in_array($status_id, [
-                    config('change_request.status_ids.pending_production_deployment_in_house'),
-                    config('change_request.status_ids.pending_stage_deployment_in_house'),
-                ])) {
+                if (
+                    !in_array($status_id, [
+                        config('change_request.status_ids.pending_production_deployment_in_house'),
+                        config('change_request.status_ids.pending_stage_deployment_in_house'),
+                    ])
+                ) {
                     return redirect()->back()
                         ->with('error', 'Change request is not in pending production deployment or pending stage deployment status.')
                         ->withInput();
@@ -929,7 +934,7 @@ class ChangeRequestController extends Controller
             DB::rollBack();
             Log::error('Failed to update change request', [
                 'cr_id' => $id ?? null,
-                'error' => $e->getMessage(),
+                'error' => $e,
                 'user_id' => auth()->id(),
             ]);
 

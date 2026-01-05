@@ -20,6 +20,7 @@ class AdminUserSeeder extends Seeder
 
         if (!$user) {
             DB::table('users')->insert([
+                'id' => 3,
                 'name' => 'admin',
                 'user_name' => 'admin',
                 'email' => 'admin@te.eg',
