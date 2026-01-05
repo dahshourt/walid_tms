@@ -17,7 +17,6 @@ return [
         'maintenance' => 3,
         'enhancement' => 4,
         'release' => 5,
-        'vendor' => 11,
     ],
 
     /*
@@ -68,14 +67,10 @@ return [
     | and business logic.
     |
     */
-    'status_ids' => function () {
-        return app()->bound('db') ? app(\App\Services\StatusConfigService::class)::loadStatusIds() : [];
-    },
+    // 'status_ids' => StatusConfigService::loadStatusIds(),
 
     // For KAM workflow, you can add a separate key:
-    'status_ids_kam' => function () {
-        return app()->bound('db') ? app(\App\Services\StatusConfigService::class)::loadStatusIdsKam() : [];
-    },
+    // 'status_ids_kam' => StatusConfigService::loadStatusIdsKam(),
 
     'man_days_status' => [
         'id' => 112,
@@ -96,9 +91,6 @@ return [
         'promo_closure' => 129,
         'review_uat_results_fb' => 168,
     ],
-    'vendor_parked_status_ids' => [
-        // Add vendor specific parked statuses here
-    ],
     'promo_depend_statuses' => [
         // 'pending_uat' => 78,
         'uat_in_progress' => 173,
@@ -109,6 +101,7 @@ return [
         'pending_uat' => 78,
     ],
     'promo_special_flow_ids' => [
+        'resume_implementation' => 156,
         'resume_implementation' => 156,
         'fix_defect_on_production' => 171,
         'rollback' => 134,

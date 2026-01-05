@@ -363,15 +363,13 @@ class ChangeRequestSearchService
 
         $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('cr_manager_review'));
         if (request()->has('check_business')) {
-            $viewStatuses->push(config('change_request.status_ids.business_test_case_approval'));
-            $viewStatuses->push(config('change_request.status_ids.business_uat_sign_off'));
-            $viewStatuses->push(config('change_request.status_ids.pending_business'));
-            $viewStatuses->push(config('change_request.status_ids.pending_business_feedback'));
-            $viewStatuses->push(config('change_request.status_ids.division_manager_approval'));
-            $viewStatuses->push(config('change_request.status_ids.pending_agreed_business'));
+            $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('business_test_case_approval'));
+            $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('business_uat_sign_off'));
+            $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('pending_business'));
+            $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('pending_business_feedback'));
 
         }
-    ;
+
         $changeRequest = Change_request::with('category')->with('change_request_custom_fields')
             ->with('attachments', function ($q) use ($groups) {
                 $q->with('user');

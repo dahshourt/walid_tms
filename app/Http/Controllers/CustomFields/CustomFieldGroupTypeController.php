@@ -177,8 +177,9 @@ class CustomFieldGroupTypeController extends Controller
 
         $r = new ChangeRequestRepository();
         $crs_in_queues = $r->getAll()->pluck('id');
+        $cr_types = \App\Models\CrType::all();
 
-        return view('search.advanced_search', compact('fields', 'statuses', 'priorities', 'applications', 'parents', 'categories', 'units', 'workflows', 'testing_users', 'sa_users', 'developer_users', 'totalCount', 'collection', 'crs_in_queues'));
+        return view('search.advanced_search', compact('fields', 'statuses', 'priorities', 'applications', 'parents', 'categories', 'units', 'workflows', 'testing_users', 'sa_users', 'developer_users', 'totalCount', 'collection', 'crs_in_queues', 'cr_types'));
     }
 
     public function AllCustomFieldsSelected()
