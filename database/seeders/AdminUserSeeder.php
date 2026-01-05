@@ -9,6 +9,7 @@ use App\Models\User;
 
 class AdminUserSeeder extends Seeder
 {
+
     /**
      * Run the database seeds.
      *
@@ -20,6 +21,7 @@ class AdminUserSeeder extends Seeder
 
         if (!$user) {
             DB::table('users')->insert([
+                'id' => 3,
                 'name' => 'admin',
                 'user_name' => 'admin',
                 'email' => 'admin@te.eg',

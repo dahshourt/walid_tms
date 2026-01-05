@@ -84,6 +84,7 @@ return [
         'confirmed_sdd' => 149,
         'set_md_prerequisites' => 112,
         'final_uat_results_fb' => 167,
+        'review_uat_results_fb' => 168,
         'promo_closure' => 129,
 
     ],
@@ -101,7 +102,6 @@ return [
         'pending_uat' => 78,
     ],
     'promo_special_flow_ids' => [
-        'resume_implementation' => 156,
         'resume_implementation' => 156,
         'fix_defect_on_production' => 171,
         'rollback' => 134,
@@ -374,5 +374,7 @@ return [
         82 => 161,
     ],
 ];
+
+
 
 

@@ -46,30 +46,30 @@ class StatusConfigService
     {
         // Use a cache key based on the suffix
         $cacheKey = 'status_config_ids_' . md5($suffix);
-        
+
         // Try to get from cache first (cache for 24 hours)
         return \Illuminate\Support\Facades\Cache::remember($cacheKey, 86400, function () use ($suffix) {
             // Check if we're in a context where we can access the database
-            if (! self::canAccessDatabase()) {
-                self::safeLog('error', 'Cannot access database when loading statuses with suffix: ' . $suffix);
+            if (!self::canAccessDatabase()) {
+                // self::safeLog('error', 'Cannot access database when loading statuses with suffix: ' . $suffix);
                 return [];
             }
-    
+
             $names = self::getStatusNameMappings();
             $result = [];
             $found = [];
             $notFound = [];
-    
+
             try {
                 foreach ($names as $key => $baseName) {
                     $searchName = $baseName . $suffix;
-    
+
                     // Use DB facade directly with query builder
                     $status = DB::table('statuses')
                         ->where('status_name', $searchName)
                         ->where('active', '1')
                         ->first();
-    
+
                     if ($status) {
                         $result[$key] = $status->id;
                         $found[] = $searchName;
@@ -77,13 +77,13 @@ class StatusConfigService
                         $notFound[] = $searchName;
                     }
                 }
-    
+
                 return $result;
             } catch (\Throwable $e) {
-                self::safeLog('error', 'Error loading statuses: ' . $e->getMessage(), [
-                    'exception' => $e,
-                    'suffix'    => $suffix,
-                ]);
+                // self::safeLog('error', 'Error loading statuses: ' . $e->getMessage(), [
+                //     'exception' => $e,
+                //     'suffix'    => $suffix,
+                // ]);
                 return [];
             }
         });
@@ -96,7 +96,7 @@ class StatusConfigService
     {
         try {
             // Check if app is bound and database connection is available
-            if (! function_exists('app') || ! app()->bound('db')) {
+            if (!function_exists('app') || !app()->bound('db')) {
                 return false;
             }
 
@@ -172,13 +172,13 @@ class StatusConfigService
             'division_manager_approval_kam' => 'Division Manager Approval',
             'business_analysis' => 'Business Analysis',
             'business_analysis_kam' => 'Business Analysis',
-            'business_feedback' =>'Business Feedback',
-            'pending_cab_approval'=>'Pending CAB Approval',
-            'pending_update_cr_doc'=>'Pending Update CR Doc',
-            'request_vendor_mds'=>'Request Vendor MDS',
-            'pending_agreed_business'=>'Pending Agreed Scope Approval-Business',
-            'pending_agreed_business_kam'=>'Pending Agreed Scope Approval-Business',
-            'pending_agreed_business_kam'=>'Pending Agreed Scope Approval-Business',
+            'business_feedback' => 'Business Feedback',
+            'pending_cab_approval' => 'Pending CAB Approval',
+            'pending_update_cr_doc' => 'Pending Update CR Doc',
+            'request_vendor_mds' => 'Request Vendor MDS',
+            'pending_agreed_business' => 'Pending Agreed Scope Approval-Business',
+            'pending_agreed_business_kam' => 'Pending Agreed Scope Approval-Business',
+            'pending_agreed_business_kam' => 'Pending Agreed Scope Approval-Business',
         ];
     }
 
@@ -207,16 +207,16 @@ class StatusConfigService
 
         $missing = [];
         foreach ($requiredKeys as $key) {
-            if (! isset($statusIds[$key])) {
+            if (!isset($statusIds[$key])) {
                 $missing[] = $key;
             }
         }
 
         return [
-            'valid'        => empty($missing),
+            'valid' => empty($missing),
             'missing_keys' => $missing,
-            'found_count'  => count($statusIds),
-            'total_count'  => count($requiredKeys),
+            'found_count' => count($statusIds),
+            'total_count' => count($requiredKeys),
         ];
     }
 
@@ -251,3 +251,5 @@ class StatusConfigService
         }
     }
 }
+
+
