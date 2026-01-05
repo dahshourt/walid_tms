@@ -416,7 +416,7 @@ class ChangeRequestController extends Controller
             DB::rollBack();
             Log::error('Failed to update change request', [
                 'cr_id' => $id,
-                'error' => $e,
+                'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
             ]);
 
@@ -850,7 +850,7 @@ class ChangeRequestController extends Controller
             DB::rollBack();
             Log::error('Failed to update change request', [
                 'cr_id' => $id ?? null,
-                'error' => $e,
+                'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
             ]);
 
@@ -934,7 +934,7 @@ class ChangeRequestController extends Controller
             DB::rollBack();
             Log::error('Failed to update change request', [
                 'cr_id' => $id ?? null,
-                'error' => $e,
+                'error' => $e->getMessage(),
                 'user_id' => auth()->id(),
             ]);
 

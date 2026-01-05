@@ -29,13 +29,19 @@
                 <div class="d-inline-flex gap-2">
                     <button type="button" class="btn btn-outline-success btn-sm _approved_active"
                             data-id="{{ $item->id }}"
-                            data-workflow="{{ $item->getSetStatus()->where('workflow_type', '0')->pluck('id')->first() }}"
+                            data-workflow="{{ $item->getSetStatus()->where('workflow_type', '0')
+                            ->pluck('id')
+                             ->skip(1)->first() }}"
                             data-token="{{ $item->generateActionToken() }}">
                         ✅ Approved 
                     </button>
                     <button type="button" class="btn btn-outline-danger btn-sm _rejected_active"
                             data-id="{{ $item->id }}"
-                            data-workflow="{{ $item->getSetStatus()->where('workflow_type', '1')->pluck('id')->first() }}"
+                            data-workflow="{{ $item->getSetStatus()
+     ->where('workflow_type', '0')
+     ->pluck('id')
+     
+     ->first()}}"
                             data-token="{{ $item->generateActionToken() }}">
                         ❌ Rejected 
                     </button>

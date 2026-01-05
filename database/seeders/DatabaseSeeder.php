@@ -32,6 +32,7 @@ class DatabaseSeeder extends Seeder
             NotificationRecipientsTableSeeder::class,
             KamCustomFieldsSeeder::class,
             KamWorkflowSeeder::class,
+            CustomFieldsSeeder::class,
 
         ]);
         // \App\Models\User::factory(10)->create();

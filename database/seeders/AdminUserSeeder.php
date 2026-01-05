@@ -9,6 +9,7 @@ use App\Models\User;
 
 class AdminUserSeeder extends Seeder
 {
+
     /**
      * Run the database seeds.
      *
