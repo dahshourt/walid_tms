@@ -446,7 +446,9 @@ class ChangeRequestController extends Controller
 
         $current_status = $cr->getCurrentStatus()->new_status_id;
 
-        if ($current_status != \App\Services\StatusConfigService::getStatusId('business_approval')) {
+        if ($current_status != \App\Services\StatusConfigService::getStatusId('business_approval') ||
+            $current_status != \App\Services\StatusConfigService::getStatusId('division_manager_approval'))
+             {
             $rejectStatuses = [
                 \App\Services\StatusConfigService::getStatusId('Reject'),
                 \App\Services\StatusConfigService::getStatusId('Reject', ' kam'),
@@ -649,6 +651,7 @@ class ChangeRequestController extends Controller
             !in_array($current_status, [
                 \App\Services\StatusConfigService::getStatusId('business_approval'),
                 \App\Services\StatusConfigService::getStatusId('business_approval', ' kam'),
+                \App\Services\StatusConfigService::getStatusId('division_manager_approval'),
             ])
         ) {
             $rejectStatuses = [
