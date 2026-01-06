@@ -186,10 +186,17 @@
 																	<select name="{{ $item->CustomField->name }}" class="form-control form-control-lg" disabled>
                                                                         <option value="">Select</option>
 																		@if($item->CustomField->name == "new_status_id")
-																		
-																		
 																		<option value="{{ $status_name }}" selected>
-																			{{ $status_name }}
+
+                                                                            @php
+                                                                                $display_status = $status_name;
+                                                                                if($cr->isDependencyHold()) {
+                                                                                    $blockingCrs = $cr->getBlockingCrNumbers();
+                                                                                    $crList = !empty($blockingCrs) ? ' (CR#' . implode(', CR#', $blockingCrs) . ')' : '';
+                                                                                    $display_status = 'Design Estimation - Pending Dependency' . $crList;
+                                                                                }
+                                                                            @endphp
+																			{{ $display_status }}
 																		</option>
 																		
                                                                             
