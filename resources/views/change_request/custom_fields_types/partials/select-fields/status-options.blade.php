@@ -2,7 +2,15 @@
 
 {{-- Default selected option from current workflow status --}}
 <option value="{{ $cr->getCurrentStatus()?->status?->id ?? '' }}" disabled selected>
-    {{ $cr->getCurrentStatus()?->status?->status_name ?? 'Select Status' }}
+    @php
+        $currentStatusName = $cr->getCurrentStatus()?->status?->status_name ?? 'Select Status';
+        if ($cr->isDependencyHold()) {
+             $blockingCrs = $cr->getBlockingCrNumbers();
+             $crList = !empty($blockingCrs) ? ' (CR#' . implode(', CR#', $blockingCrs) . ')' : '';
+             $currentStatusName = 'Design Estimation - Pending Dependency' . $crList;
+        }
+    @endphp
+    {{ $currentStatusName }}
 </option>
 
 @foreach($cr->set_status as $status)
