@@ -84,11 +84,12 @@ class changeRequest_Requests extends FormRequest
                     $rules[$field->CustomField->name] = 'required';
                 }
             } elseif ($field->enable == 0) {
-                if ($field->CustomField->name != 'need_design' && $field->CustomField->name != 'technical_teams') {
-                    $oldValue = $this->cr->{$field->CustomField->name};
-                    $rules[$field->CustomField->name] = [new CompareOldValue($oldValue)];
-                }
-            }
+    $excludedFields = ['need_design', 'technical_teams', 'cr_member']; // Add cr_member to excluded fields
+    if (!in_array($field->CustomField->name, $excludedFields)) {
+        $oldValue = $this->cr->{$field->CustomField->name};
+        $rules[$field->CustomField->name] = [new CompareOldValue($oldValue)];
+    }
+}
         }
 
         return $rules;
