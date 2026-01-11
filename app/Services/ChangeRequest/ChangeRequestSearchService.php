@@ -11,6 +11,7 @@ use App\Models\User;
 use Auth;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Log;
 
 class ChangeRequestSearchService
 {
@@ -369,8 +370,21 @@ class ChangeRequestSearchService
             $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('business_uat_sign_off'));
             $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('pending_business'));
             $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('pending_business_feedback'));
+            $viewStatuses->push(241); // Pending Agreed Scope Approval-Business
+            $viewStatuses->push(249); // Pending Agreed Scope Approval-Business
 
         }
+
+        // Debug logging
+        Log::info('SearchService find method debug', [
+            'id' => $id,
+            'userEmail' => $userEmail,
+            'divisionManager' => $divisionManager,
+            'groups' => $groups,
+            'has_check_business' => request()->has('check_business'),
+            'viewStatuses' => $viewStatuses->toArray(),
+            'groupApplications' => $groupApplications
+        ]);
 
         $changeRequest = Change_request::with('category')->with('change_request_custom_fields')
             ->with('attachments', function ($q) use ($groups) {
@@ -417,6 +431,13 @@ class ChangeRequestSearchService
             }
 
         }
+
+        // Log the SQL query
+        $sql = $changeRequest->toSql();
+        Log::info('SearchService SQL query', [
+            'sql' => $sql,
+            'bindings' => $changeRequest->getBindings()
+        ]);
 
         $changeRequest = $changeRequest->first();
 

@@ -47,6 +47,14 @@ class CustomField extends Model
 
     public function getCustomFieldValue()
     {
+        if (empty($this->related_table)) {
+            Log::warning('CustomField has empty related_table', [
+                'custom_field_id' => $this->id,
+                'custom_field_name' => $this->name
+            ]);
+            return collect([]);
+        }
+        
         return $this->setTableName($this->related_table)->getDataByDynamicTable();
     }
 
