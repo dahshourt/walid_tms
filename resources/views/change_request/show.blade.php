@@ -935,31 +935,9 @@
             }
 
             function showAlert(message, type) {
-                let icon = 'fas fa-info-circle';
-                let title = 'Info';
-
-                if (type === 'success') {
-                    icon = 'fas fa-check-circle';
-                    title = 'Success!';
-                } else if (type === 'danger') {
-                    icon = 'fas fa-exclamation-circle';
-                    title = 'Error!';
-                } else if (type === 'warning') {
-                    icon = 'fas fa-exclamation-triangle';
-                    title = 'Warning!';
-                }
-
                 const alertHtml = `
-                    <div class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">
-                        <div class="d-flex align-items-center">
-                            <i class="${icon} fa-2x mr-3 text-${type}"></i>
-                            <div>
-                                <strong>${title}</strong> ${message}
-                            </div>
-                        </div>
-                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+                    <div class="alert alert-${type} alert-dismissible fade show shadow-sm d-flex align-items-center" role="alert">
+                        ${message}
                     </div>
                 `;
 
@@ -974,7 +952,7 @@
                     $('.alert').fadeOut('slow', function() {
                         $(this).remove();
                     });
-                }, 5000);
+                }, 3000);
             }
         });
 
