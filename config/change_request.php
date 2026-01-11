@@ -127,7 +127,25 @@ return [
         'promo' => 50,
         'technical_team' => 10,
     ],
-
+'parallel_workflows' => [
+    'source_status' => 'Pending Create Agreed Scope',
+    
+    'workflow_a' => [
+        'statuses' => [
+            ['status_name' => 'Request Draft CR Doc', 'current_group_id' => 8],
+        ]
+    ],
+    
+    'workflow_b' => [
+        'statuses' => [
+            ['status_name' => 'Pending Agreed Scope Approval-SA', 'current_group_id' => 9],
+            ['status_name' => 'Pending Agreed Scope Approval-Vendor', 'current_group_id' => 21],
+            ['status_name' => 'Pending Agreed Scope Approval-Business', 'current_group_id' => null],
+        ]
+    ],
+    
+    'merge_status' => 'Pending Update Agreed Requirements',
+],
     /*
     |--------------------------------------------------------------------------
     | Mail Notifications

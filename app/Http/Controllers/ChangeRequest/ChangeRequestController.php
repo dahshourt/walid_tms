@@ -339,6 +339,15 @@ class ChangeRequestController extends Controller
             request()->request->add(['cab_cr_flag' => true]);
         }
 
+        // Debug output
+        Log::info('Edit method called', [
+            'id' => $id,
+            'cab_cr_flag' => $cab_cr_flag,
+            'has_check_business' => request()->has('check_business'),
+            'check_business_value' => request('check_business'),
+            'all_request_data' => request()->all()
+        ]);
+
         if (request()->has('check_dm')) {
             $validation = $this->validateDivisionManagerAccess($id);
             if ($validation) {
@@ -347,6 +356,10 @@ class ChangeRequestController extends Controller
         } else {
             if (!$cab_cr_flag) {
                 $cr = $this->changerequest->find($id);
+                Log::info('CR find result', [
+                    'cr_found' => $cr ? true : false,
+                    'cr_id' => $cr->id ?? null
+                ]);
                 if (!$cr) {
                     return redirect()->to('/change_request')->with('status', 'You have no access to edit this CR');
                 }
