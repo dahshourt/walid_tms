@@ -231,6 +231,7 @@ Route::middleware(['auth'])->group(
         Route::post('update_testable', 'ChangeRequest\ChangeRequestController@updateTestableFlag')->name('update_testable');
         Route::get('add_attachments_form', 'ChangeRequest\ChangeRequestController@showAddAttachmentsForm')->name('add_attachments_form');
         Route::post('store_attachments', 'ChangeRequest\ChangeRequestController@storeAttachments')->name('store_attachments');
+        Route::post('change_request/{change_request}/upload_dev_attachments', 'ChangeRequest\ChangeRequestController@uploadDevAttachments')->name('change_request.upload_dev_attachments');
         Route::resource('prerequisites', Prerequisites\PrerequisitesController::class);
         Route::get('prerequisites/download/{id}', 'Prerequisites\PrerequisitesController@download')->name('prerequisites.download');
 

@@ -406,11 +406,63 @@
                                 @endif
 
                             </div>
-                            
+
+
+
                             <!--end::Form-->
                         </div>
                         <!-- Button to trigger the modal -->
 
+                        <!-- Attachments form for dev teams -->
+                        @can('Upload Dev Team Attachments')
+                            <div class="card card-custom gutter-b example example-compact">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h3 class="card-title m-0">
+                                        <i class="fas fa-cloud-upload-alt mr-2"></i> Upload Dev Team Attachments
+                                    </h3>
+                                </div>
+                                <div class="card-body">
+                                    <form class="form" id="devAttachmentsForm" enctype="multipart/form-data" data-cr-id="{{ $cr->id }}">
+                                        @csrf
+
+                                        <div class="row">
+                                            <div class="col-md-12">
+                                                <div class="form-group mb-4 mb-lg-5">
+                                                    <label for="technical_attachments" class="font-weight-bold text-dark">
+                                                        <i class="la la-paperclip text-secondary mr-1"></i>
+                                                        Attachments
+                                                    </label>
+                                                    <div class="dropzone-wrapper" id="dropzoneWrapper">
+                                                        <div class="dropzone-desc">
+                                                            <i class="la la-cloud-upload la-3x text-primary mb-2"></i>
+                                                            <p class="mb-1">Click to browse or drag and drop files here</p>
+                                                        </div>
+                                                        <input type="file" name="technical_attachments[]" id="technicalAttachments" class="dropzone-input" multiple>
+                                                    </div>
+                                                    <div id="filePreview" class="mt-3"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="text-right mt-4">
+                                            <button type="button" class="btn btn-secondary px-5 mr-2" id="clearBtn" disabled>
+                                                <i class="fas fa-times mr-2"></i> Clear All
+                                            </button>
+                                            <button type="submit" class="btn btn-success px-5" id="uploadBtn" disabled>
+                                                <i class="fas fa-check-circle mr-2"></i> Submit
+                                            </button>
+                                        </div>
+
+                                        <div id="uploadProgress" class="mt-3" style="display: none;">
+                                            <div class="progress">
+                                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%"></div>
+                                            </div>
+                                            <p class="text-center mt-2" id="progressText">Uploading...</p>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        @endcan
 
                         @include("$view.cr_logs")
 
@@ -445,6 +497,136 @@
         .select2-dropdown {
             max-width: 100vw;
             overflow-x: hidden;
+        }
+
+        /* Dropzone Styles */
+        .dropzone-wrapper {
+            position: relative;
+            border: 2px dashed #dee2e6;
+            border-radius: 0.25rem;
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dropzone-wrapper:hover {
+            border-color: #007bff;
+            background: #e7f1ff;
+        }
+
+        .dropzone-wrapper.dragover {
+            border-color: #007bff;
+            background: #cfe2ff;
+        }
+
+        .dropzone-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .dropzone-desc {
+            pointer-events: none;
+        }
+
+        /* File Preview Styles */
+        #filePreview {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        @media (max-width: 768px) {
+            #filePreview {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            #filePreview {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .file-preview-item {
+            display: flex;
+            flex-direction: column;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 0.25rem;
+            border: 1px solid #dee2e6;
+            position: relative;
+            min-height: 100px;
+        }
+
+        .file-preview-item i {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            align-self: center;
+        }
+
+        .file-preview-info {
+            flex: 1;
+            text-align: center;
+        }
+
+        .file-preview-name {
+            font-weight: 600;
+            color: #212529;
+            margin-bottom: 4px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            font-size: 0.875rem;
+            line-height: 1.3;
+        }
+
+        .file-preview-size {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+
+        .file-preview-remove {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            padding: 0;
+            line-height: 1;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+        }
+
+        .file-preview-remove:hover {
+            background: #c82333;
+        }
+
+        .file-preview-remove i {
+            font-size: 12px;
+            line-height: 1;
+            margin: 0;
+        }
+
+        .progress {
+            height: 25px;
+        }
+
+        .alert {
+            margin-top: 15px;
         }
     </style>
 @endpush
@@ -496,6 +678,305 @@
             }
         }
 
+        // Drag and Drop File Upload Functionality
+        $(document).ready(function() {
+            let selectedFiles = [];
+            const maxFileSize = 51200 * 1024; // 50MB in bytes
+            const allowedExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'rar', 'jpg', 'jpeg', 'png', 'gif', 'msg'];
+
+            const dropzoneWrapper = $('#dropzoneWrapper');
+            const fileInput = $('#technicalAttachments');
+            const filePreview = $('#filePreview');
+            const uploadBtn = $('#uploadBtn');
+            const clearBtn = $('#clearBtn');
+            const uploadProgress = $('#uploadProgress');
+            const progressBar = $('.progress-bar');
+            const progressText = $('#progressText');
+
+            // Prevent default drag behaviors
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropzoneWrapper[0].addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            // Highlight drop zone when item is dragged over it
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzoneWrapper[0].addEventListener(eventName, () => {
+                    dropzoneWrapper.addClass('dragover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzoneWrapper[0].addEventListener(eventName, () => {
+                    dropzoneWrapper.removeClass('dragover');
+                }, false);
+            });
+
+            // Handle dropped files
+            dropzoneWrapper[0].addEventListener('drop', function(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                handleFiles(files);
+            }, false);
+
+            // Handle file input change
+            fileInput.on('change', function() {
+                handleFiles(this.files);
+                // Reset the input value so the same file can be added again after removal
+                this.value = '';
+            });
+
+            // Click on dropzone to trigger file input
+            dropzoneWrapper.on('click', function(e) {
+                if (e.target === this || $(e.target).closest('.dropzone-desc').length) {
+                    fileInput.click();
+                }
+            });
+
+            function handleFiles(files) {
+                const filesArray = Array.from(files);
+
+                filesArray.forEach(file => {
+                    // Validate file
+                    const validation = validateFile(file);
+                    if (!validation.valid) {
+                        showAlert(validation.message, 'danger');
+                        return;
+                    }
+
+                    // Check if file already exists
+                    const exists = selectedFiles.some(f => f.name === file.name && f.size === file.size);
+                    if (exists) {
+                        showAlert(`File "${file.name}" is already added.`, 'warning');
+                        return;
+                    }
+
+                    selectedFiles.push(file);
+                    addFilePreview(file);
+                });
+
+                updateButtons();
+            }
+
+            function validateFile(file) {
+                // Check file size
+                if (file.size > maxFileSize) {
+                    return {
+                        valid: false,
+                        message: `File "${file.name}" exceeds the maximum size of 50MB.`
+                    };
+                }
+
+                // Check file extension
+                const extension = file.name.split('.').pop().toLowerCase();
+                if (!allowedExtensions.includes(extension)) {
+                    return {
+                        valid: false,
+                        message: `File "${file.name}" has an invalid extension. Allowed: ${allowedExtensions.join(', ')}`
+                    };
+                }
+
+                return { valid: true };
+            }
+
+            function addFilePreview(file) {
+                const fileSize = formatFileSize(file.size);
+                const fileIcon = getFileIcon(file.name);
+                const fileId = Date.now() + Math.random();
+
+                const previewHtml = `
+                    <div class="file-preview-item" data-file-id="${fileId}">
+                        <i class="${fileIcon}"></i>
+                        <div class="file-preview-info">
+                            <div class="file-preview-name">${file.name}</div>
+                            <div class="file-preview-size">${fileSize}</div>
+                        </div>
+                        <button type="button" class="file-preview-remove" data-file-id="${fileId}">
+                            <i class="la la-times" style="color: white !important;"></i>
+                        </button>
+                    </div>
+                `;
+
+                filePreview.append(previewHtml);
+                file.previewId = fileId;
+            }
+
+            // Remove file handler
+            filePreview.on('click', '.file-preview-remove', function() {
+                const fileId = $(this).data('file-id');
+                selectedFiles = selectedFiles.filter(f => f.previewId !== fileId);
+                $(`.file-preview-item[data-file-id="${fileId}"]`).remove();
+                updateButtons();
+            });
+
+            function updateButtons() {
+                if (selectedFiles.length > 0) {
+                    uploadBtn.prop('disabled', false);
+                    clearBtn.prop('disabled', false);
+                } else {
+                    uploadBtn.prop('disabled', true);
+                    clearBtn.prop('disabled', true);
+                }
+            }
+
+            clearBtn.on('click', function() {
+                selectedFiles = [];
+                filePreview.empty();
+                fileInput.val('');
+                updateButtons();
+                showAlert('All files cleared.', 'info');
+            });
+
+            // Handle form submission
+            $('#devAttachmentsForm').on('submit', function(e) {
+                e.preventDefault();
+
+                if (selectedFiles.length === 0) {
+                    showAlert('Please select at least one file to upload.', 'warning');
+                    return;
+                }
+
+                const formData = new FormData();
+                const crId = $('#devAttachmentsForm').data('cr-id');
+                formData.append('_token', $('input[name="_token"]').val());
+
+                selectedFiles.forEach((file, index) => {
+                    formData.append('technical_attachments[]', file);
+                });
+
+                // Show progress bar
+                uploadProgress.show();
+                progressBar.css('width', '0%');
+                progressText.text('Uploading files...');
+                uploadBtn.prop('disabled', true);
+                clearBtn.prop('disabled', true);
+
+                $.ajax({
+                    url: '{{ route("change_request.upload_dev_attachments", ["change_request" => $cr->id]) }}',
+                    type: 'POST',
+                    data: formData,
+                    processData: false,
+                    contentType: false,
+                    xhr: function() {
+                        const xhr = new window.XMLHttpRequest();
+                        xhr.upload.addEventListener('progress', function(e) {
+                            if (e.lengthComputable) {
+                                const percentComplete = (e.loaded / e.total) * 100;
+                                progressBar.css('width', percentComplete + '%');
+                                progressText.text(`Uploading... ${Math.round(percentComplete)}%`);
+                            }
+                        }, false);
+                        return xhr;
+                    },
+                    success: function(response) {
+                        progressBar.css('width', '100%');
+                        progressText.text('Upload complete!');
+
+                        setTimeout(function() {
+                            uploadProgress.hide();
+                            showAlert(response.message || 'Files uploaded successfully!', 'success');
+
+                            // Clear the form
+                            selectedFiles = [];
+                            filePreview.empty();
+                            fileInput.val('');
+                            updateButtons();
+
+                            // Reload page after 2 seconds to show new attachments
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1000);
+                        }, 1000);
+                    },
+                    error: function(xhr) {
+                        uploadProgress.hide();
+                        uploadBtn.prop('disabled', false);
+                        clearBtn.prop('disabled', false);
+
+                        let errorMessage = 'Failed to upload files. Please try again.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        }
+                        showAlert(errorMessage, 'danger');
+                    }
+                });
+            });
+
+            function formatFileSize(bytes) {
+                if (bytes === 0) return '0 Bytes';
+                const k = 1024;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+            }
+
+            function getFileIcon(filename) {
+                const ext = filename.split('.').pop().toLowerCase();
+                const iconMap = {
+                    'pdf': 'la la-file-pdf text-danger',
+                    'doc': 'la la-file-word text-primary',
+                    'docx': 'la la-file-word text-primary',
+                    'xls': 'la la-file-excel text-success',
+                    'xlsx': 'la la-file-excel text-success',
+                    'zip': 'la la-file-archive text-warning',
+                    'rar': 'la la-file-archive text-warning',
+                    'jpg': 'la la-file-image text-info',
+                    'jpeg': 'la la-file-image text-info',
+                    'png': 'la la-file-image text-info',
+                    'gif': 'la la-file-image text-info',
+                    'msg': 'la la-envelope text-secondary'
+                };
+                return iconMap[ext] || 'la la-file text-secondary';
+            }
+
+            function showAlert(message, type) {
+                let icon = 'fas fa-info-circle';
+                let title = 'Info';
+
+                if (type === 'success') {
+                    icon = 'fas fa-check-circle';
+                    title = 'Success!';
+                } else if (type === 'danger') {
+                    icon = 'fas fa-exclamation-circle';
+                    title = 'Error!';
+                } else if (type === 'warning') {
+                    icon = 'fas fa-exclamation-triangle';
+                    title = 'Warning!';
+                }
+
+                const alertHtml = `
+                    <div class="alert alert-${type} alert-dismissible fade show shadow-sm" role="alert">
+                        <div class="d-flex align-items-center">
+                            <i class="${icon} fa-2x mr-3 text-${type}"></i>
+                            <div>
+                                <strong>${title}</strong> ${message}
+                            </div>
+                        </div>
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                `;
+
+                // Remove existing alerts
+                $('.alert').remove();
+
+                // Add new alert before the form
+                $('#devAttachmentsForm').parent().prepend(alertHtml);
+
+                // Auto-dismiss after 5 seconds
+                setTimeout(function() {
+                    $('.alert').fadeOut('slow', function() {
+                        $(this).remove();
+                    });
+                }, 5000);
+            }
+        });
 
     </script>
 

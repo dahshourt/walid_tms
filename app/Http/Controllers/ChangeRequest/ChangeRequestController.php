@@ -787,6 +787,54 @@ class ChangeRequestController extends Controller
         }
     }
 
+    public function uploadDevAttachments(Request $request, int $cr_id)
+    {
+        $this->authorize('Upload Dev Team Attachments');
+
+        if (!$request->hasFile('technical_attachments')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No files provided',
+            ], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Validate attachments
+            $this->attachmentService->validateAttachments($request);
+
+            // Handle file uploads
+            $this->attachmentService->handleFileUploads($request, $cr_id);
+
+            DB::commit();
+
+            Log::info('Dev team attachments uploaded successfully', [
+                'cr_id' => $cr_id,
+                'user_id' => auth()->id(),
+                'files_count' => count($request->file('technical_attachments')),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Files uploaded successfully',
+            ], 200);
+
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            Log::error('Failed to upload dev team attachments', [
+                'cr_id' => $cr_id,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function destroy(int $id)
     {
         $this->authorize('Delete ChangeRequest');
