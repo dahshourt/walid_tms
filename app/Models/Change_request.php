@@ -434,7 +434,7 @@ class Change_request extends Model
     {
         $releaseDate = $this->release_delivery_date;
 
-        return $releaseDate && $releaseDate->isPast() && ! $this->isCompleted();
+        return $releaseDate && $releaseDate->isPast() && !$this->isCompleted();
     }
 
     /**
@@ -535,7 +535,7 @@ class Change_request extends Model
             ->when(request()->query('cr_type'), function (Builder $query, $value) {
                 $query->whereHas('changeRequestCustomFields', function ($q) use ($value) {
                     $q->where('custom_field_name', 'cr_type')
-                      ->whereIn('custom_field_value', (array) $value);
+                        ->whereIn('custom_field_value', (array) $value);
                 });
             });
     }
@@ -770,7 +770,7 @@ class Change_request extends Model
     {
         $currentStatus = $this->getCurrentStatus();
 
-        if (! $currentStatus) {
+        if (!$currentStatus) {
             return false;
         }
 
@@ -807,7 +807,7 @@ class Change_request extends Model
      */
     public function needsApproval(): bool
     {
-        return ! $this->approval && $this->isInApprovalPhase();
+        return !$this->approval && $this->isInApprovalPhase();
     }
 
     /**
@@ -825,13 +825,13 @@ class Change_request extends Model
      */
     public function hasUncompletedDependencies(): bool
     {
-        if (! $this->depend_cr_id) {
+        if (!$this->depend_cr_id) {
             return false;
         }
 
         $dependentCr = self::find($this->depend_cr_id);
 
-        return $dependentCr && ! $dependentCr->isCompleted();
+        return $dependentCr && !$dependentCr->isCompleted();
     }
 
     /**
@@ -1012,7 +1012,7 @@ class Change_request extends Model
      */
     private function attachWorkflowInfo($status)
     {
-        if (! $status) {
+        if (!$status) {
             return null;
         }
 
@@ -1036,7 +1036,7 @@ class Change_request extends Model
 
     private function attachWorkflowInfoById($status)
     {
-        if (! $status) {
+        if (!$status) {
             return null;
         }
 
@@ -1065,7 +1065,7 @@ class Change_request extends Model
     {
         $currentStatus = $this->getCurrentStatus();
 
-        if (! $currentStatus) {
+        if (!$currentStatus) {
             return false;
         }
 
@@ -1075,14 +1075,14 @@ class Change_request extends Model
         return in_array($currentStatus->new_status_id, $approvalStatusIds);
     }
 
-     // funtion to check if the cr waiting for other CRs to be delivered
+    // funtion to check if the cr waiting for other CRs to be delivered
     public function isDependencyHold(): bool
     {
         return $this->is_dependency_hold === true || $this->is_dependency_hold === 1;
     }
 
 
-     // funtion to get the CR numbers that are blocking this CR from cr_dependencies table
+    // funtion to get the CR numbers that are blocking this CR from cr_dependencies table
     public function getBlockingCrNumbers(): array
     {
         return $this->activeDependencies()
@@ -1145,10 +1145,10 @@ class Change_request extends Model
         $targetWorkflowTypeId = 3;
 
         return self::where('workflow_type_id', $targetWorkflowTypeId)
-            ->whereHas('currentStatusRel', function($query) use ($finalStatuses) {
+            ->whereHas('currentStatusRel', function ($query) use ($finalStatuses) {
                 $query->whereNotIn('new_status_id', $finalStatuses);
             })
-            ->when($excludeCrId, function($query) use ($excludeCrId) {
+            ->when($excludeCrId, function ($query) use ($excludeCrId) {
                 $query->where('id', '!=', $excludeCrId);
 
                 // to exclude CRs that already depend on this CR
