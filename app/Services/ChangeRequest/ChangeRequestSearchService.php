@@ -370,8 +370,9 @@ class ChangeRequestSearchService
             $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('business_uat_sign_off'));
             $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('pending_business'));
             $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('pending_business_feedback'));
-            $viewStatuses->push(241); // Pending Agreed Scope Approval-Business
-            $viewStatuses->push(249); // Pending Agreed Scope Approval-Business
+            $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('prototype_approval_business'));
+            // $viewStatuses->push(249); // Pending Agreed Scope Approval-Business
+             $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('pending_agreed_business'));
 
         }
 

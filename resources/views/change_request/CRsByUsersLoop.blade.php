@@ -109,7 +109,7 @@
                                 </a>
                             @endif
                         @else
-                            @if($item->getCurrentStatus() && isset($item->getCurrentStatus()->status) && in_array($item->getCurrentStatus()->status->id, [64, 79,41,44,241,249]))
+                            @if($item->getCurrentStatus() && isset($item->getCurrentStatus()->status) && in_array($item->getCurrentStatus()->status->id, [64, 79,41,44,\App\Services\StatusConfigService::getStatusId('pending_agreed_business'),\App\Services\StatusConfigService::getStatusId('prototype_approval_business')]))
                                 <a href='{{url("$route")}}/{{ $item["id"] }}/edit?check_business=1'
                                    class="btn btn-sm btn-clean btn-icon mr-2" title="Edit details">
                                             <span class="svg-icon svg-icon-md">
