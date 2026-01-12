@@ -179,6 +179,7 @@ class StatusConfigService
             'pending_agreed_business' => 'Pending Agreed Scope Approval-Business',
             'pending_agreed_business_kam' => 'Pending Agreed Scope Approval-Business',
             'pending_agreed_business_kam' => 'Pending Agreed Scope Approval-Business',
+            'prototype_approval_business' => 'Prototype Approval-Business',
         ];
     }
 
