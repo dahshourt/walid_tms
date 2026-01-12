@@ -1,5 +1,20 @@
 @foreach($CustomFields as $ky => $item)
 
+@if($item->CustomField->name == 'on_behalf')
+    @php
+        $crTeamAdminGroup = config('constants.group_names.cr_team');
+        $isCrAdmin = false;
+        if(auth()->check()) {
+             $isCrAdmin = auth()->user()->user_groups()->whereHas('group', function($q) use($crTeamAdminGroup){
+                   $q->where('title', $crTeamAdminGroup);
+             })->exists();
+        }
+    @endphp
+    @if(!$isCrAdmin)
+        @continue
+    @endif
+@endif
+
 @php 
 	$custom_field_value = null;
 	if(isset($cr))

@@ -39,6 +39,8 @@ class AdvancedSearchRequestResource extends JsonResource
             'created_at' => $this->created_at->format('d-M-Y'),
             'updated_at' => $this->created_at->format('d-M-Y'),
             'current_status' => $this->getCurrentStatus()?->same_time ? $this->getCurrentStatus()->to_status_label : $this->getCurrentStatus()?->status?->status_name,
+            'on_behalf' => $this->changeRequestCustomFields->where('custom_field_name', 'on_behalf')->where('custom_field_value', '1')->first() ? 'Yes' : 'No',
+            'cr_type_name' => \App\Models\CrType::find($this->changeRequestCustomFields->where('custom_field_name', 'cr_type')->first()?->custom_field_value)?->name ?? '',
         ];
     }
 }
