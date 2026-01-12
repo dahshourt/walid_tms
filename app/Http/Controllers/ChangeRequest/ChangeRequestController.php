@@ -307,7 +307,8 @@ class ChangeRequestController extends Controller
             $status_id
         );
 
-        $logs_ers = $cr->logs;
+        $logs_ers = $cr->logs->load('user:id,user_name,default_group', 'user.defualt_group:id,title');
+
         $technical_teams = Group::where('technical_team', '1')->get();
         $title = (!empty($workflow_type_id) && $workflow_type_id == 9) ? 'View Promo' :
             'View Change Request';
@@ -789,7 +790,7 @@ class ChangeRequestController extends Controller
 
     public function uploadDevAttachments(Request $request, int $cr_id)
     {
-        $this->authorize('Upload Dev Team Attachments');
+        $this->authorize('Upload CR Attachments');
 
         if (!$request->hasFile('technical_attachments')) {
             return response()->json([
@@ -822,7 +823,7 @@ class ChangeRequestController extends Controller
         } catch (Exception $e) {
             DB::rollBack();
 
-            Log::error('Failed to upload dev team attachments', [
+            Log::error('Failed to Upload CR Attachments', [
                 'cr_id' => $cr_id,
                 'error' => $e->getMessage(),
                 'user_id' => auth()->id(),

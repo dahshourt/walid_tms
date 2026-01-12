@@ -5,23 +5,23 @@
     window.pendingProductionId = "{{ $pendingProductionId }}";
     window.relevantNotPending = "{{ $relevantNotPending }}";
 
-    var modal = document.getElementById("modal");
+    // Modern Bootstrap Modal Handler
     var btn = document.getElementById("openModal");
     var closeBtn = document.getElementById("close_logs");
-
-    btn.onclick = function () {
-        modal.style.display = "block";
-    };
-
-    closeBtn.onclick = function () {
-        modal.style.display = "none";
-    };
-
-    window.onclick = function (event) {
-        if (event.target == modal) {
-            modal.style.display = "none";
+    
+    // Open modal with Bootstrap
+    if (btn) {
+        btn.onclick = function () {
+            $('#modal').modal('show');
         }
-    };
+    }
+
+    // Close modal with Bootstrap
+    if (closeBtn) {
+        closeBtn.onclick = function () {
+            $('#modal').modal('hide');
+        }
+    }
  
     $(document).ready(function () {
         var status = $('select[name="new_status_id"] option:selected').val();
