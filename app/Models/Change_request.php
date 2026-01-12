@@ -537,6 +537,14 @@ class Change_request extends Model
                     $q->where('custom_field_name', 'cr_type')
                       ->whereIn('custom_field_value', (array) $value);
                 });
+            })
+            ->when(request()->query('on_behalf'), function (Builder $query, $value) {
+                 if ($value) {
+                     $query->whereHas('changeRequestCustomFields', function ($q) {
+                        $q->where('custom_field_name', 'on_behalf')
+                          ->where('custom_field_value', '1');
+                    });
+                 }
             });
     }
 
@@ -1207,5 +1215,29 @@ class Change_request extends Model
     public function generateActionToken(): string
     {
         return md5($this->id . $this->created_at . env('APP_KEY'));
+    }
+
+    public function getCrTypeNameAttribute(): string
+    {
+         static $crTypes;
+         if (!$crTypes) {
+             $crTypes = \App\Models\CrType::pluck('name', 'id');
+         }
+
+         $crTypeField = $this->changeRequestCustomFields
+            ->where('custom_field_name', 'cr_type')
+            ->first();
+
+         return $crTypeField ? ($crTypes[$crTypeField->custom_field_value] ?? '') : '';
+    }
+
+    public function getOnBehalfAttribute(): string
+    {
+        $onBehalf = $this->changeRequestCustomFields
+            ->where('custom_field_name', 'on_behalf')
+            ->where('custom_field_value', '1')
+            ->first();
+
+        return $onBehalf ? 'Yes' : 'No';
     }
 }

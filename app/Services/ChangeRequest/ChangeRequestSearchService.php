@@ -498,7 +498,7 @@ class ChangeRequestSearchService
             if (count($selected_statuses) > 0) {
                 $q->whereIn('new_status_id', $selected_statuses);
             }
-        }])->filters();
+        }, 'changeRequestCustomFields'])->filters();
 
         return $getAll == 0 ? $crs->paginate(10) : $crs->get();
     }

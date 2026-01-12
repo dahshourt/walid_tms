@@ -225,6 +225,18 @@
                                                         name="{{ $customField->name }}"
                                                         value="{{ request()->query($customField->name) }}"
                                                     >
+                                                @elseif ($customField->type == 'checkbox')
+                                                    <div class="checkbox-inline">
+                                                        <label class="checkbox checkbox-outline checkbox-success">
+                                                            <input
+                                                                type="checkbox"
+                                                                name="{{ $renderName }}"
+                                                                value="1"
+                                                                {{ request()->query($renderName) == '1' ? 'checked' : '' }}
+                                                            >
+                                                            <span></span>
+                                                        </label>
+                                                    </div>
                                                 @endif
 
 
@@ -295,6 +307,8 @@
                                 <th>Category</th>
                                 <th>Release</th>
                                 <th>Current Status</th>
+                                <th>On Behalf</th>
+                                <th>Cr Type</th>
                                 <th>Requester</th>
                                 <th>Requester Email</th>
                                 <th>Design Duration</th>
@@ -341,6 +355,8 @@
                                             @endforelse
                                         </div>
                                     </td>
+                                    <td>{{ $item['on_behalf'] ?? "" }}</td>
+                                    <td>{{ $item['cr_type_name'] ?? "" }}</td>
                                     <td>{{ $item['requester_name'] ?? "" }}</td>
                                     <td>{{ $item['requester_email'] ?? "" }}</td>
                                     <td>{{ $item['design_duration'] ?? "" }}</td>
