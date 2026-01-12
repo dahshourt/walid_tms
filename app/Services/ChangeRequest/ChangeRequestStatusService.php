@@ -392,8 +392,11 @@ public function updateChangeRequestStatus(int $changeRequestId, $request): bool
         // Activate pending statuses if needed
         $this->activatePendingMergeStatus($changeRequest->id, $statusData);
 
-        DB::commit();
-        $this->checkAndFireDeliveredEvent($changeRequest, $statusData);
+            DB::commit();
+            // Fire CrDeliveredEvent if CR reached Delivered status
+            $this->checkAndFireDeliveredEvent($changeRequest, $statusData);
+
+            event(new ChangeRequestStatusUpdated($changeRequest, $statusData, $request, $this->active_flag));
 
         return true;
 
@@ -771,7 +774,7 @@ private function getActiveStatusBySameTime(int $fromStatusId, int $toStatusId): 
         $this->createNewStatuses($changeRequest, $statusData, $workflow, $userId, $request);
 
         // $this->handleNotifications($statusData, $changeRequest->id, $request);
-        event(new ChangeRequestStatusUpdated($changeRequest, $statusData, $request, $this->active_flag));
+        // event(new ChangeRequestStatusUpdated($changeRequest, $statusData, $request, $this->active_flag));
 
     }
 
