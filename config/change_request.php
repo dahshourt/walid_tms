@@ -83,7 +83,7 @@ return [
         'technical_fb' => 108,
         'confirmed_sdd' => 149,
         'set_md_prerequisites' => 112,
-        'final_uat_results_fb' => 167,
+
         'review_uat_results_fb' => 168,
         'promo_closure' => 129,
 
@@ -91,6 +91,7 @@ return [
     'promo_parked_status_ids' => [
         'promo_closure' => 129,
         'review_uat_results_fb' => 168,
+        'final_uat_results_fb' => 167,
     ],
     'promo_depend_statuses' => [
         // 'pending_uat' => 78,
@@ -100,11 +101,13 @@ return [
     'promo_unparked_ids' => [
         'support_technical_issue' => 155,
         'pending_uat' => 78,
+
     ],
     'promo_special_flow_ids' => [
         'resume_implementation' => 156,
         'fix_defect_on_production' => 171,
         'rollback' => 134,
+        'start_implementation' => 154,
     ],
 
     'need_technical_attachments_statuses' => [
