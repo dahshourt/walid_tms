@@ -38,6 +38,7 @@ class Kernel extends ConsoleKernel
             ->runInBackground();
         $schedule->command('cron:escalation')->everyFiveMinutes();
         $schedule->command('auto:reject-cr')->dailyAt('00:00');
+        $schedule->command('cr:send-hold-reminders')->dailyAt('08:00')->withoutOverlapping();
 
     }
 
