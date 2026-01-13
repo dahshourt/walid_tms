@@ -12,10 +12,12 @@ class ChangeRequestHold extends Model
         'hold_reason_id',
         'resuming_date',
         'justification',
+        'reminder_sent',
     ];
 
     protected $casts = [
         'resuming_date' => 'date',
+        'reminder_sent' => 'boolean',
     ];
 
     public function changeRequest(): BelongsTo
