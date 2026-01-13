@@ -307,7 +307,8 @@ class ChangeRequestController extends Controller
             $status_id
         );
 
-        $logs_ers = $cr->logs;
+        $logs_ers = $cr->logs->load('user:id,user_name,default_group', 'user.defualt_group:id,title');
+
         $technical_teams = Group::where('technical_team', '1')->get();
         $title = (!empty($workflow_type_id) && $workflow_type_id == 9) ? 'View Promo' :
             'View Change Request';
@@ -796,6 +797,54 @@ class ChangeRequestController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to upload files',
+            ], 500);
+        }
+    }
+
+    public function uploadDevAttachments(Request $request, int $cr_id)
+    {
+        $this->authorize('Upload CR Attachments');
+
+        if (!$request->hasFile('technical_attachments')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No files provided',
+            ], 400);
+        }
+
+        DB::beginTransaction();
+        try {
+            // Validate attachments
+            $this->attachmentService->validateAttachments($request);
+
+            // Handle file uploads
+            $this->attachmentService->handleFileUploads($request, $cr_id);
+
+            DB::commit();
+
+            Log::info('Dev team attachments uploaded successfully', [
+                'cr_id' => $cr_id,
+                'user_id' => auth()->id(),
+                'files_count' => count($request->file('technical_attachments')),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Files uploaded successfully',
+            ], 200);
+
+        } catch (Exception $e) {
+            DB::rollBack();
+
+            Log::error('Failed to Upload CR Attachments', [
+                'cr_id' => $cr_id,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

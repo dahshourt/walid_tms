@@ -169,7 +169,7 @@ class ChangeRequestService
             $status_id
         );
 
-        $logs_ers = $cr->logs;
+        $logs_ers = $cr->logs->load('user:id,user_name,default_group', 'user.defualt_group:id,title');
         $all_defects = $this->defects->all_defects($id);
         $ApplicationImpact = ApplicationImpact::where('application_id', $cr->application_id)
             ->select('impacts_id')
