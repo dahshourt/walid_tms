@@ -47,4 +47,9 @@ class WorkFlowType extends Model
     {
         return 'name';
     }
+
+    public function changeRequests()
+    {
+        return $this->hasMany(Change_request::class, 'workflow_type_id');
+    }
 }

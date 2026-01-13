@@ -79,6 +79,11 @@ class ChangeRequestRepository implements ChangeRequestRepositoryInterface
         return $this->updateService->updateTestableFlag($id, $request);
     }
 
+    public function updateTopManagementFlag($id, $request)
+    {
+        return $this->updateService->updateTopManagementFlag($id, $request);
+    }
+
     public function addFeedback($id, $request)
     {
         return $this->updateService->addFeedback($id, $request);

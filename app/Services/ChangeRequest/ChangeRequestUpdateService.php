@@ -145,6 +145,15 @@ class ChangeRequestUpdateService
         return true;
     }
 
+    public function updateTopManagementFlag($id, $request)
+    {
+        $this->changeRequest_old = Change_request::find($id);
+        $this->updateCRData($id, $request);
+        $this->logRepository->logCreate($id, $request, $this->changeRequest_old, 'update');
+
+        return true;
+    }
+
     public function addFeedback($id, $request)
     {
         $this->changeRequest_old = Change_request::find($id);
