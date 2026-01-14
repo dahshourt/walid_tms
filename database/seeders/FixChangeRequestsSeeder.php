@@ -16,7 +16,7 @@ class FixChangeRequestsSeeder extends Seeder
     {
         // 1. Update category_id
         DB::statement("
-            UPDATE tms_prod.change_request
+            UPDATE change_request
             SET category_id = 1
             WHERE cr_no IN (
                 '6154','2000','2075','2001','2002','2007','2006','2003','2004','2005',
@@ -38,7 +38,7 @@ class FixChangeRequestsSeeder extends Seeder
 
         // 2. Update requester_department with CASE statement
         DB::statement("
-            UPDATE tms_prod.change_request
+            UPDATE change_request
             SET requester_department = CASE cr_no
                 WHEN '6086' THEN 'Content Mangement'
                 WHEN '2032' THEN 'Blank'
