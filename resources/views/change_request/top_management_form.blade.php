@@ -36,11 +36,6 @@
                     <div class="card card-custom gutter-b">
                         <div class="card-header">
                             <h3 class="card-title">Set CR Top Management Flag</h3>
-                            <div class="card-toolbar">
-                                <a href="{{ url('top_management_crs') }}" class="btn btn-secondary btn-sm">
-                                    <i class="fas fa-arrow-left"></i> Back to List
-                                </a>
-                            </div>
                         </div>
                         <!--begin::Form-->
                         <form class="form" action="{{ route('update_top_management') }}" method="POST">
@@ -77,7 +72,7 @@
                             </div>
                             <div class="card-footer">
                                 <button type="submit" class="btn btn-primary mr-2">Update </button>
-                                <a href="{{ url('top_management_crs') }}" class="btn btn-secondary">Cancel</a>
+                                <a href="{{ url('/') }}" class="btn btn-secondary">Cancel</a>
                             </div>
                         </form>
                         <!--end::Form-->
