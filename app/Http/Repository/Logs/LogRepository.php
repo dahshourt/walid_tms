@@ -294,7 +294,7 @@ class LogRepository implements LogRepositoryInterface
                 }
                 // Normal Status Log
                 else {
-                    $this->createLog($log, $id, $user->id, "Change Request Status changed to '$status_title' by {$user->user_name} (Actual Status: $actualStatuses)");
+                    $this->createLog($log, $id, $user->id, "Change Request Status changed to '$actualStatuses' by '$user->user_name'");
                 }
             } else {
                 $log_message = "Change Request Status changed to '$actualStatuses' by '$user->user_name'";
