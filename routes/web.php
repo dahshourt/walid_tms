@@ -229,6 +229,12 @@ Route::middleware(['auth'])->group(
 		Route::resource('sla-calculations', Sla\SlaCalculationController::class);
         Route::get('testable_form', 'ChangeRequest\ChangeRequestController@showTestableForm')->name('testable_form');
         Route::post('update_testable', 'ChangeRequest\ChangeRequestController@updateTestableFlag')->name('update_testable');
+        Route::get('top_management_crs', 'ChangeRequest\ChangeRequestController@showTopManagementForm')->name('top_management_crs');
+        Route::post('update_top_management', 'ChangeRequest\ChangeRequestController@updateTopManagementFlag')->name('update_top_management');
+        Route::post('top_management/export-table', 'ChangeRequest\ChangeRequestController@exportTopManagementTable')->name('export.top_management.table');
+        Route::get('top_management_crs/form', function() {
+            return view('change_request.top_management_form');
+        })->name('top_management_crs.form');
         Route::get('add_attachments_form', 'ChangeRequest\ChangeRequestController@showAddAttachmentsForm')->name('add_attachments_form');
         Route::post('store_attachments', 'ChangeRequest\ChangeRequestController@storeAttachments')->name('store_attachments');
         Route::post('change_request/{change_request}/upload_dev_attachments', 'ChangeRequest\ChangeRequestController@uploadDevAttachments')->name('change_request.upload_dev_attachments');

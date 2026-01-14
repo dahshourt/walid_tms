@@ -52,6 +52,7 @@ class Change_request extends Model
     protected $casts = [
         'active' => 'boolean',
         'testable' => 'boolean',
+        'top_management' => 'boolean',
         'need_design' => 'boolean',
         'need_iot_e2e_testing' => 'boolean',
         'need_down_time' => 'boolean',

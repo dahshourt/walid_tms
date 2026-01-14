@@ -15,7 +15,7 @@ trait ChangeRequestConstants
             'develop_duration', 'start_develop_time', 'end_develop_time', 'test_duration',
             'start_test_time', 'end_test_time', 'depend_cr_id', 'requester_name',
             'requester_email', 'requester_unit', 'requester_division_manager',
-            'requester_department', 'application_name', 'testable', 'created_at',
+            'requester_department', 'application_name', 'testable', 'top_management', 'created_at',
             'updated_at', 'category_id', 'priority_id', 'unit_id', 'department_id',
             'application_id', 'workflow_type_id', 'division_manager', 'creator_mobile_number',
             'calendar', 'CR_duration', 'chnage_requester_id', 'start_CR_time',

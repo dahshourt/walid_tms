@@ -923,6 +923,107 @@ class ChangeRequestController extends Controller
         }
     }
 
+    public function showTopManagementForm(Request $request)
+    {
+        $this->authorize('Edit Top Management Form');
+
+        // Get active tab from request or default to the first available workflow
+        $activeTabId = $request->get('tab');
+        if (!$activeTabId) {
+            // Get the first workflow that has top management CRs
+            $firstWorkflow = \App\Models\WorkFlowType::whereHas('changeRequests', function($query) {
+                    $query->where('top_management', '1');
+                })
+                ->active()
+                ->orderBy('id')
+                ->first();
+            
+            $activeTabId = $firstWorkflow ? $firstWorkflow->id : 9;
+        }
+        
+        // Get all workflow types that have CRs with top_management = 1
+        $workflows_with_top_management_crs = \App\Models\WorkFlowType::whereHas('changeRequests', function($query) {
+                $query->where('top_management', '1');
+            })
+            ->active()
+            ->orderBy('id')
+            ->get();
+        
+        // If no workflows have top management CRs, get all active workflow types
+        if ($workflows_with_top_management_crs->count() === 0) {
+            $workflows_with_top_management_crs = \App\Models\WorkFlowType::active()
+                ->orderBy('id')
+                ->get();
+        }
+        
+        // Get top management CRs grouped by workflow type
+        $top_management_crs_by_workflow = [];
+        foreach ($workflows_with_top_management_crs as $workflow) {
+            $top_management_crs_by_workflow[$workflow->id] = Change_request::where('top_management', '1')
+                ->where('workflow_type_id', $workflow->id)
+                ->orderBy('cr_no', 'desc')
+                ->get();
+        }
+
+        // Get all CRs with top_management = 1 (for backward compatibility)
+        $changeRequests = Change_request::where('top_management', '1')
+            ->orderBy('cr_no', 'desc')
+            ->get();
+
+        return view($this->view . '.top_management_crs', compact(
+            'changeRequests', 
+            'workflows_with_top_management_crs', 
+            'top_management_crs_by_workflow', 
+            'activeTabId'
+        ));
+    }
+
+    public function exportTopManagementTable()
+    {
+        $this->authorize('Edit Top Management Form'); // permission check
+
+        return Excel::download(new \App\Http\Controllers\ChangeRequest\TopManagementMultiSheetExport, 'Top-Management-CRs.xlsx');
+    }
+
+    public function updateTopManagementFlag(Request $request)
+    {
+        $this->authorize('Edit Top Management Form');
+
+        $request->validate([
+            'cr_number' => 'required|exists:change_request,cr_no',
+            'top_management' => 'required|in:0,1',
+        ]);
+        DB::beginTransaction();
+        try {
+            $id = Change_request::where('cr_no', $request->cr_number)->firstOrFail()->id;
+
+            $cr_id = $this->changerequest->updateTopManagementFlag($id, $request);
+
+            if ($cr_id === false) {
+                throw new Exception('Failed to update change request');
+            }
+
+            DB::commit();
+
+            Log::info('Change request updated successfully', [
+                'cr_id' => $id,
+                'user_id' => auth()->id(),
+            ]);
+
+            return redirect()->back()->with('status', 'Updated Successfully');
+
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Failed to update change request', [
+                'cr_id' => $id ?? null,
+                'error' => $e->getMessage(),
+                'user_id' => auth()->id(),
+            ]);
+
+            return redirect()->back()->with('error', 'Failed to update change request.');
+        }
+    }
+
     public function showAddAttachmentsForm()
     {
         $this->authorize('Admin Add Attachments and Feedback');
