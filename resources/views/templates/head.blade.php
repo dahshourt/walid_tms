@@ -41,6 +41,9 @@ License: You must have a valid license purchased only from themeforest(the above
 
 		<link rel="shortcut icon" href="{{asset('public/logo-icon.png')}}" />
 		<style>
+			#kt_subheader{
+				display:none;
+			}
 			.swal2-icon-show
 			{
 				left:40%;
