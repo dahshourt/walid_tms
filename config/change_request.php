@@ -74,9 +74,19 @@ return [
 
     'man_days_status' => [
         'id' => 112,
-        'name' => "Set MD's  & Prerequisites",
+        'name' => "MD’s & Prerequisites",
     ],
 
+    "need_design_exclude_status" => [
+        "yes" => [
+            'id' => 112,
+            'name' => "MD’s & Prerequisites",
+        ],
+        "no" => [
+            'id' => 144,
+            'name' => "Pending Technical Solution",
+        ],
+    ],
     'parked_status_ids' => [
         // 'pending_uat' => 78,
         'provide_technical_fb' => 146,
@@ -130,25 +140,25 @@ return [
         'promo' => 50,
         'technical_team' => 10,
     ],
-'parallel_workflows' => [
-    'source_status' => 'Pending Create Agreed Scope',
-    
-    'workflow_a' => [
-        'statuses' => [
-            ['status_name' => 'Request Draft CR Doc', 'current_group_id' => 8],
-        ]
+    'parallel_workflows' => [
+        'source_status' => 'Pending Create Agreed Scope',
+
+        'workflow_a' => [
+            'statuses' => [
+                ['status_name' => 'Request Draft CR Doc', 'current_group_id' => 8],
+            ]
+        ],
+
+        'workflow_b' => [
+            'statuses' => [
+                ['status_name' => 'Pending Agreed Scope Approval-SA', 'current_group_id' => 9],
+                ['status_name' => 'Pending Agreed Scope Approval-Vendor', 'current_group_id' => 21],
+                ['status_name' => 'Pending Agreed Scope Approval-Business', 'current_group_id' => null],
+            ]
+        ],
+
+        'merge_status' => 'Pending Update Agreed Requirements',
     ],
-    
-    'workflow_b' => [
-        'statuses' => [
-            ['status_name' => 'Pending Agreed Scope Approval-SA', 'current_group_id' => 9],
-            ['status_name' => 'Pending Agreed Scope Approval-Vendor', 'current_group_id' => 21],
-            ['status_name' => 'Pending Agreed Scope Approval-Business', 'current_group_id' => null],
-        ]
-    ],
-    
-    'merge_status' => 'Pending Update Agreed Requirements',
-],
     /*
     |--------------------------------------------------------------------------
     | Mail Notifications

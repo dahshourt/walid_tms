@@ -34,7 +34,9 @@
                    name="{{ $item->CustomField->name }}" 
                    id="{{ $item->CustomField->name }}_yes"
                    value="yes"
-                   {{ $currentValue == 'yes' ? 'checked' : '' }}>
+                   {{ $currentValue == 'yes' ? 'checked' : '' }}
+                   {{ (isset($item->enable)&&($item->enable!=1)) ? "disabled" : "" }}
+                   >
             <label class="form-check-label" for="{{ $item->CustomField->name }}_yes">
                 Yes
             </label>
@@ -46,7 +48,9 @@
                    name="{{ $item->CustomField->name }}" 
                    id="{{ $item->CustomField->name }}_no"
                    value="no"
-                   {{ $currentValue == 'no' ? 'checked' : '' }}>
+                   {{ $currentValue == 'no' ? 'checked' : '' }}
+                   {{ (isset($item->enable)&&($item->enable!=1)) ? "disabled" : "" }}
+                   >
             <label class="form-check-label" for="{{ $item->CustomField->name }}_no">
                 No
             </label>
