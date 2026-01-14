@@ -11,26 +11,28 @@
         }
     @endphp
     @php
-        $need_design = optional($cr->changeRequestCustomFields->where('custom_field_name','need_design')->first())->custom_field_value;
+        $need_design = optional($cr->changeRequestCustomFields->where('custom_field_name', 'need_design')->first())->custom_field_value;
     @endphp
-    {{ $currentStatusName }} 
-    
-    
+    {{ $currentStatusName }}
+
+
 </option>
 
 @php
-    if($cr->workflow_type_id == 9)  // promo   
+    if ($cr->workflow_type_id == 9)  // promo   
     {
-        if($currentStatusName == "SA FB")
-        {
-            if(!$need_design) $need_design = "no";
+        if ($currentStatusName == "SA FB") {
+            if (!$need_design)
+                $need_design = "no";
             $excludeId = config('change_request.need_design_exclude_status.' . $need_design . '.id');
-            $cr->set_status = $cr->set_status->filter(function($item) use ($excludeId) {
+            $cr->set_status = $cr->set_status->filter(function ($item) use ($excludeId) {
                 return ($item->workflowstatus[0]->to_status_id ?? null) != $excludeId;
             });
         }
     }
 @endphp
+
+
 
 @foreach($cr->set_status as $status)
     @php

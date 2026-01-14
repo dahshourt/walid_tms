@@ -87,6 +87,8 @@ return [
             'name' => "Pending Technical Solution",
         ],
     ],
+
+
     'parked_status_ids' => [
         // 'pending_uat' => 78,
         'provide_technical_fb' => 146,

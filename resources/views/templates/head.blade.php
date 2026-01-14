@@ -43,7 +43,6 @@ License: You must have a valid license purchased only from themeforest(the above
 	<!--begin::Layout Themes(used by all pages)-->
 	<!--end::Layout Themes-->
 
-
 	<link rel="shortcut icon" href="{{asset('public/logo-icon.png')}}" />
 	<style>
 		#kt_subheader {
@@ -131,6 +130,7 @@ License: You must have a valid license purchased only from themeforest(the above
 			0% {
 				transform: scale(0.8);
 				opacity: 0.8;
+
 			}
 
 			70% {

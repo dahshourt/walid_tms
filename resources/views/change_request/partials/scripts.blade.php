@@ -1,6 +1,17 @@
 @push('script')
 
     <script>
+        const input = document.getElementById('start_date_mds');
+
+        const now = new Date();
+        now.setSeconds(0, 0); // remove seconds & milliseconds
+
+        const minDateTime = now.toISOString().slice(0, 16);
+        input.min = minDateTime;
+    </script>
+
+
+    <script>
 
         window.pendingProductionId = "{{ $pendingProductionId }}";
         window.relevantNotPending = "{{ $relevantNotPending }}";

@@ -18,7 +18,7 @@
         <span style="color: red;">*</span>
     @endif
         @if(isset($cr))
-        <input type="datetime-local" name="{{ $item->CustomField->name }}" value="{{ $custom_field_value }}" class="form-control form-control-lg {{ $item->CustomField->class }}" {{ $required }} {{ $disabled }} />
+        <input type="datetime-local"  id="{{ $item->CustomField->name }}" name="{{ $item->CustomField->name }}" value="{{ $custom_field_value }}" class="form-control form-control-lg {{ $item->CustomField->class }}" {{ $required }} {{ $disabled }} />
         @else
             @if(isset($cr))
                 <label class="form-control form-control-lg">{{ ($cr->{$item->CustomField->name}) }} </label>
