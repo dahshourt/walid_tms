@@ -83,7 +83,15 @@ class LogRepository implements LogRepositoryInterface
         $change_request = $changeRequest_old;
 
         if ($type === 'create') {
-            $this->createLog($log, $id, $user->id, 'Issue opened by ' . $user->user_name);
+            $this->createLog($log, $id, $user->id, 'Change Request Created By ' . $user->user_name);
+
+            $new_status_id =  data_get($request, 'new_status_id');
+
+            $status_name = Status::where('id', $new_status_id)->value('status_name');
+
+            $log_message = "Change Request Status changed to '$status_name' By '$user->user_name'";
+
+            $this->createLog($log, $id, $user->id, $log_message);
 
             return true;
         }
@@ -163,10 +171,10 @@ class LogRepository implements LogRepositoryInterface
                     $newValue = $request->kpi;
                 } elseif ($field === 'depend_on') {
                      $oldValue = $change_request->dependencies
-                         ->where('pivot.status', '0') 
+                         ->where('pivot.status', '0')
                          ->pluck('id')
                          ->toArray();
-                     $newValue = $request->depend_on;                     
+                     $newValue = $request->depend_on;
                      // Normalize to arrays
                      if (!is_array($oldValue)) $oldValue = [];
                      if (!is_array($newValue)) $newValue = [];
@@ -271,7 +279,7 @@ class LogRepository implements LogRepositoryInterface
                 // Dependency Release Log (when the depend cr reach to the status delivered or reject)
                 if ($request->released_from_hold) {
                     $this->createLog($log, $id, $user->id, "Change request status has been released by {$user->user_name} and the current status is $actualStatuses");
-                } 
+                }
                 // Dependency Hold Log
                 elseif ($change_request->fresh()->is_dependency_hold) {
                     $blockingCrs = \App\Models\CrDependency::where('cr_id', $id)
@@ -281,9 +289,9 @@ class LogRepository implements LogRepositoryInterface
                         ->pluck('dependsOnCr.cr_no')
                         ->filter()
                         ->implode(', ');
-                        
+
                     $this->createLog($log, $id, $user->id, "Change Request Status changed to '$status_title' by {$user->user_name} (Actual Status: $actualStatuses - Pending Dependency (CR#$blockingCrs))");
-                } 
+                }
                 // Normal Status Log
                 else {
                     $this->createLog($log, $id, $user->id, "Change Request Status changed to '$status_title' by {$user->user_name} (Actual Status: $actualStatuses)");
