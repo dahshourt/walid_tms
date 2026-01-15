@@ -181,6 +181,9 @@ class LogRepository implements LogRepositoryInterface
                 } elseif ($field === 'cr_type') {
                      $oldValue = $change_request->changeRequestCustomFields->where('custom_field_name', 'cr_type')->first()?->custom_field_value;
                      $newValue = $request->cr_type;
+                } elseif (in_array($field, ['analysis_feedback', 'technical_feedback'], true)) {
+                    $oldValue = $change_request->changeRequestCustomFields->where('custom_field_name', $field)->last()?->custom_field_value;
+                    $newValue = $request->{$field};
                 } else {
                     $oldValue = $change_request->$field ?? null;
                     $newValue = $request->$field;
@@ -210,6 +213,22 @@ class LogRepository implements LogRepositoryInterface
                             if ($field === 'testable') {
                                 $newValue = $request->get('testable') === '1' ? 'Testable' : 'Non Testable';
                                 $info['message'] = 'Change Request is';
+                            }
+
+                            if (in_array($field, ['technical_attachments', 'business_attachments'], true)) {
+                                $files_name = [];
+                                $attachments = $request->file($field, []);
+
+                                foreach ($attachments as $attachment) {
+                                    $files_name[] = $attachment->getClientOriginalName();
+                                }
+
+                                $info['message'] = 'Attachment(s) Added ';
+                                $newValue = implode(', ', $files_name);
+                            }
+
+                            if (in_array($field, ['analysis_feedback', 'technical_feedback'], true)) {
+                                $info['message'] = 'Comment Added ';
                             }
 
                             $message = $info['message'] . " \"$newValue\"";
