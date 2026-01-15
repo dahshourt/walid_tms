@@ -49,7 +49,7 @@
             function isStatusReject() {
                 if (statusField) {
                     const selectedText = statusField.options[statusField.selectedIndex].text;
-                    return selectedText === "Reject" || selectedText === "Reject kam";
+                    return selectedText === "Reject" || selectedText === "Reject kam" || selectedText === "CR Team FB";
                 }
                 return false;
             }
@@ -64,10 +64,12 @@
 
             // Function to handle the visibility of rejection reasons field and label
             function handleRejectionReasonsVisibility() {
-                if (isStatusReject() || isStatusPromo()) {
+                if (isStatusReject()) {
                     $(".field_rejection_reason_id").show();
+                    $('select[name="rejection_reason_id"]').prop('required', true);
                 } else {
                     $(".field_rejection_reason_id").hide();
+                    $('select[name="rejection_reason_id"]').prop('required', false);
                 }
             }
 
