@@ -73,8 +73,14 @@ return [
     // 'status_ids_kam' => StatusConfigService::loadStatusIdsKam(),
 
     'man_days_status' => [
-        'id' => 112,
-        'name' => "MD’s & Prerequisites",
+        //'id' => 112,
+        'name' => [
+            "MD’s & Prerequisites",
+            "Pending Pre-requisites",
+            "Start Implementation",
+            "Support Technical Issue",
+            "Resume Implementation",
+        ]
     ],
 
     "need_design_exclude_status" => [
