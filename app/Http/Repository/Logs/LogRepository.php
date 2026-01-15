@@ -208,7 +208,8 @@ class LogRepository implements LogRepositoryInterface
                             }
 
                             if ($field === 'testable') {
-                                $newValue = $request->get('testable') === '1' ? 'Testable' : 'Not Testable';
+                                $newValue = $request->get('testable') === '1' ? 'Testable' : 'Non Testable';
+                                $info['message'] = 'Change Request is';
                             }
 
                             $message = $info['message'] . " \"$newValue\"";
