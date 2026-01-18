@@ -320,7 +320,7 @@ class LogRepository implements LogRepositoryInterface
                 $log_message = "Change Request Status changed to '$actualStatuses' by '$user->user_name'";
 
                 if ($request->has('is_final_confirmation')) {
-                    $log_message = "Issue manually set to status '$actualStatuses' by '$user->user_name' from Administration";
+                    $log_message = "Change Request Status changed to '$actualStatuses' by '$user->user_name' from Administration";
                 }
 
                 $this->createLog($log, $id, $user->id, $log_message);
