@@ -824,12 +824,6 @@ class ChangeRequestController extends Controller
 
             DB::commit();
 
-            Log::info('Dev team attachments uploaded successfully', [
-                'cr_id' => $cr_id,
-                'user_id' => auth()->id(),
-                'files_count' => count($request->file('technical_attachments')),
-            ]);
-
             return response()->json([
                 'success' => true,
                 'message' => 'Files uploaded successfully',
@@ -939,10 +933,10 @@ class ChangeRequestController extends Controller
                 ->active()
                 ->orderBy('id')
                 ->first();
-            
+
             $activeTabId = $firstWorkflow ? $firstWorkflow->id : 9;
         }
-        
+
         // Get all workflow types that have CRs with top_management = 1
         $workflows_with_top_management_crs = \App\Models\WorkFlowType::whereHas('changeRequests', function($query) {
                 $query->where('top_management', '1');
@@ -950,14 +944,14 @@ class ChangeRequestController extends Controller
             ->active()
             ->orderBy('id')
             ->get();
-        
+
         // If no workflows have top management CRs, get all active workflow types
         if ($workflows_with_top_management_crs->count() === 0) {
             $workflows_with_top_management_crs = \App\Models\WorkFlowType::active()
                 ->orderBy('id')
                 ->get();
         }
-        
+
         // Get top management CRs grouped by workflow type
         $top_management_crs_by_workflow = [];
         foreach ($workflows_with_top_management_crs as $workflow) {
@@ -973,9 +967,9 @@ class ChangeRequestController extends Controller
             ->get();
 
         return view($this->view . '.top_management_crs', compact(
-            'changeRequests', 
-            'workflows_with_top_management_crs', 
-            'top_management_crs_by_workflow', 
+            'changeRequests',
+            'workflows_with_top_management_crs',
+            'top_management_crs_by_workflow',
             'activeTabId'
         ));
     }
