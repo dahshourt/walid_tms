@@ -18,6 +18,9 @@ class Change_request extends Model
 {
     use HasFactory;
 
+    public const WORKFLOW_TYPE_CR = 3;
+    public const STATUS_TYPE_ACTIVE = 1;
+
     /**
      * The table associated with the model.
      */
@@ -130,13 +133,7 @@ class Change_request extends Model
         return $this->hasMany(ChangeRequestCustomField::class, 'cr_id', 'id');
     }
 
-    /**
-     * @deprecated Use changeRequestCustomFields() instead.
-     */
-    public function change_request_custom_fields(): HasMany
-    {
-        return $this->changeRequestCustomFields();
-    }
+
 
     /**
      * Get request statuses for this change request.
@@ -147,13 +144,7 @@ class Change_request extends Model
             ->select('id', 'new_status_id', 'old_status_id', 'active');
     }
 
-    /**
-     * @deprecated Use reqStatus() instead.
-     */
-    public function Req_status(): HasMany
-    {
-        return $this->reqStatus();
-    }
+
 
     /**
      * Get the category this change request belongs to.
@@ -195,13 +186,7 @@ class Change_request extends Model
         return $this->belongsTo(Change_request::class, 'depend_cr_id')->select('id', 'title', 'cr_no');
     }
 
-    /**
-     * @deprecated Use dependCr() instead.
-     */
-    public function depend_cr(): BelongsTo
-    {
-        return $this->dependCr();
-    }
+
 
     /**
      * Get the requester of this change request.
@@ -248,13 +233,7 @@ class Change_request extends Model
         return $this->hasOne(CabCr::class, 'cr_id', 'id')->where('status', '0');
     }
 
-    /**
-     * @deprecated Use cabCr() instead.
-     */
-    public function cab_cr(): HasOne
-    {
-        return $this->cabCr();
-    }
+
 
     /**
      * Get the active technical CR record.
@@ -264,13 +243,7 @@ class Change_request extends Model
         return $this->hasOne(TechnicalCr::class, 'cr_id', 'id')->where('status', '0');
     }
 
-    /**
-     * @deprecated Use technicalCr() instead.
-     */
-    public function technical_Cr(): HasOne
-    {
-        return $this->technicalCr();
-    }
+
 
     /**
      * Get the first technical CR record.
@@ -280,13 +253,7 @@ class Change_request extends Model
         return $this->hasOne(TechnicalCr::class, 'cr_id', 'id')->orderBy('id', 'DESC');
     }
 
-    /**
-     * @deprecated Use technicalCrFirst() instead.
-     */
-    public function technical_Cr_first(): HasOne
-    {
-        return $this->technicalCrFirst();
-    }
+
 
     /**
      * Get current group statuses through status relationship.
@@ -303,13 +270,7 @@ class Change_request extends Model
         )->where('group_statuses.type', 1);
     }
 
-    /**
-     * @deprecated Use currentStatus() instead.
-     */
-    public function current_status(): HasManyThrough
-    {
-        return $this->currentStatus();
-    }
+
 
     /**
      * Get request statuses ordered by ID descending.
@@ -346,13 +307,7 @@ class Change_request extends Model
         return $this->hasOne(Change_request_statuse::class, 'cr_id', 'id')->whereIn('active', [1, 2]);
     }
 
-    /**
-     * @deprecated Use currentRequestStatusesLast() instead.
-     */
-    public function CurrentRequestStatuses_last(): HasOne
-    {
-        return $this->currentRequestStatusesLast();
-    }
+
 
     /**
      * Get the division manager for this change request.
@@ -362,13 +317,7 @@ class Change_request extends Model
         return $this->belongsTo(User::class, 'division_manager_id');
     }
 
-    /**
-     * @deprecated Use divisionManager() instead.
-     */
-    public function division_manger(): BelongsTo
-    {
-        return $this->divisionManager();
-    }
+
 
     /**
      * Get attachments for this change request.
@@ -481,71 +430,69 @@ class Change_request extends Model
     public function scopeFilters(Builder $query): Builder
     {
         return $query
-            ->when(request()->query('cr_no'), function (Builder $query, $value) {
-                $query->where('cr_no', $value);
-            })
-            ->when(request()->query('title'), function (Builder $query, $value) {
-                $query->where('title', 'like', "%{$value}%");
-            })
-            ->when(request()->query('application_id'), function (Builder $query, $value) {
-                $query->whereIn('application_id', (array) $value);
-            })
-            ->when(request()->query('tester_id'), function (Builder $query, $value) {
-                $query->whereIn('tester_id', (array) $value);
-            })
-            ->when(request()->query('developer_id'), function (Builder $query, $value) {
-                $query->whereIn('developer_id', (array) $value);
-            })
-            ->when(request()->query('designer_id'), function (Builder $query, $value) {
-                $query->whereIn('designer_id', (array) $value);
-            })
-            ->when(request()->query('category_id'), function (Builder $query, $value) {
-                $query->whereIn('category_id', (array) $value);
-            })
-            ->when(request()->query('priority_id'), function (Builder $query, $value) {
-                $query->whereIn('priority_id', (array) $value);
-            })
-            ->when(request()->query('unit_id'), function (Builder $query, $value) {
-                $query->whereIn('unit_id', (array) $value);
-            })
-            ->when(request()->query('division_manager'), function (Builder $query, $value) {
-                $query->where('division_manager', $value);
-            })
-            ->when(request()->query('workflow_type_id'), function (Builder $query, $value) {
-                $query->whereIn('workflow_type_id', (array) $value);
-            })
-            ->when(request()->query('requester_name'), function (Builder $query, $value) {
-                $query->where('requester_name', 'like', "%{$value}%");
-            })
-            ->when(request()->query('created_at_start'), function (Builder $query, $value) {
-                $query->whereDate('created_at', '>=', $value);
-            })->when(request()->query('created_at_end'), function (Builder $query, $value) {
-                $query->whereDate('created_at', '<=', $value);
-            })
-            ->when(request()->query('updated_at_start'), function (Builder $query, $value) {
-                $query->whereDate('updated_at', '>=', $value);
-            })
-            ->when(request()->query('updated_at_end'), function (Builder $query, $value) {
-                $query->whereDate('updated_at', '<=', $value);
-            })
-            ->when(request()->query('new_status_id'), function (Builder $query, $value) {
-                $query->whereHas('currentRequestStatuses', function (Builder $query) use ($value) {
-                    $query->whereIn('new_status_id', (array) $value);
-                });
-            })
-            ->when(request()->query('cr_type'), function (Builder $query, $value) {
-                $query->whereHas('changeRequestCustomFields', function ($q) use ($value) {
-                    $q->where('custom_field_name', 'cr_type')
+            ->filterByBasicFields()
+            ->filterByRelations()
+            ->filterByDates()
+            ->filterByStatus()
+            ->filterByCustomFields();
+    }
+
+    public function scopeFilterByBasicFields(Builder $query): Builder
+    {
+        return $query
+            ->when(request()->query('cr_no'), fn(Builder $q, $value) => $q->where('cr_no', $value))
+            ->when(request()->query('title'), fn(Builder $q, $value) => $q->where('title', 'like', "%{$value}%"));
+    }
+
+    public function scopeFilterByRelations(Builder $query): Builder
+    {
+        return $query
+            ->when(request()->query('application_id'), fn(Builder $q, $value) => $q->whereIn('application_id', (array) $value))
+            ->when(request()->query('tester_id'), fn(Builder $q, $value) => $q->whereIn('tester_id', (array) $value))
+            ->when(request()->query('developer_id'), fn(Builder $q, $value) => $q->whereIn('developer_id', (array) $value))
+            ->when(request()->query('designer_id'), fn(Builder $q, $value) => $q->whereIn('designer_id', (array) $value))
+            ->when(request()->query('category_id'), fn(Builder $q, $value) => $q->whereIn('category_id', (array) $value))
+            ->when(request()->query('priority_id'), fn(Builder $q, $value) => $q->whereIn('priority_id', (array) $value))
+            ->when(request()->query('unit_id'), fn(Builder $q, $value) => $q->whereIn('unit_id', (array) $value))
+            ->when(request()->query('division_manager'), fn(Builder $q, $value) => $q->where('division_manager', $value))
+            ->when(request()->query('workflow_type_id'), fn(Builder $q, $value) => $q->whereIn('workflow_type_id', (array) $value))
+            ->when(request()->query('requester_name'), fn(Builder $q, $value) => $q->where('requester_name', 'like', "%{$value}%"));
+    }
+
+    public function scopeFilterByDates(Builder $query): Builder
+    {
+        return $query
+            ->when(request()->query('created_at_start'), fn(Builder $q, $value) => $q->whereDate('created_at', '>=', $value))
+            ->when(request()->query('created_at_end'), fn(Builder $q, $value) => $q->whereDate('created_at', '<=', $value))
+            ->when(request()->query('updated_at_start'), fn(Builder $q, $value) => $q->whereDate('updated_at', '>=', $value))
+            ->when(request()->query('updated_at_end'), fn(Builder $q, $value) => $q->whereDate('updated_at', '<=', $value));
+    }
+
+    public function scopeFilterByStatus(Builder $query): Builder
+    {
+        return $query->when(request()->query('new_status_id'), function (Builder $q, $value) {
+            $q->whereHas('currentRequestStatuses', function (Builder $subQ) use ($value) {
+                $subQ->whereIn('new_status_id', (array) $value);
+            });
+        });
+    }
+
+    public function scopeFilterByCustomFields(Builder $query): Builder
+    {
+        return $query
+            ->when(request()->query('cr_type'), function (Builder $q, $value) {
+                $q->whereHas('changeRequestCustomFields', function ($subQ) use ($value) {
+                    $subQ->where('custom_field_name', 'cr_type')
                         ->whereIn('custom_field_value', (array) $value);
                 });
             })
-            ->when(request()->query('on_behalf'), function (Builder $query, $value) {
-                 if ($value) {
-                     $query->whereHas('changeRequestCustomFields', function ($q) {
-                        $q->where('custom_field_name', 'on_behalf')
-                          ->where('custom_field_value', '1');
+            ->when(request()->query('on_behalf'), function (Builder $q, $value) {
+                if ($value) {
+                    $q->whereHas('changeRequestCustomFields', function ($subQ) {
+                        $subQ->where('custom_field_name', 'on_behalf')
+                            ->where('custom_field_value', '1');
                     });
-                 }
+                }
             });
     }
 
@@ -639,13 +586,7 @@ class Change_request extends Model
             ->get();
     }
 
-    /**
-     * @deprecated Use getReleases() instead.
-     */
-    public function get_releases(): Collection
-    {
-        return $this->getReleases();
-    }
+
 
     /**
      * Get current status (old method) with better error handling.
@@ -711,58 +652,63 @@ class Change_request extends Model
     public function getCurrentStatus()
     {
         try {
+            $status = $this->resolveCurrentStatus();
 
-            if (request()->reference_status) {
-                $statusInfo = Change_request_statuse::find(request()->reference_status);
-                $status = $this->attachWorkflowInfo($statusInfo);
-
-            } else {
-                $group = $this->getCurrentGroupId();
-                $view_statuses = GroupStatuses::where('group_id', $group)
-                    ->where('type', 2)
-                    ->pluck('status_id')
-                    ->toArray();
-
-                $technical_cr_team_status = $this->getTechnicalTeamCurrentStatus();
-
-                if ($technical_cr_team_status) {
-                    if (in_array($technical_cr_team_status->current_status_id, $view_statuses)) {
-                        $view_statuses = [$technical_cr_team_status->current_status_id];
-                    }
-                }
-
-                $status = Change_request_statuse::where('cr_id', $this->id)
-                    ->whereIn('new_status_id', $view_statuses)
-                    ->where('active', '1')
-                    ->first();
-
-                if ($status) {
-                    $status = $this->attachWorkflowInfo($status);
-                } else {
-                    // Fallback logic
-                    $status = Change_request_statuse::where('cr_id', $this->id)
-                        ->where('active', '1')
-                        ->first();
-
-                    if ($status) {
-                        $status = $this->attachWorkflowInfo($status);
-                    } else {
-                        $status = Change_request_statuse::where('cr_id', $this->id)
-                            ->orderBy('id', 'desc')
-                            ->first();
-                        if ($status) {
-                            $status = $this->attachWorkflowInfo($status);
-                        }
-                    }
-                }
-            }
-
-            return $status;
+            return $this->attachWorkflowInfo($status);
         } catch (Exception $e) {
             \Log::error("Error getting current status for CR {$this->id}: " . $e->getMessage());
 
             return null;
         }
+    }
+
+    private function resolveCurrentStatus()
+    {
+        if (request()->reference_status) {
+            return Change_request_statuse::find(request()->reference_status);
+        }
+
+        $viewStatuses = $this->getViewableStatuses();
+
+        $status = Change_request_statuse::where('cr_id', $this->id)
+            ->whereIn('new_status_id', $viewStatuses)
+            ->where('active', '1') // Ensure we only look for active statuses if that was the intent
+            ->first();
+
+        if ($status) {
+            return $status;
+        }
+
+        // Fallback 1: Active status
+        $status = Change_request_statuse::where('cr_id', $this->id)
+            ->where('active', '1')
+            ->first();
+
+        if ($status) {
+            return $status;
+        }
+
+        // Fallback 2: Latest status
+        return Change_request_statuse::where('cr_id', $this->id)
+            ->orderBy('id', 'desc')
+            ->first();
+    }
+
+    private function getViewableStatuses(): array
+    {
+        $group = $this->getCurrentGroupId();
+        $viewStatuses = GroupStatuses::where('group_id', $group)
+            ->where('type', 2)
+            ->pluck('status_id')
+            ->toArray();
+
+        $technicalTeamStatus = $this->getTechnicalTeamCurrentStatus();
+
+        if ($technicalTeamStatus && in_array($technicalTeamStatus->current_status_id, $viewStatuses)) {
+            return [$technicalTeamStatus->current_status_id];
+        }
+
+        return $viewStatuses;
     }
 
     public function getAllCurrentStatus()
@@ -937,7 +883,7 @@ class Change_request extends Model
         return (bool) $this->parent_id;
     }
 
-    public function getSetStatus()
+    public function getSetStatus(): Collection
     {
         $currentStatus = $this->getCurrentStatus();
 
@@ -1220,16 +1166,16 @@ class Change_request extends Model
 
     public function getCrTypeNameAttribute(): string
     {
-         static $crTypes;
-         if (!$crTypes) {
-             $crTypes = \App\Models\CrType::pluck('name', 'id');
-         }
+        static $crTypes;
+        if (!$crTypes) {
+            $crTypes = \App\Models\CrType::pluck('name', 'id');
+        }
 
-         $crTypeField = $this->changeRequestCustomFields
+        $crTypeField = $this->changeRequestCustomFields
             ->where('custom_field_name', 'cr_type')
             ->first();
 
-         return $crTypeField ? ($crTypes[$crTypeField->custom_field_value] ?? '') : '';
+        return $crTypeField ? ($crTypes[$crTypeField->custom_field_value] ?? '') : '';
     }
 
     public function getOnBehalfAttribute(): string
@@ -1240,5 +1186,89 @@ class Change_request extends Model
             ->first();
 
         return $onBehalf ? 'Yes' : 'No';
+    }
+
+    // ===================================
+    // DEPRECATED METHODS
+    // ===================================
+
+    /**
+     * @deprecated Use changeRequestCustomFields() instead.
+     */
+    public function change_request_custom_fields(): HasMany
+    {
+        return $this->changeRequestCustomFields();
+    }
+
+    /**
+     * @deprecated Use reqStatus() instead.
+     */
+    public function Req_status(): HasMany
+    {
+        return $this->reqStatus();
+    }
+
+    /**
+     * @deprecated Use dependCr() instead.
+     */
+    public function depend_cr(): BelongsTo
+    {
+        return $this->dependCr();
+    }
+
+    /**
+     * @deprecated Use cabCr() instead.
+     */
+    public function cab_cr(): HasOne
+    {
+        return $this->cabCr();
+    }
+
+    /**
+     * @deprecated Use technicalCr() instead.
+     */
+    public function technical_Cr(): HasOne
+    {
+        return $this->technicalCr();
+    }
+
+    /**
+     * @deprecated Use technicalCrFirst() instead.
+     */
+    public function technical_Cr_first(): HasOne
+    {
+        return $this->technicalCrFirst();
+    }
+
+    /**
+     * @deprecated Use currentStatus() instead.
+     */
+    public function current_status(): HasManyThrough
+    {
+        return $this->currentStatus();
+    }
+
+    /**
+     * @deprecated Use currentRequestStatusesLast() instead.
+     */
+    public function CurrentRequestStatuses_last(): HasOne
+    {
+        return $this->currentRequestStatusesLast();
+    }
+
+    /**
+     * @deprecated Use divisionManager() instead.
+     */
+    public function division_manger(): BelongsTo
+    {
+        return $this->divisionManager();
+    }
+
+    /**
+     * @deprecated Use getReleases() instead.
+     */
+    public function get_releases(): Collection
+    {
+        return $this->getReleases();
     }
 }
