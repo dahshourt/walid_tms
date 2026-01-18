@@ -52,7 +52,7 @@ class KickOffMeetingStatusUpdate extends Command
                 ->where('custom_field_value', '!=', '')
                 ->whereHas('change_request.currentRequestStatuses', function ($q) {
                     $q->where('new_status_id', '103')
-                        ->whereRaw('CAST(active AS CHAR) = ?', ['1']);
+                        ->active();
                 })
                 ->get()
                 ->filter(function ($cr) {
