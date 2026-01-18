@@ -33,6 +33,17 @@ class WorkFlowType extends Model
         return $query->where('active', '1');
     }
 
+    public function scopeChild(Builder $query): Builder
+    {
+        return $query->where('parent_id', '!=', null);
+    }
+
+    public function scopeNotChild(Builder $query): Builder
+    {
+        return $query->where('parent_id', null);
+    }
+
+
     public function children()
     {
         return $this->hasMany(WorkFlowType::class, 'parent_id');
