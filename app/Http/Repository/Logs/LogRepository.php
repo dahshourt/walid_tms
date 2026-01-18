@@ -96,7 +96,7 @@ class LogRepository implements LogRepositoryInterface
             return true;
         }
         if ($type === 'shifting') {
-            $this->createLog($log, $id, $user->id, 'CR shifted by admin : ' . $user->user_name);
+            $this->createLog($log, $id, $user->id, 'Change Request shifted by admin : ' . $user->user_name);
 
             return true;
         }
@@ -107,12 +107,12 @@ class LogRepository implements LogRepositoryInterface
             'testable' => ['message' => 'Testable flag changed to'],
             'priority_id' => ['model' => Priority::class, 'field' => 'name', 'message' => 'Priority Changed To'],
             // 'technical_feedback' => 'Technical Feedback Is',
-            'unit_id' => ['model' => Unit::class, 'field' => 'name', 'message' => 'CR Assigned To Unit'],
+            'unit_id' => ['model' => Unit::class, 'field' => 'name', 'message' => 'Change Request Assigned To Unit'],
             // 'creator_mobile_number' => 'Creator Mobile Changed To',
             // 'title' => 'Subject Changed To',
             'application_id' => ['model' => Application::class, 'field' => 'name', 'message' => 'Title Changed To'],
             // 'description' => 'CR Description To',
-            'category_id' => ['model' => Category::class, 'field' => 'name', 'message' => 'CR Category Changed To'],
+            'category_id' => ['model' => Category::class, 'field' => 'name', 'message' => 'Change Request Category Changed To'],
             'division_manager_id' => ['model' => DivisionManagers::class, 'field' => 'name', 'message' => 'Division Managers To'],
             'need_down_time' => ['model' => NeedDownTime::class, 'field' => 'name', 'message' => 'Need down time Changed To'],
             'rejection_reason_id' => ['model' => Rejection_reason::class, 'field' => 'name', 'message' => 'rejection Reason Changed To'],
