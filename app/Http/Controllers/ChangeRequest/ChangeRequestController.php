@@ -941,17 +941,19 @@ class ChangeRequestController extends Controller
             $activeTabId = $firstWorkflow ? $firstWorkflow->id : 9;
         }
         
-        // Get all workflow types that have CRs with top_management = 1
+        // Get all workflow types that have CRs with top_management = 1 and parent_id is not null
         $workflows_with_top_management_crs = \App\Models\WorkFlowType::whereHas('changeRequests', function($query) {
                 $query->where('top_management', '1');
             })
+            ->whereNotNull('parent_id')
             ->active()
             ->orderBy('id')
             ->get();
         
-        // If no workflows have top management CRs, get all active workflow types
+        // If no workflows have top management CRs, get all active workflow types with parent_id is not null
         if ($workflows_with_top_management_crs->count() === 0) {
             $workflows_with_top_management_crs = \App\Models\WorkFlowType::active()
+                ->whereNotNull('parent_id')
                 ->orderBy('id')
                 ->get();
         }
