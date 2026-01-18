@@ -1,34 +1,34 @@
 <?php
 
 return [
-    'cairo' =>
-        [    
-            'ldap_host' 	=> 'Cairo.TelecomEgypt.corp',
-			'ldap_binddn' 	=> "Cairo\\",
-			'ldap_search' 	=> "sAMAccountName",
-			'ldap_Base_DN' 	=> "DC=Cairo,DC=TelecomEgypt,DC=corp",
+	'cairo' =>
+		[
+			'ldap_host' => 'Cairo.TelecomEgypt.corp',
+			'ldap_binddn' => "Cairo\\",
+			'ldap_search' => "sAMAccountName",
+			'ldap_Base_DN' => "DC=Cairo,DC=TelecomEgypt,DC=corp",
 			'ldap_password' => '',
 			'ldap_username' => 'sAMAccountName'
-        ],
+		],
 	'egypt' =>
 		[
-			'ldap_host' 	=> 'egypt.te-data.core',
-			'ldap_binddn' 	=> "EGYPT\\",
-			'ldap_search' 	=> "sAMAccountName",
-			'ldap_Base_DN' 	=> "DC=egypt,DC=te-data, DC=core",
+			'ldap_host' => 'egypt.te-data.core',
+			'ldap_binddn' => "EGYPT\\",
+			'ldap_search' => "sAMAccountName",
+			'ldap_Base_DN' => "DC=egypt,DC=te-data, DC=core",
 			'ldap_password' => 'systemsldapnogoisa',
 			'ldap_username' => 'appsauth@te-data.core'
 		],
 	'active-directory' =>
-	    [
-			'name'      => 'ad.query',
-			'pwd'      => 'AdQu@112233',
+		[
+			'name' => 'ad.query',
+			'pwd' => 'AdQu@112233',
 			'ldap_host' => "Cairo.TelecomEgypt.corp",
 			'ldap_binddn' => "Cairo\\",
 			'ldap_rootdn' => "DC=Cairo,DC=TelecomEgypt,DC=corp"
 		],
 	'mails' =>
-	    [
+		[
 			'cr_manager' => 'ahmed.o.hasan@te.eg',
 			'qc_mail' => 'ahmed.o.hasan@te.eg',
 			'ticketing_dev_mail' => 'Ticketing.DEV@te.eg',
@@ -42,7 +42,7 @@ return [
 			'uat_team' => 'uat-sr@te.eg',
 		],
 	'group_names' =>
-	    [
+		[
 			'cr_team' => 'CR Team Admin',
 			'sa_team' => 'Design team',
 			'qc_team' => 'QC team',
@@ -51,10 +51,10 @@ return [
 			'bo_team' => 'IT Billing Ops',
 			'pmo_team' => 'Commercial PMO',
 			'uat_team' => 'UAT Promo',
-		],	
+		],
 	'division_managers_mails' =>
 		[
-			'ahmed.o.hasan@te.eg', 
+			'ahmed.o.hasan@te.eg',
 			//'mahmoud.bastawisy@te.eg', 
 			//'sara.mostafa@te.eg', 
 			//'yousry.mostafa@te.eg', 
@@ -68,11 +68,16 @@ return [
 			//'sara.mostafa@te.eg', 
 			//'ahmed.elzayat@te.eg',
 			//'yousry.mostafa@te.eg', 
-			
+
 		],
 	'rules' =>
 		[
 			'notify_division_manager_default' => 'CR Created - Notify Division Manager (Regular)',
 			'notify_division_manager_promo' => 'CR Created - Notify Division Manager (Promo)',
+		],
+	"tms_division_manager" =>
+		[
+			'sara.mostafa@te.eg',
 		]
+
 ];
