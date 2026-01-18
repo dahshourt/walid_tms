@@ -817,6 +817,8 @@ class ChangeRequestController extends Controller
             // Validate attachments
             $this->attachmentService->validateAttachments($request);
 
+            $this->changeRequestService->updateChangeRequest($cr_id, $request);
+
             // Handle file uploads
             $this->attachmentService->handleFileUploads($request, $cr_id);
 
