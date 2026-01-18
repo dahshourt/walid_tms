@@ -310,7 +310,7 @@ class LogRepository implements LogRepositoryInterface
                         ->filter()
                         ->implode(', ');
 
-                    $this->createLog($log, $id, $user->id, "Change Request Status changed to '$status_title' by {$user->user_name} (Actual Status: $actualStatuses - Pending Dependency (CR#$blockingCrs))");
+                    $this->createLog($log, $id, $user->id, "Change Request Status changed to '$actualStatuses' by {$user->user_name} (Pending Dependency (CR#$blockingCrs))");
                 }
                 // Normal Status Log
                 else {
