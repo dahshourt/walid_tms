@@ -187,7 +187,7 @@
 					applicationIdField.options[applicationIdField.selectedIndex].text;
 
 				if (selectedText === "TMS") {
-					divisionManagerField.value = "{{ config('constants.tms_division_manager') }}";
+					divisionManagerField.value = "{{ config('constants.tms_division_manager.0') }}";
 					divisionManagerField.readOnly = true;
 				} else {
 					divisionManagerField.value = "";
