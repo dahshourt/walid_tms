@@ -335,9 +335,9 @@ class LogRepository implements LogRepositoryInterface
         }
 
         if ($request->hold === 1) {
-            $this->createLog($log, $id, $user->id, "CR Held by $user->user_name");
+            $this->createLog($log, $id, $user->id, "Change Request Held by $user->user_name");
         } elseif ($request->hold === 0) {
-            $this->createLog($log, $id, $user->id, "CR unheld by $user->user_name");
+            $this->createLog($log, $id, $user->id, "Change Request unheld by $user->user_name");
         }
 
         return true;
