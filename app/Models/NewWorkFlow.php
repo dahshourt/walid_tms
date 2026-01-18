@@ -52,6 +52,16 @@ class NewWorkFlow extends Model
         return $this->belongsTo(WorkFlowType::class, 'type_id');
     }
 
+    public function scopeActive($query)
+    {
+        return $query->whereRaw('CAST(active AS CHAR) = ?', ['1']);
+    }
+
+    public function scopeNotActive($query)
+    {
+        return $query->whereRaw('CAST(active AS CHAR) = ?', ['0']);
+    }
+
     /*public function workflowStatuses()
      {
          return $this->hasMany(NewWorkFlowStatuses::class, 'new_workflow_id', 'id');

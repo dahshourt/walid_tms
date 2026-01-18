@@ -85,6 +85,26 @@ class change_request_statuse extends Model
         return $this->belongsTo(Group::class, 'current_group_id');
     }
 
+    public function scopeActive($query)
+    {
+        return $query->whereRaw('CAST(active AS CHAR) = ?', ['1']);
+    }
+
+    public function scopeNotActive($query)
+    {
+        return $query->whereRaw('CAST(active AS CHAR) = ?', ['0']);
+    }
+
+    public function scopeCompleted($query)
+    {
+        return $query->whereRaw('CAST(active AS CHAR) = ?', ['2']);
+    }
+
+    public function scopeCompletedOrActive($query)
+    {
+        return $query->whereRaw('CAST(active AS CHAR) != ?', ['0']);
+    }
+
     protected static function booted(): void
     {
         static::creating(function (self $model) {
