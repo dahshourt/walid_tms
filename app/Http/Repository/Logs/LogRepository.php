@@ -181,7 +181,7 @@ class LogRepository implements LogRepositoryInterface
                 } elseif ($field === 'cr_type') {
                      $oldValue = $change_request->changeRequestCustomFields->where('custom_field_name', 'cr_type')->first()?->custom_field_value;
                      $newValue = $request->cr_type;
-                } elseif (in_array($field, ['analysis_feedback', 'technical_feedback'], true)) {
+                } elseif (in_array($field, ['analysis_feedback'], true)) {
                     $oldValue = $change_request->changeRequestCustomFields->where('custom_field_name', $field)->last()?->custom_field_value;
                     $newValue = $request->{$field};
                 } else {
