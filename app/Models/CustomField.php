@@ -23,7 +23,7 @@ class CustomField extends Model
 
     protected $table = 'custom_fields';
 
-    protected $fillable = ['type', 'active', 'name', 'label', 'class', 'default_value', 'related_table'];
+    protected $fillable = ['type', 'active', 'name', 'label', 'class', 'default_value', 'related_table', 'log_message'];
 
     public static function findId($name)
     {

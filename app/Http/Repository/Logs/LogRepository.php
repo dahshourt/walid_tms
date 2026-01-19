@@ -6,6 +6,7 @@ use App\Contracts\Logs\LogRepositoryInterface;
 // declare Entities
 use App\Models\Application;
 use App\Models\Category;
+use App\Models\Change_request;
 use App\Models\CustomField;
 use App\Models\DeploymentImpact;
 use App\Models\DivisionManagers;
@@ -87,9 +88,9 @@ class LogRepository implements LogRepositoryInterface
 
             $new_status_id =  data_get($request, 'new_status_id');
 
-            $status_name = Status::where('id', $new_status_id)->value('status_name');
+            $change_request = new Change_request();
 
-            $log_message = "Change Request Status changed to '$status_name' By '$user->user_name'";
+            $log_message = $this->prepareCRStatusLogMessage($new_status_id, $change_request, $user, 'create');
 
             $this->createLog($log, $id, $user->id, $log_message);
 
@@ -298,17 +299,21 @@ class LogRepository implements LogRepositoryInterface
                 $status_title = $workflow->to_status_label;
             }
 
-            $newStatusesIds = NewWorkFlowStatuses::where('new_workflow_id', $request->new_status_id)->pluck('to_status_id')->toArray();
-            $newStatusesNames = Status::whereIn('id', $newStatusesIds)->pluck('status_name')->toArray();
-            $actualStatuses = implode(', ', $newStatusesNames);
-
             if ($status_title && $request->missing('hold') && $request->missing('is_final_confirmation')) {
                 // Dependency Release Log (when the depend cr reach to the status delivered or reject)
                 if ($request->released_from_hold) {
+                    $newStatusesIds = NewWorkFlowStatuses::where('new_workflow_id', $request->new_status_id)->pluck('to_status_id')->toArray();
+                    $newStatusesNames = Status::whereIn('id', $newStatusesIds)->pluck('status_name')->toArray();
+                    $actualStatuses = implode(', ', $newStatusesNames);
+
                     $this->createLog($log, $id, $user->id, "Change request status has been released by {$user->user_name} and the current status is $actualStatuses");
                 }
                 // Dependency Hold Log
                 elseif ($change_request->fresh()->is_dependency_hold) {
+                    $newStatusesIds = NewWorkFlowStatuses::where('new_workflow_id', $request->new_status_id)->pluck('to_status_id')->toArray();
+                    $newStatusesNames = Status::whereIn('id', $newStatusesIds)->pluck('status_name')->toArray();
+                    $actualStatuses = implode(', ', $newStatusesNames);
+
                     $blockingCrs = \App\Models\CrDependency::where('cr_id', $id)
                         ->active()
                         ->with('dependsOnCr:id,cr_no')
@@ -321,13 +326,15 @@ class LogRepository implements LogRepositoryInterface
                 }
                 // Normal Status Log
                 else {
-                    $this->createLog($log, $id, $user->id, "Change Request Status changed to '$actualStatuses' by '$user->user_name'");
+                    $log_message = $this->prepareCRStatusLogMessage($request->new_status_id, $change_request, $user);
+
+                    $this->createLog($log, $id, $user->id, $log_message);
                 }
             } else {
-                $log_message = "Change Request Status changed to '$actualStatuses' by '$user->user_name'";
+                $log_message = $this->prepareCRStatusLogMessage($request->new_status_id, $change_request, $user);
 
                 if ($request->has('is_final_confirmation')) {
-                    $log_message = "Change Request Status changed to '$actualStatuses' by '$user->user_name' from Administration";
+                    $log_message = "$log_message from Administration";
                 }
 
                 $this->createLog($log, $id, $user->id, $log_message);
@@ -401,5 +408,28 @@ class LogRepository implements LogRepositoryInterface
     private function logExists(string $log_message, string $crId): bool
     {
         return Log::where('cr_id', $crId)->where('log_text', $log_message)->exists();
+    }
+
+    private function prepareCRStatusLogMessage(int $status_id, Change_request $change_request, User $user, ?string $stage = null): string
+    {
+        $default_status_log_message = "Change Request Status changed to ':status_name' By ':user_name'";
+
+        if ($stage === 'create') {
+            $status = Status::findOrFail($status_id);
+
+            $status_name = $status?->status_name;
+            $log_message = $status->log_message ?? $default_status_log_message;
+        } else {
+            $newStatusesIds = NewWorkFlowStatuses::where('new_workflow_id', $status_id)->pluck('to_status_id')->toArray();
+            $statuses = Status::whereIn('id', $newStatusesIds)->toBase()->get(['status_name', 'log_message']);
+
+            $status_name = $statuses?->pluck('status_name')->implode(', ');
+            $log_message = $statuses->whereNotNull('log_message')->first()->log_message ?? $default_status_log_message;
+        }
+
+        return trans($log_message, [
+            'status_name' => $status_name,
+            'user_name' => $user->user_name,
+        ]);
     }
 }
