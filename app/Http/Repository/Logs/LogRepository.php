@@ -104,21 +104,25 @@ class LogRepository implements LogRepositoryInterface
         $fields = [
             // 'analysis_feedback' => 'Analysis FeedBack',
             // 'comment' => 'Comment',
-            'testable' => ['message' => 'Testable flag changed to'],
-            'priority_id' => ['model' => Priority::class, 'field' => 'name', 'message' => 'Priority Changed To'],
+            'testable' => ['message' => 'Change Request Testable flag changed to'],
+            'priority_id' => ['model' => Priority::class, 'field' => 'name', 'message' => 'Change Request Priority Changed To'],
             // 'technical_feedback' => 'Technical Feedback Is',
             'unit_id' => ['model' => Unit::class, 'field' => 'name', 'message' => 'Change Request Assigned To Unit'],
             // 'creator_mobile_number' => 'Creator Mobile Changed To',
             // 'title' => 'Subject Changed To',
-            'application_id' => ['model' => Application::class, 'field' => 'name', 'message' => 'Title Changed To'],
+            'application_id' => ['model' => Application::class, 'field' => 'name', 'message' => 'Change Request Title Changed To'],
             // 'description' => 'CR Description To',
             'category_id' => ['model' => Category::class, 'field' => 'name', 'message' => 'Change Request Category Changed To'],
             'division_manager_id' => ['model' => DivisionManagers::class, 'field' => 'name', 'message' => 'Division Managers To'],
-            'need_down_time' => ['model' => NeedDownTime::class, 'field' => 'name', 'message' => 'Need down time Changed To'],
-            'rejection_reason_id' => ['model' => Rejection_reason::class, 'field' => 'name', 'message' => 'rejection Reason Changed To'],
-            'deployment_impact' => ['model' => DeploymentImpact::class, 'field' => 'name', 'message' => 'Deployment Impact Changed To'],
+            'need_down_time' => ['model' => NeedDownTime::class, 'field' => 'name', 'message' => 'Change Request Need down time Changed To'],
+            'rejection_reason_id' => ['model' => Rejection_reason::class, 'field' => 'name', 'message' => 'Change Request rejection Reason Changed To'],
+            'deployment_impact' => ['model' => DeploymentImpact::class, 'field' => 'name', 'message' => 'Change Request Deployment Impact Changed To'],
         ];
         $excludeNames = ['develop_duration', 'design_duration', 'test_duration', 'new_status_id'];
+
+        if ($request->has('design_duration')) {
+            $excludeNames[] = 'design_estimation';
+        }
 
         // fetch custom fields you want to append
         $customFields = CustomField::query()
@@ -164,6 +168,7 @@ class LogRepository implements LogRepositoryInterface
 
         // append without overriding existing keys in $fields
         $fields += $customFieldMap;
+//        dd($fields, $request->all());
         foreach ($fields as $field => $info) {
             if (isset($request->$field)) {
                 if ($field === 'kpi') {
@@ -181,7 +186,7 @@ class LogRepository implements LogRepositoryInterface
                 } elseif ($field === 'cr_type') {
                      $oldValue = $change_request->changeRequestCustomFields->where('custom_field_name', 'cr_type')->first()?->custom_field_value;
                      $newValue = $request->cr_type;
-                } elseif (in_array($field, ['analysis_feedback'], true)) {
+                } elseif (in_array($field, ['analysis_feedback', 'designer_id', 'assignment_user_id', 'design_estimation', 'dev_estimation', 'testing_estimation'], true)) {
                     $oldValue = $change_request->changeRequestCustomFields->where('custom_field_name', $field)->last()?->custom_field_value;
                     $newValue = $request->{$field};
                 } else {
@@ -227,11 +232,13 @@ class LogRepository implements LogRepositoryInterface
                                 $newValue = implode(', ', $files_name);
                             }
 
+                            $message = $info['message'] . " \"$newValue\"";
+
                             if (in_array($field, ['analysis_feedback', 'technical_feedback'], true)) {
                                 $info['message'] = 'Comment Added ';
-                            }
 
-                            $message = $info['message'] . " \"$newValue\"";
+                                $message = 'Comment ' . " \"$newValue\" Added " ;
+                            }
                         }
 
                     } else {
@@ -253,13 +260,13 @@ class LogRepository implements LogRepositoryInterface
 
         // User Assignments
         $assignments = [
-            'assign_to' => 'Issue assigned  manually to',
-            'cr_member' => 'Issue assigned  manually to',
-            'rtm_member' => 'Issue assigned  manually to',
-            'assignment_user_id' => 'Issue assigned  manually to',
-            'developer_id' => 'Issue Assigned  Manually to',
-            'tester_id' => 'Issue Assigned  Manually to',
-            'designer_id' => 'Issue Assigned  Manually to',
+            'assign_to' => 'Change Request assigned  manually to',
+            'cr_member' => 'Change Request assigned  manually to',
+            'rtm_member' => 'Change Request assigned  manually to',
+            'assignment_user_id' => 'Change Request assigned  manually to',
+            'developer_id' => 'Change Request Assigned  Manually to',
+            'tester_id' => 'Change Request Assigned  Manually to',
+            'designer_id' => 'Change Request Assigned  Manually to',
         ];
 
         foreach ($assignments as $field => $label) {
@@ -343,7 +350,7 @@ class LogRepository implements LogRepositoryInterface
         return true;
     }
 
-    private function createLog($logRepo, $crId, $userId, $message)
+    private function createLog($logRepo, $crId, $userId, $message): void
     {
         $this->create([
             'cr_id' => $crId,
@@ -363,20 +370,36 @@ class LogRepository implements LogRepositoryInterface
     private function logEstimateWithoutAssignee($logRepo, $crId, $user, $request, $durationField, $assigneeField, $label)
     {
         if (isset($request->$durationField) && empty($request->$assigneeField)) {
-            $this->createLog($logRepo, $crId, $user->id, "Issue $label Estimated by {$user->user_name}");
+            $this->createLog($logRepo, $crId, $user->id, "Change Request $label Estimated by {$user->user_name}");
         }
     }
 
     private function logDurationWithTimes($logRepo, $crId, $user, $request, $durationField, $startField, $endField)
     {
         if (isset($request->$durationField)) {
-            $this->createLog($logRepo, $crId, $user->id, "Issue $durationField manually set to '{$request->$durationField} H' by {$user->user_name}");
+            $cleaned_field = Str::of($durationField)->remove('_id')->replace('_', ' ')->title();
+            $log_message = "Change Request $cleaned_field manually set to '{$request->$durationField} H' by {$user->user_name}";
+
+            if (! $this->logExists($log_message, $crId)) {
+                $this->createLog($logRepo, $crId, $user->id, $log_message);
+            }
         }
 
         if (isset($request->$startField) && isset($request->$endField)) {
             $startLabel = Str::of($startField)->replace('_', ' ')->title();
             $endLabel = Str::of($endField)->replace('_', ' ')->title();
-            $this->createLog($logRepo, $crId, $user->id, "Issue $startLabel set to '{$request->$startField}' and $endLabel set to '{$request->$endField}' by {$user->user_name}");
+
+            $log_message = "Change Request $startLabel set to '{$request->$startField}' and $endLabel set to '{$request->$endField}' by {$user->user_name}";
+
+            if (! $this->logExists($log_message, $crId)) {
+                $this->createLog($logRepo, $crId, $user->id, $log_message);
+            }
+
         }
+    }
+
+    private function logExists(string $log_message, string $crId): bool
+    {
+        return Log::where('cr_id', $crId)->where('log_text', $log_message)->exists();
     }
 }
