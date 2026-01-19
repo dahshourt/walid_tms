@@ -314,7 +314,7 @@ class ChangeRequestController extends Controller
             'View Change Request';
         $form_title = (!empty($workflow_type_id) && $workflow_type_id == 9)
             ? 'Promo'
-            : view()->shared('form_title');
+            : \Illuminate\Support\Facades\View::shared('form_title');
 
         return view("{$this->view}.show", compact(
             'CustomFields',
@@ -1258,5 +1258,29 @@ class ChangeRequestController extends Controller
         }
 
         return $query;
+        return $this->changeRequestService->list_crs_by_user($request);
+    }
+
+    public function updateManDaysDate(Request $request)
+    {
+        try {
+            $request->validate([
+                'id' => 'required|exists:man_days_logs,id',
+                'start_date' => 'required|date'
+            ]);
+
+            $log = $this->changeRequestService->updateManDaysDate($request->id, $request->start_date);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Start Date updated successfully',
+                'data' => $log
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 }

@@ -485,20 +485,6 @@
 
 		const CHECK_INTERVAL = {{ config('app.check_interval') }};
 
-		{
-			{ --setInterval(() => { --}}
-			{ { --  --} }
-			{
-				{ --$.get("{{ route('check-active') }}", function (data) { --}}
-				{ { --console.log("check-active", data.active); --} }
-				{
-					{ --		if (data.active == false || data.active === "0" || data.active === 0) { --} }
-					{
-						{
-							--                //window.location.href = "{{ route('inactive-logout') }}";--}}
-
-								{ { --}, CHECK_INTERVAL); --}
-					}
 	</script>
 @endauth
 
@@ -510,38 +496,38 @@
 <!-- Display SweetAlert2 notifications -->
 @if(session('error') && is_array(session('error')))
 	<script>
-					document.addEventListener('DOMContentLoaded', function () {
-						const error = @json(session('error'));
-						Swal.fire({
-							title: error.title || 'Error',
-							html: error.message || 'An error occurred',
-							icon: error.icon || 'error',
-							confirmButtonText: error.confirmButtonText || 'OK',
-							showCancelButton: error.showCancelButton || false,
-							buttonsStyling: false,
-							customClass: {
-								confirmButton: 'btn font-weight-bold btn-light-primary',
-								cancelButton: 'btn font-weight-bold btn-light-danger'
-							}
-						});
-					});
+		document.addEventListener('DOMContentLoaded', function () {
+			const error = @json(session('error'));
+			Swal.fire({
+				title: error.title || 'Error',
+				html: error.message || 'An error occurred',
+				icon: error.icon || 'error',
+				confirmButtonText: error.confirmButtonText || 'OK',
+				showCancelButton: error.showCancelButton || false,
+				buttonsStyling: false,
+				customClass: {
+					confirmButton: 'btn font-weight-bold btn-light-primary',
+					cancelButton: 'btn font-weight-bold btn-light-danger'
+				}
+			});
+		});
 	</script>
 @endif
 
 @if(session('success'))
 	<script>
-					document.addEventListener('DOMContentLoaded', function () {
-						Swal.fire({
-							title: 'Success',
-							text: '{{ session('success') }}',
-							icon: 'success',
-							confirmButtonText: 'OK',
-							buttonsStyling: false,
-							customClass: {
-								confirmButton: 'btn font-weight-bold btn-light-primary'
-							}
-						});
-					});
+		document.addEventListener('DOMContentLoaded', function () {
+			Swal.fire({
+				title: 'Success',
+				text: '{{ session('success') }}',
+				icon: 'success',
+				confirmButtonText: 'OK',
+				buttonsStyling: false,
+				customClass: {
+					confirmButton: 'btn font-weight-bold btn-light-primary'
+				}
+			});
+		});
 	</script>
 @endif
 
