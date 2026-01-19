@@ -68,17 +68,39 @@ class ChangeRequestService
     public function updateChangeRequest(int $id, Request $request)
     {
         if ($request->man_days && !empty($request->man_days)) {
-            ManDaysLog::create([
-                'group_id' => Session::get('current_group'),
-                'user_id' => auth()->user()->id,
-                'cr_id' => $id,
-                'man_day' => $request->man_days,
-            ]);
+            $startDate = $request->start_date_mds;
+            $manDays = $request->man_days;
+            $endDate = null;
+
+            if ($startDate && $manDays) {
+                $endDate = $this->calculateEndDateMds($startDate, $manDays);
+            }
+
+            $mds = ManDaysLog::where('cr_id', $id)->where('group_id', Session::get('current_group'))->first();
+            if ($mds) {
+                $mds->update([
+                    'group_id' => Session::get('current_group'),
+                    'user_id' => auth()->user()->id,
+                    'cr_id' => $id,
+                    'man_day' => $request->man_days,
+                    'start_date' => $request->start_date_mds,
+                    'end_date' => $endDate,
+                ]);
+            } else {
+                ManDaysLog::create([
+                    'group_id' => Session::get('current_group'),
+                    'user_id' => auth()->user()->id,
+                    'cr_id' => $id,
+                    'man_day' => $request->man_days,
+                    'start_date' => $request->start_date_mds,
+                    'end_date' => $endDate,
+                ]);
+            }
         }
 
         if ($request->cap_users) {
             $cap_users = array_unique($request->cap_users);
-            
+
             if ($request->cr) {
                 $requesterId = $request->cr->requester_id;
                 $requester = User::find($requesterId);
@@ -91,12 +113,12 @@ class ChangeRequestService
                             throw new Exception('You cannot be the only CAB user. Please select at least one additional CAB user.');
                         }
                     }
-                } 
+                }
             }
         }
 
         $this->assignTechnicalTeams($request, $id);
-        
+
         $cr_id = $this->changerequest->update($id, $request);
 
         if ($cr_id === false) {
@@ -106,6 +128,51 @@ class ChangeRequestService
         $this->handleCapUsersNotification($request, $id);
 
         return $cr_id;
+    }
+
+    private function calculateEndDateMds($startDate, $manDays)
+    {
+        $currentDate = \Carbon\Carbon::parse($startDate);
+        $daysRemaining = ceil((float) $manDays);
+
+        // adjust if starting on a weekend (optional, but good practice if start_date can be weekend)
+        // If start date is Friday/Saturday, move to Sunday?
+        // User requirement: "exclude friday and starday".
+        // Use basic loop logic.
+
+        $addedDays = 0;
+        while ($daysRemaining > 0) {
+            // Check if current day is Friday or Saturday
+            if ($currentDate->isFriday() || $currentDate->isSaturday()) {
+                $currentDate->addDay();
+                continue;
+            }
+
+            // It's a working day
+            $daysRemaining--;
+            if ($daysRemaining > 0) {
+                $currentDate->addDay();
+            }
+        }
+
+        return $currentDate->toDateString();
+    }
+
+    public function updateManDaysDate(int $id, $startDate)
+    {
+        $log = ManDaysLog::find($id);
+        if (!$log) {
+            throw new Exception("Man Days Log not found");
+        }
+
+        $endDate = $this->calculateEndDateMds($startDate, $log->man_day);
+
+        $log->update([
+            'start_date' => $startDate,
+            'end_date' => $endDate
+        ]);
+
+        return $log;
     }
 
     private function assignTechnicalTeams(Request $request, int $id): void
@@ -193,7 +260,7 @@ class ChangeRequestService
             ->toArray();
         $reject = new RejectionReasonsRepository();
         $rejects = $reject->workflows($workflow_type_id);
-        
+
         $man_days = ManDaysLog::where('cr_id', $id)->with('user')->get();
         $relevantField = $cr->change_request_custom_fields
             ->where('custom_field_name', 'relevant')
@@ -222,12 +289,29 @@ class ChangeRequestService
         // Get CRs that can be depended upon
         $dependableCrs = Change_request::getDependableCrs($cr->id);
 
-        return compact('rejects',
-            'selected_technical_teams', 'man_day', 'technical_team_disabled', 'status_name',
-            'ApplicationImpact', 'cap_users', 'CustomFields', 'cr', 'workflow_type_id',
-            'logs_ers', 'developer_users', 'sa_users', 'testing_users', 'technical_teams',
-            'all_defects', 'reminder_promo_tech_teams', 'rtm_members', 'assignment_users',
-            'reminder_promo_tech_teams_text', 'technical_groups', 'man_days',
+        return compact(
+            'rejects',
+            'selected_technical_teams',
+            'man_day',
+            'technical_team_disabled',
+            'status_name',
+            'ApplicationImpact',
+            'cap_users',
+            'CustomFields',
+            'cr',
+            'workflow_type_id',
+            'logs_ers',
+            'developer_users',
+            'sa_users',
+            'testing_users',
+            'technical_teams',
+            'all_defects',
+            'reminder_promo_tech_teams',
+            'rtm_members',
+            'assignment_users',
+            'reminder_promo_tech_teams_text',
+            'technical_groups',
+            'man_days',
             'relevantCrsData',
             'relevantNotPending',
             'pendingProductionId',
