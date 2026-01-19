@@ -57,7 +57,7 @@ class ChangeRequestSearchService
         }
 
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
-            $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($group) {
+            $query->active()->where(function ($qq) use ($group) {
                 $qq->where('group_id', $group)->orWhereNull('group_id');
             })
                 ->whereIn('new_status_id', $viewStatuses)
@@ -117,7 +117,7 @@ class ChangeRequestSearchService
         }
 
         return $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
-            $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($group) {
+            $query->active()->where(function ($qq) use ($group) {
                 $qq->where('group_id', $group)->orWhereNull('group_id');
             })
                 ->whereIn('new_status_id', $viewStatuses)
@@ -174,7 +174,7 @@ class ChangeRequestSearchService
         }
 
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
-            $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($group) {
+            $query->active()->where(function ($qq) use ($group) {
                 $qq->where('group_id', $group)->orWhereNull('group_id');
             })
                 ->whereIn('new_status_id', $viewStatuses)
@@ -400,7 +400,7 @@ class ChangeRequestSearchService
                 }
             })
             ->whereHas('RequestStatuses', function ($query) use ($groups, $viewStatuses) {
-                $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($groups) {
+                $query->active()->where(function ($qq) use ($groups) {
                     $qq->whereIn('group_id', $groups)->orWhereNull('group_id');
                 })
                     ->whereIn('new_status_id', $viewStatuses);
@@ -533,7 +533,7 @@ class ChangeRequestSearchService
 
     public function getCurrentStatusForDivision($changeRequest)
     {
-        $status = Change_request_statuse::where('cr_id', $changeRequest->id)->whereRaw('CAST(active AS CHAR) = ?', ['1'])->first();
+        $status = Change_request_statuse::where('cr_id', $changeRequest->id)->active()->first();
 
         return $status;
 
@@ -610,9 +610,7 @@ class ChangeRequestSearchService
 
         return Change_request_statuse::where('cr_id', $changeRequest->id)
             ->whereIn('new_status_id', $viewStatuses)
-            // ->where('active', '1')
-            // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            ->active()
             ->first();
 
     }
@@ -620,8 +618,7 @@ class ChangeRequestSearchService
     protected function getCurrentStatusCab($changeRequest, $viewStatuses)
     {
         return Change_request_statuse::where('cr_id', $changeRequest->id)
-            // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            ->active()
             ->first();
     }
 
@@ -644,7 +641,7 @@ class ChangeRequestSearchService
                 $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
             })
             ->where('type_id', $typeId)
-            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            ->active()
             ->orderBy('id', 'DESC')
             ->get();
     }

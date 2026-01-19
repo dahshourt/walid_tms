@@ -5,9 +5,12 @@ namespace App\Console\Commands;
 use App\Http\Repository\ChangeRequest\ChangeRequestRepository;
 use Carbon\Carbon;
 use Exception;
+use App\Models\User;
+use App\Models\ChangeRequestCustomField;
 use Illuminate\Console\Command;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class KickOffMeetingStatusUpdate extends Command
 {
@@ -35,6 +38,7 @@ class KickOffMeetingStatusUpdate extends Command
         try {
             $this->info('Starting kick off meeting status update process...');
 
+            $adminUser = User::where('email', 'admin@te.eg')->first();
             // Get today's date
             $today = Carbon::today();
             $todayFormatted = $today->format('Y-m-d');
@@ -43,19 +47,21 @@ class KickOffMeetingStatusUpdate extends Command
 
             // Query the change_request_custom_fields table
             // Get all records with kick_off_meeting_date field
-            $changeRequests = DB::table('change_request_custom_fields')
-                ->select('cr_id', 'custom_field_name', 'custom_field_value', 'user_id')
-                ->where('custom_field_name', 'kick_off_meeting_date')
+            $changeRequests = ChangeRequestCustomField::where('custom_field_name', 'kick_off_meeting_date')
                 ->whereNotNull('custom_field_value')
                 ->where('custom_field_value', '!=', '')
+                ->whereHas('change_request.currentRequestStatuses', function ($q) {
+                    $q->where('new_status_id', '103')
+                        ->active();
+                })
                 ->get()
                 ->filter(function ($cr) {
                     try {
                         // Parse the date from database and compare
                         $kickOffDate = Carbon::parse($cr->custom_field_value);
 
-                        // Check if the kick off date is today or has already passed
-                        $shouldProcess = $kickOffDate->isToday() || $kickOffDate->isPast();
+                        // Check if the kick off date is already passed
+                        $shouldProcess = $kickOffDate->isPast();
 
                         if ($shouldProcess) {
                             $this->line("Found CR ID: {$cr->cr_id} with kick off date: {$cr->custom_field_value}");
@@ -84,27 +90,16 @@ class KickOffMeetingStatusUpdate extends Command
 
             // You may want to get this from config or a specific user
             // Consider using: config('app.system_user_id', 1) or Auth::id()
-
             foreach ($changeRequests as $cr) {
-
-                $user_id = $cr->user_id;
+                $new_status_id = $cr->change_request->getSetStatus()->where('workflow_type', 0)->first()->id;
+                $user_id = $adminUser->id;
                 try {
                     $crId = $cr->cr_id;
 
-                    /* // Check if this CR is already in status 104 or higher to avoid duplicate updates
-                     $currentStatus = DB::table('change_requests')
-                         ->where('cr_no', $crId)
-                         ->value('status_id');
-
-                     if ($currentStatus && $currentStatus >= 104) {
-                         $this->warn("CR ID: {$crId} is already in status {$currentStatus}, skipping...");
-                         continue;
-                     }*/
 
                     $requestData = new Request([
                         'old_status_id' => '103',
-                        'new_status_id' => '104',
-                        'cab_cr_flag' => '1',
+                        'new_status_id' => $new_status_id,
                         'user_id' => $user_id,
                     ]);
 
@@ -135,7 +130,8 @@ class KickOffMeetingStatusUpdate extends Command
             $this->info('Total processed: ' . ($updatedCount + $errorCount));
 
         } catch (Exception $e) {
-            $this->error('Command failed with critical error: ' . $e->getMessage());
+            $this->error('Command failed with critical error: ' . $e);
+            Log::error('Command failed with critical error: ' . $e);
 
             return Command::FAILURE;
         }

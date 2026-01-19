@@ -69,234 +69,234 @@ class ChangeRequestStatusService
         $this->statusRepository = new ChangeRequestStatusRepository();
         $this->mailController = new MailController();
     }
-/**
- * Check if both workflows have reached the merge point status
- * 
- * @param int $crId
- * @param string $mergeStatusName The merge point status name (e.g., "Pending Update Agreed Requirements")
- * @return bool True if both workflows have reached this status
- */
-private function haveBothWorkflowsReachedMergePoint(int $crId, string $mergeStatusName): bool
-{
-    // Find the merge status ID
-    $mergeStatus = Status::where('name', $mergeStatusName)->first();
-    
-    if (!$mergeStatus) {
-        Log::error('Merge status not found', [
-            'status_name' => $mergeStatusName
-        ]);
-        return false;
-    }
-    
-    // Get all status records for this CR with the merge status
-    $mergeStatusRecords = ChangeRequestStatus::where('cr_id', $crId)
-        ->where('new_status_id', $mergeStatus->id)
-        ->get();
-    
-    if ($mergeStatusRecords->isEmpty()) {
-        Log::info('No merge status records found yet', [
+    /**
+     * Check if both workflows have reached the merge point status
+     * 
+     * @param int $crId
+     * @param string $mergeStatusName The merge point status name (e.g., "Pending Update Agreed Requirements")
+     * @return bool True if both workflows have reached this status
+     */
+    private function haveBothWorkflowsReachedMergePoint(int $crId, string $mergeStatusName): bool
+    {
+        // Find the merge status ID
+        $mergeStatus = Status::where('name', $mergeStatusName)->first();
+
+        if (!$mergeStatus) {
+            Log::error('Merge status not found', [
+                'status_name' => $mergeStatusName
+            ]);
+            return false;
+        }
+
+        // Get all status records for this CR with the merge status
+        $mergeStatusRecords = ChangeRequestStatus::where('cr_id', $crId)
+            ->where('new_status_id', $mergeStatus->id)
+            ->get();
+
+        if ($mergeStatusRecords->isEmpty()) {
+            Log::info('No merge status records found yet', [
+                'cr_id' => $crId,
+                'merge_status' => $mergeStatusName
+            ]);
+            return false;
+        }
+
+        // Count how many unique old_status_ids have reached the merge point
+        // We need at least 2: one from Workflow A and one from Workflow B
+        $uniqueSourceStatuses = $mergeStatusRecords->pluck('old_status_id')->unique();
+
+        Log::info('Checking merge point status', [
             'cr_id' => $crId,
-            'merge_status' => $mergeStatusName
+            'merge_status' => $mergeStatusName,
+            'total_records' => $mergeStatusRecords->count(),
+            'unique_sources' => $uniqueSourceStatuses->count(),
+            'source_status_ids' => $uniqueSourceStatuses->toArray()
         ]);
-        return false;
+
+        // Both workflows have reached if we have records from 2+ different source statuses
+        $bothReached = $uniqueSourceStatuses->count() >= 2;
+
+        if (!$bothReached) {
+            Log::warning('Merge point not ready - both workflows have not reached it', [
+                'cr_id' => $crId,
+                'reached_count' => $uniqueSourceStatuses->count(),
+                'required_count' => 2
+            ]);
+        }
+
+        return $bothReached;
     }
-    
-    // Count how many unique old_status_ids have reached the merge point
-    // We need at least 2: one from Workflow A and one from Workflow B
-    $uniqueSourceStatuses = $mergeStatusRecords->pluck('old_status_id')->unique();
-    
-    Log::info('Checking merge point status', [
-        'cr_id' => $crId,
-        'merge_status' => $mergeStatusName,
-        'total_records' => $mergeStatusRecords->count(),
-        'unique_sources' => $uniqueSourceStatuses->count(),
-        'source_status_ids' => $uniqueSourceStatuses->toArray()
-    ]);
-    
-    // Both workflows have reached if we have records from 2+ different source statuses
-    $bothReached = $uniqueSourceStatuses->count() >= 2;
-    
-    if (!$bothReached) {
-        Log::warning('Merge point not ready - both workflows have not reached it', [
+    /**
+     * Check if BOTH workflows have reached merge point
+     * Works by counting how many different paths led to the merge status
+     */
+    /**
+     * Check if both workflows reached merge point
+     * Dynamically determines workflow paths
+     */
+    private function areBothWorkflowsCompleteById(int $crId, int $mergeStatusId): bool
+    {
+        Log::info('Checking both workflows completion', [
             'cr_id' => $crId,
-            'reached_count' => $uniqueSourceStatuses->count(),
-            'required_count' => 2
+            'merge_status_id' => $mergeStatusId
         ]);
-    }
-    
-    return $bothReached;
-}
-/**
- * Check if BOTH workflows have reached merge point
- * Works by counting how many different paths led to the merge status
- */
-/**
- * Check if both workflows reached merge point
- * Dynamically determines workflow paths
- */
-private function areBothWorkflowsCompleteById(int $crId, int $mergeStatusId): bool
-{
-    Log::info('Checking both workflows completion', [
-        'cr_id' => $crId,
-        'merge_status_id' => $mergeStatusId
-    ]);
-    
-    // Get all records where new_status_id = merge point (250)
-    $mergeRecords = ChangeRequestStatus::where('cr_id', $crId)
-        ->where('new_status_id', $mergeStatusId)
-        ->get();
-    
-    if ($mergeRecords->isEmpty()) {
-        Log::info('No workflows have reached merge point yet', [
-            'cr_id' => $crId
-        ]);
-        return false;
-    }
-    
-    // Count unique old_status_id values (different workflow paths)
-    $uniquePaths = $mergeRecords->pluck('old_status_id')->unique();
-    $pathCount = $uniquePaths->count();
-    
-    Log::info('Workflow paths analysis', [
-        'cr_id' => $crId,
-        'total_merge_records' => $mergeRecords->count(),
-        'unique_workflow_paths' => $pathCount,
-        'path_source_ids' => $uniquePaths->toArray(),
-        'both_complete' => $pathCount >= 2
-    ]);
-    
-    // Need at least 2 different paths (Workflow A + Workflow B)
-    return $pathCount >= 2;
-}
-private function activatePendingMergeStatus(int $crId, array $statusData): void
-{
-    $mergePointStatusId = 250;
-    
-    // Only if we just reached the merge point
-    if ($statusData['new_status_id'] == $mergePointStatusId) {
-        
-        if ($this->areBothWorkflowsCompleteById($crId, $mergePointStatusId)) {
-            
-            Log::info('Both workflows complete - activating pending statuses', [
+
+        // Get all records where new_status_id = merge point (250)
+        $mergeRecords = ChangeRequestStatus::where('cr_id', $crId)
+            ->where('new_status_id', $mergeStatusId)
+            ->get();
+
+        if ($mergeRecords->isEmpty()) {
+            Log::info('No workflows have reached merge point yet', [
                 'cr_id' => $crId
             ]);
-            
-            // Find records with active=0 from merge point
-            $pendingStatuses = ChangeRequestStatus::where('cr_id', $crId)
-                ->where('old_status_id', $mergePointStatusId)
-                ->whereRaw('CAST(active AS CHAR) = ?', ['0'])
-                ->get();
-            
-            foreach ($pendingStatuses as $status) {
-                $status->update(['active' => self::ACTIVE_STATUS]);
-                
-                Log::info('Updated pending status to active=1', [
-                    'cr_id' => $crId,
-                    'status_id' => $status->id
+            return false;
+        }
+
+        // Count unique old_status_id values (different workflow paths)
+        $uniquePaths = $mergeRecords->pluck('old_status_id')->unique();
+        $pathCount = $uniquePaths->count();
+
+        Log::info('Workflow paths analysis', [
+            'cr_id' => $crId,
+            'total_merge_records' => $mergeRecords->count(),
+            'unique_workflow_paths' => $pathCount,
+            'path_source_ids' => $uniquePaths->toArray(),
+            'both_complete' => $pathCount >= 2
+        ]);
+
+        // Need at least 2 different paths (Workflow A + Workflow B)
+        return $pathCount >= 2;
+    }
+    private function activatePendingMergeStatus(int $crId, array $statusData): void
+    {
+        $mergePointStatusId = 250;
+
+        // Only if we just reached the merge point
+        if ($statusData['new_status_id'] == $mergePointStatusId) {
+
+            if ($this->areBothWorkflowsCompleteById($crId, $mergePointStatusId)) {
+
+                Log::info('Both workflows complete - activating pending statuses', [
+                    'cr_id' => $crId
                 ]);
+
+                // Find records with active=0 from merge point
+                $pendingStatuses = ChangeRequestStatus::where('cr_id', $crId)
+                    ->where('old_status_id', $mergePointStatusId)
+                    ->notActive()
+                    ->get();
+
+                foreach ($pendingStatuses as $status) {
+                    $status->update(['active' => self::ACTIVE_STATUS]);
+
+                    Log::info('Updated pending status to active=1', [
+                        'cr_id' => $crId,
+                        'status_id' => $status->id
+                    ]);
+                }
             }
         }
     }
-}
 
-/**
- * Check if both workflows have reached merge point by checking specific workflow statuses
- * More accurate version that checks specific workflow completion
- */
-// private function areBothWorkflowsComplete(int $crId): bool
+    /**
+     * Check if both workflows have reached merge point by checking specific workflow statuses
+     * More accurate version that checks specific workflow completion
+     */
+    // private function areBothWorkflowsComplete(int $crId): bool
 // {
 //     $mergeStatusName = 'Pending Update Agreed Requirements';
 //     $mergeStatus = Status::where('status_name', $mergeStatusName)->first();
-    
-//     if (!$mergeStatus) {
+
+    //     if (!$mergeStatus) {
 //         return false;
 //     }
-    
-//     // Define what we're looking for:
+
+    //     // Define what we're looking for:
 //     // Workflow A source: "Request Draft CR Doc" or its next statuses
 //     // Workflow B source: One of the three approval statuses or their next statuses
-    
-//     $workflowAStatuses = [
+
+    //     $workflowAStatuses = [
 //         'Request Draft CR Doc',
 //         'Pending Update Draft CR Doc',
 //         // Add other Workflow A intermediate statuses here
 //     ];
-    
-//     $workflowBStatuses = [
+
+    //     $workflowBStatuses = [
 //         'Pending Agreed Scope Approval-SA',
 //         'Pending Agreed Scope Approval-Vendor',
 //         'Pending Agreed Scope Approval-Business',
 //         // Add other Workflow B intermediate statuses here
 //     ];
-    
-//     // Check if Workflow A has reached the merge point
+
+    //     // Check if Workflow A has reached the merge point
 //     $workflowAStatusIds = Status::whereIn('status_name', $workflowAStatuses)->pluck('id');
 //     $workflowAReached = ChangeRequestStatus::where('cr_id', $crId)
 //         ->whereIn('old_status_id', $workflowAStatusIds)
 //         ->where('new_status_id', $mergeStatus->id)
 //         ->exists();
-    
-//     // Check if Workflow B has reached the merge point
+
+    //     // Check if Workflow B has reached the merge point
 //     $workflowBStatusIds = Status::whereIn('status_name', $workflowBStatuses)->pluck('id');
 //     $workflowBReached = ChangeRequestStatus::where('cr_id', $crId)
 //         ->whereIn('old_status_id', $workflowBStatusIds)
 //         ->where('new_status_id', $mergeStatus->id)
 //         ->exists();
-    
-//     Log::info('Checking both workflows completion', [
+
+    //     Log::info('Checking both workflows completion', [
 //         'cr_id' => $crId,
 //         'workflow_a_reached' => $workflowAReached,
 //         'workflow_b_reached' => $workflowBReached,
 //         'both_complete' => $workflowAReached && $workflowBReached
 //     ]);
-    
-//     return $workflowAReached && $workflowBReached;
+
+    //     return $workflowAReached && $workflowBReached;
 // }
 
 
-private function requiresMergePointCheck(int $fromStatusId, int $toStatusId): bool
-{
-    // Check if there's a workflow with same_time = 1
-    $workflowStatus = \App\Models\NewWorkflowStatus::where('from_status_id', $fromStatusId)
-        ->where('to_status_id', $toStatusId)
-        ->first();
-    
-    if (!$workflowStatus || !$workflowStatus->workflow) {
-        return false;
+    private function requiresMergePointCheck(int $fromStatusId, int $toStatusId): bool
+    {
+        // Check if there's a workflow with same_time = 1
+        $workflowStatus = \App\Models\NewWorkflowStatus::where('from_status_id', $fromStatusId)
+            ->where('to_status_id', $toStatusId)
+            ->first();
+
+        if (!$workflowStatus || !$workflowStatus->workflow) {
+            return false;
+        }
+
+        // If same_time = 1, this transition requires merge point check
+        return $workflowStatus->workflow->same_time == 1;
     }
-    
-    // If same_time = 1, this transition requires merge point check
-    return $workflowStatus->workflow->same_time == 1;
-}
-// /public function updateChangeRequestStatus(int $changeRequestId, $request): bool
+    // /public function updateChangeRequestStatus(int $changeRequestId, $request): bool
 // {
 //     try {
 //         DB::beginTransaction();
 
-//         $statusData = $this->extractStatusData($request);
-        
-//         Log::info('Status transition attempt', [
+    //         $statusData = $this->extractStatusData($request);
+
+    //         Log::info('Status transition attempt', [
 //             'cr_id' => $changeRequestId,
 //             'old_status_id' => $statusData['old_status_id'],
 //             'new_status_id' => $statusData['new_status_id']
 //         ]);
-        
-//         $workflow = $this->getWorkflow($statusData);
+
+    //         $workflow = $this->getWorkflow($statusData);
 //         $changeRequest = $this->getChangeRequest($changeRequestId);
 //         $userId = $this->getUserId($changeRequest, $request);
 
-//         // Get status objects
+    //         // Get status objects
 //         $fromStatus = Status::find($statusData['old_status_id']);
 //         $toStatus = Status::find($statusData['new_status_id']);
-        
-//         // Validate destination status exists
-     
-        
-//         // ════════════════════════════════════════════════════════════
+
+    //         // Validate destination status exists
+
+
+    //         // ════════════════════════════════════════════════════════════
 //         // MERGE POINT CHECK
 //         // ════════════════════════════════════════════════════════════
-        
-//        $mergePointStatusId = 250;
+
+    //        $mergePointStatusId = 250;
 //         $isMergePointTransition = ($statusData['old_status_id'] == $mergePointStatusId);
 //         $bothWorkflowsComplete = true;
 //         // Check if transitioning FROM the merge point
@@ -305,92 +305,92 @@ private function requiresMergePointCheck(int $fromStatusId, int $toStatusId): bo
 //                 $changeRequestId, 
 //                 $mergePointStatusId
 //             );
-            
-//             Log::info('Merge point check', [
+
+    //             Log::info('Merge point check', [
 //                 'cr_id' => $changeRequestId,
 //                 'both_complete' => $bothWorkflowsComplete,
 //                 'will_insert_with_active' => $bothWorkflowsComplete ? '1' : '0'
 //             ]);
 //         }
-        
-        
-//         // ════════════════════════════════════════════════════════════
+
+
+    //         // ════════════════════════════════════════════════════════════
 //         // END MERGE POINT CHECK
 //         // ════════════════════════════════════════════════════════════
 
-//         $this->processStatusUpdate($changeRequest, $statusData, $workflow, $userId, $request);
+    //         $this->processStatusUpdate($changeRequest, $statusData, $workflow, $userId, $request);
 //         $this->activatePendingMergeStatus($changeRequest->id, $statusData);
 
-//         DB::commit();
-        
-//         Log::info('========== STATUS UPDATE COMMITTED ==========', [
+    //         DB::commit();
+
+    //         Log::info('========== STATUS UPDATE COMMITTED ==========', [
 //             'cr_id' => $changeRequestId,
 //             'was_merge_point' => $isMergePoint,
 //             'both_complete' => $bothComplete
 //         ]);
-        
-//         // ════════════════════════════════════════════════════════════
+
+    //         // ════════════════════════════════════════════════════════════
 //         // AFTER INSERT is committed, optionally show message
 //         // ════════════════════════════════════════════════════════════
-        
-//         if ($isMergePoint && !$bothComplete) {
-            
-//             Log::warning('Record inserted with active=0 - showing user message', [
+
+    //         if ($isMergePoint && !$bothComplete) {
+
+    //             Log::warning('Record inserted with active=0 - showing user message', [
 //                 'cr_id' => $changeRequestId
 //             ]);
-            
-//             // Status already inserted with active=0
+
+    //             // Status already inserted with active=0
 //             // Show informational message to user
 //             throw new \Exception(
 //                 'Status updated successfully. However, this status is pending and will become active when both Workflow A and Workflow B complete and reach "Pending Update Agreed Requirements".'
 //             );
 //         }
-        
-//         // Fire event if no message
+
+    //         // Fire event if no message
 //         $this->checkAndFireDeliveredEvent($changeRequest, $statusData);
 
-//         return true;
+    //         return true;
 
-//     } catch (Exception $e) {
-        
-//         // Check if this is our informational message
+    //     } catch (Exception $e) {
+
+    //         // Check if this is our informational message
 //         $isInfoMessage = strpos($e->getMessage(), 'Status updated successfully') !== false;
-        
-//         if ($isInfoMessage) {
+
+    //         if ($isInfoMessage) {
 //             // Record already committed, just showing message
 //             Log::info('User message displayed (record already saved with active=0)', [
 //                 'cr_id' => $changeRequestId
 //             ]);
 //             throw $e;
 //         }
-        
-//         // Real error - rollback
+
+    //         // Real error - rollback
 //         DB::rollback();
-        
-//         Log::error('Error updating change request status', [
+
+    //         Log::error('Error updating change request status', [
 //             'change_request_id' => $changeRequestId,
 //             'error' => $e->getMessage()
 //         ]);
-        
-//         throw $e;
+
+    //         throw $e;
 //     }
 // }
 
-public function updateChangeRequestStatus(int $changeRequestId, $request): bool
-{
-    try {
-        DB::beginTransaction();
+    public function updateChangeRequestStatus(int $changeRequestId, $request): bool
+    {
+        try {
+            DB::beginTransaction();
 
-        $statusData = $this->extractStatusData($request);
-        $workflow = $this->getWorkflow($statusData);
-        $changeRequest = $this->getChangeRequest($changeRequestId);
-        $userId = $this->getUserId($changeRequest, $request);
+            $statusData = $this->extractStatusData($request);
+            $workflow = $this->getWorkflow($statusData);
+            $changeRequest = $this->getChangeRequest($changeRequestId);
+            $userId = $this->getUserId($changeRequest, $request);
 
-        // Process update - determineActiveStatus handles merge point logic
-        $this->processStatusUpdate($changeRequest, $statusData, $workflow, $userId, $request);
+            // Process update - determineActiveStatus handles merge point logic
+            $this->processStatusUpdate($changeRequest, $statusData, $workflow, $userId, $request);
 
-        // Activate pending statuses if needed
-        $this->activatePendingMergeStatus($changeRequest->id, $statusData);
+            // Activate pending statuses if needed
+            $this->activatePendingMergeStatus($changeRequest->id, $statusData);
 
             DB::commit();
             // Fire CrDeliveredEvent if CR reached Delivered status
@@ -398,95 +398,95 @@ public function updateChangeRequestStatus(int $changeRequestId, $request): bool
 
             event(new ChangeRequestStatusUpdated($changeRequest, $statusData, $request, $this->active_flag));
 
-        return true;
+            return true;
 
-    } catch (Exception $e) {
-        DB::rollback();
-        Log::error('Error updating change request status', [
-            'change_request_id' => $changeRequestId,
-            'error' => $e->getMessage()
-        ]);
-        throw $e;
+        } catch (Exception $e) {
+            DB::rollback();
+            Log::error('Error updating change request status', [
+                'change_request_id' => $changeRequestId,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
-}
-/**
- * Check if both workflows reached merge point using status NAMES
- */
-private function areBothWorkflowsComplete(int $crId): bool
-{
-    // IMPORTANT: Replace 'name' with your actual column name throughout
-    
-    $mergeStatusName = 'Pending Update Agreed Requirements';
-    
-    // Find merge status
-    $mergeStatus = Status::where('status_name', $mergeStatusName)->first();  // ← Change 'name' if needed
-    
-    if (!$mergeStatus) {
-        Log::error('Merge status not found', [
-            'status_name' => $mergeStatusName
+    /**
+     * Check if both workflows reached merge point using status NAMES
+     */
+    private function areBothWorkflowsComplete(int $crId): bool
+    {
+        // IMPORTANT: Replace 'name' with your actual column name throughout
+
+        $mergeStatusName = 'Pending Update Agreed Requirements';
+
+        // Find merge status
+        $mergeStatus = Status::where('status_name', $mergeStatusName)->first();  // ← Change 'name' if needed
+
+        if (!$mergeStatus) {
+            Log::error('Merge status not found', [
+                'status_name' => $mergeStatusName
+            ]);
+            return false;
+        }
+
+        // Workflow A status names
+        $workflowANames = [
+            'Request Draft CR Doc',
+            'Pending Update Draft CR Doc',
+        ];
+
+        // Get Workflow A status IDs
+        $workflowAStatusIds = Status::whereIn('status_name', $workflowANames)  // ← Change 'name' if needed
+            ->pluck('id')
+            ->toArray();
+
+        Log::info('Workflow A status IDs', [
+            'names' => $workflowANames,
+            'ids' => $workflowAStatusIds
         ]);
-        return false;
+
+        // Check if Workflow A reached merge point
+        $workflowAReached = ChangeRequestStatus::where('cr_id', $crId)
+            ->whereIn('old_status_id', $workflowAStatusIds)
+            ->where('new_status_id', $mergeStatus->id)
+            ->exists();
+
+        Log::info('Workflow A reached', ['reached' => $workflowAReached]);
+
+        // Workflow B status names
+        $workflowBNames = [
+            'Pending Agreed Scope Approval-SA',
+            'Pending Agreed Scope Approval-Vendor',
+            'Pending Agreed Scope Approval-Business',
+        ];
+
+        // Get Workflow B status IDs
+        $workflowBStatusIds = Status::whereIn('status_name', $workflowBNames)  // ← Change 'name' if needed
+            ->pluck('id')
+            ->toArray();
+
+        Log::info('Workflow B status IDs', [
+            'names' => $workflowBNames,
+            'ids' => $workflowBStatusIds
+        ]);
+
+        // Check if Workflow B reached merge point
+        $workflowBReached = ChangeRequestStatus::where('cr_id', $crId)
+            ->whereIn('old_status_id', $workflowBStatusIds)
+            ->where('new_status_id', $mergeStatus->id)
+            ->exists();
+
+        Log::info('Workflow B reached', ['reached' => $workflowBReached]);
+
+        $bothComplete = $workflowAReached && $workflowBReached;
+
+        Log::info('Final result', [
+            'workflow_a' => $workflowAReached,
+            'workflow_b' => $workflowBReached,
+            'both_complete' => $bothComplete
+        ]);
+
+        return $bothComplete;
     }
-    
-    // Workflow A status names
-    $workflowANames = [
-        'Request Draft CR Doc',
-        'Pending Update Draft CR Doc',
-    ];
-    
-    // Get Workflow A status IDs
-    $workflowAStatusIds = Status::whereIn('status_name', $workflowANames)  // ← Change 'name' if needed
-        ->pluck('id')
-        ->toArray();
-    
-    Log::info('Workflow A status IDs', [
-        'names' => $workflowANames,
-        'ids' => $workflowAStatusIds
-    ]);
-    
-    // Check if Workflow A reached merge point
-    $workflowAReached = ChangeRequestStatus::where('cr_id', $crId)
-        ->whereIn('old_status_id', $workflowAStatusIds)
-        ->where('new_status_id', $mergeStatus->id)
-        ->exists();
-    
-    Log::info('Workflow A reached', ['reached' => $workflowAReached]);
-    
-    // Workflow B status names
-    $workflowBNames = [
-        'Pending Agreed Scope Approval-SA',
-        'Pending Agreed Scope Approval-Vendor',
-        'Pending Agreed Scope Approval-Business',
-    ];
-    
-    // Get Workflow B status IDs
-    $workflowBStatusIds = Status::whereIn('status_name', $workflowBNames)  // ← Change 'name' if needed
-        ->pluck('id')
-        ->toArray();
-    
-    Log::info('Workflow B status IDs', [
-        'names' => $workflowBNames,
-        'ids' => $workflowBStatusIds
-    ]);
-    
-    // Check if Workflow B reached merge point
-    $workflowBReached = ChangeRequestStatus::where('cr_id', $crId)
-        ->whereIn('old_status_id', $workflowBStatusIds)
-        ->where('new_status_id', $mergeStatus->id)
-        ->exists();
-    
-    Log::info('Workflow B reached', ['reached' => $workflowBReached]);
-    
-    $bothComplete = $workflowAReached && $workflowBReached;
-    
-    Log::info('Final result', [
-        'workflow_a' => $workflowAReached,
-        'workflow_b' => $workflowBReached,
-        'both_complete' => $bothComplete
-    ]);
-    
-    return $bothComplete;
-}
     // public function updateChangeRequestStatus(int $changeRequestId, $request): bool
     // {
     //     try {
@@ -506,30 +506,30 @@ private function areBothWorkflowsComplete(int $crId): bool
     //         ]);
     //     $fromStatus = Status::find($statusData['old_status_id']);
     //     $toStatus = Status::find($statusData['new_status_id']);
-        
+
     //     // Check if transitioning FROM merge point TO next status
     //     if ($fromStatus && $fromStatus->name === 'Pending Update Agreed Requirements') {
     //         // Check if trying to proceed to "Pending Receive Vendor CR Doc"
     //         if ($toStatus && $toStatus->name === 'Pending Receive Vendor CR Doc') {
-                
+
     //             // Check if both workflows have reached the merge point
     //             if (!$this->areBothWorkflowsComplete($changeRequestId)) {
-                    
+
     //                 Log::warning('Transition blocked - both workflows have not reached merge point', [
     //                     'cr_id' => $changeRequestId,
     //                     'from_status' => $fromStatus->name,
     //                     'to_status' => $toStatus->name
     //                 ]);
-                    
+
     //                 DB::rollBack();
-                    
+
     //                 throw new \Exception(
     //                     'Cannot proceed to "Pending Receive Vendor CR Doc". ' .
     //                     'Both Workflow A and Workflow B must reach "Pending Update Agreed Requirements" first. ' .
     //                     'Please ensure both workflows are completed before proceeding.'
     //                 );
     //             }
-                
+
     //             Log::info('Merge point check passed - both workflows complete', [
     //                 'cr_id' => $changeRequestId,
     //                 'proceeding_to' => $toStatus->name
@@ -591,79 +591,79 @@ private function areBothWorkflowsComplete(int $crId): bool
     // }
 
     /**
- * Check if a status is the independent Workflow A status
- */
-private function isIndependentWorkflowA(int $statusId): bool
-{
-    $status = Status::find($statusId);
-    
-    if (!$status) {
+     * Check if a status is the independent Workflow A status
+     */
+    private function isIndependentWorkflowA(int $statusId): bool
+    {
+        $status = Status::find($statusId);
+
+        if (!$status) {
+            return false;
+        }
+
+        // Only "Request Draft CR Doc" is independent (Workflow A)
+        return $status->name === 'Request Draft CR Doc';
+    }
+
+    /**
+     * Check if two statuses are both Workflow A (should not affect each other)
+     * Returns true ONLY if:
+     * - One is Workflow A ("Request Draft CR Doc")
+     * - The other is NOT Workflow A (Workflow B approval)
+     */
+    private function shouldPreserveForIndependentWorkflow(int $currentStatusId, int $otherStatusId): bool
+    {
+        $currentIsWorkflowA = $this->isIndependentWorkflowA($currentStatusId);
+        $otherIsWorkflowA = $this->isIndependentWorkflowA($otherStatusId);
+
+        // If one is Workflow A and the other is not, they should not affect each other
+        // This means: preserve the other status
+        if ($currentIsWorkflowA && !$otherIsWorkflowA) {
+            return true; // Current is A, other is B - preserve B
+        }
+
+        if (!$currentIsWorkflowA && $otherIsWorkflowA) {
+            return true; // Current is B, other is A - preserve A
+        }
+
+        // Both are Workflow A OR both are Workflow B - they can affect each other normally
         return false;
     }
-    
-    // Only "Request Draft CR Doc" is independent (Workflow A)
-    return $status->name === 'Request Draft CR Doc';
-}
 
-/**
- * Check if two statuses are both Workflow A (should not affect each other)
- * Returns true ONLY if:
- * - One is Workflow A ("Request Draft CR Doc")
- * - The other is NOT Workflow A (Workflow B approval)
- */
-private function shouldPreserveForIndependentWorkflow(int $currentStatusId, int $otherStatusId): bool
-{
-    $currentIsWorkflowA = $this->isIndependentWorkflowA($currentStatusId);
-    $otherIsWorkflowA = $this->isIndependentWorkflowA($otherStatusId);
-    
-    // If one is Workflow A and the other is not, they should not affect each other
-    // This means: preserve the other status
-    if ($currentIsWorkflowA && !$otherIsWorkflowA) {
-        return true; // Current is A, other is B - preserve B
-    }
-    
-    if (!$currentIsWorkflowA && $otherIsWorkflowA) {
-        return true; // Current is B, other is A - preserve A
-    }
-    
-    // Both are Workflow A OR both are Workflow B - they can affect each other normally
-    return false;
-}
+    /**
+     * Get the active status value based on same_time field in new_workflows
+     * 
+     * @param int $fromStatusId The old/from status ID
+     * @param int $toStatusId The new/to status ID
+     * @return string '1' for active or '2' for completed
+     */
+    private function getActiveStatusBySameTime(int $fromStatusId, int $toStatusId): string
+    {
+        // Check if there's a workflow definition with same_time field
+        $workflow = \App\Models\NewWorkFlow::whereHas('workflowstatus', function ($q) use ($fromStatusId, $toStatusId) {
+            $q->where('from_status_id', $fromStatusId)
+                ->where('to_status_id', $toStatusId);
+        })->first();
 
-/**
- * Get the active status value based on same_time field in new_workflows
- * 
- * @param int $fromStatusId The old/from status ID
- * @param int $toStatusId The new/to status ID
- * @return string '1' for active or '2' for completed
- */
-private function getActiveStatusBySameTime(int $fromStatusId, int $toStatusId): string
-{
-    // Check if there's a workflow definition with same_time field
-    $workflow = \App\Models\NewWorkFlow::whereHas('workflowstatus', function($q) use ($fromStatusId, $toStatusId) {
-        $q->where('from_status_id', $fromStatusId)
-          ->where('to_status_id', $toStatusId);
-    })->first();
-    
-    if (!$workflow) {
-        // If no workflow found, default to active status
+        if (!$workflow) {
+            // If no workflow found, default to active status
+            return self::ACTIVE_STATUS;  // '1'
+        }
+
+        // Check same_time field
+        if (isset($workflow->same_time) && $workflow->same_time == 1) {
+            // same_time = 1: Set as completed
+            Log::info('Setting status as completed based on same_time=1', [
+                'from_status_id' => $fromStatusId,
+                'to_status_id' => $toStatusId,
+                'workflow_id' => $workflow->id
+            ]);
+            return self::COMPLETED_STATUS;  // '2'
+        }
+
+        // same_time = 0 or NULL: Set as active
         return self::ACTIVE_STATUS;  // '1'
     }
-    
-    // Check same_time field
-    if (isset($workflow->same_time) && $workflow->same_time == 1) {
-        // same_time = 1: Set as completed
-        Log::info('Setting status as completed based on same_time=1', [
-            'from_status_id' => $fromStatusId,
-            'to_status_id' => $toStatusId,
-            'workflow_id' => $workflow->id
-        ]);
-        return self::COMPLETED_STATUS;  // '2'
-    }
-    
-    // same_time = 0 or NULL: Set as active
-    return self::ACTIVE_STATUS;  // '1'
-}
 
     private function validateStatusChange($changeRequest, $statusData, $workflow)
     {
@@ -822,12 +822,12 @@ private function getActiveStatusBySameTime(int $fromStatusId, int $toStatusId): 
                 ->where('new_status_id', $statusData['old_status_id'])
                 //->where('active', self::ACTIVE_STATUS)
                 //->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-                ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+                ->active()
                 ->first();
 
             //to check all the active statuses for this CR
             $allActiveStatuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
-                ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+                ->active()
                 ->get(['id', 'new_status_id', 'old_status_id', 'active']);
             Log::debug('updateCurrentStatus: All active statuses for this CR', [
                 'cr_id' => $changeRequestId,
@@ -858,36 +858,36 @@ private function getActiveStatusBySameTime(int $fromStatusId, int $toStatusId): 
         $slaDifference = $this->calculateSlaDifference($currentStatus->created_at);
 
         $shouldUpdate = $this->shouldUpdateCurrentStatus($statusData['old_status_id'], $technicalTeamCounts);
- $newStatus = Status::find($statusData['new_status_id']);
-    
-    if ($newStatus && $newStatus->status_name === 'Request Draft CR Doc') {
-        
-        Log::info('Transitioning TO Request Draft CR Doc - setting need_ui_ux=1', [
-            'cr_id' => $changeRequestId,
-            'status_id' => $newStatus->id,
-            'status_name' => $newStatus->status_name
-        ]);
-        
-        // Get the change request
-        $changeRequest = ChangeRequest::find($changeRequestId);
-        
-        if ($changeRequest) {
-            
-            // Update need_ui_ux to 1
-            //$changeRequest->update(['need_ui_ux' => 1]);
-            
-            Log::info('need_ui_ux successfully set to 1', [
+        $newStatus = Status::find($statusData['new_status_id']);
+
+        if ($newStatus && $newStatus->status_name === 'Request Draft CR Doc') {
+
+            Log::info('Transitioning TO Request Draft CR Doc - setting need_ui_ux=1', [
                 'cr_id' => $changeRequestId,
-                'old_value' => $changeRequest->getOriginal('need_ui_ux'),
-                'new_value' => 1
+                'status_id' => $newStatus->id,
+                'status_name' => $newStatus->status_name
             ]);
-            
-        } else {
-            Log::error('Change request not found for need_ui_ux update', [
-                'cr_id' => $changeRequestId
-            ]);
+
+            // Get the change request
+            $changeRequest = ChangeRequest::find($changeRequestId);
+
+            if ($changeRequest) {
+
+                // Update need_ui_ux to 1
+                //$changeRequest->update(['need_ui_ux' => 1]);
+
+                Log::info('need_ui_ux successfully set to 1', [
+                    'cr_id' => $changeRequestId,
+                    'old_value' => $changeRequest->getOriginal('need_ui_ux'),
+                    'new_value' => 1
+                ]);
+
+            } else {
+                Log::error('Change request not found for need_ui_ux update', [
+                    'cr_id' => $changeRequestId
+                ]);
+            }
         }
-    }
         // Only update if conditions are met
         if ($shouldUpdate) {
             $updateResult = $currentStatus->update([
@@ -937,360 +937,358 @@ private function getActiveStatusBySameTime(int $fromStatusId, int $toStatusId): 
     /**
      * Handle dependent statuses based on workflow type
      */
- /**
- * Handle dependent statuses
- * MODIFIED: Preserves independence between Workflow A and Workflow B
- */
-private function handleDependentStatuses(
-    int $changeRequestId,
-    ChangeRequestStatus $currentStatus,
-    string $workflowActive
-): void {
-    // Get all statuses with the same old_status_id that are still active
-    $dependentStatuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
-        ->where('old_status_id', $currentStatus->old_status_id)
-        ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
-        ->get();
+    /**
+     * Handle dependent statuses
+     * MODIFIED: Preserves independence between Workflow A and Workflow B
+     */
+    private function handleDependentStatuses(
+        int $changeRequestId,
+        ChangeRequestStatus $currentStatus,
+        string $workflowActive
+    ): void {
+        // Get all statuses with the same old_status_id that are still active
+        $dependentStatuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
+            ->where('old_status_id', $currentStatus->old_status_id)
+            ->active()
+            ->get();
 
-    Log::debug('handleDependentStatuses: Processing dependent statuses', [
-        'cr_id' => $changeRequestId,
-        'current_status_id' => $currentStatus->new_status_id,
-        'old_status_id' => $currentStatus->old_status_id,
-        'dependent_count' => $dependentStatuses->count(),
-        'workflow_active' => $workflowActive
-    ]);
-
-    // Check if current status is independent Workflow A
-    $currentIsWorkflowA = $this->isIndependentWorkflowA($currentStatus->new_status_id);
-    
-    if ($currentIsWorkflowA) {
-        // ================================================================
-        // WORKFLOW A MODE: Do NOT deactivate Workflow B statuses
-        // ================================================================
-        
-        Log::info('Workflow A status detected - preserving Workflow B statuses', [
+        Log::debug('handleDependentStatuses: Processing dependent statuses', [
             'cr_id' => $changeRequestId,
             'current_status_id' => $currentStatus->new_status_id,
-            'current_status_name' => 'Request Draft CR Doc'
-        ]);
-        
-        $dependentStatuses->each(function ($status) use ($currentStatus, $changeRequestId) {
-            // Skip if it's the same record
-            if ($status->id === $currentStatus->id) {
-                return;
-            }
-            
-            // Check if this is a Workflow B status (should be preserved)
-            if ($this->shouldPreserveForIndependentWorkflow($currentStatus->new_status_id, $status->new_status_id)) {
-                Log::info('Preserving Workflow B status (independent from Workflow A)', [
-                    'cr_id' => $changeRequestId,
-                    'preserved_status_id' => $status->new_status_id,
-                    'reason' => 'Independent workflow - A does not affect B'
-                ]);
-                // DO NOT deactivate - preserve it
-            } else {
-                // This would be another Workflow A status (though there's only one)
-                // Deactivate normally
-                $status->update(['active' => self::INACTIVE_STATUS]);
-                Log::info('Deactivated same workflow status', [
-                    'cr_id' => $changeRequestId,
-                    'status_id' => $status->new_status_id
-                ]);
-            }
-        });
-        
-    } else {
-        // ================================================================
-        // WORKFLOW B OR NORMAL MODE
-        // ================================================================
-        
-        Log::debug('Workflow B or normal workflow - standard deactivation', [
-            'cr_id' => $changeRequestId,
-            'current_status_id' => $currentStatus->new_status_id,
+            'old_status_id' => $currentStatus->old_status_id,
+            'dependent_count' => $dependentStatuses->count(),
             'workflow_active' => $workflowActive
         ]);
-        
-        if (!$workflowActive) {
-            // Abnormal workflow - deactivate all dependent statuses
+
+        // Check if current status is independent Workflow A
+        $currentIsWorkflowA = $this->isIndependentWorkflowA($currentStatus->new_status_id);
+
+        if ($currentIsWorkflowA) {
+            // ================================================================
+            // WORKFLOW A MODE: Do NOT deactivate Workflow B statuses
+            // ================================================================
+
+            Log::info('Workflow A status detected - preserving Workflow B statuses', [
+                'cr_id' => $changeRequestId,
+                'current_status_id' => $currentStatus->new_status_id,
+                'current_status_name' => 'Request Draft CR Doc'
+            ]);
+
             $dependentStatuses->each(function ($status) use ($currentStatus, $changeRequestId) {
                 // Skip if it's the same record
                 if ($status->id === $currentStatus->id) {
                     return;
                 }
-                
-                // Preserve Workflow A if current is Workflow B
+
+                // Check if this is a Workflow B status (should be preserved)
                 if ($this->shouldPreserveForIndependentWorkflow($currentStatus->new_status_id, $status->new_status_id)) {
-                    Log::info('Preserving Workflow A status (independent from Workflow B)', [
+                    Log::info('Preserving Workflow B status (independent from Workflow A)', [
                         'cr_id' => $changeRequestId,
                         'preserved_status_id' => $status->new_status_id,
-                        'reason' => 'Independent workflow - B does not affect A'
+                        'reason' => 'Independent workflow - A does not affect B'
                     ]);
-                    // DO NOT deactivate Workflow A
+                    // DO NOT deactivate - preserve it
                 } else {
-                    // Normal deactivation for same workflow statuses
+                    // This would be another Workflow A status (though there's only one)
+                    // Deactivate normally
                     $status->update(['active' => self::INACTIVE_STATUS]);
-                    Log::debug('Deactivated dependent status', [
+                    Log::info('Deactivated same workflow status', [
                         'cr_id' => $changeRequestId,
                         'status_id' => $status->new_status_id
                     ]);
                 }
             });
+
+        } else {
+            // ================================================================
+            // WORKFLOW B OR NORMAL MODE
+            // ================================================================
+
+            Log::debug('Workflow B or normal workflow - standard deactivation', [
+                'cr_id' => $changeRequestId,
+                'current_status_id' => $currentStatus->new_status_id,
+                'workflow_active' => $workflowActive
+            ]);
+
+            if (!$workflowActive) {
+                // Abnormal workflow - deactivate all dependent statuses
+                $dependentStatuses->each(function ($status) use ($currentStatus, $changeRequestId) {
+                    // Skip if it's the same record
+                    if ($status->id === $currentStatus->id) {
+                        return;
+                    }
+
+                    // Preserve Workflow A if current is Workflow B
+                    if ($this->shouldPreserveForIndependentWorkflow($currentStatus->new_status_id, $status->new_status_id)) {
+                        Log::info('Preserving Workflow A status (independent from Workflow B)', [
+                            'cr_id' => $changeRequestId,
+                            'preserved_status_id' => $status->new_status_id,
+                            'reason' => 'Independent workflow - B does not affect A'
+                        ]);
+                        // DO NOT deactivate Workflow A
+                    } else {
+                        // Normal deactivation for same workflow statuses
+                        $status->update(['active' => self::INACTIVE_STATUS]);
+                        Log::debug('Deactivated dependent status', [
+                            'cr_id' => $changeRequestId,
+                            'status_id' => $status->new_status_id
+                        ]);
+                    }
+                });
+            }
         }
     }
-}
 
     /**
      * Create new status records based on workflow
      */
+    /**
+   * Create new status records based on workflow
   /**
- * Create new status records based on workflow
-/**
- * Create new status records based on workflow
- */
+   * Create new status records based on workflow
+   */
 
 
 
-/**
- * Create new status records for a change request
- * Handles parallel workflows and merge point logic
- * 
- * @param ChangeRequest $changeRequest
- * @param array $statusData
- * @param NewWorkFlow $workflow
- * @param int $userId
- * @param mixed $request
- * @return void
- */
-private function createNewStatuses(
-    ChangeRequest $changeRequest,
-    array $statusData,
-    NewWorkFlow $workflow,
-    int $userId,
-    $request
-): void {
+    /**
+     * Create new status records for a change request
+     * Handles parallel workflows and merge point logic
+     * 
+     * @param ChangeRequest $changeRequest
+     * @param array $statusData
+     * @param NewWorkFlow $workflow
+     * @param int $userId
+     * @param mixed $request
+     * @return void
+     */
+    private function createNewStatuses(
+        ChangeRequest $changeRequest,
+        array $statusData,
+        NewWorkFlow $workflow,
+        int $userId,
+        $request
+    ): void {
 
-    if (request()->reference_status) {
-        $currentStatus = ChangeRequestStatus::find(request()->reference_status);
-    } else {
-        $currentStatus = ChangeRequestStatus::where('cr_id', $changeRequest->id)
-            ->where('new_status_id', $statusData['old_status_id'])
-            ->first();
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════
-    // FLEXIBLE PARALLEL WORKFLOWS from "Pending Create Agreed Scope"
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    $oldStatus = Status::find($statusData['old_status_id']);
-    
-    // Get new status from workflow
-    $newStatus = null;
-    if ($workflow && $workflow->workflowstatus->isNotEmpty()) {
-        $newStatus = $workflow->workflowstatus->first()->to_status;
-    }
-    
-    $shouldCreateParallelWorkflows = false;
-    $statusesToCreate = [];
-    
-   
-    
-    if ($oldStatus && $oldStatus->status_name == 'Pending Create Agreed Scope') {
-        
-        // ════════════════════════════════════════════════════════════
-        // ✨ CASE 1: "Request Draft CR Doc" selected
-        // Create ALL 4 statuses (Workflow A + Workflow B)
-        // ════════════════════════════════════════════════════════════
-        
-        if ($newStatus && $newStatus->status_name == 'Request Draft CR Doc') {
-            
-            $shouldCreateParallelWorkflows = true;
-            
-            // Create ALL 4 statuses
-            $statusesToCreate = [
-                ['status_name' => 'Request Draft CR Doc', 'current_group_id' => 8],
-                ['status_name' => 'Pending Agreed Scope Approval-SA', 'current_group_id' => 9],
-                ['status_name' => 'Pending Agreed Scope Approval-Vendor', 'current_group_id' => 21],
-                ['status_name' => 'Pending Agreed Scope Approval-Business', 'current_group_id' => null],
-            ];
-            
-            Log::info('Request Draft CR Doc selected - creating 4 statuses (Workflow A + B)', [
-                'cr_id' => $changeRequest->id,
-                'total_statuses' => count($statusesToCreate)
-            ]);
+        if (request()->reference_status) {
+            $currentStatus = ChangeRequestStatus::find(request()->reference_status);
+        } else {
+            $currentStatus = ChangeRequestStatus::where('cr_id', $changeRequest->id)
+                ->where('new_status_id', $statusData['old_status_id'])
+                ->first();
         }
-        
-        // ════════════════════════════════════════════════════════════
-        // ✨ CASE 2: "Pending Agreed Scope Approval-SA" selected
-        // Create ONLY 3 Workflow B statuses (no Workflow A)
-        // ════════════════════════════════════════════════════════════
-        
-        elseif ($newStatus && $newStatus->status_name === 'Pending Agreed Scope Approval-SA') {
-            
-            $shouldCreateParallelWorkflows = true;
-            
-            // Create ONLY Workflow B statuses
-            $statusesToCreate = [
-                ['status_name' => 'Pending Agreed Scope Approval-SA', 'current_group_id' => 9],
-                ['status_name' => 'Pending Agreed Scope Approval-Vendor', 'current_group_id' => 21],
-                ['status_name' => 'Pending Agreed Scope Approval-Business', 'current_group_id' => null],
-            ];
-            
-            Log::info('Pending Agreed Scope Approval-SA selected - creating 3 statuses (Workflow B only)', [
-                'cr_id' => $changeRequest->id,
-                'total_statuses' => count($statusesToCreate)
-            ]);
-        }
-        
-        // ════════════════════════════════════════════════════════════
-        // ✨ CASE 3: Any other status selected
-        // Use normal workflow (single status)
-        // ════════════════════════════════════════════════════════════
-        
-        else {
-            Log::info('Other status selected - using normal workflow', [
-                'cr_id' => $changeRequest->id,
-                'selected_status' => $newStatus ? $newStatus->status_name : 'unknown'
-            ]);
-        }
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // CREATE PARALLEL WORKFLOW STATUSES
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    if ($shouldCreateParallelWorkflows && !empty($statusesToCreate)) {
-        
-        $previous_group_id = $currentStatus->current_group_id ?? 8;
 
-        foreach ($statusesToCreate as $index => $statusConfig) {
-            $statusName = $statusConfig['status_name'];
-            $groupId = $statusConfig['current_group_id'];
+        // ═══════════════════════════════════════════════════════════════════════
+        // FLEXIBLE PARALLEL WORKFLOWS from "Pending Create Agreed Scope"
+        // ═══════════════════════════════════════════════════════════════════════
 
-            $status = Status::where('status_name', $statusName)->first();
-            
-            if (!$status) {
-                Log::error('Status not found for parallel workflow', [
-                    'status_name' => $statusName,
-                    'cr_id' => $changeRequest->id
+        $oldStatus = Status::find($statusData['old_status_id']);
+
+        // Get new status from workflow
+        $newStatus = null;
+        if ($workflow && $workflow->workflowstatus->isNotEmpty()) {
+            $newStatus = $workflow->workflowstatus->first()->to_status;
+        }
+
+        $shouldCreateParallelWorkflows = false;
+        $statusesToCreate = [];
+
+
+
+        if ($oldStatus && $oldStatus->status_name == 'Pending Create Agreed Scope') {
+
+            // ════════════════════════════════════════════════════════════
+            // ✨ CASE 1: "Request Draft CR Doc" selected
+            // Create ALL 4 statuses (Workflow A + Workflow B)
+            // ════════════════════════════════════════════════════════════
+
+            if ($newStatus && $newStatus->status_name == 'Request Draft CR Doc') {
+
+                $shouldCreateParallelWorkflows = true;
+
+                // Create ALL 4 statuses
+                $statusesToCreate = [
+                    ['status_name' => 'Request Draft CR Doc', 'current_group_id' => 8],
+                    ['status_name' => 'Pending Agreed Scope Approval-SA', 'current_group_id' => 9],
+                    ['status_name' => 'Pending Agreed Scope Approval-Vendor', 'current_group_id' => 21],
+                    ['status_name' => 'Pending Agreed Scope Approval-Business', 'current_group_id' => null],
+                ];
+
+                Log::info('Request Draft CR Doc selected - creating 4 statuses (Workflow A + B)', [
+                    'cr_id' => $changeRequest->id,
+                    'total_statuses' => count($statusesToCreate)
                 ]);
+            }
+
+            // ════════════════════════════════════════════════════════════
+            // ✨ CASE 2: "Pending Agreed Scope Approval-SA" selected
+            // Create ONLY 3 Workflow B statuses (no Workflow A)
+            // ════════════════════════════════════════════════════════════
+            elseif ($newStatus && $newStatus->status_name === 'Pending Agreed Scope Approval-SA') {
+
+                $shouldCreateParallelWorkflows = true;
+
+                // Create ONLY Workflow B statuses
+                $statusesToCreate = [
+                    ['status_name' => 'Pending Agreed Scope Approval-SA', 'current_group_id' => 9],
+                    ['status_name' => 'Pending Agreed Scope Approval-Vendor', 'current_group_id' => 21],
+                    ['status_name' => 'Pending Agreed Scope Approval-Business', 'current_group_id' => null],
+                ];
+
+                Log::info('Pending Agreed Scope Approval-SA selected - creating 3 statuses (Workflow B only)', [
+                    'cr_id' => $changeRequest->id,
+                    'total_statuses' => count($statusesToCreate)
+                ]);
+            }
+
+            // ════════════════════════════════════════════════════════════
+            // ✨ CASE 3: Any other status selected
+            // Use normal workflow (single status)
+            // ════════════════════════════════════════════════════════════
+            else {
+                Log::info('Other status selected - using normal workflow', [
+                    'cr_id' => $changeRequest->id,
+                    'selected_status' => $newStatus ? $newStatus->status_name : 'unknown'
+                ]);
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // CREATE PARALLEL WORKFLOW STATUSES
+        // ═══════════════════════════════════════════════════════════════════════
+
+        if ($shouldCreateParallelWorkflows && !empty($statusesToCreate)) {
+
+            $previous_group_id = $currentStatus->current_group_id ?? 8;
+
+            foreach ($statusesToCreate as $index => $statusConfig) {
+                $statusName = $statusConfig['status_name'];
+                $groupId = $statusConfig['current_group_id'];
+
+                $status = Status::where('status_name', $statusName)->first();
+
+                if (!$status) {
+                    Log::error('Status not found for parallel workflow', [
+                        'status_name' => $statusName,
+                        'cr_id' => $changeRequest->id
+                    ]);
+                    continue;
+                }
+
+                // Determine workflow type
+                $workflowType = ($statusName === 'Request Draft CR Doc') ? 'Workflow A' : 'Workflow B';
+
+                $activeStatus = self::ACTIVE_STATUS;
+
+                $payload = $this->buildStatusData(
+                    $changeRequest->id,
+                    $statusData['old_status_id'],
+                    $status->id,
+                    null,
+                    $currentStatus->reference_group_id ?? 8,
+                    $previous_group_id,
+                    $groupId,
+                    $userId,
+                    $activeStatus
+                );
+
+                $this->statusRepository->create($payload);
+
+                Log::info('Created parallel workflow status', [
+                    'cr_id' => $changeRequest->id,
+                    'workflow_type' => $workflowType,
+                    'status_name' => $statusName,
+                    'status_id' => $status->id,
+                    'index' => $index + 1,
+                    'total' => count($statusesToCreate)
+                ]);
+            }
+
+            $this->active_flag = self::ACTIVE_STATUS;
+
+            Log::info('Parallel workflows initialized', [
+                'cr_id' => $changeRequest->id,
+                'total_created' => count($statusesToCreate)
+            ]);
+
+            return;  // Exit early - parallel workflow complete
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // NORMAL WORKFLOW PROCESSING
+        // For all other cases (creates single status)
+        // ═══════════════════════════════════════════════════════════════════════
+
+        foreach ($workflow->workflowstatus as $workflowStatus) {
+
+            if ($this->shouldSkipWorkflowStatus($changeRequest, $workflowStatus, $statusData)) {
                 continue;
             }
 
-            // Determine workflow type
-            $workflowType = ($statusName === 'Request Draft CR Doc') ? 'Workflow A' : 'Workflow B';
-            
-            $activeStatus = self::ACTIVE_STATUS;
-
-            $payload = $this->buildStatusData(
+            $active = $this->determineActiveStatus(
                 $changeRequest->id,
+                $workflowStatus,
+                $workflow,
                 $statusData['old_status_id'],
-                $status->id,
-                null,
-                $currentStatus->reference_group_id ?? 8,
-                $previous_group_id,
-                $groupId,
-                $userId,
-                $activeStatus
+                $statusData['new_status_id'],
+                $changeRequest
             );
 
-            $this->statusRepository->create($payload);
-            
-            Log::info('Created parallel workflow status', [
-                'cr_id' => $changeRequest->id,
-                'workflow_type' => $workflowType,
-                'status_name' => $statusName,
-                'status_id' => $status->id,
-                'index' => $index + 1,
-                'total' => count($statusesToCreate)
-            ]);
-        }
-        
-        $this->active_flag = self::ACTIVE_STATUS;
+            $newStatusRow = Status::find($workflowStatus->to_status_id);
+            $previous_group_id = session('current_group') ?: (auth()->check() ? auth()->user()->default_group : null);
+            $viewTechFlag = $newStatusRow?->view_technical_team_flag ?? false;
 
-        Log::info('Parallel workflows initialized', [
-            'cr_id' => $changeRequest->id,
-            'total_created' => count($statusesToCreate)
-        ]);
-
-        return;  // Exit early - parallel workflow complete
-    }
-    
-    // ═══════════════════════════════════════════════════════════════════════
-    // NORMAL WORKFLOW PROCESSING
-    // For all other cases (creates single status)
-    // ═══════════════════════════════════════════════════════════════════════
-    
-    foreach ($workflow->workflowstatus as $workflowStatus) {
-        
-        if ($this->shouldSkipWorkflowStatus($changeRequest, $workflowStatus, $statusData)) {
-            continue;
-        }
-
-        $active = $this->determineActiveStatus(
-            $changeRequest->id,
-            $workflowStatus,
-            $workflow,
-            $statusData['old_status_id'],
-            $statusData['new_status_id'],
-            $changeRequest
-        );
-
-        $newStatusRow = Status::find($workflowStatus->to_status_id);
-        $previous_group_id = session('current_group') ?: (auth()->check() ? auth()->user()->default_group : null);
-        $viewTechFlag = $newStatusRow?->view_technical_team_flag ?? false;
-        
-        if ($viewTechFlag) {
-            $previous_technical_teams = [];
-            if ($changeRequest && $changeRequest->technical_Cr_first) {
-                $previous_technical_teams = $changeRequest->technical_Cr_first->technical_cr_team 
-                    ? $changeRequest->technical_Cr_first->technical_cr_team->pluck('group_id')->toArray() 
-                    : [];
-            }
-            
-            $teams = $request->technical_teams ?? $request['technical_teams'] ?? $previous_technical_teams;
-            
-            if (!empty($teams) && is_iterable($teams)) {
-                foreach ($teams as $teamGroupId) {
-                    $payload = $this->buildStatusData(
-                        $changeRequest->id,
-                        $statusData['old_status_id'],
-                        (int) $workflowStatus->to_status_id,
-                        (int) $teamGroupId,
-                        (int) $teamGroupId,
-                        (int) $previous_group_id,
-                        (int) $teamGroupId,
-                        $userId,
-                        $active
-                    );
-                    
-                    $this->statusRepository->create($payload);
+            if ($viewTechFlag) {
+                $previous_technical_teams = [];
+                if ($changeRequest && $changeRequest->technical_Cr_first) {
+                    $previous_technical_teams = $changeRequest->technical_Cr_first->technical_cr_team
+                        ? $changeRequest->technical_Cr_first->technical_cr_team->pluck('group_id')->toArray()
+                        : [];
                 }
+
+                $teams = $request->technical_teams ?? $request['technical_teams'] ?? $previous_technical_teams;
+
+                if (!empty($teams) && is_iterable($teams)) {
+                    foreach ($teams as $teamGroupId) {
+                        $payload = $this->buildStatusData(
+                            $changeRequest->id,
+                            $statusData['old_status_id'],
+                            (int) $workflowStatus->to_status_id,
+                            (int) $teamGroupId,
+                            (int) $teamGroupId,
+                            (int) $previous_group_id,
+                            (int) $teamGroupId,
+                            $userId,
+                            $active
+                        );
+
+                        $this->statusRepository->create($payload);
+                    }
+                }
+            } else {
+                $payload = $this->buildStatusData(
+                    $changeRequest->id,
+                    $statusData['old_status_id'],
+                    (int) $workflowStatus->to_status_id,
+                    null,
+                    $currentStatus->reference_group_id,
+                    $previous_group_id,
+                    optional($newStatusRow->group_statuses)
+                        ->where('type', '2')
+                        ->pluck('group_id')
+                        ->first(),
+                    $userId,
+                    $active
+                );
+
+                $this->statusRepository->create($payload);
+
+                Log::info('Created single status (normal workflow)', [
+                    'cr_id' => $changeRequest->id,
+                    'status_name' => $newStatusRow ? $newStatusRow->status_name : 'unknown'
+                ]);
             }
-        } else {
-            $payload = $this->buildStatusData(
-                $changeRequest->id,
-                $statusData['old_status_id'],
-                (int) $workflowStatus->to_status_id,
-                null,
-                $currentStatus->reference_group_id,
-                $previous_group_id,
-                optional($newStatusRow->group_statuses)
-                    ->where('type', '2')
-                    ->pluck('group_id')
-                    ->first(),
-                $userId,
-                $active
-            );
-            
-            $this->statusRepository->create($payload);
-            
-            Log::info('Created single status (normal workflow)', [
-                'cr_id' => $changeRequest->id,
-                'status_name' => $newStatusRow ? $newStatusRow->status_name : 'unknown'
-            ]);
         }
     }
-}
     /**
      * Check if workflow status should be skipped
      */
@@ -1308,206 +1306,206 @@ private function createNewStatuses(
     /**
      * Determine if new status should be active
      */
-    
-private function determineActiveStatus(
-    int $changeRequestId,
-    $workflowStatus,
-    NewWorkFlow $workflow,
-    int $oldStatusId,
-    int $newStatusId,
-    ChangeRequest $changeRequest
-): string {
-    
-    // Priority 1: Workflow A
-    $fromStatus = Status::find($oldStatusId);
-    if ($fromStatus && $fromStatus->status_name === 'Request Draft CR Doc') {
-        return self::ACTIVE_STATUS;
-    }
-    
-    // ════════════════════════════════════════════════════════════
-    // Priority 2: MERGE POINT CHECK
-    // ✨ MODIFIED: Only apply if CR used parallel workflows
-    // ════════════════════════════════════════════════════════════
-    
-    $mergePointStatusId = 250;
-    
-   if ($workflowStatus->to_status_id == $mergePointStatusId) {
-        
-        // ════════════════════════════════════════════════════════
-        // ✨ NEW: Check if this CR used parallel workflows
-        // ════════════════════════════════════════════════════════
-        
-        $usedParallelWorkflows = $this->didUseParallelWorkflows($changeRequestId);
-        
-        Log::info('Merge point transition - checking if parallel workflows used', [
-            'cr_id' => $changeRequestId,
-            'used_parallel_workflows' => $usedParallelWorkflows
-        ]);
-        
-        if ($usedParallelWorkflows) {
-            // This CR used parallel workflows - apply merge point logic
-            
-            Log::info('Parallel workflows detected - checking completion', [
-                'cr_id' => $changeRequestId
-            ]);
-            
-            $bothWorkflowsComplete = $this->areBothWorkflowsCompleteById(
-                $changeRequestId, 
-                $mergePointStatusId
-            );
-            
-            if ($bothWorkflowsComplete) {
-                Log::info('Both workflows complete - active=1', [
-                    'cr_id' => $changeRequestId
-                ]);
-                
-                $this->active_flag = self::ACTIVE_STATUS;
-                return self::ACTIVE_STATUS;  // '1'
-            } else {
-                Log::info('Only one workflow complete - active=0', [
-                    'cr_id' => $changeRequestId
-                ]);
-                
-                $this->active_flag = self::INACTIVE_STATUS;
-                return self::INACTIVE_STATUS;  // '0'
-            }
-            
-        } else {
-            // This CR did NOT use parallel workflows - normal logic
-            
-            Log::info('No parallel workflows - using normal logic', [
-                'cr_id' => $changeRequestId
-            ]);
-            
-            // Fall through to normal logic below
+
+    private function determineActiveStatus(
+        int $changeRequestId,
+        $workflowStatus,
+        NewWorkFlow $workflow,
+        int $oldStatusId,
+        int $newStatusId,
+        ChangeRequest $changeRequest
+    ): string {
+
+        // Priority 1: Workflow A
+        $fromStatus = Status::find($oldStatusId);
+        if ($fromStatus && $fromStatus->status_name === 'Request Draft CR Doc') {
+            return self::ACTIVE_STATUS;
         }
-    }
-    
-    // ════════════════════════════════════════════════════════════
-    // Priority 3: Original logic for all other workflows
-    // ════════════════════════════════════════════════════════════
-    
-    $active = self::INACTIVE_STATUS;
-    
-    $cr_status = ChangeRequestStatus::where('cr_id', $changeRequestId)
-        ->where('new_status_id', $oldStatusId)
-        ->whereRaw('CAST(active AS CHAR) != ?', ['0'])
-        ->latest()
-        ->first();
-    
-    if (!$cr_status) {
-        $this->active_flag = self::INACTIVE_STATUS;
-        return self::INACTIVE_STATUS;
-    }
-    
-    $parkedIds = array_values(config('change_request.promo_parked_status_ids', []));
-    
-    $all_depend_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
-        ->where('old_status_id', $cr_status->old_status_id)
-        ->whereRaw('CAST(active AS CHAR) != ?', ['0'])
-        ->whereNull('group_id')
-        ->whereHas('change_request_data', function ($query) {
-            $query->where('workflow_type_id', '!=', 9);
-        })
-        ->get();
-    
-    $depend_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
-        ->where('old_status_id', $cr_status->old_status_id)
-        ->whereRaw('CAST(active AS CHAR) = ?', ['2'])
-        ->whereNull('group_id')
-        ->whereHas('change_request_data', function ($query) {
-            $query->where('workflow_type_id', '!=', 9);
-        })
-        ->get();
-    
-    $depend_active_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
-        ->where('old_status_id', $cr_status->old_status_id)
-        ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
-        ->whereNull('group_id')
-        ->whereHas('change_request_data', function ($query) {
-            $query->where('workflow_type_id', '!=', 9);
-        })
-        ->get();
-    
-    if ($changeRequest->workflow_type_id == 9) {
-        $NextStatusWorkflow = NewWorkFlow::find($newStatusId);
-        
-        if ($NextStatusWorkflow && isset($NextStatusWorkflow->workflowstatus[0])) {
-            $nextToStatusId = $NextStatusWorkflow->workflowstatus[0]->to_status_id;
-            
-            if (in_array($nextToStatusId, $parkedIds, true)) {
-                $depend_active_count = ChangeRequestStatus::where('cr_id', $changeRequestId)
-                    ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
-                    ->count();
-                
-                $active = $depend_active_count > 0 ? self::INACTIVE_STATUS : self::ACTIVE_STATUS;
+
+        // ════════════════════════════════════════════════════════════
+        // Priority 2: MERGE POINT CHECK
+        // ✨ MODIFIED: Only apply if CR used parallel workflows
+        // ════════════════════════════════════════════════════════════
+
+        $mergePointStatusId = 250;
+
+        if ($workflowStatus->to_status_id == $mergePointStatusId) {
+
+            // ════════════════════════════════════════════════════════
+            // ✨ NEW: Check if this CR used parallel workflows
+            // ════════════════════════════════════════════════════════
+
+            $usedParallelWorkflows = $this->didUseParallelWorkflows($changeRequestId);
+
+            Log::info('Merge point transition - checking if parallel workflows used', [
+                'cr_id' => $changeRequestId,
+                'used_parallel_workflows' => $usedParallelWorkflows
+            ]);
+
+            if ($usedParallelWorkflows) {
+                // This CR used parallel workflows - apply merge point logic
+
+                Log::info('Parallel workflows detected - checking completion', [
+                    'cr_id' => $changeRequestId
+                ]);
+
+                $bothWorkflowsComplete = $this->areBothWorkflowsCompleteById(
+                    $changeRequestId,
+                    $mergePointStatusId
+                );
+
+                if ($bothWorkflowsComplete) {
+                    Log::info('Both workflows complete - active=1', [
+                        'cr_id' => $changeRequestId
+                    ]);
+
+                    $this->active_flag = self::ACTIVE_STATUS;
+                    return self::ACTIVE_STATUS;  // '1'
+                } else {
+                    Log::info('Only one workflow complete - active=0', [
+                        'cr_id' => $changeRequestId
+                    ]);
+
+                    $this->active_flag = self::INACTIVE_STATUS;
+                    return self::INACTIVE_STATUS;  // '0'
+                }
+
+            } else {
+                // This CR did NOT use parallel workflows - normal logic
+
+                Log::info('No parallel workflows - using normal logic', [
+                    'cr_id' => $changeRequestId
+                ]);
+
+                // Fall through to normal logic below
+            }
+        }
+
+        // ════════════════════════════════════════════════════════════
+        // Priority 3: Original logic for all other workflows
+        // ════════════════════════════════════════════════════════════
+
+        $active = self::INACTIVE_STATUS;
+
+        $cr_status = ChangeRequestStatus::where('cr_id', $changeRequestId)
+            ->where('new_status_id', $oldStatusId)
+            ->completedOrActive()
+            ->latest()
+            ->first();
+
+        if (!$cr_status) {
+            $this->active_flag = self::INACTIVE_STATUS;
+            return self::INACTIVE_STATUS;
+        }
+
+        $parkedIds = array_values(config('change_request.promo_parked_status_ids', []));
+
+        $all_depend_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
+            ->where('old_status_id', $cr_status->old_status_id)
+            ->completedOrActive()
+            ->whereNull('group_id')
+            ->whereHas('change_request_data', function ($query) {
+                $query->where('workflow_type_id', '!=', 9);
+            })
+            ->get();
+
+        $depend_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
+            ->where('old_status_id', $cr_status->old_status_id)
+            ->completed()
+            ->whereNull('group_id')
+            ->whereHas('change_request_data', function ($query) {
+                $query->where('workflow_type_id', '!=', 9);
+            })
+            ->get();
+
+        $depend_active_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
+            ->where('old_status_id', $cr_status->old_status_id)
+            ->active()
+            ->whereNull('group_id')
+            ->whereHas('change_request_data', function ($query) {
+                $query->where('workflow_type_id', '!=', 9);
+            })
+            ->get();
+
+        if ($changeRequest->workflow_type_id == 9) {
+            $NextStatusWorkflow = NewWorkFlow::find($newStatusId);
+
+            if ($NextStatusWorkflow && isset($NextStatusWorkflow->workflowstatus[0])) {
+                $nextToStatusId = $NextStatusWorkflow->workflowstatus[0]->to_status_id;
+
+                if (in_array($nextToStatusId, $parkedIds, true)) {
+                    $depend_active_count = ChangeRequestStatus::where('cr_id', $changeRequestId)
+                        ->active()
+                        ->count();
+
+                    $active = $depend_active_count > 0 ? self::INACTIVE_STATUS : self::ACTIVE_STATUS;
+                } else {
+                    $active = self::ACTIVE_STATUS;
+                }
             } else {
                 $active = self::ACTIVE_STATUS;
             }
         } else {
-            $active = self::ACTIVE_STATUS;
+            $active = $depend_active_statuses->count() > 0 ? self::INACTIVE_STATUS : self::ACTIVE_STATUS;
         }
-    } else {
-        $active = $depend_active_statuses->count() > 0 ? self::INACTIVE_STATUS : self::ACTIVE_STATUS;
+
+        $this->active_flag = $active;
+
+        return $active;
     }
-    
-    $this->active_flag = $active;
-    
-    return $active;
-}
 
 
-/**
- * Check if this change request used the parallel workflow feature
- * 
- * @param int $crId
- * @return bool
- */
-private function didUseParallelWorkflows(int $crId): bool
-{
-    $sourceStatus = Status::where('status_name', 'Pending Create Agreed Scope')->first();
-    
-    if (!$sourceStatus) {
-        return false;
+    /**
+     * Check if this change request used the parallel workflow feature
+     * 
+     * @param int $crId
+     * @return bool
+     */
+    private function didUseParallelWorkflows(int $crId): bool
+    {
+        $sourceStatus = Status::where('status_name', 'Pending Create Agreed Scope')->first();
+
+        if (!$sourceStatus) {
+            return false;
+        }
+
+        // Workflow A status
+        $workflowAStatusId = Status::where('status_name', 'Request Draft CR Doc')->value('id');
+
+        // Workflow B statuses
+        $workflowBStatusIds = Status::whereIn('status_name', [
+            'Pending Agreed Scope Approval-SA',
+            'Pending Agreed Scope Approval-Vendor',
+            'Pending Agreed Scope Approval-Business'
+        ])->pluck('id')->toArray();
+
+        if (!$workflowAStatusId || empty($workflowBStatusIds)) {
+            return false;
+        }
+
+        // ✨ KEY: Check if BOTH workflows exist
+        $hasWorkflowA = ChangeRequestStatus::where('cr_id', $crId)
+            ->where('old_status_id', $sourceStatus->id)
+            ->where('new_status_id', $workflowAStatusId)
+            ->exists();
+
+        $hasWorkflowB = ChangeRequestStatus::where('cr_id', $crId)
+            ->where('old_status_id', $sourceStatus->id)
+            ->whereIn('new_status_id', $workflowBStatusIds)
+            ->exists();
+
+        // Both must exist!
+        $hasBothWorkflows = $hasWorkflowA && $hasWorkflowB;
+
+        Log::debug('Parallel workflow check', [
+            'cr_id' => $crId,
+            'workflow_a' => $hasWorkflowA,
+            'workflow_b' => $hasWorkflowB,
+            'result' => $hasBothWorkflows
+        ]);
+
+        return $hasBothWorkflows;
     }
-    
-    // Workflow A status
-    $workflowAStatusId = Status::where('status_name', 'Request Draft CR Doc')->value('id');
-    
-    // Workflow B statuses
-    $workflowBStatusIds = Status::whereIn('status_name', [
-        'Pending Agreed Scope Approval-SA',
-        'Pending Agreed Scope Approval-Vendor',
-        'Pending Agreed Scope Approval-Business'
-    ])->pluck('id')->toArray();
-    
-    if (!$workflowAStatusId || empty($workflowBStatusIds)) {
-        return false;
-    }
-    
-    // ✨ KEY: Check if BOTH workflows exist
-    $hasWorkflowA = ChangeRequestStatus::where('cr_id', $crId)
-        ->where('old_status_id', $sourceStatus->id)
-        ->where('new_status_id', $workflowAStatusId)
-        ->exists();
-    
-    $hasWorkflowB = ChangeRequestStatus::where('cr_id', $crId)
-        ->where('old_status_id', $sourceStatus->id)
-        ->whereIn('new_status_id', $workflowBStatusIds)
-        ->exists();
-    
-    // Both must exist!
-    $hasBothWorkflows = $hasWorkflowA && $hasWorkflowB;
-    
-    Log::debug('Parallel workflow check', [
-        'cr_id' => $crId,
-        'workflow_a' => $hasWorkflowA,
-        'workflow_b' => $hasWorkflowB,
-        'result' => $hasBothWorkflows
-    ]);
-    
-    return $hasBothWorkflows;
-}
     /**
      * Check workflow dependencies
      */
@@ -1547,7 +1545,7 @@ private function didUseParallelWorkflows(int $crId): bool
             ->where('old_status_id', $dependentWorkflow->previous_status_id)
             // ->where('active', self::COMPLETED_STATUS)
             // ->whereIN('active',self::$COMPLETED_STATUS_ARRAY)
-            ->whereRaw('CAST(active AS CHAR) = ?', ['2'])
+            ->completed()
             ->exists();
     }
 
@@ -1559,7 +1557,7 @@ private function didUseParallelWorkflows(int $crId): bool
         $dependentStatuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
             // ->where('active', self::ACTIVE_STATUS)
             // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            ->active()
             ->get();
 
         if ($dependentStatuses->count() > 1) {
@@ -1574,7 +1572,7 @@ private function didUseParallelWorkflows(int $crId): bool
             ->whereIn('new_status_id', $checkDependentWorkflow)
             // ->where('active', self::ACTIVE_STATUS)
             // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            ->active()
             ->count();
 
         return $dependentCount > 0 ? self::INACTIVE_STATUS : self::ACTIVE_STATUS;
