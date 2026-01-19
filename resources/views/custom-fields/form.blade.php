@@ -145,7 +145,15 @@
     <div class="col-lg-6">
         <!--begin::Form Group-->
         <div class="form-group">
-            <label for="log_message">Log Message</label>
+            <label for="log_message">
+                Log Message
+                <button type="button" class="btn btn-sm btn-light-primary ml-2" onclick="insertPlaceholder('log_message', ':cf_name')">
+                    CF Name
+                </button>
+                <button type="button" class="btn btn-sm btn-light-primary ml-1" onclick="insertPlaceholder('log_message', ':user_name')">
+                    User Name
+                </button>
+            </label>
             <textarea
                 class="form-control form-control-solid @error('log_message') is-invalid @enderror"
                 id="log_message" name="log_message" rows="3"
@@ -361,6 +369,26 @@
                 }
             });
         });
+
+        // Function to insert placeholder at cursor position in textarea
+        function insertPlaceholder(textareaId, placeholder) {
+            var textarea = document.getElementById(textareaId);
+            if (!textarea) return;
+            
+            var start = textarea.selectionStart;
+            var end = textarea.selectionEnd;
+            var text = textarea.value;
+            
+            // Insert placeholder at cursor position
+            textarea.value = text.substring(0, start) + placeholder + text.substring(end);
+            
+            // Set cursor position after inserted text
+            var newPosition = start + placeholder.length;
+            textarea.setSelectionRange(newPosition, newPosition);
+            
+            // Focus the textarea
+            textarea.focus();
+        }
     </script>
 @endpush
 <!--end::Form-->
