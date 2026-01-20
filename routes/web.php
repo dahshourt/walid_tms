@@ -113,6 +113,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('add_attachments_form', 'showAddAttachmentsForm')->name('add_attachments_form');
         Route::post('store_attachments', 'storeAttachments')->name('store_attachments');
         Route::post('change_request/{change_request}/upload_dev_attachments', 'uploadDevAttachments')->name('change_request.upload_dev_attachments');
+        Route::post('/change-requests/man-days/update', 'updateManDaysDate')->name('change-requests.man-days.update');
     });
 
     Route::resource('change_request', ChangeRequestController::class);

@@ -19,6 +19,18 @@ class ManDaysLog extends Model
         'user_id',
         'cr_id',
         'man_day',
+        'start_date',
+        'end_date',
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
     ];
 
     /**
