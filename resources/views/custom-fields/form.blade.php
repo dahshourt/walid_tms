@@ -147,8 +147,11 @@
         <div class="form-group">
             <label for="log_message">
                 Log Message
-                <button type="button" class="btn btn-sm btn-light-primary ml-2" onclick="insertPlaceholder('log_message', ':cf_name')">
-                    CF Name
+                <button type="button" class="btn btn-sm btn-light-primary ml-2" onclick="insertPlaceholder('log_message', ':cf_label')">
+                    CF Label
+                </button>
+                <button type="button" class="btn btn-sm btn-light-primary ml-1" onclick="insertPlaceholder('log_message', ':cf_value')">
+                    CF Value
                 </button>
                 <button type="button" class="btn btn-sm btn-light-primary ml-1" onclick="insertPlaceholder('log_message', ':user_name')">
                     User Name
