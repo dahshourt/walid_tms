@@ -214,6 +214,7 @@ class ChangeRequestSearchService
                 && in_array($status->status->id, [
                     \App\Services\StatusConfigService::getStatusId('pending_cab'),
                     \App\Services\StatusConfigService::getStatusId('pending_cab', ' kam'),
+                    \App\Services\StatusConfigService::getStatusId('pending_cab_approval'),
                 ]);
             // return $status && $status->status && $status->status->id == \App\Services\StatusConfigService::getStatusId('pending_cab');
         });

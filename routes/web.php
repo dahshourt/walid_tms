@@ -107,9 +107,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('change_request/{id}/edit_cab', 'edit_cab')->name('edit_cab.cr');
         Route::get('testable_form', 'showTestableForm')->name('testable_form');
         Route::post('update_testable', 'updateTestableFlag')->name('update_testable');
-        Route::get('top_management_crs', 'showTopManagementForm')->name('top_management_crs');
-        Route::post('update_top_management', 'updateTopManagementFlag')->name('update_top_management');
-        Route::post('top_management/export-table', 'exportTopManagementTable')->name('export.top_management.table');
+        Route::get('top_management_crs', 'showTopManagementForm')->name('top_management_crs')->middleware('permission:Access Top Management CRS');
+        Route::post('update_top_management', 'updateTopManagementFlag')->name('update_top_management')->middleware('permission:Update Top Management Flag');
+        Route::post('top_management/export-table', 'exportTopManagementTable')->name('export.top_management.table')->middleware('permission:Access Top Management CRS');
         Route::get('add_attachments_form', 'showAddAttachmentsForm')->name('add_attachments_form');
         Route::post('store_attachments', 'storeAttachments')->name('store_attachments');
         Route::post('change_request/{change_request}/upload_dev_attachments', 'uploadDevAttachments')->name('change_request.upload_dev_attachments');
@@ -120,7 +120,17 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('top_management_crs/form', function () {
         return view('change_request.top_management_form');
-    })->name('top_management_crs.form');
+    })->name('top_management_crs.form')->middleware('permission:Edit Top Management Form');
+
+    // --- Top Management CRS CRUD Routes ---
+    Route::prefix('top_management_crs')->name('top_management_crs.')->middleware('auth')->group(function () {
+        Route::get('list', [ChangeRequestController::class, 'listTopManagementCrs'])->name('list')->middleware('permission:List Top Management CRS');
+        Route::get('create', [ChangeRequestController::class, 'createTopManagementCr'])->name('create')->middleware('permission:Create Top Management CRS');
+        Route::post('store', [ChangeRequestController::class, 'storeTopManagementCr'])->name('store')->middleware('permission:Create Top Management CRS');
+        Route::get('{id}/edit', [ChangeRequestController::class, 'editTopManagementCr'])->name('edit')->middleware('permission:Edit Top Management Form');
+        Route::put('{id}', [ChangeRequestController::class, 'updateTopManagementCr'])->name('update')->middleware('permission:Edit Top Management Form');
+        Route::delete('{id}', [ChangeRequestController::class, 'deleteTopManagementCr'])->name('delete')->middleware('permission:Delete Top Management CRS');
+    });
 
     // --- Search ---
     Route::resource('searchs', SearchController::class);
