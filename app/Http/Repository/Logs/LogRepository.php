@@ -86,7 +86,7 @@ class LogRepository implements LogRepositoryInterface
         if ($type === 'create') {
             $this->createLog($log, $id, $user->id, 'Change Request Created By ' . $user->user_name);
 
-            $new_status_id =  data_get($request, 'new_status_id');
+            $new_status_id = data_get($request, 'new_status_id');
 
             $change_request = new Change_request();
 
@@ -105,7 +105,6 @@ class LogRepository implements LogRepositoryInterface
         $fields = [
             // 'analysis_feedback' => 'Analysis FeedBack',
             // 'comment' => 'Comment',
-            'testable' => ['message' => 'Change Request Testable flag changed to'],
             'priority_id' => ['model' => Priority::class, 'field' => 'name', 'message' => 'Change Request Priority Changed To'],
             // 'technical_feedback' => 'Technical Feedback Is',
             'unit_id' => ['model' => Unit::class, 'field' => 'name', 'message' => 'Change Request Assigned To Unit'],
@@ -130,7 +129,9 @@ class LogRepository implements LogRepositoryInterface
             ->whereNotIn('name', $excludeNames)
             ->get();
 
-        $customFieldMap = $customFields->mapWithKeys(function ($cf) use ($request) {
+        $cf_default_log_message = ":cf_label Changed To ':cf_value' by :user_name";
+
+        $customFieldMap = $customFields->mapWithKeys(function ($cf) use ($request, $cf_default_log_message, $user) {
 
             if (! $request->{$cf->name} || ! array_key_exists($cf->name, $request->all())) {
                 return [];
@@ -138,55 +139,76 @@ class LogRepository implements LogRepositoryInterface
 
             // Fallback message if label is null
             $label = $cf->label ?: Str::of($cf->name)->replace('_', ' ')->title();
+            $cf_log_message = $cf->log_message ?? $cf_default_log_message;
 
-            $message = "$label Changed To";
             $base = [];
 
             if ($cf->type === 'multiselect') {
                 $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name});
-                $rest_of_message = $data?->implode(', ');
-                $message .= " '$rest_of_message'";
-                $base['already_has_message'] = true;
+
+                $value = $data?->implode(', ');
             } elseif ($cf->type === 'select') {
                 $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name});
-                $rest_of_message = $data?->implode(', ');
 
-                $message .= " '$rest_of_message'";
-                $base['already_has_message'] = true;
+                $value = $data?->implode(', ');
             }
 
-            $base['message'] = $message;
-
-            // If the custom field is linked to another table, include that hint
-            // (adjust 'field' if your related table uses another display column)
-            if (! empty($cf->related_table)) {
-                $base['table'] = $cf->related_table;
-                $base['field'] = 'name';
+            if ($cf->name === 'testable') {
+                $value = $request->get('testable') === '1' ? 'Testable' : 'Non Testable';
             }
+
+            if (in_array($cf->name, ['technical_attachments', 'business_attachments'], true)) {
+                $files_name = [];
+                $attachments = $request->file($cf->name, []);
+
+                foreach ($attachments as $attachment) {
+                    $files_name[] = $attachment->getClientOriginalName();
+                }
+
+                $value = implode(', ', $files_name);
+            }
+
+            if ($cf->name === 'depend_on') {
+                // For depend_on, use the CR Numbers directly
+                $value = is_array($request->depend_on) ? implode(', ', array_filter($request->depend_on)) : $request->depend_on;
+            }
+
+            $base['message'] = trans($cf_log_message, [
+                'cf_label' => $label,
+                'cf_value' => $value ?? $request->{$cf->name},
+                'user_name' => $user->user_name,
+            ]);
+
+            $base['already_has_message'] = true;
 
             return [$cf->name => $base];
         })->toArray();
 
+        $all_logs = [];
+
         // append without overriding existing keys in $fields
         $fields += $customFieldMap;
-//        dd($fields, $request->all());
         foreach ($fields as $field => $info) {
             if (isset($request->$field)) {
                 if ($field === 'kpi') {
                     $oldValue = $change_request->kpis->first()->id ?? null;
                     $newValue = $request->kpi;
                 } elseif ($field === 'depend_on') {
-                     $oldValue = $change_request->dependencies
-                         ->where('pivot.status', '0')
-                         ->pluck('id')
-                         ->toArray();
-                     $newValue = $request->depend_on;
-                     // Normalize to arrays
-                     if (!is_array($oldValue)) $oldValue = [];
-                     if (!is_array($newValue)) $newValue = [];
+                    $oldValue = $change_request->dependencies
+                        ->where('pivot.status', '0')
+                        ->pluck('id')
+                        ->toArray();
+                    $newValue = $request->depend_on;
+                    // Normalize to arrays
+                    if (! is_array($oldValue)) {
+                        $oldValue = [];
+                    }
+                    if (! is_array($newValue)) {
+                        $newValue = [];
+                    }
                 } elseif ($field === 'cr_type') {
-                     $oldValue = $change_request->changeRequestCustomFields->where('custom_field_name', 'cr_type')->first()?->custom_field_value;
-                     $newValue = $request->cr_type;
+                    $oldValue = $change_request->changeRequestCustomFields->where('custom_field_name', 'cr_type')->first()?->custom_field_value;
+                    $newValue = $request->cr_type;
                 } elseif (in_array($field, ['analysis_feedback', 'designer_id', 'assignment_user_id', 'design_estimation', 'dev_estimation', 'testing_estimation'], true)) {
                     $oldValue = $change_request->changeRequestCustomFields->where('custom_field_name', $field)->last()?->custom_field_value;
                     $newValue = $request->{$field};
@@ -202,58 +224,19 @@ class LogRepository implements LogRepositoryInterface
                             $modelName = $info['model'];
                             $fieldName = $info['field'];
                             $valueName = $modelName::find($newValue)?->$fieldName;
-                            $message = $info['message'] . " \"$valueName\"";
+                            $message = $info['message'] . " '$valueName' By '$user->user_name'";
+
+                            $all_logs[] = $message;
                         } elseif (array_key_exists('already_has_message', $info)) {
-                            if ($field === 'depend_on') {
-                                // For depend_on, use the CR Numbers directly
-                                $displayValue = is_array($request->depend_on) ? implode(', ', array_filter($request->depend_on)) : $request->depend_on;
-                                $message = "Depend On CR Changed To '$displayValue'";
-                            } else {
-                                $message = $info['message'];
-                            }
-                        } else {
-                            if (is_array($newValue)) {
-                                $newValue = implode(' , ', $newValue);
-                            }
-
-                            if ($field === 'testable') {
-                                $newValue = $request->get('testable') === '1' ? 'Testable' : 'Non Testable';
-                                $info['message'] = 'Change Request is';
-                            }
-
-                            if (in_array($field, ['technical_attachments', 'business_attachments'], true)) {
-                                $files_name = [];
-                                $attachments = $request->file($field, []);
-
-                                foreach ($attachments as $attachment) {
-                                    $files_name[] = $attachment->getClientOriginalName();
-                                }
-
-                                $info['message'] = 'Attachment(s) Added ';
-                                $newValue = implode(', ', $files_name);
-                            }
-
-                            $message = $info['message'] . " \"$newValue\"";
-
-                            if (in_array($field, ['analysis_feedback', 'technical_feedback'], true)) {
-                                $info['message'] = 'Comment Added ';
-
-                                $message = 'Comment ' . " \"$newValue\" Added " ;
-                            }
-                        }
-
-                    } else {
-                        if ($info['message']) {
-                            $message = $info['message'] . " \"$newValue\"";
-                        } else {
-                            $message = "$info \"$newValue\"";
+                            $all_logs[] = $info['message'];
                         }
                     }
-
-                    $this->createLog($log, $id, $user->id, "$message By {$user->user_name}");
                 }
             }
         }
+
+        // Store all logs
+        $this->createMultipleLogs($change_request->id, $user->id, $all_logs);
 
         // Boolean Toggles
         $this->logToggle($log, $id, $user->id, $request, $change_request, 'postpone', 'CR PostPone changed To');
@@ -431,5 +414,27 @@ class LogRepository implements LogRepositoryInterface
             'status_name' => $status_name,
             'user_name' => $user->user_name,
         ]);
+    }
+
+    private function createMultipleLogs(int $crId, int $userId, array $logs): void
+    {
+        if (count($logs) === 0) {
+            return;
+        }
+
+        $formated_logs = [];
+        $now = now();
+
+        foreach ($logs as $log_message) {
+            $formated_logs[] = [
+                'cr_id' => $crId,
+                'user_id' => $userId,
+                'log_text' => $log_message,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        Log::insert($formated_logs);
     }
 }
