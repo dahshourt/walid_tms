@@ -80,13 +80,30 @@
             }
 
             // Function to handle the visibility of rejection reasons field and label
+            // Function to handle the visibility of rejection reasons field and label
             function handleRejectionReasonsVisibility() {
+                const label = document.querySelector('.field_rejection_reason_id label');
                 if (isStatusReject()) {
                     $(".field_rejection_reason_id").show();
                     $('select[name="rejection_reason_id"]').prop('required', true);
+
+                    // Add red asterisk
+                    if (label && !label.querySelector('.required-mark')) {
+                        const asterisk = document.createElement('span');
+                        asterisk.className = 'required-mark';
+                        asterisk.style.color = 'red';
+                        asterisk.textContent = ' *';
+                        label.appendChild(asterisk);
+                    }
                 } else {
                     $(".field_rejection_reason_id").hide();
                     $('select[name="rejection_reason_id"]').prop('required', false);
+
+                    // Remove red asterisk
+                    if (label) {
+                        const asterisk = label.querySelector('.required-mark');
+                        if (asterisk) asterisk.remove();
+                    }
                 }
             }
 

@@ -1,6 +1,6 @@
 {{-- partials/select-fields/cr-member-select.blade.php --}}
-<select name="{{ $item->CustomField->name }}" class="form-control form-control-lg"
-    @cannot('Set Time For Another User') disabled @endcannot>
+<select name="{{ $item->CustomField->name }}" class="form-control form-control-lg" @cannot('Set Time For Another User')
+    disabled @endcannot {{ (isset($item->enable) && ($item->enable != 1)) ? "disabled" : "" }}>
     <option value="">Select</option>
     @foreach($item->CustomField->getCustomFieldValue() as $value)
         @if($value->defualt_group && $value->defualt_group->title === 'CR Team Admin')
