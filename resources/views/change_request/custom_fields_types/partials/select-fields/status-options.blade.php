@@ -21,7 +21,7 @@
 @php
     if ($cr->workflow_type_id == 9)  // promo   
     {
-        if ($currentStatusName == "SA FB") {
+        if ($currentStatusName == "SA FB" || $currentStatusName == "CD Confirmed") {
             if (!$need_design)
                 $need_design = "no";
             $excludeId = config('change_request.need_design_exclude_status.' . $need_design . '.id');
