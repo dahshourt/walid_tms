@@ -1270,7 +1270,7 @@
                                                 </li>
                                             @endcan
 
-                                            @can('List Prerequisites')
+                                            @can('List Assisstance Request')
                                                 <li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click"
                                                     aria-haspopup="true">
                                                     <a href="{{ url('prerequisites') }}" class="menu-link">
