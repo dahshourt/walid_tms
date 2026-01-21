@@ -64,9 +64,9 @@ class LogRepository implements LogRepositoryInterface
 
     }
 
-    public function logCreate($id, $request, $changeRequest_old, $type = 'create')
+    public function logCreate($id, $request, $changeRequest_old, $type = 'create'): bool
     {
-        $log = new LogRepository();
+        $log = new self();
         // $user_id = $request->user_id ? $request->user_id : \Auth::user()->id;
 
         if ($request instanceof \Illuminate\Support\Collection) {
@@ -84,7 +84,7 @@ class LogRepository implements LogRepositoryInterface
         $change_request = $changeRequest_old;
 
         if ($type === 'create') {
-            $this->createLog($log, $id, $user->id, 'Change Request Created By ' . $user->user_name);
+            $this->createLog($log, $id, $user->id, "Change Request Created By '$user->user_name'");
 
             $new_status_id = data_get($request, 'new_status_id');
 
@@ -143,11 +143,7 @@ class LogRepository implements LogRepositoryInterface
 
             $base = [];
 
-            if ($cf->type === 'multiselect') {
-                $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name});
-
-                $value = $data?->implode(', ');
-            } elseif ($cf->type === 'select') {
+            if (in_array($cf->type, ['multiselect', 'select'], true)) {
                 $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name});
 
                 $value = $data?->implode(', ');
