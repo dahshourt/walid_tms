@@ -23,7 +23,7 @@ class PrerequisitesRepository implements PrerequisitesRepositoryInterface
 
             $prerequisite = Prerequisite::create($data->except(['comments', 'attachments'])->all());
 
-            if (isset($requestData['comments']) && ! empty($requestData['comments'])) {
+            if (isset($requestData['comments']) && !empty($requestData['comments'])) {
                 $prerequisite->comments()->create([
                     'user_id' => auth()->id(),
                     'comment' => $requestData['comments'],
@@ -52,7 +52,7 @@ class PrerequisitesRepository implements PrerequisitesRepositoryInterface
         return DB::transaction(function () use ($request, $model) {
             $data = collect($request);
 
-            if (isset($request['status_id']) && ! empty($request['status_id']) && $model->status_id != $request['status_id']) {
+            if (isset($request['status_id']) && !empty($request['status_id']) && $model->status_id != $request['status_id']) {
 
                 $status = Status::find($request['status_id']);
 
@@ -67,7 +67,7 @@ class PrerequisitesRepository implements PrerequisitesRepositoryInterface
             // $model->update($data->except(['comments', 'attachments'])->all());
 
             // add comment if provided
-            if (isset($request['comments']) && ! empty($request['comments'])) {
+            if (isset($request['comments']) && !empty($request['comments'])) {
                 $model->comments()->create([
                     'user_id' => auth()->id(),
                     'comment' => $request['comments'],
@@ -116,8 +116,8 @@ class PrerequisitesRepository implements PrerequisitesRepositoryInterface
         $query = Prerequisite::query();
 
         $query->where(function ($q) use ($group, $openStatus) {
-            $q->where('group_id', $group)
-                ->where('status_id', $openStatus);
+            //$q->where('group_id', $group);
+            $q->where('status_id', $openStatus);
         })
             ->orWhere(function ($q) use ($userId, $pendingStatus, $closedStatus) {
                 $q->where('created_by', $userId)
@@ -131,7 +131,7 @@ class PrerequisitesRepository implements PrerequisitesRepositoryInterface
     {
         if ($file->isValid()) {
             $uploadPath = public_path('uploads/prerequisites');
-            if (! file_exists($uploadPath)) {
+            if (!file_exists($uploadPath)) {
                 mkdir($uploadPath, 0777, true);
             }
             $filename = time() . '_' . uniqid() . '_' . $file->getClientOriginalName();
