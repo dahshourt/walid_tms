@@ -118,11 +118,8 @@ class LogRepository implements LogRepositoryInterface
             'rejection_reason_id' => ['model' => Rejection_reason::class, 'field' => 'name', 'message' => 'Change Request rejection Reason Changed To'],
             'deployment_impact' => ['model' => DeploymentImpact::class, 'field' => 'name', 'message' => 'Change Request Deployment Impact Changed To'],
         ];
-        $excludeNames = ['develop_duration', 'design_duration', 'test_duration', 'new_status_id'];
 
-        if ($request->has('design_duration')) {
-            $excludeNames[] = 'design_estimation';
-        }
+        $excludeNames = ['new_status_id', 'testing_estimation', 'design_estimation', 'dev_estimation'];
 
         // fetch custom fields you want to append
         $customFields = CustomField::query()
@@ -205,7 +202,7 @@ class LogRepository implements LogRepositoryInterface
                 } elseif ($field === 'cr_type') {
                     $oldValue = $change_request->changeRequestCustomFields->where('custom_field_name', 'cr_type')->first()?->custom_field_value;
                     $newValue = $request->cr_type;
-                } elseif (in_array($field, ['designer_id', 'assignment_user_id', 'design_estimation', 'dev_estimation', 'testing_estimation'], true)) {
+                } elseif (in_array($field, ['designer_id', 'assignment_user_id', 'design_estimation', 'dev_estimation', 'testing_estimation', 'cr_member'], true)) {
                     $oldValue = $change_request->changeRequestCustomFields->where('custom_field_name', $field)->last()?->custom_field_value;
                     $newValue = $request->{$field};
                 } else {
@@ -240,23 +237,23 @@ class LogRepository implements LogRepositoryInterface
 
         // User Assignments
         $assignments = [
-            'assign_to' => 'Change Request assigned  manually to',
-            'cr_member' => 'Change Request assigned  manually to',
-            'rtm_member' => 'Change Request assigned  manually to',
-            'assignment_user_id' => 'Change Request assigned  manually to',
-            'developer_id' => 'Change Request Assigned  Manually to',
-            'tester_id' => 'Change Request Assigned  Manually to',
-            'designer_id' => 'Change Request Assigned  Manually to',
+            'assign_to' => 'Change Request assigned manually to',
         ];
+
+        $assignment_logs = [];
 
         foreach ($assignments as $field => $label) {
             if (isset($request->$field)) {
+                // TODO: Take this query out of the foreach
                 $assignedUser = User::find($request->$field);
                 if ($assignedUser) {
-                    $this->createLog($log, $id, $user->id, "$label '{$assignedUser->user_name}' by {$user->user_name}");
+                    $assignment_logs[] = "$label '{$assignedUser->user_name}' by {$user->user_name}";
+//                    $this->createLog($log, $id, $user->id, "$label '{$assignedUser->user_name}' by {$user->user_name}");
                 }
             }
         }
+
+        $this->createMultipleLogs($id, $user->id, $assignment_logs);
 
         // Estimations without assignments
 
@@ -268,6 +265,7 @@ class LogRepository implements LogRepositoryInterface
         $this->logDurationWithTimes($log, $id, $user, $request, 'design_duration', 'start_design_time', 'end_design_time');
         $this->logDurationWithTimes($log, $id, $user, $request, 'develop_duration', 'start_develop_time', 'end_develop_time');
         $this->logDurationWithTimes($log, $id, $user, $request, 'test_duration', 'start_test_time', 'end_test_time');
+
         // Status change
         if (isset($request->new_status_id)) {
             // echo $request->new_status_id; die;
@@ -356,7 +354,11 @@ class LogRepository implements LogRepositoryInterface
     private function logEstimateWithoutAssignee($logRepo, $crId, $user, $request, $durationField, $assigneeField, $label)
     {
         if (isset($request->$durationField) && empty($request->$assigneeField)) {
-            $this->createLog($logRepo, $crId, $user->id, "Change Request $label Estimated by {$user->user_name}");
+            $log_message = "Change Request $label Estimated by {$user->user_name}";
+
+            if (! $this->logExists($log_message, $crId)) {
+                $this->createLog($logRepo, $crId, $user->id, $log_message);
+            }
         }
     }
 
@@ -402,7 +404,7 @@ class LogRepository implements LogRepositoryInterface
             $newStatusesIds = NewWorkFlowStatuses::where('new_workflow_id', $status_id)->pluck('to_status_id')->toArray();
             $statuses = Status::whereIn('id', $newStatusesIds)->toBase()->get(['status_name', 'log_message']);
 
-            $status_name = $statuses?->pluck('status_name')->implode(', ');
+            $status_name = $statuses?->pluck('status_name')->unique()->implode(', ');
             $log_message = $statuses->whereNotNull('log_message')->first()->log_message ?? $default_status_log_message;
         }
 
