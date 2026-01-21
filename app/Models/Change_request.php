@@ -894,7 +894,7 @@ class Change_request extends Model
             ->where(function ($query) use ($previousStatusId) {
                 $query->whereNull('previous_status_id')
                     ->orWhere('previous_status_id', 0)
-                    ->orWhere('previous_status_id', $previousStatusId);
+                   ->orWhere('previous_status_id', '>', 0);
             })
             ->whereHas('workflowstatus', function ($q) {
                 $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');

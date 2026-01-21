@@ -541,10 +541,12 @@ class ChangeRequestService
             ->where('active', '1')
             ->value('new_status_id');
 
-        if ($current_status != \App\Services\StatusConfigService::getStatusId('pending_cab')) {
-            $message = $current_status == \App\Services\StatusConfigService::getStatusId('pending_cab_proceed')
-                ? 'You already rejected this CR.'
-                : 'You already approved this CR.';
+        if ($current_status != \App\Services\StatusConfigService::getStatusId('pending_cab') && 
+            $current_status != \App\Services\StatusConfigService::getStatusId('pending_cab_approval')) {
+            $message = ($current_status == \App\Services\StatusConfigService::getStatusId('pending_cab_proceed') ||
+                $current_status == \App\Services\StatusConfigService::getStatusId('request_vendor_mds'))
+                ? 'You already rejected2 this CR.'
+                : 'You already approved2 this CR.';
             throw new Exception($message);
         }
 
