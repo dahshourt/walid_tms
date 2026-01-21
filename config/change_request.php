@@ -85,8 +85,8 @@ return [
 
     "need_design_exclude_status" => [
         "yes" => [
-            'id' => 112,
-            'name' => "MD’s & Prerequisites",
+            'id' => 111,
+            'name' => "Request MD’s & Prerequisites",
         ],
         "no" => [
             'id' => 144,
