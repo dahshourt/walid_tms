@@ -25,8 +25,8 @@ class PrerequisitesController extends Controller
         $view = 'prerequisites';
         $route = 'prerequisites';
         $OtherRoute = 'prerequisites';
-        $title = 'Prerequisites';
-        $form_title = 'Prerequisite';
+        $title = 'Assisstance Request';
+        $form_title = 'Assisstance Request';
         view()->share(compact('view', 'route', 'title', 'form_title', 'OtherRoute'));
     }
 
@@ -39,7 +39,7 @@ class PrerequisitesController extends Controller
     {
         $this->authorize('List Prerequisites'); // permission check
         $collection = $this->prerequisites->paginateAll();
-
+        //dd($collection);
         return view("$this->view.index", compact('collection'));
     }
 
@@ -69,7 +69,7 @@ class PrerequisitesController extends Controller
         $this->authorize('Create Prerequisite'); // permission check
         $this->prerequisites->create($request->all());
 
-        return redirect()->back()->with('status', 'Prerequisite Created Successfully');
+        return redirect()->back()->with('status', 'Assisstance Request Created Successfully');
     }
 
     /**
@@ -152,7 +152,7 @@ class PrerequisitesController extends Controller
 
         $this->prerequisites->update($request->all(), $prerequisite);
 
-        return redirect()->route("$this->route.index")->with('status', 'Prerequisite Updated Successfully');
+        return redirect()->route("$this->route.index")->with('status', 'Assisstance Request Updated Successfully');
     }
 
     /**
@@ -167,7 +167,7 @@ class PrerequisitesController extends Controller
 
     public function download($id)
     {
-        $this->authorize('Download Prerequisite Attach');
+        $this->authorize('Download Assisstance Request Attach');
         $attachment = PrerequisiteAttachment::findOrFail($id);
         $filePath = public_path('uploads/prerequisites/' . $attachment->file);
 
