@@ -86,7 +86,7 @@ class PrerequisitesController extends Controller
 
         return view("$this->view.show", [
             'row' => $prerequisite,
-            'form_title' => 'View Prerequisite',
+            'form_title' => 'View Assisstance Request',
             'changeRequests' => collect([$prerequisite->promo]),
             'groups' => collect([$prerequisite->group]),
             'statuses' => collect([$prerequisite->status]),
@@ -130,7 +130,7 @@ class PrerequisitesController extends Controller
 
         return view("$this->view.edit", [
             'row' => $prerequisite,
-            'form_title' => 'Prerequisite',
+            'form_title' => 'Assisstance Request',
             'changeRequests' => $changeRequests,
             'groups' => $groups,
             'statuses' => $availableStatuses,
