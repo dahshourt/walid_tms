@@ -33,7 +33,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('email:process-approvals')->everyMinute();
         $schedule->command('cab:approve-users')->daily();
         $schedule->command('cr:update-kickoff-status')
-            ->dailyAt('09:00')
+            ->everyFiveMinutes()
             ->withoutOverlapping()
             ->runInBackground();
         $schedule->command('cron:escalation')->everyFiveMinutes();

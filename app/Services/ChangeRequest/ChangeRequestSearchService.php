@@ -49,7 +49,7 @@ class ChangeRequestSearchService
                     $q->where('custom_field_name', 'tech_group_id')
                         ->where('custom_field_value', $groupData->id);
                 })
-                // Case 2: OR unit_id does NOT exist in custom fields
+                    // Case 2: OR unit_id does NOT exist in custom fields
                     ->orWhereDoesntHave('change_request_custom_fields', function ($q) {
                         $q->where('custom_field_name', 'tech_group_id');
                     });
@@ -57,7 +57,7 @@ class ChangeRequestSearchService
         }
 
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
-            $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($group) {
+            $query->active()->where(function ($qq) use ($group) {
                 $qq->where('group_id', $group)->orWhereNull('group_id');
             })
                 ->whereIn('new_status_id', $viewStatuses)
@@ -78,8 +78,8 @@ class ChangeRequestSearchService
         $viewStatuses = $this->getViewStatuses($group);
 
         $work_flow_relations = match ($workflow_type_id) {
-            3,5 => ['member', 'application'],
-            9 => ['requester','department' , 'rejectionReason', 'accumulativeMDs', 'deploymentDate'],
+            3, 5 => ['member', 'application'],
+            9 => ['requester', 'department', 'rejectionReason', 'accumulativeMDs', 'deploymentDate'],
             default => []
         };
 
@@ -117,7 +117,7 @@ class ChangeRequestSearchService
         }
 
         return $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
-            $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($group) {
+            $query->active()->where(function ($qq) use ($group) {
                 $qq->where('group_id', $group)->orWhereNull('group_id');
             })
                 ->whereIn('new_status_id', $viewStatuses)
@@ -166,7 +166,7 @@ class ChangeRequestSearchService
                     $q->where('custom_field_name', 'tech_group_id')
                         ->where('custom_field_value', $groupData->id);
                 })
-                // Case 2: OR unit_id does NOT exist in custom fields
+                    // Case 2: OR unit_id does NOT exist in custom fields
                     ->orWhereDoesntHave('change_request_custom_fields', function ($q) {
                         $q->where('custom_field_name', 'tech_group_id');
                     });
@@ -174,7 +174,7 @@ class ChangeRequestSearchService
         }
 
         $changeRequests = $changeRequests->whereHas('RequestStatuses', function ($query) use ($group, $viewStatuses) {
-            $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($group) {
+            $query->active()->where(function ($qq) use ($group) {
                 $qq->where('group_id', $group)->orWhereNull('group_id');
             })
                 ->whereIn('new_status_id', $viewStatuses)
@@ -210,11 +210,12 @@ class ChangeRequestSearchService
             $status = $item->getCurrentStatusForDivision();
 
             return $status
-            && $status->status
-            && in_array($status->status->id, [
-                \App\Services\StatusConfigService::getStatusId('pending_cab'),
-                \App\Services\StatusConfigService::getStatusId('pending_cab', ' kam'),
-            ]);
+                && $status->status
+                && in_array($status->status->id, [
+                    \App\Services\StatusConfigService::getStatusId('pending_cab'),
+                    \App\Services\StatusConfigService::getStatusId('pending_cab', ' kam'),
+                    \App\Services\StatusConfigService::getStatusId('pending_cab_approval'),
+                ]);
             // return $status && $status->status && $status->status->id == \App\Services\StatusConfigService::getStatusId('pending_cab');
         });
 
@@ -277,13 +278,13 @@ class ChangeRequestSearchService
             $status = $item->getCurrentStatusForDivision();
 
             return $status
-            && $status->status
-            && in_array($status->status->id, [
-                \App\Services\StatusConfigService::getStatusId('business_approval'),
-                \App\Services\StatusConfigService::getStatusId('business_approval', ' kam'),
-                \App\Services\StatusConfigService::getStatusId('division_manager_approval'),
-                //\App\Services\StatusConfigService::getStatusId('division_manager_approval', ' kam'),
-            ]);
+                && $status->status
+                && in_array($status->status->id, [
+                    \App\Services\StatusConfigService::getStatusId('business_approval'),
+                    \App\Services\StatusConfigService::getStatusId('business_approval', ' kam'),
+                    \App\Services\StatusConfigService::getStatusId('division_manager_approval'),
+                    //\App\Services\StatusConfigService::getStatusId('division_manager_approval', ' kam'),
+                ]);
             // return $status && $status->status && $status->status->id == \App\Services\StatusConfigService::getStatusId('business_approval');
         });
 
@@ -372,7 +373,7 @@ class ChangeRequestSearchService
             $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('pending_business_feedback'));
             $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('prototype_approval_business'));
             // $viewStatuses->push(249); // Pending Agreed Scope Approval-Business
-             $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('pending_agreed_business'));
+            $viewStatuses->push(\App\Services\StatusConfigService::getStatusId('pending_agreed_business'));
 
         }
 
@@ -390,7 +391,7 @@ class ChangeRequestSearchService
         $changeRequest = Change_request::with('category')->with('change_request_custom_fields')
             ->with('attachments', function ($q) use ($groups) {
                 $q->with('user');
-                if (! in_array(8, $groups)) {
+                if (!in_array(8, $groups)) {
                     $q->whereHas('user', function ($q) {
                         if (Auth::user()->flag == '0') {
                             $q->where('flag', Auth::user()->flag);
@@ -400,13 +401,13 @@ class ChangeRequestSearchService
                 }
             })
             ->whereHas('RequestStatuses', function ($query) use ($groups, $viewStatuses) {
-                $query->whereRaw('CAST(active AS CHAR) = ?', ['1'])->where(function ($qq) use ($groups) {
+                $query->active()->where(function ($qq) use ($groups) {
                     $qq->whereIn('group_id', $groups)->orWhereNull('group_id');
                 })
                     ->whereIn('new_status_id', $viewStatuses);
-                if (! request()->has('check_business')) {
+                if (!request()->has('check_business')) {
                     $query->whereHas('status.group_statuses', function ($query) use ($groups) {
-                        if (! in_array(19, $groups) && ! in_array(8, $groups)) {
+                        if (!in_array(19, $groups) && !in_array(8, $groups)) {
                             $query->whereIn('group_id', $groups);
                         }
                         $query->where('type', 2);
@@ -414,7 +415,7 @@ class ChangeRequestSearchService
                 }
             });
         $changeRequest = $changeRequest->where('id', $id);
-        if ($groupApplications && ! request()->has('check_business')) {
+        if ($groupApplications && !request()->has('check_business')) {
             $changeRequest = $changeRequest->whereIn('application_id', $groupApplications);
 
             if ($groupData) {
@@ -424,7 +425,7 @@ class ChangeRequestSearchService
                         $q->where('custom_field_name', 'tech_group_id')
                             ->where('custom_field_value', $groupData[0]->id);
                     })
-                    // Case 2: OR unit_id does NOT exist in custom fields
+                        // Case 2: OR unit_id does NOT exist in custom fields
                         ->orWhereDoesntHave('change_request_custom_fields', function ($q) {
                             $q->where('custom_field_name', 'tech_group_id');
                         });
@@ -465,7 +466,7 @@ class ChangeRequestSearchService
         $changeRequest = Change_request::with(['category', 'defects'])
             ->with('attachments', function ($q) use ($groups) {
                 $q->with('user');
-                if (! in_array(8, $groups)) {
+                if (!in_array(8, $groups)) {
                     $q->whereHas('user', function ($q) {
                         if (Auth::user()->flag == '0') {
                             $q->where('flag', Auth::user()->flag);
@@ -492,14 +493,17 @@ class ChangeRequestSearchService
 
     public function advancedSearch($getAll = 0)
     {
-        $crs = Change_request::with(['RequestStatuses' => function ($q) {
-            $q->with('status');
+        $crs = Change_request::with([
+            'RequestStatuses' => function ($q) {
+                $q->with('status');
 
-            $selected_statuses = (array) request()->query('new_status_id', []);
-            if (count($selected_statuses) > 0) {
-                $q->whereIn('new_status_id', $selected_statuses);
-            }
-        }, 'changeRequestCustomFields'])->filters();
+                $selected_statuses = (array) request()->query('new_status_id', []);
+                if (count($selected_statuses) > 0) {
+                    $q->whereIn('new_status_id', $selected_statuses);
+                }
+            },
+            'changeRequestCustomFields'
+        ])->filters();
 
         return $getAll == 0 ? $crs->paginate(10) : $crs->get();
     }
@@ -516,9 +520,11 @@ class ChangeRequestSearchService
 
     public function showChangeRequestData($id, $group)
     {
-        return Change_request::with(['current_status' => function ($q) use ($group) {
-            $q->where('group_statuses.group_id', $group)->with('status.to_status_workflow');
-        }])->where('id', $id)->get();
+        return Change_request::with([
+            'current_status' => function ($q) use ($group) {
+                $q->where('group_statuses.group_id', $group)->with('status.to_status_workflow');
+            }
+        ])->where('id', $id)->get();
     }
 
     public function findWithReleaseAndStatus($id)
@@ -528,7 +534,7 @@ class ChangeRequestSearchService
 
     public function getCurrentStatusForDivision($changeRequest)
     {
-        $status = Change_request_statuse::where('cr_id', $changeRequest->id)->whereRaw('CAST(active AS CHAR) = ?', ['1'])->first();
+        $status = Change_request_statuse::where('cr_id', $changeRequest->id)->active()->first();
 
         return $status;
 
@@ -536,7 +542,7 @@ class ChangeRequestSearchService
 
     protected function resolveGroup($group = null)
     {
-        if (! empty($group)) {
+        if (!empty($group)) {
             return $group;
         }
 
@@ -605,9 +611,7 @@ class ChangeRequestSearchService
 
         return Change_request_statuse::where('cr_id', $changeRequest->id)
             ->whereIn('new_status_id', $viewStatuses)
-        // ->where('active', '1')
-        // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            ->active()
             ->first();
 
     }
@@ -615,14 +619,13 @@ class ChangeRequestSearchService
     protected function getCurrentStatusCab($changeRequest, $viewStatuses)
     {
         return Change_request_statuse::where('cr_id', $changeRequest->id)
-            // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            ->active()
             ->first();
     }
 
     protected function getSetStatus($currentStatus, $typeId)
     {
-        if (! $currentStatus) {
+        if (!$currentStatus) {
             return collect();
         }
 
@@ -639,7 +642,7 @@ class ChangeRequestSearchService
                 $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
             })
             ->where('type_id', $typeId)
-            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            ->active()
             ->orderBy('id', 'DESC')
             ->get();
     }

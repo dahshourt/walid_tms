@@ -326,7 +326,7 @@ class ChangeRequestUpdateService
                     ? $workflow->workflowstatus[0]->to_status_id : null;
                 if (in_array($new_status_id, $promo_special_flow_ids, true)) {
                     $oldStatusId = $request->old_status_id ?? null;
-                    $current_status_data = Change_request_statuse::where('cr_id', $id)->where('new_status_id', $oldStatusId)->whereRaw('CAST(active AS CHAR) = ?', ['1'])->first();
+                    $current_status_data = Change_request_statuse::where('cr_id', $id)->where('new_status_id', $oldStatusId)->active()->first();
                     $technicalCr = TechnicalCr::where('cr_id', $id)->whereRaw('CAST(status AS CHAR) = ?', ['0'])->first();
                     TechnicalCrTeam::create([
                         'group_id' => $current_status_data->reference_group_id,
@@ -590,7 +590,7 @@ class ChangeRequestUpdateService
                 ->where('new_status_id', $oldStatusId)
                 // ->where('active', '1')
                 // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-                ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+                ->active()
                 ->update(['assignment_user_id' => $request->assignment_user_id]);
         }
 
@@ -601,7 +601,7 @@ class ChangeRequestUpdateService
                     ->where('new_status_id', $oldStatusId)
                     // ->where('active', '1')
                     // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-                    ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+                    ->active()
                     ->update(['assignment_user_id' => $request->$field]);
             }
         }
@@ -692,7 +692,7 @@ class ChangeRequestUpdateService
             ->where('from_status_id', $fromStatusId)
             // ->where('active', '1')
             // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+            ->active()
             ->whereHas('workflowstatus', fn($q) => $q->where('to_status_id', $toStatusId))
             ->exists();
     }

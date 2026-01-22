@@ -25,8 +25,8 @@ class PrerequisitesController extends Controller
         $view = 'prerequisites';
         $route = 'prerequisites';
         $OtherRoute = 'prerequisites';
-        $title = 'Prerequisites';
-        $form_title = 'Prerequisite';
+        $title = 'Assisstance Request';
+        $form_title = 'Assisstance Request';
         view()->share(compact('view', 'route', 'title', 'form_title', 'OtherRoute'));
     }
 
@@ -37,9 +37,9 @@ class PrerequisitesController extends Controller
      */
     public function index()
     {
-        $this->authorize('List Prerequisites'); // permission check
+        $this->authorize('List Assisstance Request'); // permission check
         $collection = $this->prerequisites->paginateAll();
-
+        //dd($collection);
         return view("$this->view.index", compact('collection'));
     }
 
@@ -50,7 +50,7 @@ class PrerequisitesController extends Controller
      */
     public function create()
     {
-        $this->authorize('Create Prerequisite'); // permission check
+        $this->authorize('Create Assisstance Request'); // permission check
         $changeRequests = change_request::where('workflow_type_id', 9)->get();
         $groups = Group::all();
         $defaultStatusId = Status::where('status_name', 'Open')->value('id');
@@ -66,10 +66,10 @@ class PrerequisitesController extends Controller
      */
     public function store(PrerequisitesRequest $request)
     {
-        $this->authorize('Create Prerequisite'); // permission check
+        $this->authorize('Create Assisstance Request'); // permission check
         $this->prerequisites->create($request->all());
 
-        return redirect()->back()->with('status', 'Prerequisite Created Successfully');
+        return redirect()->back()->with('status', 'Assisstance Request Created Successfully');
     }
 
     /**
@@ -80,13 +80,13 @@ class PrerequisitesController extends Controller
     // In PrerequisitesController.php
     public function show(Prerequisite $prerequisite)
     {
-        $this->authorize('Show Prerequisite');
+        $this->authorize('Show Assisstance Request');
 
         $prerequisite->load(['promo', 'group', 'status', 'comments', 'attachments', 'logs']);
 
         return view("$this->view.show", [
             'row' => $prerequisite,
-            'form_title' => 'View Prerequisite',
+            'form_title' => 'View Assisstance Request',
             'changeRequests' => collect([$prerequisite->promo]),
             'groups' => collect([$prerequisite->group]),
             'statuses' => collect([$prerequisite->status]),
@@ -104,7 +104,7 @@ class PrerequisitesController extends Controller
      */
     public function edit(Prerequisite $prerequisite)
     {
-        $this->authorize('Edit Prerequisite');
+        $this->authorize('Edit Assisstance Request');
 
         $prerequisite->load(['comments', 'attachments', 'logs']);
 
@@ -130,7 +130,7 @@ class PrerequisitesController extends Controller
 
         return view("$this->view.edit", [
             'row' => $prerequisite,
-            'form_title' => 'Prerequisite',
+            'form_title' => 'Assisstance Request',
             'changeRequests' => $changeRequests,
             'groups' => $groups,
             'statuses' => $availableStatuses,
@@ -148,11 +148,11 @@ class PrerequisitesController extends Controller
      */
     public function update(Request $request, Prerequisite $prerequisite)
     {
-        $this->authorize('Edit Prerequisite'); // permission check
+        $this->authorize('Edit Assisstance Request'); // permission check
 
         $this->prerequisites->update($request->all(), $prerequisite);
 
-        return redirect()->route("$this->route.index")->with('status', 'Prerequisite Updated Successfully');
+        return redirect()->route("$this->route.index")->with('status', 'Assisstance Request Updated Successfully');
     }
 
     /**
@@ -167,7 +167,7 @@ class PrerequisitesController extends Controller
 
     public function download($id)
     {
-        $this->authorize('Download Prerequisite Attach');
+        $this->authorize('Download Assisstance Request Attach');
         $attachment = PrerequisiteAttachment::findOrFail($id);
         $filePath = public_path('uploads/prerequisites/' . $attachment->file);
 

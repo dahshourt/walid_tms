@@ -73,9 +73,27 @@ return [
     // 'status_ids_kam' => StatusConfigService::loadStatusIdsKam(),
 
     'man_days_status' => [
-        'id' => 112,
-        'name' => "Set MD's  & Prerequisites",
+        //'id' => 112,
+        'name' => [
+            "MD’s & Prerequisites",
+            "Pending Pre-requisites",
+            "Start Implementation",
+            "Support Technical Issue",
+            "Resume Implementation",
+        ]
     ],
+
+    "need_design_exclude_status" => [
+        "yes" => [
+            'id' => 111,
+            'name' => "Request MD’s & Prerequisites",
+        ],
+        "no" => [
+            'id' => 144,
+            'name' => "Pending Technical Solution",
+        ],
+    ],
+
 
     'parked_status_ids' => [
         // 'pending_uat' => 78,
@@ -130,25 +148,25 @@ return [
         'promo' => 50,
         'technical_team' => 10,
     ],
-'parallel_workflows' => [
-    'source_status' => 'Pending Create Agreed Scope',
-    
-    'workflow_a' => [
-        'statuses' => [
-            ['status_name' => 'Request Draft CR Doc', 'current_group_id' => 8],
-        ]
+    'parallel_workflows' => [
+        'source_status' => 'Pending Create Agreed Scope',
+
+        'workflow_a' => [
+            'statuses' => [
+                ['status_name' => 'Request Draft CR Doc', 'current_group_id' => 8],
+            ]
+        ],
+
+        'workflow_b' => [
+            'statuses' => [
+                ['status_name' => 'Pending Agreed Scope Approval-SA', 'current_group_id' => 9],
+                ['status_name' => 'Pending Agreed Scope Approval-Vendor', 'current_group_id' => 21],
+                ['status_name' => 'Pending Agreed Scope Approval-Business', 'current_group_id' => null],
+            ]
+        ],
+
+        'merge_status' => 'Pending Update Agreed Requirements',
     ],
-    
-    'workflow_b' => [
-        'statuses' => [
-            ['status_name' => 'Pending Agreed Scope Approval-SA', 'current_group_id' => 9],
-            ['status_name' => 'Pending Agreed Scope Approval-Vendor', 'current_group_id' => 21],
-            ['status_name' => 'Pending Agreed Scope Approval-Business', 'current_group_id' => null],
-        ]
-    ],
-    
-    'merge_status' => 'Pending Update Agreed Requirements',
-],
     /*
     |--------------------------------------------------------------------------
     | Mail Notifications

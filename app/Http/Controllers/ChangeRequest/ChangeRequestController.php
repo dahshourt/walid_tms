@@ -314,7 +314,7 @@ class ChangeRequestController extends Controller
             'View Change Request';
         $form_title = (!empty($workflow_type_id) && $workflow_type_id == 9)
             ? 'Promo'
-            : view()->shared('form_title');
+            : \Illuminate\Support\Facades\View::shared('form_title');
 
         return view("{$this->view}.show", compact(
             'CustomFields',
@@ -751,6 +751,7 @@ class ChangeRequestController extends Controller
 
     public function handlePendingCap(Request $request)
     {
+
         try {
             $message = $this->changeRequestService->handlePendingCap($request);
 
@@ -921,15 +922,15 @@ class ChangeRequestController extends Controller
 
     public function showTopManagementForm(Request $request)
     {
-        $this->authorize('Edit Top Management Form');
+        $this->authorize('Access Top Management CRS');
 
         // Get active tab from request or default to the first available workflow
         $activeTabId = $request->get('tab');
         if (!$activeTabId) {
             // Get the first workflow that has top management CRs
             $firstWorkflow = \App\Models\WorkFlowType::whereHas('changeRequests', function($query) {
-                    $query->where('top_management', '1');
-                })
+                $query->where('top_management', '1');
+            })
                 ->active()
                 ->orderBy('id')
                 ->first();
@@ -937,17 +938,19 @@ class ChangeRequestController extends Controller
             $activeTabId = $firstWorkflow ? $firstWorkflow->id : 9;
         }
 
-        // Get all workflow types that have CRs with top_management = 1
+        // Get all workflow types that have CRs with top_management = 1 and parent_id is not null
         $workflows_with_top_management_crs = \App\Models\WorkFlowType::whereHas('changeRequests', function($query) {
-                $query->where('top_management', '1');
-            })
+            $query->where('top_management', '1');
+        })
+            ->whereNotNull('parent_id')
             ->active()
             ->orderBy('id')
             ->get();
 
-        // If no workflows have top management CRs, get all active workflow types
+        // If no workflows have top management CRs, get all active workflow types with parent_id is not null
         if ($workflows_with_top_management_crs->count() === 0) {
             $workflows_with_top_management_crs = \App\Models\WorkFlowType::active()
+                ->whereNotNull('parent_id')
                 ->orderBy('id')
                 ->get();
         }
@@ -976,7 +979,7 @@ class ChangeRequestController extends Controller
 
     public function exportTopManagementTable()
     {
-        $this->authorize('Edit Top Management Form'); // permission check
+        $this->authorize('Access Top Management CRS'); // permission check
 
         return Excel::download(new \App\Http\Controllers\ChangeRequest\TopManagementMultiSheetExport, 'Top-Management-CRs.xlsx');
     }
@@ -1251,5 +1254,184 @@ class ChangeRequestController extends Controller
         }
 
         return $query;
+        return $this->changeRequestService->list_crs_by_user($request);
+    }
+
+    public function updateManDaysDate(Request $request)
+    {
+        try {
+            $request->validate([
+                'id' => 'required|exists:man_days_logs,id',
+                'start_date' => 'required|date'
+            ]);
+
+            $log = $this->changeRequestService->updateManDaysDate($request->id, $request->start_date);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Start Date updated successfully',
+                'data' => $log
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // --- Top Management CRS CRUD Methods ---
+
+    public function listTopManagementCrs(Request $request)
+    {
+        $this->authorize('List Top Management CRS');
+
+        $changeRequests = Change_request::where('top_management', '1')
+            ->with(['member', 'application', 'currentRequestStatuses.status'])
+            ->orderBy('cr_no', 'desc')
+            ->paginate(15);
+
+        return view($this->view . '.top_management_list', compact('changeRequests'));
+    }
+
+    public function createTopManagementCr(Request $request)
+    {
+        $this->authorize('Create Top Management CRS');
+
+        // Get necessary data for the form
+        $workflow_type = (new Workflow_type_repository)->get_workflow_all_subtype_without_release();
+        $applications = (new ApplicationFactory)->index();
+
+        return view($this->view . '.create_top_management', compact('workflow_type', 'applications'));
+    }
+
+    public function storeTopManagementCr(Request $request)
+    {
+        $this->authorize('Create Top Management CRS');
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'workflow_type_id' => 'required|exists:workflow_type,id',
+            'application_id' => 'required|exists:applications,id',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $changeRequest = Change_request::create([
+                'title' => $request->title,
+                'description' => $request->description,
+                'workflow_type_id' => $request->workflow_type_id,
+                'application_id' => $request->application_id,
+                'requester_id' => auth()->id(),
+                'top_management' => '1',
+                'cr_no' => $this->generateCrNumber(),
+            ]);
+
+            // Create initial status
+            Change_request_statuse::create([
+                'change_request_id' => $changeRequest->id,
+                'status_id' => $this->getInitialStatusId($request->workflow_type_id),
+                'user_id' => auth()->id(),
+            ]);
+
+            DB::commit();
+            return redirect()->route('top_management_crs.list')
+                ->with('success', 'Top Management CR created successfully.');
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Error creating top management CR: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Error creating Top Management CR. Please try again.')
+                ->withInput();
+        }
+    }
+
+    public function editTopManagementCr($id)
+    {
+        $this->authorize('Edit Top Management Form');
+
+        $changeRequest = Change_request::where('top_management', '1')
+            ->findOrFail($id);
+
+        $workflow_type = (new Workflow_type_repository)->get_workflow_all_subtype_without_release();
+        $applications = (new ApplicationFactory)->index();
+
+        return view($this->view . '.edit_top_management', compact('changeRequest', 'workflow_type', 'applications'));
+    }
+
+    public function updateTopManagementCr(Request $request, $id)
+    {
+        $this->authorize('Edit Top Management Form');
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'required|string',
+            'workflow_type_id' => 'required|exists:workflow_type,id',
+            'application_id' => 'required|exists:applications,id',
+        ]);
+
+        $changeRequest = Change_request::where('top_management', '1')
+            ->findOrFail($id);
+
+        DB::beginTransaction();
+        try {
+            $changeRequest->update([
+                'title' => $request->title,
+                'description' => $request->description,
+                'workflow_type_id' => $request->workflow_type_id,
+                'application_id' => $request->application_id,
+            ]);
+
+            DB::commit();
+            return redirect()->route('top_management_crs.list')
+                ->with('success', 'Top Management CR updated successfully.');
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Error updating top management CR: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Error updating Top Management CR. Please try again.')
+                ->withInput();
+        }
+    }
+
+    public function deleteTopManagementCr($id)
+    {
+        $this->authorize('Delete Top Management CRS');
+
+        $changeRequest = Change_request::where('top_management', '1')
+            ->findOrFail($id);
+
+        DB::beginTransaction();
+        try {
+            // Delete related records first
+            $changeRequest->currentRequestStatuses()->delete();
+            $changeRequest->delete();
+
+            DB::commit();
+            return redirect()->route('top_management_crs.list')
+                ->with('success', 'Top Management CR deleted successfully.');
+        } catch (Exception $e) {
+            DB::rollBack();
+            Log::error('Error deleting top management CR: ' . $e->getMessage());
+            return redirect()->back()
+                ->with('error', 'Error deleting Top Management CR. Please try again.');
+        }
+    }
+
+    // --- Helper Methods ---
+
+    private function generateCrNumber()
+    {
+        $latestCr = Change_request::orderBy('id', 'desc')->first();
+        $nextNumber = $latestCr ? intval(substr($latestCr->cr_no, 2)) + 1 : 1;
+        return 'CR' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+    }
+
+    private function getInitialStatusId($workflowTypeId)
+    {
+        // Get the first status for the workflow type
+        $workflowType = WorkFlowType::find($workflowTypeId);
+        return $workflowType ? $workflowType->statuses()->first()->id : 1;
     }
 }
