@@ -43,6 +43,7 @@ class StatusRequest extends FormRequest
         return [
             'status_name' => ['required', 'string', 'unique:statuses'],
             'stage_id' => ['required', 'integer'],
+            'log_message' => ['nullable', 'string'],
             'active' => ['required', 'integer'],
             'group_id' => ['required', 'array'],
             'group_id.*' => ['integer', 'exists:groups,id'],
@@ -63,6 +64,7 @@ class StatusRequest extends FormRequest
 
             'status_name' => ['required', 'string', 'unique:statuses,status_name,' . request()->status],
             'stage_id' => ['required', 'integer'],
+            'log_message' => ['nullable', 'string'],
             'active' => ['required', 'integer'],
             'group_id' => ['sometimes', 'array'],
             'group_id.*' => ['integer', 'exists:groups,id'],

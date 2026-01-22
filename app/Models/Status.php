@@ -30,6 +30,7 @@ class Status extends Model
         'sla',
         'active',
         'view_technical_team_flag',
+        'log_message',
     ];
 
     protected $hidden = [

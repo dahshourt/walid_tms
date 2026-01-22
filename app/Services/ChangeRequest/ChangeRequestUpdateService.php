@@ -277,9 +277,9 @@ class ChangeRequestUpdateService
     {
         $user = $request['assign_to'] ? User::find($request['assign_to']) : Auth::user();
 
-        if ($this->needsAssignmentUpdate($request)) {
-            $request['assignment_user_id'] = $user->id;
-        }
+//        if ($this->needsAssignmentUpdate($request)) {
+//            $request['assignment_user_id'] = $user->id;
+//        }
     }
 
     protected function needsAssignmentUpdate($request): bool

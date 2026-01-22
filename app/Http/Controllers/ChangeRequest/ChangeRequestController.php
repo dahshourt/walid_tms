@@ -751,7 +751,7 @@ class ChangeRequestController extends Controller
 
     public function handlePendingCap(Request $request)
     {
-      
+
         try {
             $message = $this->changeRequestService->handlePendingCap($request);
 
@@ -818,16 +818,12 @@ class ChangeRequestController extends Controller
             // Validate attachments
             $this->attachmentService->validateAttachments($request);
 
+            $this->changeRequestService->updateChangeRequest($cr_id, $request);
+
             // Handle file uploads
             $this->attachmentService->handleFileUploads($request, $cr_id);
 
             DB::commit();
-
-            Log::info('Dev team attachments uploaded successfully', [
-                'cr_id' => $cr_id,
-                'user_id' => auth()->id(),
-                'files_count' => count($request->file('technical_attachments')),
-            ]);
 
             return response()->json([
                 'success' => true,
@@ -933,24 +929,24 @@ class ChangeRequestController extends Controller
         if (!$activeTabId) {
             // Get the first workflow that has top management CRs
             $firstWorkflow = \App\Models\WorkFlowType::whereHas('changeRequests', function($query) {
-                    $query->where('top_management', '1');
-                })
+                $query->where('top_management', '1');
+            })
                 ->active()
                 ->orderBy('id')
                 ->first();
-            
+
             $activeTabId = $firstWorkflow ? $firstWorkflow->id : 9;
         }
-        
+
         // Get all workflow types that have CRs with top_management = 1 and parent_id is not null
         $workflows_with_top_management_crs = \App\Models\WorkFlowType::whereHas('changeRequests', function($query) {
-                $query->where('top_management', '1');
-            })
+            $query->where('top_management', '1');
+        })
             ->whereNotNull('parent_id')
             ->active()
             ->orderBy('id')
             ->get();
-        
+
         // If no workflows have top management CRs, get all active workflow types with parent_id is not null
         if ($workflows_with_top_management_crs->count() === 0) {
             $workflows_with_top_management_crs = \App\Models\WorkFlowType::active()
@@ -958,7 +954,7 @@ class ChangeRequestController extends Controller
                 ->orderBy('id')
                 ->get();
         }
-        
+
         // Get top management CRs grouped by workflow type
         $top_management_crs_by_workflow = [];
         foreach ($workflows_with_top_management_crs as $workflow) {
@@ -974,9 +970,9 @@ class ChangeRequestController extends Controller
             ->get();
 
         return view($this->view . '.top_management_crs', compact(
-            'changeRequests', 
-            'workflows_with_top_management_crs', 
-            'top_management_crs_by_workflow', 
+            'changeRequests',
+            'workflows_with_top_management_crs',
+            'top_management_crs_by_workflow',
             'activeTabId'
         ));
     }
@@ -1305,7 +1301,7 @@ class ChangeRequestController extends Controller
         // Get necessary data for the form
         $workflow_type = (new Workflow_type_repository)->get_workflow_all_subtype_without_release();
         $applications = (new ApplicationFactory)->index();
-        
+
         return view($this->view . '.create_top_management', compact('workflow_type', 'applications'));
     }
 

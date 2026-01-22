@@ -33,7 +33,7 @@ trait BindsDynamically
     public function getDataByDynamicTable()
     {
         $model = $this->getModelFromTable();
-        
+
         if (!$model) {
             Log::error('Model not found for table', [
                 'table_name' => $this->tableName,
@@ -41,7 +41,7 @@ trait BindsDynamically
             ]);
             return collect([]);
         }
-        
+
         $model = new $model();
         if ($this->tableName == 'users') {
             $data = $model::where('active', '1')->get();
@@ -56,7 +56,7 @@ trait BindsDynamically
     {
         try {
             $model = $this->getModelFromTable();
-            
+
             if (!$model) {
                 Log::error('Model not found for table', [
                     'table_name' => $this->tableName,
@@ -64,13 +64,17 @@ trait BindsDynamically
                 ]);
                 return collect([]);
             }
-            
+
             $model = new $model();
 
             if ($model instanceof Status) {
                 $new_work_flow_status = NewWorkFlowStatuses::with('to_status')->whereIn('new_workflow_id', $selectedValues)->first();
 
                 return collect($new_work_flow_status?->to_status?->status_name);
+            }
+
+            if ($this->name === 'cap_users') {
+                return $model->whereIn('user_id', $selectedValues)->with('user')->get()->pluck('user.user_name')?->unique();
             }
 
             $query = $model::whereIn($columnName ?? 'id', $selectedValues);
@@ -113,7 +117,7 @@ trait BindsDynamically
         if (class_exists($modelClass)) {
             return $modelClass;
         }
-        
+
         // Fall back to the original approach
         foreach ($this->getModels() as $class) {
             if (is_subclass_of($class, 'Illuminate\Database\Eloquent\Model')) {

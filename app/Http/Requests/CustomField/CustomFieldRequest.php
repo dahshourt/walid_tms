@@ -64,6 +64,7 @@ class CustomFieldRequest extends FormRequest
                 'sometimes',
                 'in:1,0',
             ],
+            'log_message' => ['nullable', 'string'],
         ];
     }
 
@@ -85,6 +86,7 @@ class CustomFieldRequest extends FormRequest
             'class.max' => 'The class may not be greater than 255 characters.',
             'default_value.max' => 'The default value may not be greater than 1000 characters.',
             'related_table.max' => 'The related table may not be greater than 255 characters.',
+            'log_message.string' => 'The log message must be a valid text value.',
         ];
     }
 
@@ -101,6 +103,7 @@ class CustomFieldRequest extends FormRequest
             'default_value' => 'default value',
             'related_table' => 'related table',
             'active' => 'status',
+            'log_message' => 'log message',
         ];
     }
 

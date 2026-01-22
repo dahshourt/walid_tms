@@ -6,6 +6,7 @@ use App\Contracts\Logs\LogRepositoryInterface;
 // declare Entities
 use App\Models\Application;
 use App\Models\Category;
+use App\Models\Change_request;
 use App\Models\CustomField;
 use App\Models\DeploymentImpact;
 use App\Models\DivisionManagers;
@@ -63,9 +64,9 @@ class LogRepository implements LogRepositoryInterface
 
     }
 
-    public function logCreate($id, $request, $changeRequest_old, $type = 'create')
+    public function logCreate($id, $request, $changeRequest_old, $type = 'create'): bool
     {
-        $log = new LogRepository();
+        $log = new self();
         // $user_id = $request->user_id ? $request->user_id : \Auth::user()->id;
 
         if ($request instanceof \Illuminate\Support\Collection) {
@@ -83,12 +84,20 @@ class LogRepository implements LogRepositoryInterface
         $change_request = $changeRequest_old;
 
         if ($type === 'create') {
-            $this->createLog($log, $id, $user->id, 'Issue opened by ' . $user->user_name);
+            $this->createLog($log, $id, $user->id, "Change Request Created By '$user->user_name'");
+
+            $new_status_id = data_get($request, 'new_status_id');
+
+            $change_request = new Change_request();
+
+            $log_message = $this->prepareCRStatusLogMessage($new_status_id, $change_request, $user, 'create');
+
+            $this->createLog($log, $id, $user->id, $log_message);
 
             return true;
         }
         if ($type === 'shifting') {
-            $this->createLog($log, $id, $user->id, 'CR shifted by admin : ' . $user->user_name);
+            $this->createLog($log, $id, $user->id, 'Change Request shifted by admin : ' . $user->user_name);
 
             return true;
         }
@@ -96,63 +105,82 @@ class LogRepository implements LogRepositoryInterface
         $fields = [
             // 'analysis_feedback' => 'Analysis FeedBack',
             // 'comment' => 'Comment',
-            'testable' => ['message' => 'Testable flag changed to'],
-            'priority_id' => ['model' => Priority::class, 'field' => 'name', 'message' => 'Priority Changed To'],
+            'priority_id' => ['model' => Priority::class, 'field' => 'name', 'message' => 'Change Request Priority Changed To'],
             // 'technical_feedback' => 'Technical Feedback Is',
-            'unit_id' => ['model' => Unit::class, 'field' => 'name', 'message' => 'CR Assigned To Unit'],
+            'unit_id' => ['model' => Unit::class, 'field' => 'name', 'message' => 'Change Request Assigned To Unit'],
             // 'creator_mobile_number' => 'Creator Mobile Changed To',
             // 'title' => 'Subject Changed To',
-            'application_id' => ['model' => Application::class, 'field' => 'name', 'message' => 'Title Changed To'],
+            'application_id' => ['model' => Application::class, 'field' => 'name', 'message' => 'Change Request Title Changed To'],
             // 'description' => 'CR Description To',
-            'category_id' => ['model' => Category::class, 'field' => 'name', 'message' => 'CR Category Changed To'],
+            'category_id' => ['model' => Category::class, 'field' => 'name', 'message' => 'Change Request Category Changed To'],
             'division_manager_id' => ['model' => DivisionManagers::class, 'field' => 'name', 'message' => 'Division Managers To'],
-            'need_down_time' => ['model' => NeedDownTime::class, 'field' => 'name', 'message' => 'Need down time Changed To'],
-            'rejection_reason_id' => ['model' => Rejection_reason::class, 'field' => 'name', 'message' => 'rejection Reason Changed To'],
-            'deployment_impact' => ['model' => DeploymentImpact::class, 'field' => 'name', 'message' => 'Deployment Impact Changed To'],
+            'need_down_time' => ['model' => NeedDownTime::class, 'field' => 'name', 'message' => 'Change Request Need down time Changed To'],
+            'rejection_reason_id' => ['model' => Rejection_reason::class, 'field' => 'name', 'message' => 'Change Request rejection Reason Changed To'],
+            'deployment_impact' => ['model' => DeploymentImpact::class, 'field' => 'name', 'message' => 'Change Request Deployment Impact Changed To'],
         ];
-        $excludeNames = ['develop_duration', 'design_duration', 'test_duration', 'new_status_id'];
+
+        // Excluded to be handled in separate function
+        $excludeNames = ['new_status_id', 'testing_estimation', 'design_estimation', 'dev_estimation', 'postpone', 'need_ux_ui'];
 
         // fetch custom fields you want to append
         $customFields = CustomField::query()
             ->whereNotIn('name', $excludeNames)
             ->get();
 
-        $customFieldMap = $customFields->mapWithKeys(function ($cf) use ($request) {
+        $cf_default_log_message = ":cf_label Changed To ':cf_value' by :user_name";
 
-            if (! $request->{$cf->name} || ! array_key_exists($cf->name, $request->all())) {
+        $customFieldMap = $customFields->mapWithKeys(function ($cf) use ($request, $cf_default_log_message, $user, $change_request) {
+
+            if ($cf->name !== 'testable' && (! $request->{$cf->name} || ! array_key_exists($cf->name, $request->all()))) {
                 return [];
             }
 
             // Fallback message if label is null
             $label = $cf->label ?: Str::of($cf->name)->replace('_', ' ')->title();
+            $cf_log_message = $cf->log_message ?? $cf_default_log_message;
 
-            $message = "$label Changed To";
             $base = [];
 
-            if ($cf->type === 'multiselect') {
-                $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name});
-                $rest_of_message = $data?->implode(', ');
-                $message .= " '$rest_of_message'";
-                $base['already_has_message'] = true;
-            } elseif ($cf->type === 'select') {
-                $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name});
-                $rest_of_message = $data?->implode(', ');
+            $base['old_value'] = json_decode($change_request->changeRequestCustomFields->where('custom_field_name', $cf->name)->last()?->custom_field_value, true);
 
-                $message .= " '$rest_of_message'";
-                $base['already_has_message'] = true;
+            if (in_array($cf->type, ['multiselect', 'select'], true)) {
+                $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name});
+
+                $value = $data?->implode(', ');
             }
 
-            $base['message'] = $message;
-
-            // If the custom field is linked to another table, include that hint
-            // (adjust 'field' if your related table uses another display column)
-            if (! empty($cf->related_table)) {
-                $base['table'] = $cf->related_table;
-                $base['field'] = 'name';
+            if ($cf->name === 'testable') {
+                $value = $request->get('testable') === '1' ? 'Testable' : 'Non Testable';
             }
+
+            if (in_array($cf->name, ['technical_attachments', 'business_attachments'], true)) {
+                $files_name = [];
+                $attachments = $request->file($cf->name, []);
+
+                foreach ($attachments as $attachment) {
+                    $files_name[] = $attachment->getClientOriginalName();
+                }
+
+                $value = implode(', ', $files_name);
+            }
+
+            if ($cf->name === 'depend_on') {
+                // For depend_on, use the CR Numbers directly
+                $value = is_array($request->depend_on) ? implode(', ', array_filter($request->depend_on)) : $request->depend_on;
+            }
+
+            $base['message'] = trans($cf_log_message, [
+                'cf_label' => $label,
+                'cf_value' => $value ?? $request->{$cf->name},
+                'user_name' => $user->user_name,
+            ]);
+
+            $base['already_has_message'] = true;
 
             return [$cf->name => $base];
         })->toArray();
+
+        $all_logs = [];
 
         // append without overriding existing keys in $fields
         $fields += $customFieldMap;
@@ -162,17 +190,24 @@ class LogRepository implements LogRepositoryInterface
                     $oldValue = $change_request->kpis->first()->id ?? null;
                     $newValue = $request->kpi;
                 } elseif ($field === 'depend_on') {
-                     $oldValue = $change_request->dependencies
-                         ->where('pivot.status', '0') 
-                         ->pluck('id')
-                         ->toArray();
-                     $newValue = $request->depend_on;                     
-                     // Normalize to arrays
-                     if (!is_array($oldValue)) $oldValue = [];
-                     if (!is_array($newValue)) $newValue = [];
+                    $oldValue = $change_request->dependencies
+                        ->where('pivot.status', '0')
+                        ->pluck('id')
+                        ->toArray();
+                    $newValue = $request->depend_on;
+                    // Normalize to arrays
+                    if (! is_array($oldValue)) {
+                        $oldValue = [];
+                    }
+                    if (! is_array($newValue)) {
+                        $newValue = [];
+                    }
                 } elseif ($field === 'cr_type') {
-                     $oldValue = $change_request->changeRequestCustomFields->where('custom_field_name', 'cr_type')->first()?->custom_field_value;
-                     $newValue = $request->cr_type;
+                    $oldValue = $change_request->changeRequestCustomFields->where('custom_field_name', 'cr_type')->first()?->custom_field_value;
+                    $newValue = $request->cr_type;
+                } elseif (is_array($info) && array_key_exists('old_value', $info)) {
+                    $oldValue = $info['old_value'];
+                    $newValue = $request->{$field};
                 } else {
                     $oldValue = $change_request->$field ?? null;
                     $newValue = $request->$field;
@@ -185,39 +220,19 @@ class LogRepository implements LogRepositoryInterface
                             $modelName = $info['model'];
                             $fieldName = $info['field'];
                             $valueName = $modelName::find($newValue)?->$fieldName;
-                            $message = $info['message'] . " \"$valueName\"";
+                            $message = $info['message'] . " '$valueName' By '$user->user_name'";
+
+                            $all_logs[] = $message;
                         } elseif (array_key_exists('already_has_message', $info)) {
-                            if ($field === 'depend_on') {
-                                // For depend_on, use the CR Numbers directly
-                                $displayValue = is_array($request->depend_on) ? implode(', ', array_filter($request->depend_on)) : $request->depend_on;
-                                $message = "Depend On CR Changed To '$displayValue'";
-                            } else {
-                                $message = $info['message'];
-                            }
-                        } else {
-                            if (is_array($newValue)) {
-                                $newValue = implode(' , ', $newValue);
-                            }
-
-                            if ($field === 'testable') {
-                                $newValue = $request->get('testable') === '1' ? 'Testable' : 'Not Testable';
-                            }
-
-                            $message = $info['message'] . " \"$newValue\"";
-                        }
-
-                    } else {
-                        if ($info['message']) {
-                            $message = $info['message'] . " \"$newValue\"";
-                        } else {
-                            $message = "$info \"$newValue\"";
+                            $all_logs[] = $info['message'];
                         }
                     }
-
-                    $this->createLog($log, $id, $user->id, "$message By {$user->user_name}");
                 }
             }
         }
+
+        // Store all logs
+        $this->createMultipleLogs($change_request->id, $user->id, $all_logs);
 
         // Boolean Toggles
         $this->logToggle($log, $id, $user->id, $request, $change_request, 'postpone', 'CR PostPone changed To');
@@ -225,23 +240,22 @@ class LogRepository implements LogRepositoryInterface
 
         // User Assignments
         $assignments = [
-            'assign_to' => 'Issue assigned  manually to',
-            'cr_member' => 'Issue assigned  manually to',
-            'rtm_member' => 'Issue assigned  manually to',
-            'assignment_user_id' => 'Issue assigned  manually to',
-            'developer_id' => 'Issue Assigned  Manually to',
-            'tester_id' => 'Issue Assigned  Manually to',
-            'designer_id' => 'Issue Assigned  Manually to',
+            'assign_to' => 'Change Request assigned manually to',
         ];
+
+        $assignment_logs = [];
 
         foreach ($assignments as $field => $label) {
             if (isset($request->$field)) {
+                // TODO: Take this query out of the foreach
                 $assignedUser = User::find($request->$field);
                 if ($assignedUser) {
-                    $this->createLog($log, $id, $user->id, "$label '{$assignedUser->user_name}' by {$user->user_name}");
+                    $assignment_logs[] = "$label '{$assignedUser->user_name}' by {$user->user_name}";
                 }
             }
         }
+
+        $this->createMultipleLogs($id, $user->id, $assignment_logs);
 
         // Estimations without assignments
 
@@ -253,6 +267,7 @@ class LogRepository implements LogRepositoryInterface
         $this->logDurationWithTimes($log, $id, $user, $request, 'design_duration', 'start_design_time', 'end_design_time');
         $this->logDurationWithTimes($log, $id, $user, $request, 'develop_duration', 'start_develop_time', 'end_develop_time');
         $this->logDurationWithTimes($log, $id, $user, $request, 'test_duration', 'start_test_time', 'end_test_time');
+
         // Status change
         if (isset($request->new_status_id)) {
             // echo $request->new_status_id; die;
@@ -263,17 +278,21 @@ class LogRepository implements LogRepositoryInterface
                 $status_title = $workflow->to_status_label;
             }
 
-            $newStatusesIds = NewWorkFlowStatuses::where('new_workflow_id', $request->new_status_id)->pluck('to_status_id')->toArray();
-            $newStatusesNames = Status::whereIn('id', $newStatusesIds)->pluck('status_name')->toArray();
-            $actualStatuses = implode(', ', $newStatusesNames);
-
             if ($status_title && $request->missing('hold') && $request->missing('is_final_confirmation')) {
                 // Dependency Release Log (when the depend cr reach to the status delivered or reject)
                 if ($request->released_from_hold) {
+                    $newStatusesIds = NewWorkFlowStatuses::where('new_workflow_id', $request->new_status_id)->pluck('to_status_id')->toArray();
+                    $newStatusesNames = Status::whereIn('id', $newStatusesIds)->pluck('status_name')->toArray();
+                    $actualStatuses = implode(', ', $newStatusesNames);
+
                     $this->createLog($log, $id, $user->id, "Change request status has been released by {$user->user_name} and the current status is $actualStatuses");
-                } 
+                }
                 // Dependency Hold Log
                 elseif ($change_request->fresh()->is_dependency_hold) {
+                    $newStatusesIds = NewWorkFlowStatuses::where('new_workflow_id', $request->new_status_id)->pluck('to_status_id')->toArray();
+                    $newStatusesNames = Status::whereIn('id', $newStatusesIds)->pluck('status_name')->toArray();
+                    $actualStatuses = implode(', ', $newStatusesNames);
+
                     $blockingCrs = \App\Models\CrDependency::where('cr_id', $id)
                         ->active()
                         ->with('dependsOnCr:id,cr_no')
@@ -281,18 +300,20 @@ class LogRepository implements LogRepositoryInterface
                         ->pluck('dependsOnCr.cr_no')
                         ->filter()
                         ->implode(', ');
-                        
-                    $this->createLog($log, $id, $user->id, "Change Request Status changed to '$status_title' by {$user->user_name} (Actual Status: $actualStatuses - Pending Dependency (CR#$blockingCrs))");
-                } 
+
+                    $this->createLog($log, $id, $user->id, "Change Request Status changed to '$actualStatuses' by {$user->user_name} (Pending Dependency (CR#$blockingCrs))");
+                }
                 // Normal Status Log
                 else {
-                    $this->createLog($log, $id, $user->id, "Change Request Status changed to '$status_title' by {$user->user_name} (Actual Status: $actualStatuses)");
+                    $log_message = $this->prepareCRStatusLogMessage($request->new_status_id, $change_request, $user);
+
+                    $this->createLog($log, $id, $user->id, $log_message);
                 }
             } else {
-                $log_message = "Change Request Status changed to '$actualStatuses' by '$user->user_name'";
+                $log_message = $this->prepareCRStatusLogMessage($request->new_status_id, $change_request, $user);
 
                 if ($request->has('is_final_confirmation')) {
-                    $log_message = "Issue manually set to status '$actualStatuses' by '$user->user_name' from Administration";
+                    $log_message = "$log_message from Administration";
                 }
 
                 $this->createLog($log, $id, $user->id, $log_message);
@@ -307,15 +328,15 @@ class LogRepository implements LogRepositoryInterface
         }
 
         if ($request->hold === 1) {
-            $this->createLog($log, $id, $user->id, "CR Held by $user->user_name");
+            $this->createLog($log, $id, $user->id, "Change Request Held by $user->user_name");
         } elseif ($request->hold === 0) {
-            $this->createLog($log, $id, $user->id, "CR unheld by $user->user_name");
+            $this->createLog($log, $id, $user->id, "Change Request unheld by $user->user_name");
         }
 
         return true;
     }
 
-    private function createLog($logRepo, $crId, $userId, $message)
+    private function createLog($logRepo, $crId, $userId, $message): void
     {
         $this->create([
             'cr_id' => $crId,
@@ -335,20 +356,92 @@ class LogRepository implements LogRepositoryInterface
     private function logEstimateWithoutAssignee($logRepo, $crId, $user, $request, $durationField, $assigneeField, $label)
     {
         if (isset($request->$durationField) && empty($request->$assigneeField)) {
-            $this->createLog($logRepo, $crId, $user->id, "Issue $label Estimated by {$user->user_name}");
+            $log_message = "Change Request $label Estimated by {$user->user_name}";
+
+            if (! $this->logExists($log_message, $crId)) {
+                $this->createLog($logRepo, $crId, $user->id, $log_message);
+            }
         }
     }
 
     private function logDurationWithTimes($logRepo, $crId, $user, $request, $durationField, $startField, $endField)
     {
         if (isset($request->$durationField)) {
-            $this->createLog($logRepo, $crId, $user->id, "Issue $durationField manually set to '{$request->$durationField} H' by {$user->user_name}");
+            $cleaned_field = Str::of($durationField)->remove('_id')->replace('_', ' ')->title();
+            $log_message = "Change Request $cleaned_field manually set to '{$request->$durationField} H' by {$user->user_name}";
+
+            if (! $this->logExists($log_message, $crId)) {
+                $this->createLog($logRepo, $crId, $user->id, $log_message);
+            }
         }
 
         if (isset($request->$startField) && isset($request->$endField)) {
+            $startField = match ($startField) {
+                'start_design_time' => 'design_start_time',
+                'start_develop_time' => 'develop_start_time',
+                'start_test_time' => 'testing_start_time',
+                default => $startField
+            };
+
             $startLabel = Str::of($startField)->replace('_', ' ')->title();
             $endLabel = Str::of($endField)->replace('_', ' ')->title();
-            $this->createLog($logRepo, $crId, $user->id, "Issue $startLabel set to '{$request->$startField}' and $endLabel set to '{$request->$endField}' by {$user->user_name}");
+
+            $log_message = "Change Request $startLabel set to '{$request->$startField}' and end time set to '{$request->$endField}' by {$user->user_name}";
+
+            if (! $this->logExists($log_message, $crId)) {
+                $this->createLog($logRepo, $crId, $user->id, $log_message);
+            }
+
         }
+    }
+
+    private function logExists(string $log_message, string $crId): bool
+    {
+        return Log::where('cr_id', $crId)->where('log_text', $log_message)->exists();
+    }
+
+    private function prepareCRStatusLogMessage(int $status_id, Change_request $change_request, User $user, ?string $stage = null): string
+    {
+        $default_status_log_message = "Change Request Status changed to ':status_name' By ':user_name'";
+
+        if ($stage === 'create') {
+            $status = Status::findOrFail($status_id);
+
+            $status_name = $status?->status_name;
+            $log_message = $status->log_message ?? $default_status_log_message;
+        } else {
+            $newStatusesIds = NewWorkFlowStatuses::where('new_workflow_id', $status_id)->pluck('to_status_id')->toArray();
+            $statuses = Status::whereIn('id', $newStatusesIds)->toBase()->get(['status_name', 'log_message']);
+
+            $status_name = $statuses?->pluck('status_name')->unique()->implode(', ');
+            $log_message = $statuses->whereNotNull('log_message')->first()->log_message ?? $default_status_log_message;
+        }
+
+        return trans($log_message, [
+            'status_name' => $status_name,
+            'user_name' => $user->user_name,
+        ]);
+    }
+
+    private function createMultipleLogs(int $crId, int $userId, array $logs): void
+    {
+        if (count($logs) === 0) {
+            return;
+        }
+
+        $formated_logs = [];
+        $now = now();
+
+        foreach ($logs as $log_message) {
+            $formated_logs[] = [
+                'cr_id' => $crId,
+                'user_id' => $userId,
+                'log_text' => $log_message,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
+        }
+
+        Log::insert($formated_logs);
     }
 }
