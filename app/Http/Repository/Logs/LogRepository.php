@@ -128,9 +128,9 @@ class LogRepository implements LogRepositoryInterface
 
         $cf_default_log_message = ":cf_label Changed To ':cf_value' by :user_name";
 
-        $customFieldMap = $customFields->mapWithKeys(function ($cf) use ($request, $cf_default_log_message, $user) {
+        $customFieldMap = $customFields->mapWithKeys(function ($cf) use ($request, $cf_default_log_message, $user, $change_request) {
 
-            if (! $request->{$cf->name} || ! array_key_exists($cf->name, $request->all())) {
+            if ($cf->name !== 'testable' && (! $request->{$cf->name} || ! array_key_exists($cf->name, $request->all()))) {
                 return [];
             }
 
@@ -139,6 +139,8 @@ class LogRepository implements LogRepositoryInterface
             $cf_log_message = $cf->log_message ?? $cf_default_log_message;
 
             $base = [];
+
+            $base['old_value'] = json_decode($change_request->changeRequestCustomFields->where('custom_field_name', $cf->name)->last()?->custom_field_value, true);
 
             if (in_array($cf->type, ['multiselect', 'select'], true)) {
                 $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name});
@@ -202,8 +204,8 @@ class LogRepository implements LogRepositoryInterface
                 } elseif ($field === 'cr_type') {
                     $oldValue = $change_request->changeRequestCustomFields->where('custom_field_name', 'cr_type')->first()?->custom_field_value;
                     $newValue = $request->cr_type;
-                } elseif (in_array($field, ['designer_id', 'assignment_user_id', 'design_estimation', 'dev_estimation', 'testing_estimation', 'cr_member'], true)) {
-                    $oldValue = $change_request->changeRequestCustomFields->where('custom_field_name', $field)->last()?->custom_field_value;
+                } elseif (is_array($info) && array_key_exists('old_value', $info)) {
+                    $oldValue = $info['old_value'];
                     $newValue = $request->{$field};
                 } else {
                     $oldValue = $change_request->$field ?? null;
@@ -248,7 +250,6 @@ class LogRepository implements LogRepositoryInterface
                 $assignedUser = User::find($request->$field);
                 if ($assignedUser) {
                     $assignment_logs[] = "$label '{$assignedUser->user_name}' by {$user->user_name}";
-//                    $this->createLog($log, $id, $user->id, "$label '{$assignedUser->user_name}' by {$user->user_name}");
                 }
             }
         }
@@ -262,9 +263,9 @@ class LogRepository implements LogRepositoryInterface
         $this->logEstimateWithoutAssignee($log, $id, $user, $request, 'test_duration', 'tester_id', 'Testing');
 
         // Durations with times
-        $this->logDurationWithTimes($log, $id, $user, $request, 'design_duration', 'start_design_time', 'end_design_time');
-        $this->logDurationWithTimes($log, $id, $user, $request, 'develop_duration', 'start_develop_time', 'end_develop_time');
-        $this->logDurationWithTimes($log, $id, $user, $request, 'test_duration', 'start_test_time', 'end_test_time');
+        $this->logDurationWithTimes($log, $id, $user, $request, 'design_duration', 'design_start_time', 'end_time');
+        $this->logDurationWithTimes($log, $id, $user, $request, 'develop_duration', 'develop_start_time', 'end_time');
+        $this->logDurationWithTimes($log, $id, $user, $request, 'test_duration', 'testing_start_time', 'end_time');
 
         // Status change
         if (isset($request->new_status_id)) {
