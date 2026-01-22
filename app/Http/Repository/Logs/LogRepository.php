@@ -119,7 +119,8 @@ class LogRepository implements LogRepositoryInterface
             'deployment_impact' => ['model' => DeploymentImpact::class, 'field' => 'name', 'message' => 'Change Request Deployment Impact Changed To'],
         ];
 
-        $excludeNames = ['new_status_id', 'testing_estimation', 'design_estimation', 'dev_estimation'];
+        // Excluded to be handled in separate function
+        $excludeNames = ['new_status_id', 'testing_estimation', 'design_estimation', 'dev_estimation', 'postpone', 'need_ux_ui'];
 
         // fetch custom fields you want to append
         $customFields = CustomField::query()
