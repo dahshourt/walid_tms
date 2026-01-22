@@ -263,9 +263,9 @@ class LogRepository implements LogRepositoryInterface
         $this->logEstimateWithoutAssignee($log, $id, $user, $request, 'test_duration', 'tester_id', 'Testing');
 
         // Durations with times
-        $this->logDurationWithTimes($log, $id, $user, $request, 'design_duration', 'design_start_time', 'end_time');
-        $this->logDurationWithTimes($log, $id, $user, $request, 'develop_duration', 'develop_start_time', 'end_time');
-        $this->logDurationWithTimes($log, $id, $user, $request, 'test_duration', 'testing_start_time', 'end_time');
+        $this->logDurationWithTimes($log, $id, $user, $request, 'design_duration', 'start_design_time', 'end_design_time');
+        $this->logDurationWithTimes($log, $id, $user, $request, 'develop_duration', 'start_develop_time', 'end_develop_time');
+        $this->logDurationWithTimes($log, $id, $user, $request, 'test_duration', 'start_test_time', 'end_test_time');
 
         // Status change
         if (isset($request->new_status_id)) {
@@ -375,10 +375,17 @@ class LogRepository implements LogRepositoryInterface
         }
 
         if (isset($request->$startField) && isset($request->$endField)) {
+            $startField = match ($startField) {
+                'start_design_time' => 'design_start_time',
+                'start_develop_time' => 'develop_start_time',
+                'start_test_time' => 'testing_start_time',
+                default => $startField
+            };
+
             $startLabel = Str::of($startField)->replace('_', ' ')->title();
             $endLabel = Str::of($endField)->replace('_', ' ')->title();
 
-            $log_message = "Change Request $startLabel set to '{$request->$startField}' and $endLabel set to '{$request->$endField}' by {$user->user_name}";
+            $log_message = "Change Request $startLabel set to '{$request->$startField}' and end time set to '{$request->$endField}' by {$user->user_name}";
 
             if (! $this->logExists($log_message, $crId)) {
                 $this->createLog($logRepo, $crId, $user->id, $log_message);
