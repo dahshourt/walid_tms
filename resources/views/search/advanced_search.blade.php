@@ -363,7 +363,7 @@
                                     <td>{{ $item['develop_duration'] ?? "" }}</td>
                                     <td>{{ $item['test_duration'] ?? "" }}</td>
                                     <td>{{ $item['created_at'] ?? "" }}</td>
-                                    <td>{{ $item['department'] ?? "" }}</td>
+                                    <td>{{ is_object($item->requesterDepartment) ? ($item->requesterDepartment->name ?? '') : ($item->requesterDepartment ?? '') }}</td>
                                     <td>{{ $item['application']['name'] ?? "" }}</td>
                                     <td>{{ $item['updated_at'] ?? "" }}</td>
                                     <td>
