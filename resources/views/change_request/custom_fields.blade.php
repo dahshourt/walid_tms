@@ -1,42 +1,45 @@
-@foreach($CustomFields as $ky => $item)
+@php
+    $enabledFields = $CustomFields->filter(function ($item) {
+        return isset($item->enable) && $item->enable == 1;
+    });
 
-@if($item->CustomField->name == 'on_behalf')
-    @php
-        $crTeamAdminGroup = config('constants.group_names.cr_team');
-        $isCrAdmin = false;
-        if(auth()->check()) {
-             $isCrAdmin = auth()->user()->user_groups()->whereHas('group', function($q) use($crTeamAdminGroup){
-                   $q->where('title', $crTeamAdminGroup);
-             })->exists();
-        }
-    @endphp
-    @if(!$isCrAdmin)
-        @continue
-    @endif
+    $disabledFields = $CustomFields->filter(function ($item) {
+        return !isset($item->enable) || $item->enable != 1;
+    });
+@endphp
+
+@if($enabledFields->isNotEmpty())
+    <div class="col-12 crt-section-container editable">
+        <div class="crt-section-header editable">
+            <span class="crt-header-icon editable">
+                <i class="flaticon2-edit text-primary"></i>
+            </span>
+            <h4 class="crt-header-title text-primary">Editable Fields</h4>
+        </div>
+        <div class="row">
+            @foreach($enabledFields as $ky => $item)
+                @include('change_request.partials.custom_field_item', ['item' => $item])
+            @endforeach
+        </div>
+    </div>
 @endif
 
-@php 
-	$custom_field_value = null;
-	if(isset($cr))
-	{
-		//$custom_field_value = $cr->change_request_custom_fields->where('custom_field_name',$item->CustomField->name)->last();
-		$custom_field_value = $cr->change_request_custom_fields->where('custom_field_name', $item->CustomField->name)->sortByDesc('id')->first();
-		$custom_field_value = $custom_field_value  ? $custom_field_value->custom_field_value  : $cr->{$item->CustomField->name};	
-	}
-	
-@endphp
-												  
-@include("$view.custom_fields_types.file")	
-@include("$view.custom_fields_types.input")	
-@include("$view.custom_fields_types.checkbox")	
-@include("$view.custom_fields_types.select")	
-@include("$view.custom_fields_types.textarea")	
-@include("$view.custom_fields_types.multiselect")                                               
-@include("$view.custom_fields_types.button")     
-@include("$view.custom_fields_types.radio")   
-@include("$view.custom_fields_types.date")                                                 
-@include("$view.custom_fields_types.datetime")                                                 
-@endforeach
+@if($disabledFields->isNotEmpty())
+    <div class="col-12 crt-section-container readonly">
+        <div class="crt-section-header readonly">
+            <span class="crt-header-icon readonly">
+                <i class="flaticon2-lock text-muted"></i>
+            </span>
+            <h4 class="crt-header-title text-muted">Read-Only Fields</h4>
+        </div>
+        <div class="row">
+            @foreach($disabledFields as $ky => $item)
+                @include('change_request.partials.custom_field_item', ['item' => $item])
+            @endforeach
+        </div>
+    </div>
+@endif
+
 <!-- <script>
     document.addEventListener('DOMContentLoaded', function () {
         const statusSelect = document.querySelector('[name="new_status_id"]');
@@ -71,7 +74,7 @@
             form.addEventListener('submit', function (e) {
                 const selectedStatus = parseInt(statusSelect.value) || 0;
                 const designEstimation = parseFloat(designEstimationInput.value);
-                
+
                 const invalidCondition =
                     (selectedStatus === 44 && designEstimation > 0) ||
                     (selectedStatus === 43 && (!designEstimation || designEstimation === 0));
@@ -93,7 +96,3 @@
         }
     });
 </script>
-
-
-
-
