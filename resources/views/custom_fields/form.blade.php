@@ -12,6 +12,9 @@
             <label class="crt-config-label mb-0" for="custom_field_id_{{ $i }}">
                 {{ $field['label'] }}
             </label>
+            <span class="mb-0">
+                (type: {{ $field['type'] }})
+            </span>
         </div>
 
         <!-- Controls: Validation, Sort, Enable -->
