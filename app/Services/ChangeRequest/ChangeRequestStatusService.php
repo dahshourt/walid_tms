@@ -184,7 +184,7 @@ class ChangeRequestStatusService
                 // Find records with active=0 from merge point
                 $pendingStatuses = ChangeRequestStatus::where('cr_id', $crId)
                     ->where('old_status_id', $mergePointStatusId)
-                    ->notActive()
+                    ->whereRaw('CAST(active AS CHAR) = ?', ['0'])
                     ->get();
 
                 foreach ($pendingStatuses as $status) {
@@ -822,12 +822,12 @@ class ChangeRequestStatusService
                 ->where('new_status_id', $statusData['old_status_id'])
                 //->where('active', self::ACTIVE_STATUS)
                 //->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-                ->active()
+                ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
                 ->first();
 
             //to check all the active statuses for this CR
             $allActiveStatuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
-                ->active()
+                ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
                 ->get(['id', 'new_status_id', 'old_status_id', 'active']);
             Log::debug('updateCurrentStatus: All active statuses for this CR', [
                 'cr_id' => $changeRequestId,
@@ -949,7 +949,7 @@ class ChangeRequestStatusService
         // Get all statuses with the same old_status_id that are still active
         $dependentStatuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
             ->where('old_status_id', $currentStatus->old_status_id)
-            ->active()
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->get();
 
         Log::debug('handleDependentStatuses: Processing dependent statuses', [
@@ -1389,7 +1389,7 @@ class ChangeRequestStatusService
 
         $cr_status = ChangeRequestStatus::where('cr_id', $changeRequestId)
             ->where('new_status_id', $oldStatusId)
-            ->completedOrActive()
+            ->whereRaw('CAST(active AS CHAR) != ?', ['0'])
             ->latest()
             ->first();
 
@@ -1402,7 +1402,7 @@ class ChangeRequestStatusService
 
         $all_depend_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
             ->where('old_status_id', $cr_status->old_status_id)
-            ->completedOrActive()
+            ->whereRaw('CAST(active AS CHAR) != ?', ['0'])
             ->whereNull('group_id')
             ->whereHas('change_request_data', function ($query) {
                 $query->where('workflow_type_id', '!=', 9);
@@ -1411,7 +1411,7 @@ class ChangeRequestStatusService
 
         $depend_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
             ->where('old_status_id', $cr_status->old_status_id)
-            ->completed()
+            ->whereRaw('CAST(active AS CHAR) = ?', ['2'])
             ->whereNull('group_id')
             ->whereHas('change_request_data', function ($query) {
                 $query->where('workflow_type_id', '!=', 9);
@@ -1420,7 +1420,7 @@ class ChangeRequestStatusService
 
         $depend_active_statuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
             ->where('old_status_id', $cr_status->old_status_id)
-            ->active()
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->whereNull('group_id')
             ->whereHas('change_request_data', function ($query) {
                 $query->where('workflow_type_id', '!=', 9);
@@ -1435,7 +1435,7 @@ class ChangeRequestStatusService
 
                 if (in_array($nextToStatusId, $parkedIds, true)) {
                     $depend_active_count = ChangeRequestStatus::where('cr_id', $changeRequestId)
-                        ->active()
+                        ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
                         ->count();
 
                     $active = $depend_active_count > 0 ? self::INACTIVE_STATUS : self::ACTIVE_STATUS;
@@ -1545,7 +1545,7 @@ class ChangeRequestStatusService
             ->where('old_status_id', $dependentWorkflow->previous_status_id)
             // ->where('active', self::COMPLETED_STATUS)
             // ->whereIN('active',self::$COMPLETED_STATUS_ARRAY)
-            ->completed()
+            ->whereRaw('CAST(active AS CHAR) = ?', ['2'])
             ->exists();
     }
 
@@ -1557,7 +1557,7 @@ class ChangeRequestStatusService
         $dependentStatuses = ChangeRequestStatus::where('cr_id', $changeRequestId)
             // ->where('active', self::ACTIVE_STATUS)
             // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-            ->active()
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->get();
 
         if ($dependentStatuses->count() > 1) {
@@ -1572,7 +1572,7 @@ class ChangeRequestStatusService
             ->whereIn('new_status_id', $checkDependentWorkflow)
             // ->where('active', self::ACTIVE_STATUS)
             // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-            ->active()
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->count();
 
         return $dependentCount > 0 ? self::INACTIVE_STATUS : self::ACTIVE_STATUS;

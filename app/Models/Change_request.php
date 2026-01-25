@@ -900,7 +900,7 @@ class Change_request extends Model
                 $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
             })
             ->where('type_id', $this->workflow_type_id)
-            ->active()
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->orderBy('id', 'DESC')
             ->get();
     }

@@ -277,7 +277,7 @@ class ChangeRequestUpdateService
     {
         $user = $request['assign_to'] ? User::find($request['assign_to']) : Auth::user();
 
-//        if ($this->needsAssignmentUpdate($request)) {
+        //        if ($this->needsAssignmentUpdate($request)) {
 //            $request['assignment_user_id'] = $user->id;
 //        }
     }
@@ -590,7 +590,7 @@ class ChangeRequestUpdateService
                 ->where('new_status_id', $oldStatusId)
                 // ->where('active', '1')
                 // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-                ->active()
+                ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
                 ->update(['assignment_user_id' => $request->assignment_user_id]);
         }
 
@@ -601,7 +601,7 @@ class ChangeRequestUpdateService
                     ->where('new_status_id', $oldStatusId)
                     // ->where('active', '1')
                     // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-                    ->active()
+                    ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
                     ->update(['assignment_user_id' => $request->$field]);
             }
         }

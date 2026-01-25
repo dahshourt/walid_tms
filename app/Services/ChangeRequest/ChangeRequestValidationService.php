@@ -871,7 +871,7 @@ class ChangeRequestValidationService
             ->where('group_id', $groupId)
             // ->where('active','1')
             // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-            ->active()
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->first();
         if (!$currentStatus) {
             if (isset($currentStatus->old_status_id)) {
