@@ -39,7 +39,7 @@ class CustomFieldGroupTypeController extends Controller
         // Ensure the user is authenticated
         $this->middleware(function ($request, $next) {
             $this->user = Auth::user();
-            if (! $this->user->hasRole('Super Admin') && ! $this->user->can('Access CustomFields') && ! $this->user->can('Access Advanced Search')) {
+            if (!$this->user->hasRole('Super Admin') && !$this->user->can('Access CustomFields') && !$this->user->can('Access Advanced Search')) {
                 abort(403, 'This action is unauthorized.');
             } else {
                 return $next($request);
@@ -167,7 +167,7 @@ class CustomFieldGroupTypeController extends Controller
         $collection = $this->changerequest->AdvancedSearchResult()->appends(request()->query());
 
         // Ensure $collection is an instance of Illuminate\Pagination\LengthAwarePaginator
-        if (! ($collection instanceof \Illuminate\Pagination\LengthAwarePaginator)) {
+        if (!($collection instanceof \Illuminate\Pagination\LengthAwarePaginator)) {
             abort(500, 'Expected paginated collection from AdvancedSearchResult.');
         }
 
@@ -290,7 +290,7 @@ class CustomFieldGroupTypeController extends Controller
     public function update(CustomFieldGroupTypeRequest $request, $id)
     {
         $CustomField = $this->custom_field_group_type->find($id);
-        if (! $CustomField) {
+        if (!$CustomField) {
             return response()->json([
                 'message' => 'Group Not Exists',
             ], 422);
