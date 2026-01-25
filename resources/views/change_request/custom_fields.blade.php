@@ -14,7 +14,7 @@
             <span class="crt-header-icon editable">
                 <i class="flaticon2-edit text-primary"></i>
             </span>
-            <h4 class="crt-header-title text-primary">Editable Fields</h4>
+            <h4 class="crt-header-title text-primary">Action Fields</h4>
         </div>
         <div class="row">
             @foreach($enabledFields as $ky => $item)

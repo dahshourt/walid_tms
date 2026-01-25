@@ -2,6 +2,8 @@
 
 @section('content')
 
+	@include('change_request.partials.styles')
+
 	<!--begin::Content-->
 	<div class="content d-flex flex-column flex-column-fluid" id="kt_content">
 		<!--begin::Subheader-->
