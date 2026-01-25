@@ -27,9 +27,11 @@ class CustomFieldGroupTypeRepository implements CustomFieldGroupTypeRepositoryIn
 
     public function getAllCustomFieldsWithSelected($column, $value)
     {
-        $result = CustomField::with(['custom_field_group' => function ($q) use ($column, $value) {
-            $q->where($column, $value);
-        }])->get();
+        $result = CustomField::with([
+            'custom_field_group' => function ($q) use ($column, $value) {
+                $q->where($column, $value);
+            }
+        ])->get();
 
         return $result;
         // return CustomField::with('custom_field_group')->get();
@@ -38,9 +40,11 @@ class CustomFieldGroupTypeRepository implements CustomFieldGroupTypeRepositoryIn
     public function AllCustomFieldsWithSelectedWithFormType($column, $value, $form_type)
     {
         // \DB::enableQueryLog();
-        $result = CustomField::with(['custom_field_group' => function ($q) use ($column, $value, $form_type) {
-            $q->where($column, $value)->where('form_type', $form_type);
-        }])->get();
+        $result = CustomField::with([
+            'custom_field_group' => function ($q) use ($column, $value, $form_type) {
+                $q->where($column, $value)->where('form_type', $form_type);
+            }
+        ])->get();
         // $queries = \DB::getQueryLog();
         // $lastQuery = end($queries);
 
@@ -134,7 +138,7 @@ class CustomFieldGroupTypeRepository implements CustomFieldGroupTypeRepositoryIn
         $result = CustomFieldGroup::with('CustomField')->where('wf_type_id', $workflow_type_id)->where('form_type', $form_type)
             ->where(function ($query) use ($status_id) {
                 $query->where('status_id', $status_id)->orWhereNULL('status_id');
-            })->GroupBy('custom_field_id')->orderBy('sort')->get();
+            })->GroupBy('custom_field_id')->orderBy('enable', 'Desc')->orderBy('sort')->get();
 
         // $result = CustomField::whereHas('custom_field_by_workflow', function($q) use($workflow_type_id, $form_type,$status_id){
         //     $q->where('wf_type_id',$workflow_type_id)->where('form_type',$form_type)->where(function($query) use($status_id) {
@@ -169,20 +173,22 @@ class CustomFieldGroupTypeRepository implements CustomFieldGroupTypeRepositoryIn
     public function AllCustomFieldsSelected()
     {
 
-        $result = CustomField::with(['custom_field_group' => function ($q) {
-            $q->where('form_type', request()->form_type);
-            $q->where('wf_type_id', request()->wf_type_id);
-            if (request()->group_id) {
-                $q->where('group_id', request()->group_id);
-            } else {
-                $q->WhereNULL('group_id');
+        $result = CustomField::with([
+            'custom_field_group' => function ($q) {
+                $q->where('form_type', request()->form_type);
+                $q->where('wf_type_id', request()->wf_type_id);
+                if (request()->group_id) {
+                    $q->where('group_id', request()->group_id);
+                } else {
+                    $q->WhereNULL('group_id');
+                }
+                if (request()->status_id) {
+                    $q->where('status_id', request()->status_id);
+                } else {
+                    $q->WhereNULL('status_id');
+                }
             }
-            if (request()->status_id) {
-                $q->where('status_id', request()->status_id);
-            } else {
-                $q->WhereNULL('status_id');
-            }
-        }])->get();
+        ])->get();
 
         return $result;
         // return CustomField::with('custom_field_group')->get();
