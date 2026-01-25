@@ -932,7 +932,7 @@ class ChangeRequestController extends Controller
             $firstWorkflow = \App\Models\WorkFlowType::whereHas('changeRequests', function ($query) {
                 $query->where('top_management', '1');
             })
-                ->active()
+                ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
                 ->orderBy('id')
                 ->first();
 
@@ -944,7 +944,7 @@ class ChangeRequestController extends Controller
             $query->where('top_management', '1');
         })
             ->whereNotNull('parent_id')
-            ->active()
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->orderBy('id')
             ->get();
 
