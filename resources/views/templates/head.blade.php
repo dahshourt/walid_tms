@@ -48,6 +48,8 @@ License: You must have a valid license purchased only from themeforest(the above
 
 	<!-- All Custom styles include here -->
 	<link href="{{ asset('public/css/custom-style.css') }}" rel="stylesheet" type="text/css" />
+
+	<link href="{{ asset('public/css/custom_change_request.css') }}" rel="stylesheet" type="text/css" />
 	<!-- All Custom styles include here -->
 
 
