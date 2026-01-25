@@ -1,4 +1,5 @@
 @if($item->CustomField->type == "radio")
+
     <div class="col-md-6 change-request-form-field field_{{$item->CustomField->name}}">
         <label>{{ $item->CustomField->label }} 
             @if( isset($item->validation_type_id) && ($item->validation_type_id==1))
@@ -26,34 +27,40 @@
             
             // Priority: old input > existing database value
             $currentValue = old($item->CustomField->name, $existingValue);
+
+            if($item->CustomField->name == 'kick_off_meeting' && empty($currentValue)){
+                $currentValue = 'yes';
+            }
         @endphp
         
-        <div class="form-check">
-            <input class="form-check-input radio-{{ $item->CustomField->name }}" 
-                   type="radio" 
-                   name="{{ $item->CustomField->name }}" 
-                   id="{{ $item->CustomField->name }}_yes"
-                   value="yes"
-                   {{ $currentValue == 'yes' ? 'checked' : '' }}
-                   {{ (isset($item->enable)&&($item->enable!=1)) ? "disabled" : "" }}
-                   >
-            <label class="form-check-label" for="{{ $item->CustomField->name }}_yes">
-                Yes
-            </label>
-        </div>
-        
-        <div class="form-check">
-            <input class="form-check-input radio-{{ $item->CustomField->name }}" 
-                   type="radio" 
-                   name="{{ $item->CustomField->name }}" 
-                   id="{{ $item->CustomField->name }}_no"
-                   value="no"
-                   {{ $currentValue == 'no' ? 'checked' : '' }}
-                   {{ (isset($item->enable)&&($item->enable!=1)) ? "disabled" : "" }}
-                   >
-            <label class="form-check-label" for="{{ $item->CustomField->name }}_no">
-                No
-            </label>
+        <div class="custom-radio-group {{ (isset($item->enable)&&($item->enable!=1)) ? 'disabled' : '' }}">
+            <div class="custom-radio-option yes">
+                <input class="form-check-input radio-{{ $item->CustomField->name }}" 
+                       type="radio" 
+                       name="{{ $item->CustomField->name }}" 
+                       id="{{ $item->CustomField->name }}_yes"
+                       value="yes"
+                       {{ $currentValue == 'yes' ? 'checked' : '' }}
+                       {{ (isset($item->enable)&&($item->enable!=1)) ? "disabled" : "" }}
+                       >
+                <label class="custom-radio-label" for="{{ $item->CustomField->name }}_yes">
+                    Yes
+                </label>
+            </div>
+            
+            <div class="custom-radio-option no">
+                <input class="form-check-input radio-{{ $item->CustomField->name }}" 
+                       type="radio" 
+                       name="{{ $item->CustomField->name }}" 
+                       id="{{ $item->CustomField->name }}_no"
+                       value="no"
+                       {{ $currentValue == 'no' ? 'checked' : '' }}
+                       {{ (isset($item->enable)&&($item->enable!=1)) ? "disabled" : "" }}
+                       >
+                <label class="custom-radio-label" for="{{ $item->CustomField->name }}_no">
+                    No
+                </label>
+            </div>
         </div>
         
         {{-- Error message --}}
@@ -168,4 +175,5 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 @endif
+@include('change_request.partials.radio_kickoff_script')
 
