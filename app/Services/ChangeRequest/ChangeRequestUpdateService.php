@@ -590,7 +590,7 @@ class ChangeRequestUpdateService
                 ->where('new_status_id', $oldStatusId)
                 // ->where('active', '1')
                 // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-                ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+                ->active()
                 ->update(['assignment_user_id' => $request->assignment_user_id]);
         }
 
@@ -601,7 +601,7 @@ class ChangeRequestUpdateService
                     ->where('new_status_id', $oldStatusId)
                     // ->where('active', '1')
                     // ->whereIN('active',self::$ACTIVE_STATUS_ARRAY)
-                    ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
+                    ->active()
                     ->update(['assignment_user_id' => $request->$field]);
             }
         }
