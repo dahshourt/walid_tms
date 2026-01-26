@@ -57,6 +57,13 @@
 							<!--begin::Form-->
 							<form class="form" action='{{url("$route")}}' method="post" enctype="multipart/form-data">
 								{{ csrf_field() }}
+
+								<div class="card-header d-flex justify-content-between align-items-center">
+									<h3 class="card-title m-0 text-info">
+										{{ $title }}
+									</h3>
+								</div>
+
 								<input type="hidden" name="workflow_type_id" value="{{$workflow_type_id}}">
 								<div class="card-body">
 									<div class="form-group row">

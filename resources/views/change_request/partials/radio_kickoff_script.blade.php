@@ -9,7 +9,7 @@
 
             // Find the option with text 'Request Kickoff meeting'
             for (let i = 0; i < statusSelect.options.length; i++) {
-                if (statusSelect.options[i].text.trim() === {{config('change_request.kickoff_meeting_flag.status.name')}}) {
+                if (statusSelect.options[i].text.trim() === '{{config('change_request.kickoff_meeting_flag.status.name')}}') {
                     kickoffOption = statusSelect.options[i];
                     nextSibling = kickoffOption.nextElementSibling; // Store reference for re-insertion
                     break;
