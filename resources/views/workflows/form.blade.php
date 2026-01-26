@@ -23,156 +23,173 @@
         </div>
     @endif
     <div class="form-group form-group-last"></div>
-
-    <div class="form-group">
-        <label>Is Special?</label>
-        <div class="checkbox-inline">
-            <label class="checkbox">
-                <input type="checkbox" name="workflow_type" value="1" {{ isset($row) && $row->workflow_type == 1 ? "checked" : "" }}>
-                <span></span>Yes
-            </label>
+    
+    <!-- Section: Workflow Configuration -->
+    <div class="form-section-title">
+        <i class="la la-cogs"></i> Workflow Configuration
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group modern-form-group">
+                <label for="type_id">Type <span class="text-danger">*</span></label>
+                <select class="form-control modern-form-control" id="type_id" name="type_id" {{ isset($row) ? "disabled" : "" }}>
+                    <option value="">Select Type</option>
+                    @foreach($types as $item)
+                        <option value="{{ $item->id }}" @if(isset($row) && $row->type_id == $item->id) selected
+                        @elseif(old('type_id') == $item->id) selected @endif>
+                            {{ $item->name }}
+                        </option>
+                    @endforeach
+                </select>
+                {!! $errors->first('type_id', '<span class="form-control-feedback">:message</span>') !!}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group modern-form-group">
+                <label>Options</label>
+                <div class="mt-2">
+                    <label class="modern-checkbox">
+                        <input type="checkbox" name="workflow_type" value="1" {{ isset($row) && $row->workflow_type == 1 ? "checked" : "" }}>
+                        <span class="checkmark"></span>
+                        <span class="ml-2">Is Special?</span>
+                    </label>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="form-group">
-        <label for="type_id">Type <span class="text-danger">*</span></label>
-        <select class="form-control form-control-lg" id="type_id" name="type_id" {{ isset($row) ? "disabled" : "" }}>
-            <option value="">Select</option>
-            @foreach($types as $item)
-                <option value="{{ $item->id }}" @if(isset($row) && $row->type_id == $item->id) selected
-                @elseif(old('type_id') == $item->id) selected @endif>
-                    {{ $item->name }}
-                </option>
-            @endforeach
-        </select>
-        {!! $errors->first('type_id', '<span class="form-control-feedback">:message</span>') !!}
+    <!-- Section: Status Transition -->
+    <div class="form-section-title">
+        <i class="la la-exchange"></i> Status Transition
     </div>
 
-    <div class="form-group">
-        <div class="checkbox-inline mb-10">
-            <label class="checkbox">
+    <div class="form-group modern-form-group">
+         <div class="mb-2">
+            <label class="modern-checkbox">
                 <input type="checkbox" id="same_time_from" name="same_time_from">
-                <span></span>From At the same time
+                <span class="checkmark"></span>
+                <span class="ml-2">From At the same time</span>
             </label>
         </div>
     </div>
 
     <span id="load_from_status">
-        <div class="form-group">
-            <label for="previous_status_id">Previous Status:</label>
-            <select class="form-control form-control-lg" id="previous_status_id" name="previous_status_id">
-                <option value="">Select</option>
-                @foreach($statuses as $item)
-                    <option value="{{ $item->id }}" {{ isset($row) && $row->previous_status_id == $item->id ? "selected" : "" }}>
-                        {{ $item->name }}
-                    </option>
-                @endforeach
-            </select>
-            {!! $errors->first('previous_status_id', '<span class="form-control-feedback">:message</span>') !!}
-        </div>
-
-
-        <div class="form-group">
-            <label for="from_status_id">From Status <span class="text-danger">*</span></label>
-            <select class="form-control form-control-lg" id="from_status_id" name="from_status_id">
-                <option value="">Select</option>
-                @foreach($statuses as $item)
-                    <option value="{{ $item->id }}" @if(isset($row) && $row->from_status_id == $item->id) selected
-                    @elseif(old('from_status_id') == $item->id) selected @endif>
-                        {{ $item->name }}
-                    </option>
-                @endforeach
-            </select>
-            {!! $errors->first('from_status_id', '<span class="form-control-feedback">:message</span>') !!}
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group modern-form-group">
+                    <label for="previous_status_id">Previous Status</label>
+                    <select class="form-control modern-form-control" id="previous_status_id" name="previous_status_id">
+                        <option value="">Select Previous Status</option>
+                        @foreach($statuses as $item)
+                            <option value="{{ $item->id }}" {{ isset($row) && $row->previous_status_id == $item->id ? "selected" : "" }}>
+                                {{ $item->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    {!! $errors->first('previous_status_id', '<span class="form-control-feedback">:message</span>') !!}
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="form-group modern-form-group">
+                    <label for="from_status_id">From Status <span class="text-danger">*</span></label>
+                    <select class="form-control modern-form-control" id="from_status_id" name="from_status_id">
+                        <option value="">Select From Status</option>
+                        @foreach($statuses as $item)
+                            <option value="{{ $item->id }}" @if(isset($row) && $row->from_status_id == $item->id) selected
+                            @elseif(old('from_status_id') == $item->id) selected @endif>
+                                {{ $item->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                    {!! $errors->first('from_status_id', '<span class="form-control-feedback">:message</span>') !!}
+                </div>
+            </div>
         </div>
     </span>
-    <div class="form-group">
-        <div class="checkbox-inline mb-10">
-            <label class="checkbox">
+
+    <div class="form-group modern-form-group">
+        <div class="mb-2">
+            <label class="modern-checkbox">
                 <input type="checkbox" id="same_time" name="same_time" value="1" {{ isset($row) && $row->same_time == 1 ? "checked" : "" }}>
-                <span></span>At the same time
+                <span class="checkmark"></span>
+                <span class="ml-2">At the same time (target)</span>
             </label>
         </div>
     </div>
-
-    <div class="form-group">
-        <label for="to_status_id">To Status <span class="text-danger">*</span></label>
-
-
-        <!--<div class="same_class">-->
-        <select class="form-control form-control-lg" id="to_status_id" name="to_status_id[]" multiple="multiple">
-            <option value="">Select</option>
-            @foreach($statuses as $key => $item)
-
-                <option value="{{ $item->id }}" @if(isset($row)) @foreach($row->workflowstatus as $it)
-                    @if($it->to_status_id == $item->id) {{'Selected'}} @else {{''}} @endif @endforeach
-                @elseif(collect(old('to_status_id', []))->contains($item->id)) selected @endif>
-                    {{ $item->name}}
-                </option>
-            @endforeach
-        </select>
-        {!! $errors->first('to_status_id', '<span class="form-control-feedback">:message</span>') !!}
-        <!--</div>-->
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="form-group modern-form-group">
+                <label for="to_status_id">To Status <span class="text-danger">*</span></label>
+                <!--<div class="same_class">-->
+                <select class="form-control modern-form-control" id="to_status_id" name="to_status_id[]" multiple="multiple">
+                    <option value="">Select To Status</option>
+                    @foreach($statuses as $key => $item)
+                        <option value="{{ $item->id }}" @if(isset($row)) @foreach($row->workflowstatus as $it)
+                            @if($it->to_status_id == $item->id) {{'Selected'}} @else {{''}} @endif @endforeach
+                        @elseif(collect(old('to_status_id', []))->contains($item->id)) selected @endif>
+                            {{ $item->name}}
+                        </option>
+                    @endforeach
+                </select>
+                {!! $errors->first('to_status_id', '<span class="form-control-feedback">:message</span>') !!}
+                <!--</div>-->
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group modern-form-group">
+                <label>To Status Label</label>
+                <input type="text" class="form-control modern-form-control" placeholder="To Status Label" name="to_status_lable"
+                    value="{{ isset($row) ? $row->to_status_label : old('to_status_lable') }}" />
+                {!! $errors->first('to_status_lable', '<span class="form-control-feedback">:message</span>') !!}
+            </div>
+        </div>
     </div>
-    <div class="form-group">
-        <label>To Status Label:</label>
-        <input type="text" class="form-control form-control-lg" placeholder="To Status Label" name="to_status_lable"
-            value="{{ isset($row) ? $row->to_status_label : old('to_status_lable') }}" />
-        {!! $errors->first('to_status_lable', '<span class="form-control-feedback">:message</span>') !!}
+
+    <!-- Section: Settings -->
+    <div class="form-section-title">
+        <i class="la la-toggle-on"></i> Settings
     </div>
-
-    <!-- <div class="form-group not_same_class">
-        <select class="form-control form-control-lg " id="to_status_id" name="to_status_id">
-            <option value="">Select</option>
-            {{ isset($row) && $row->to_status_id == $item->id ? "selected" : "" }}
-    @foreach($statuses as $item)
-
-        <option value="{{ $item->id }}"
-                    @if(isset($row))
-            @foreach($row->workflowstatus as $it)
-                @if($it->to_status_id == $item->id)
-                    {{'Selected'}}
-                @else
-                    {{''}}
-                @endif
-            @endforeach
-        @endif
-        >
-{{ $item->name }}
-        </option>
-
-    @endforeach
-    </select>
-{!! $errors->first('to_status_id', '<span class="form-control-feedback">:message</span>') !!}
-    </div> -->
+    
     @if(isset($row))
         @foreach($row->workflowstatus as $itm)
             @php
                 $res = $itm['default_to_status'];
-
             @endphp
         @endforeach
     @endif
-    <div class="form-group">
-        <label>Default Status</label>
-        <div class="checkbox-inline">
-            <label class="checkbox">
-                <input type="checkbox" name="default_status" value="1" @if(isset($res) && $res == 1) checked @endif>
-                <span></span>Yes
-            </label>
+    
+    <div class="row">
+        <div class="col-md-6">
+             <div class="form-group modern-form-group">
+                <label style="display:block; marginBottom: 5px;">Default Status</label>
+                <div class="mb-2">
+                    <label class="modern-checkbox">
+                        <input type="checkbox" name="default_status" value="1" @if(isset($res) && $res == 1) checked @endif>
+                        <span class="checkmark"></span>
+                        <span class="ml-2">Yes</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="form-group modern-form-group">
+                <label style="display:block; margin-bottom: 15px;">Active <span class="text-danger">*</span></label>
+                <div>
+                    <label class="modern-toggle-switch">
+                        <input type="hidden" name="active" value="0">
+                        <input type="checkbox" name="active" value="1" {{ (isset($row) && $row->active == 1) || old('active', 0) == 1 ? "checked" : "" }}>
+                        <span class="modern-toggle-slider"></span>
+                    </label>
+                    <span class="toggle-label text-muted">Enable this workflow</span>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="form-group">
-        <label>Active <span class="text-danger">*</span></label>
-        <div class="checkbox-inline">
-            <label class="checkbox">
-                <input type="hidden" name="active" value="0">
-                <input type="checkbox" name="active" value="1" {{ (isset($row) && $row->active == 1) || old('active', 0) == 1 ? "checked" : "" }}>
-                <span></span>Yes
-            </label>
-        </div>
-    </div>
+
 </div>
 
 @push('script')
