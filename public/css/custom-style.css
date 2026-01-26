@@ -1,3 +1,7 @@
+.header-logo {
+    margin-left: 20px;
+}
+
 .custom-radio-group {
     display: flex;
     background-color: #f0f8ff;
@@ -451,4 +455,30 @@ input:checked+.modern-toggle-slider:before {
 
 .modern-page-link i {
     font-size: 0.7rem;
+}
+
+
+@media (min-width: 1200px) {
+
+    .container-xl,
+    .container-lg,
+    .container-md,
+    .container-sm,
+    .container {
+        max-width: 1250px;
+    }
+}
+
+
+@media (min-width: 992px) {
+
+    .container,
+    .container-fluid,
+    .container-sm,
+    .container-md,
+    .container-lg,
+    .container-xl,
+    .container-xxl {
+        padding: 0;
+    }
 }
