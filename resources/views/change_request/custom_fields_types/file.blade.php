@@ -13,9 +13,9 @@
         <div class="crt-file-upload-wrapper {{ $isDisabled ? 'disabled' : '' }}">
             <input type="file" multiple name="{{ $fieldName }}" class="crt-file-input" {{ $isDisabled ? 'disabled' : '' }}
                 {{ $isRequired ? 'required' : '' }} onchange="
-                        var names = Array.from(this.files).map(f => f.name).join(', ');
-                        this.nextElementSibling.querySelector('.crt-file-name-display').textContent = names || '';
-                    " />
+                                                var names = Array.from(this.files).map(f => f.name).join(', ');
+                                                this.nextElementSibling.querySelector('.crt-file-name-display').textContent = names || '';
+                                            " />
 
             <div class="crt-file-content">
                 <div class="crt-file-icon">
@@ -23,6 +23,7 @@
                 </div>
                 <div class="crt-file-label">Click to upload files</div>
                 <div class="crt-file-hint">Max file size: 50MB</div>
+                <div class="crt-file-hint">file types: doc, docx, xls, xlsx, pdf, zip, rar, jpeg, jpg, png, gif, msg</div>
                 <div class="crt-file-name-display"></div>
             </div>
         </div>

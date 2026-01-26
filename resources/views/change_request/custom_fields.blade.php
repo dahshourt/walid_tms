@@ -14,7 +14,7 @@
             <span class="crt-header-icon editable">
                 <i class="flaticon2-edit text-primary"></i>
             </span>
-            <h4 class="crt-header-title text-primary">Action Fields</h4>
+            <h4 class="crt-header-title text-primary"> Action Data</h4>
         </div>
         <div class="row">
             @foreach($enabledFields as $ky => $item)
@@ -30,7 +30,7 @@
             <span class="crt-header-icon readonly">
                 <i class="flaticon2-lock text-muted"></i>
             </span>
-            <h4 class="crt-header-title text-muted">Read-Only Fields</h4>
+            <h4 class="crt-header-title text-muted">Read-Only Data</h4>
         </div>
         <div class="row">
             @foreach($disabledFields as $ky => $item)

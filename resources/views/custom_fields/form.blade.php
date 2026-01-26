@@ -46,8 +46,8 @@
             <div class="crt-control-group">
                 <label class="crt-control-label" for="enable_{{ $i }}">Status</label>
                 <select id="enable_{{ $i }}" name="enable[]" class="form-control form-control-sm">
-                    <option value="1" @if(isset($field['custom_field_group'][0]['enable']) && $field['custom_field_group'][0]['enable'] == 1) selected @endif>Active</option>
-                    <option value="0" @if(isset($field['custom_field_group'][0]['enable']) && $field['custom_field_group'][0]['enable'] == 0) selected @endif>Inactive</option>
+                    <option value="1" @if(isset($field['custom_field_group'][0]['enable']) && $field['custom_field_group'][0]['enable'] == 1) selected @endif>Enable</option>
+                    <option value="0" @if(isset($field['custom_field_group'][0]['enable']) && $field['custom_field_group'][0]['enable'] == 0) selected @endif>Disable</option>
                 </select>
             </div>
         </div>

@@ -18,14 +18,12 @@
             <span class="text-danger">*</span>
         @endif
         {{-- Textarea --}}
-        <textarea name="{{ $fieldName }}"
-                  id="{{ $fieldName }}"
-                  class="form-control form-control-lg @error($fieldName) is-invalid @enderror"
-                  {{ $isRequired }} {{ $isDisabled }}>{{ $value }}</textarea>
+        <textarea name="{{ $fieldName }}" id="{{ $fieldName }}"
+            class="form-control form-control-lg @error($fieldName) is-invalid @enderror" {{ $isRequired }} {{ $isDisabled }}>{{ $value }}</textarea>
 
         {{-- Error display --}}
         @error($fieldName)
-        <small class="text-danger d-block">{{ $message }}</small>
+            <small class="text-danger d-block">{{ $message }}</small>
         @enderror
     </div>
 @endif
