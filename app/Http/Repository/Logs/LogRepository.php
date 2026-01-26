@@ -123,17 +123,20 @@ class LogRepository implements LogRepositoryInterface
         $excludeNames = ['new_status_id', 'testing_estimation', 'design_estimation', 'dev_estimation', 'postpone', 'need_ux_ui'];
 
         // fetch custom fields you want to append
-        $customFields = CustomField::query()
-            ->whereNotIn('name', $excludeNames)
-            ->get();
+        $customFieldsQuery = CustomField::query()
+            ->whereIn('name', array_keys(array_filter($request->all())))
+            ->whereNotIn('name', $excludeNames);
+
+        if ($request->get('new_status_id')) {
+            $newStatusesIds = NewWorkFlowStatuses::where('new_workflow_id', $request->get('new_status_id'))->pluck('to_status_id')->toArray();
+            $customFieldsQuery->logsForStatus($newStatusesIds);
+        }
+
+        $customFields = $customFieldsQuery->get();
 
         $cf_default_log_message = ":cf_label Changed To ':cf_value' by :user_name";
 
         $customFieldMap = $customFields->mapWithKeys(function ($cf) use ($request, $cf_default_log_message, $user, $change_request) {
-
-            if ($cf->name !== 'testable' && (! $request->{$cf->name} || ! array_key_exists($cf->name, $request->all()))) {
-                return [];
-            }
 
             // Fallback message if label is null
             $label = $cf->label ?: Str::of($cf->name)->replace('_', ' ')->title();
@@ -141,9 +144,13 @@ class LogRepository implements LogRepositoryInterface
 
             $base = [];
 
-            $latest_value = $change_request->changeRequestCustomFields->where('custom_field_name', $cf->name)->last()?->custom_field_value;
+            if ($cf->type === 'textArea') {
+                $base['old_value'] = null;
+            } else {
+                $latest_value = $change_request->changeRequestCustomFields->where('custom_field_name', $cf->name)->last()?->custom_field_value;
 
-            $base['old_value'] = json_decode($latest_value, true);
+                $base['old_value'] = json_decode($latest_value, true);
+            }
 
             if (in_array($cf->type, ['multiselect', 'select'], true)) {
                 $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name});
@@ -215,23 +222,22 @@ class LogRepository implements LogRepositoryInterface
                     $newValue = $request->$field;
                 }
 
-                if ($oldValue != $newValue) {
+                if (($oldValue != $newValue) && is_array($info)) {
+                    if (isset($info['model'])) {
+                        $modelName = $info['model'];
+                        $fieldName = $info['field'];
+                        $valueName = $modelName::find($newValue)?->$fieldName;
+                        $message = $info['message'] . " '$valueName' By '$user->user_name'";
 
-                    if (is_array($info)) {
-                        if (isset($info['model'])) {
-                            $modelName = $info['model'];
-                            $fieldName = $info['field'];
-                            $valueName = $modelName::find($newValue)?->$fieldName;
-                            $message = $info['message'] . " '$valueName' By '$user->user_name'";
-
-                            $all_logs[] = $message;
-                        } elseif (array_key_exists('already_has_message', $info)) {
-                            $all_logs[] = $info['message'];
-                        }
+                        $all_logs[] = $message;
+                    } elseif (array_key_exists('already_has_message', $info)) {
+                        $all_logs[] = $info['message'];
                     }
                 }
             }
         }
+
+        dd($all_logs);
 
         // Store all logs
         $this->createMultipleLogs($change_request->id, $user->id, $all_logs);

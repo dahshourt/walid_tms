@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Traits\BindsDynamically;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CustomField extends Model
 {
@@ -50,11 +52,12 @@ class CustomField extends Model
         if (empty($this->related_table)) {
             Log::warning('CustomField has empty related_table', [
                 'custom_field_id' => $this->id,
-                'custom_field_name' => $this->name
+                'custom_field_name' => $this->name,
             ]);
+
             return collect([]);
         }
-        
+
         return $this->setTableName($this->related_table)->getDataByDynamicTable();
     }
 
@@ -66,8 +69,17 @@ class CustomField extends Model
     /**
      * Get the status log messages for this custom field.
      */
-    public function customFieldStatuses()
+    public function customFieldStatuses(): HasMany
     {
         return $this->hasMany(CustomFieldStatus::class);
+    }
+
+    public function scopeLogsForStatus(Builder $query, array $statuses_ids): Builder
+    {
+        return $query->with([
+            'customFieldStatuses' => function ($query) use ($statuses_ids) {
+                $query->whereIn('status_id', $statuses_ids);
+            },
+        ]);
     }
 }
