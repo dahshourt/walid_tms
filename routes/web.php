@@ -195,7 +195,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('directors', DirectorController::class)->except(['show', 'destroy']);
     Route::post('directors/updateactive', [DirectorController::class, 'updateStatus'])->name('directors.updateStatus');
 
-    // Custom Field Status Log Messages (must be before resource route to avoid conflicts)
+    // Custom Field Status Log Messages
     Route::get('custom-fields/log-messages/statuses', [CustomFieldStatusController::class, 'getActiveStatuses'])->name('custom-fields.log-messages.statuses');
     Route::get('custom-fields/{id}/log-messages', [CustomFieldStatusController::class, 'index'])->where('id', '[0-9]+')->name('custom-fields.log-messages.index');
     Route::post('custom-fields/{id}/log-messages', [CustomFieldStatusController::class, 'store'])->where('id', '[0-9]+')->name('custom-fields.log-messages.store');
