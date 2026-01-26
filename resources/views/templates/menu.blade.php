@@ -1345,6 +1345,16 @@
                                                     <span class="menu-text">Rejected CRs</span>
                                                 </a>
                                             </li>
+                                            <li class="menu-item">
+                                                <a href="{{ url('reports/sla-report') }}" class="menu-link">
+                                                    <span class="menu-text">SLA Report</span>
+                                                </a>
+                                            </li>
+                                            <li class="menu-item">
+                                                <a href="{{ url('reports/kpi-report') }}" class="menu-link">
+                                                    <span class="menu-text">KPI Report</span>
+                                                </a>
+                                            </li>
                                         </ul>
                                     </div>
                                 </li>
