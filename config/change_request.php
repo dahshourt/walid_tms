@@ -93,7 +93,12 @@ return [
             'name' => "Pending Technical Solution",
         ],
     ],
-
+    "kickoff_meeting_flag" => [
+        "status" => [
+            'id' => 102,
+            'name' => "Request Kickoff meeting",
+        ]
+    ],
 
     'parked_status_ids' => [
         // 'pending_uat' => 78,

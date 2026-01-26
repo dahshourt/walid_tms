@@ -894,13 +894,13 @@ class Change_request extends Model
             ->where(function ($query) use ($previousStatusId) {
                 $query->whereNull('previous_status_id')
                     ->orWhere('previous_status_id', 0)
-                   ->orWhere('previous_status_id', '>', 0);
+                    ->orWhere('previous_status_id', '>', 0);
             })
             ->whereHas('workflowstatus', function ($q) {
                 $q->whereColumn('to_status_id', '!=', 'new_workflow.from_status_id');
             })
             ->where('type_id', $this->workflow_type_id)
-            ->active()
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->orderBy('id', 'DESC')
             ->get();
     }
@@ -915,6 +915,21 @@ class Change_request extends Model
             'id',
             'custom_field_value'
         )->where('change_request_custom_fields.custom_field_name', 'cr_member');
+    }
+
+    public function requesterDepartment(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            RequesterDepartment::class,      // Final model
+            ChangeRequestCustomField::class, // Intermediate model
+            'cr_id',                         // FK on change_request_custom_fields → change_requests.id
+            'id',                            // PK on requester_departments
+            'id',                            // PK on change_requests
+            'custom_field_value'             // FK on change_request_custom_fields → requester_departments.id
+        )->where(
+                'change_request_custom_fields.custom_field_name',
+                'requester_department'
+            );
     }
 
     public function parentCR(): BelongsTo

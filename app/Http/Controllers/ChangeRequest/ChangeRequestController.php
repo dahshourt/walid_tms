@@ -460,9 +460,10 @@ class ChangeRequestController extends Controller
 
         $current_status = $cr->getCurrentStatus()->new_status_id;
 
-        if ($current_status != \App\Services\StatusConfigService::getStatusId('business_approval') ||
-            $current_status != \App\Services\StatusConfigService::getStatusId('division_manager_approval'))
-             {
+        if (
+            $current_status != \App\Services\StatusConfigService::getStatusId('business_approval') ||
+            $current_status != \App\Services\StatusConfigService::getStatusId('division_manager_approval')
+        ) {
             $rejectStatuses = [
                 \App\Services\StatusConfigService::getStatusId('Reject'),
                 \App\Services\StatusConfigService::getStatusId('Reject', ' kam'),
@@ -928,10 +929,10 @@ class ChangeRequestController extends Controller
         $activeTabId = $request->get('tab');
         if (!$activeTabId) {
             // Get the first workflow that has top management CRs
-            $firstWorkflow = \App\Models\WorkFlowType::whereHas('changeRequests', function($query) {
+            $firstWorkflow = \App\Models\WorkFlowType::whereHas('changeRequests', function ($query) {
                 $query->where('top_management', '1');
             })
-                ->active()
+                ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
                 ->orderBy('id')
                 ->first();
 
@@ -939,11 +940,11 @@ class ChangeRequestController extends Controller
         }
 
         // Get all workflow types that have CRs with top_management = 1 and parent_id is not null
-        $workflows_with_top_management_crs = \App\Models\WorkFlowType::whereHas('changeRequests', function($query) {
+        $workflows_with_top_management_crs = \App\Models\WorkFlowType::whereHas('changeRequests', function ($query) {
             $query->where('top_management', '1');
         })
             ->whereNotNull('parent_id')
-            ->active()
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->orderBy('id')
             ->get();
 
@@ -1254,7 +1255,7 @@ class ChangeRequestController extends Controller
         }
 
         return $query;
-        return $this->changeRequestService->list_crs_by_user($request);
+        //    return $this->changeRequestService->list_crs_by_user($request);
     }
 
     public function updateManDaysDate(Request $request)

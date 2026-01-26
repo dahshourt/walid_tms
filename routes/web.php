@@ -343,6 +343,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/cr-current-status', [ReportController::class, 'crCurrentStatus'])->name('reports.cr_current_status');
         Route::get('/cr-crossed-sla', [ReportController::class, 'crCrossedSla'])->name('reports.cr_crossed_sla');
         Route::get('/rejected-crs', [ReportController::class, 'rejectedCrs'])->name('reports.rejected_crs');
+        Route::get('/sla-report', [ReportController::class, 'slaReport'])->name('reports.sla_report');
+        Route::get('/kpi-report', [ReportController::class, 'kpiReport'])->name('reports.kpi_report');
 
         Route::post('/cr-current-status', [ReportController::class, 'crCurrentStatus'])->name('report.current-status');
         Route::post('/cr-current-status/export', [ReportController::class, 'exportCurrentStatus'])->name('report.current-status.export');

@@ -983,4 +983,741 @@ $query = "
 
         return Excel::download(new TableExport($filters), 'current_status.xlsx');
     }
+
+    /**
+     * Show SLA Report page
+     */
+    public function slaReport(Request $request)
+    {
+        $from_date = $request->input('from_date');
+        $to_date = $request->input('to_date');
+        $unit_id = $request->input('unit_id');
+        $status_name = $request->input('status_name');
+        $department_id = $request->input('department_id');
+
+        // Dynamic ID fetching for consistency, though seeding implies a fixed name
+        $department_field_id = \DB::table('custom_fields')->where('name', 'requester_department')->value('id');
+
+        $query = "
+WITH designprogress_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        user_id,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+    FROM change_request_statuses
+    WHERE new_status_id = 15
+),
+ pend_design_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+    FROM change_request_statuses
+    WHERE new_status_id = 7
+),
+    pend_implementaion_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        user_id,
+        group_id,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+    FROM change_request_statuses
+    WHERE new_status_id = 8
+),
+technical_implementation_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        group_id,
+        user_id,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+    FROM change_request_statuses
+    WHERE new_status_id = 10
+),
+    pend_testing_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        user_id,
+        group_id,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+    FROM change_request_statuses
+    WHERE new_status_id = 11
+)
+SELECT 
+    req.cr_no,
+    categry.`name` AS 'Category',
+    stat.status_name AS 'Current Status',
+    req.requester_name,
+    apps.`name` AS 'Targeted System',
+    technical_team.title AS 'Technical Team',
+    IF(req.start_design_time > 0 AND req.end_design_time > 0, 'Design', 'No Design') AS 'Design Status',
+    IF(req.start_test_time > 0 AND req.end_test_time > 0, 'Testing', 'No Testing') AS 'Testing Status',
+    
+    -- Business Validation
+    IF(
+        IF(sla_busns_val.sla_type_unit = 'day', 
+           (TIMESTAMPDIFF(DAY, busnes_valid_stats.created_at, busnes_valid_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, busnes_valid_stats.created_at, busnes_valid_stats.updated_at) + WEEKDAY(busnes_valid_stats.created_at) + 1) / 7) * 2)),
+           (TIMESTAMPDIFF(DAY, busnes_valid_stats.created_at, busnes_valid_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, busnes_valid_stats.created_at, busnes_valid_stats.updated_at) + WEEKDAY(busnes_valid_stats.created_at) + 1) / 7) * 2)) * 8
+        ) <= sla_busns_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
+    ) AS 'Business Validation',
+
+    -- Testing Estimation
+    IF(
+        IF(tstig_est_val.sla_type_unit = 'day', 
+           (TIMESTAMPDIFF(DAY, tstig_est_stats.created_at, tstig_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tstig_est_stats.created_at, tstig_est_stats.updated_at) + WEEKDAY(tstig_est_stats.created_at) + 1) / 7) * 2)),
+           (TIMESTAMPDIFF(DAY, tstig_est_stats.created_at, tstig_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tstig_est_stats.created_at, tstig_est_stats.updated_at) + WEEKDAY(tstig_est_stats.created_at) + 1) / 7) * 2)) * 8
+        ) <= tstig_est_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
+    ) AS 'Testing Estimation',
+
+    -- Design Estimation
+    IF(
+        IF(dsign_est_val.sla_type_unit = 'day', 
+           (TIMESTAMPDIFF(DAY, dsign_est_stats.created_at, dsign_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, dsign_est_stats.created_at, dsign_est_stats.updated_at) + WEEKDAY(dsign_est_stats.created_at) + 1) / 7) * 2)),
+           (TIMESTAMPDIFF(DAY, dsign_est_stats.created_at, dsign_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, dsign_est_stats.created_at, dsign_est_stats.updated_at) + WEEKDAY(dsign_est_stats.created_at) + 1) / 7) * 2)) * 8
+        ) <= dsign_est_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
+    ) AS 'Design Estimation',
+
+    -- Technical Estimation
+    IF(
+        IF(tech_est_val.sla_type_unit = 'day', 
+           (TIMESTAMPDIFF(DAY, tech_est_stats.created_at, tech_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tech_est_stats.created_at, tech_est_stats.updated_at) + WEEKDAY(tech_est_stats.created_at) + 1) / 7) * 2)),
+           (TIMESTAMPDIFF(DAY, tech_est_stats.created_at, tech_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tech_est_stats.created_at, tech_est_stats.updated_at) + WEEKDAY(tech_est_stats.created_at) + 1) / 7) * 2)) * 8
+        ) <= tech_est_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
+    ) AS 'Technical Estimation',
+
+    -- Pending Design Document Approval QC 
+    IF(
+        IF(pedig_dishn_doc_appov_val.sla_type_unit = 'day', 
+           (TIMESTAMPDIFF(DAY, pedig_dishn_doc_appov_stats.created_at, pedig_dishn_doc_appov_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, pedig_dishn_doc_appov_stats.created_at, pedig_dishn_doc_appov_stats.updated_at) + WEEKDAY(pedig_dishn_doc_appov_stats.created_at) + 1) / 7) * 2)),
+           (TIMESTAMPDIFF(DAY, pedig_dishn_doc_appov_stats.created_at, pedig_dishn_doc_appov_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, pedig_dishn_doc_appov_stats.created_at, pedig_dishn_doc_appov_stats.updated_at) + WEEKDAY(pedig_dishn_doc_appov_stats.created_at) + 1) / 7) * 2)) * 8
+        ) <= pedig_dishn_doc_appov_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
+    ) AS 'Pending Design Document Approval QC ',
+
+    -- Pending Design Document Approval DEV
+    IF(
+        IF(pedig_dishn_doc_dev_appov_val.sla_type_unit = 'day', 
+           (TIMESTAMPDIFF(DAY, pedig_dishn_doc_dev_appov_stats.created_at, pedig_dishn_doc_dev_appov_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, pedig_dishn_doc_dev_appov_stats.created_at, pedig_dishn_doc_dev_appov_stats.updated_at) + WEEKDAY(pedig_dishn_doc_dev_appov_stats.created_at) + 1) / 7) * 2)),
+           (TIMESTAMPDIFF(DAY, pedig_dishn_doc_dev_appov_stats.created_at, pedig_dishn_doc_dev_appov_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, pedig_dishn_doc_dev_appov_stats.created_at, pedig_dishn_doc_dev_appov_stats.updated_at) + WEEKDAY(pedig_dishn_doc_dev_appov_stats.created_at) + 1) / 7) * 2)) * 8
+        ) <= pedig_dishn_doc_dev_appov_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
+    ) AS 'Pending Design Document Approval DEV ',
+
+    -- Technical Test Case Approval
+    IF(
+        IF(tech_tst_apprvl_val.sla_type_unit = 'day', 
+           (TIMESTAMPDIFF(DAY, tech_tst_apprvl_stats.created_at, tech_tst_apprvl_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tech_tst_apprvl_stats.created_at, tech_tst_apprvl_stats.updated_at) + WEEKDAY(tech_tst_apprvl_stats.created_at) + 1) / 7) * 2)),
+           (TIMESTAMPDIFF(DAY, tech_tst_apprvl_stats.created_at, tech_tst_apprvl_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tech_tst_apprvl_stats.created_at, tech_tst_apprvl_stats.updated_at) + WEEKDAY(tech_tst_apprvl_stats.created_at) + 1) / 7) * 2)) * 8
+        ) <= tech_tst_apprvl_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
+    ) AS 'Technical Test Case Approval',
+
+    -- Design Test Case Approval
+    IF(
+        IF(dsgn_tst_apprvl_val.sla_type_unit = 'day', 
+           (TIMESTAMPDIFF(DAY, dsgn_tst_apprvl_stats.created_at, dsgn_tst_apprvl_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, dsgn_tst_apprvl_stats.created_at, dsgn_tst_apprvl_stats.updated_at) + WEEKDAY(dsgn_tst_apprvl_stats.created_at) + 1) / 7) * 2)),
+           (TIMESTAMPDIFF(DAY, dsgn_tst_apprvl_stats.created_at, dsgn_tst_apprvl_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, dsgn_tst_apprvl_stats.created_at, dsgn_tst_apprvl_stats.updated_at) + WEEKDAY(dsgn_tst_apprvl_stats.created_at) + 1) / 7) * 2)) * 8
+        ) <= dsgn_tst_apprvl_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
+    ) AS 'Design Test Case Approval',
+
+    -- Business Test Case Approval
+    IF(
+        IF(bsns_tst_apprvl_val.sla_type_unit = 'day', 
+           (TIMESTAMPDIFF(DAY, bsns_tst_apprvl_stats.created_at, bsns_tst_apprvl_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, bsns_tst_apprvl_stats.created_at, bsns_tst_apprvl_stats.updated_at) + WEEKDAY(bsns_tst_apprvl_stats.created_at) + 1) / 7) * 2)),
+           (TIMESTAMPDIFF(DAY, bsns_tst_apprvl_stats.created_at, bsns_tst_apprvl_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, bsns_tst_apprvl_stats.created_at, bsns_tst_apprvl_stats.updated_at) + WEEKDAY(bsns_tst_apprvl_stats.created_at) + 1) / 7) * 2)) * 8
+        ) <= bsns_tst_apprvl_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
+    ) AS 'Business Test Case Approval',
+
+    -- RollBack
+    IF(
+        IF(rollback_val.sla_type_unit = 'day', 
+           (TIMESTAMPDIFF(DAY, rollback_stats.created_at, rollback_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, rollback_stats.created_at, rollback_stats.updated_at) + WEEKDAY(rollback_stats.created_at) + 1) / 7) * 2)),
+           (TIMESTAMPDIFF(DAY, rollback_stats.created_at, rollback_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, rollback_stats.created_at, rollback_stats.updated_at) + WEEKDAY(rollback_stats.created_at) + 1) / 7) * 2)) * 8
+        ) <= rollback_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
+    ) AS 'RollBack',
+
+    -- Sanity Check
+    IF(
+        IF(sanity_val.sla_type_unit = 'day', 
+           (TIMESTAMPDIFF(DAY, sanity_stats.created_at, sanity_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, sanity_stats.created_at, sanity_stats.updated_at) + WEEKDAY(sanity_stats.created_at) + 1) / 7) * 2)),
+           (TIMESTAMPDIFF(DAY, sanity_stats.created_at, sanity_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, sanity_stats.created_at, sanity_stats.updated_at) + WEEKDAY(sanity_stats.created_at) + 1) / 7) * 2)) * 8
+        ) <= sanity_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
+    ) AS 'Sanity Check',
+
+    -- Health Check
+    IF(
+        IF(health_val.sla_type_unit = 'day', 
+           (TIMESTAMPDIFF(DAY, health_stats.created_at, health_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, health_stats.created_at, health_stats.updated_at) + WEEKDAY(health_stats.created_at) + 1) / 7) * 2)),
+           (TIMESTAMPDIFF(DAY, health_stats.created_at, health_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, health_stats.created_at, health_stats.updated_at) + WEEKDAY(health_stats.created_at) + 1) / 7) * 2)) * 8
+        ) <= health_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
+    ) AS 'Health Check',
+        -- Design Estimation Comparison
+    IF(
+        -- Actual Duration (8-hour work day, excluding Fri/Sat)
+        ((TIMESTAMPDIFF(DAY, designprogress.created_at, designprogress.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, designprogress.created_at, designprogress.updated_at) + WEEKDAY(designprogress.created_at) + 1) / 7) * 2)) * 8) 
+        <= 
+        -- Planned Duration (8-hour work day, excluding Fri/Sat)
+        ((TIMESTAMPDIFF(DAY, req.start_design_time, req.end_design_time) - (FLOOR((TIMESTAMPDIFF(DAY, req.start_design_time, req.end_design_time) + WEEKDAY(req.start_design_time) + 1) / 7) * 2)) * 8),
+        'Meet', 'Not Meet'
+    ) AS 'Design Estimation Comparison',
+
+    -- Technical Implementation Comparison
+    IF(
+        -- Actual Duration (8-hour work day, excluding Fri/Sat)
+        ((TIMESTAMPDIFF(DAY, tetch_implt_start.created_at, tetch_implt_start.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tetch_implt_start.created_at, tetch_implt_start.updated_at) + WEEKDAY(tetch_implt_start.created_at) + 1) / 7) * 2)) * 8) 
+        <= 
+        -- Planned Duration (8-hour work day, excluding Fri/Sat)
+        ((TIMESTAMPDIFF(DAY, req.start_develop_time, req.end_develop_time) - (FLOOR((TIMESTAMPDIFF(DAY, req.start_develop_time, req.end_develop_time) + WEEKDAY(req.start_develop_time) + 1) / 7) * 2)) * 8),
+        'Meet', 'Not Meet'
+    ) AS 'Technical Estimation Comparison',
+
+    -- Testing Estimation Comparison
+    IF(
+        -- Actual Duration (8-hour work day, excluding Fri/Sat)
+        ((TIMESTAMPDIFF(DAY, pend_test.created_at, pend_test.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, pend_test.created_at, pend_test.updated_at) + WEEKDAY(pend_test.created_at) + 1) / 7) * 2)) * 8) 
+        <= 
+        -- Planned Duration (8-hour work day, excluding Fri/Sat)
+        ((TIMESTAMPDIFF(DAY, req.start_test_time, req.end_test_time) - (FLOOR((TIMESTAMPDIFF(DAY, req.start_test_time, req.end_test_time) + WEEKDAY(req.start_test_time) + 1) / 7) * 2)) * 8),
+        'Meet', 'Not Meet'
+    ) AS 'Testing Estimation Comparison'
+        
+         
+
+FROM change_request AS req
+LEFT JOIN applications AS apps ON apps.id = req.application_id
+LEFT JOIN change_request_statuses AS curr_status ON curr_status.cr_id = req.id AND curr_status.`active` = '1'
+LEFT JOIN statuses AS stat ON stat.id = curr_status.new_status_id 
+LEFT JOIN change_request_custom_fields AS req_csut_feld ON req_csut_feld.cr_id = req.id AND req_csut_feld.custom_field_id = ?
+
+-- Latest Status Lookups
+LEFT JOIN change_request_statuses AS busnes_valid_stats ON busnes_valid_stats.id = (SELECT MAX(id) FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = '18')
+LEFT JOIN change_request_statuses AS tstig_est_stats ON tstig_est_stats.id = (SELECT MAX(id) FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = '6')
+LEFT JOIN change_request_statuses AS dsign_est_stats ON dsign_est_stats.id = (SELECT MAX(id) FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = '3')
+LEFT JOIN change_request_statuses AS tech_est_stats ON tech_est_stats.id = (SELECT MAX(id) FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = '4')
+LEFT JOIN change_request_statuses AS pedig_dishn_doc_appov_stats ON pedig_dishn_doc_appov_stats.id = (SELECT MAX(id) FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = '72')
+LEFT JOIN change_request_statuses AS pedig_dishn_doc_dev_appov_stats ON pedig_dishn_doc_dev_appov_stats.id = (SELECT MAX(id) FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = '71')
+LEFT JOIN change_request_statuses AS tech_tst_apprvl_stats ON tech_tst_apprvl_stats.id = (SELECT MAX(id) FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = '39')
+LEFT JOIN change_request_statuses AS dsgn_tst_apprvl_stats ON dsgn_tst_apprvl_stats.id = (SELECT MAX(id) FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = '40')
+LEFT JOIN change_request_statuses AS bsns_tst_apprvl_stats ON bsns_tst_apprvl_stats.id = (SELECT MAX(id) FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = '41')
+LEFT JOIN change_request_statuses AS rollback_stats ON rollback_stats.id = (SELECT MAX(id) FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = '29')
+LEFT JOIN change_request_statuses AS sanity_stats ON sanity_stats.id = (SELECT MAX(id) FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = '21')
+LEFT JOIN change_request_statuses AS health_stats ON health_stats.id = (SELECT MAX(id) FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = '48')
+
+-- SLA Joins
+LEFT JOIN sla_calculations AS sla_busns_val ON sla_busns_val.status_id = '18'
+LEFT JOIN sla_calculations AS tstig_est_val ON tstig_est_val.status_id = '6'
+LEFT JOIN sla_calculations AS dsign_est_val ON dsign_est_val.status_id = '3'
+LEFT JOIN sla_calculations AS tech_est_val ON tech_est_val.status_id = '4'
+LEFT JOIN sla_calculations AS pedig_dishn_doc_appov_val ON pedig_dishn_doc_appov_val.status_id = '72'
+LEFT JOIN sla_calculations AS pedig_dishn_doc_dev_appov_val ON pedig_dishn_doc_dev_appov_val.status_id = '71'
+LEFT JOIN sla_calculations AS tech_tst_apprvl_val ON tech_tst_apprvl_val.status_id = '39'
+LEFT JOIN sla_calculations AS dsgn_tst_apprvl_val ON dsgn_tst_apprvl_val.status_id = '40'
+LEFT JOIN sla_calculations AS bsns_tst_apprvl_val ON bsns_tst_apprvl_val.status_id = '41'
+LEFT JOIN sla_calculations AS rollback_val ON rollback_val.status_id = '29'
+LEFT JOIN sla_calculations AS sanity_val ON sanity_val.status_id = '21'
+LEFT JOIN sla_calculations AS health_val ON health_val.status_id = '48'
+
+-- Technical Team
+LEFT JOIN change_request_statuses AS tetch_implt_latest ON tetch_implt_latest.id = (SELECT MAX(id) FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = 10)
+LEFT JOIN user_groups AS usr_grp ON usr_grp.user_id = tetch_implt_latest.user_id 
+LEFT JOIN `groups` AS technical_team ON technical_team.id = usr_grp.group_id 
+
+   LEFT JOIN designprogress_ranked designprogress ON designprogress.cr_id = req.id AND designprogress.rn = 1
+   LEFT JOIN technical_implementation_ranked AS tetch_implt_start ON tetch_implt_start.cr_id = req.id  AND tetch_implt_start.rn = 1
+   LEFT JOIN pend_testing_ranked pend_test ON pend_test.cr_id = req.id AND pend_test.rn = 1
+
+
+-- Category
+LEFT JOIN change_request_custom_fields AS cut_felds_cagoy ON cut_felds_cagoy.cr_id = req.id AND cut_felds_cagoy.custom_field_id = '31'
+LEFT JOIN categories AS categry ON categry.id = cut_felds_cagoy.custom_field_value
+
+
+  WHERE 1=1
+  ";
+
+        $bindings = [];
+        // Bind ID for custom field join
+        $bindings[] = $department_field_id;
+
+        if ($from_date) {
+            $query .= " AND req.created_at >= ?";
+            $bindings[] = $from_date . ' 00:00:00';
+        }
+
+        if ($to_date) {
+            $query .= " AND req.created_at <= ?";
+            $bindings[] = $to_date . ' 23:59:59';
+        }
+
+        if ($unit_id) {
+            $query .= " AND req.unit_id = ?";
+            $bindings[] = $unit_id;
+        }
+
+        if ($status_name) {
+            $query .= " AND stat.status_name = ?";
+            $bindings[] = $status_name;
+        }
+
+        if ($department_id) {
+            $department = \App\Models\RequesterDepartment::find($department_id);
+            if ($department) {
+                $query .= " AND req_csut_feld.custom_field_value = ?";
+                $bindings[] = $department->name;
+            }
+        }
+
+        $query .= " GROUP BY req.cr_no";
+
+        // Execute query
+        $results = collect(DB::select($query, $bindings));
+
+        // Pagination
+        $perPage = 10;
+        $page = $request->get('page', 1);
+        $currentPageItems = $results->slice(($page - 1) * $perPage, $perPage)->values();
+
+        $paginatedResults = new LengthAwarePaginator(
+            $currentPageItems,
+            $results->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        $units = \App\Models\Unit::all(); 
+        $statuses = DB::table('statuses')->select('status_name')->distinct()->orderBy('status_name')->get();
+        $departments = \App\Models\RequesterDepartment::where('active', '1')->get();
+         
+        return view('reports.sla_report', [
+            'results' => $paginatedResults,
+            'units' => $units,
+            'statuses' => $statuses,
+            'departments' => $departments
+        ]);
+    }
+
+    /**
+     * Show KPI Report page
+     */
+    public function kpiReport(Request $request)
+    {
+        $from_date = $request->input('from_date');
+        $to_date = $request->input('to_date');
+        $unit_id = $request->input('unit_id');
+        $status_name = $request->input('status_name');
+        $department_id = $request->input('department_id');
+
+        // Dynamic ID fetching for consistency
+        $department_field_id = \DB::table('custom_fields')->where('name', 'requester_department')->value('id');
+
+        $query = "
+   WITH designprogress_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        user_id,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+    FROM change_request_statuses
+    WHERE new_status_id = 15
+),
+ pend_implementaion_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        user_id,
+        group_id,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+    FROM change_request_statuses
+    WHERE new_status_id = 8
+),
+ pend_testing_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        user_id,
+        group_id,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+    FROM change_request_statuses
+    WHERE new_status_id = 11
+),
+technical_implementation_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        group_id,
+        user_id,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn
+    FROM change_request_statuses
+    WHERE new_status_id = 10
+),
+ test_in_progress_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn,
+        COUNT(*) OVER (PARTITION BY cr_id) AS total_entries -- New column to check total count
+    FROM change_request_statuses
+    WHERE new_status_id = 13
+),
+uat_in_Progress_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn,
+        COUNT(*) OVER (PARTITION BY cr_id) AS total_entries -- New column to check total count
+    FROM change_request_statuses
+    WHERE new_status_id = 42
+),
+sanity_check_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn,
+        COUNT(*) OVER (PARTITION BY cr_id) AS total_entries -- New column to check total count
+    FROM change_request_statuses
+    WHERE new_status_id = 21
+),
+health_check_ranked AS (
+    SELECT 
+        cr_id,
+        id,
+        created_at,
+        updated_at,
+        ROW_NUMBER() OVER (PARTITION BY cr_id ORDER BY id DESC) AS rn,
+        COUNT(*) OVER (PARTITION BY cr_id) AS total_entries -- New column to check total count
+    FROM change_request_statuses
+    WHERE new_status_id = 48
+)
+   
+SELECT 
+    req.cr_no,
+    categry.`name` AS 'Category',
+    stat.status_name AS 'Current Status',
+    req.requester_name,
+    apps.`name` AS 'Targeted System',
+    technical_team.title AS 'Technical Team',
+    IF(req.start_design_time > 0 AND req.end_design_time > 0, 'Design', 'No Design') AS 'Design Status',
+    IF(req.start_test_time > 0 AND req.end_test_time > 0, 'Testing', 'No Testing') AS 'Testing Status',
+
+    -- Design Estimation Comparison
+    IF(
+        -- Actual Duration (8-hour work day, excluding Fri/Sat)
+        ((TIMESTAMPDIFF(DAY, designprogress.created_at, designprogress.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, designprogress.created_at, designprogress.updated_at) + WEEKDAY(designprogress.created_at) + 1) / 7) * 2)) * 8) 
+        <= 
+        -- Planned Duration (8-hour work day, excluding Fri/Sat)
+        ((TIMESTAMPDIFF(DAY, req.start_design_time, req.end_design_time) - (FLOOR((TIMESTAMPDIFF(DAY, req.start_design_time, req.end_design_time) + WEEKDAY(req.start_design_time) + 1) / 7) * 2)) * 8),
+        'Meet', 'Not Meet'
+    ) AS 'Design Estimation',
+
+    -- Technical Implementation Comparison
+    IF(
+        -- Actual Duration (8-hour work day, excluding Fri/Sat)
+        ((TIMESTAMPDIFF(DAY, tetch_implt_start.created_at, tetch_implt_start.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tetch_implt_start.created_at, tetch_implt_start.updated_at) + WEEKDAY(tetch_implt_start.created_at) + 1) / 7) * 2)) * 8) 
+        <= 
+        -- Planned Duration (8-hour work day, excluding Fri/Sat)
+        ((TIMESTAMPDIFF(DAY, req.start_develop_time, req.end_develop_time) - (FLOOR((TIMESTAMPDIFF(DAY, req.start_develop_time, req.end_develop_time) + WEEKDAY(req.start_develop_time) + 1) / 7) * 2)) * 8),
+        'Meet', 'Not Meet'
+    ) AS 'Technical Estimation',
+
+    -- Testing Estimation Comparison
+    IF(
+        -- Actual Duration (8-hour work day, excluding Fri/Sat)
+        ((TIMESTAMPDIFF(DAY, pend_test.created_at, pend_test.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, pend_test.created_at, pend_test.updated_at) + WEEKDAY(pend_test.created_at) + 1) / 7) * 2)) * 8) 
+        <= 
+        -- Planned Duration (8-hour work day, excluding Fri/Sat)
+        ((TIMESTAMPDIFF(DAY, req.start_test_time, req.end_test_time) - (FLOOR((TIMESTAMPDIFF(DAY, req.start_test_time, req.end_test_time) + WEEKDAY(req.start_test_time) + 1) / 7) * 2)) * 8),
+        'Meet', 'Not Meet'
+    ) AS 'Testing Estimation',
+   
+   -- Test InProgress vs Rework Logic
+    CASE 
+        WHEN pendig_rework_after_test_inprogress.created_at IS NULL THEN 'NA'
+        WHEN pendig_rework_after_test_inprogress.created_at > test_in_progress_rnk.created_at THEN 'Not Meet'
+        ELSE 'Meet'
+    END AS 'Test in Progress',
+    -- UAT In Progress vs Rework 
+    CASE 
+        WHEN pendig_rework_after_uat_inprogress.created_at IS NULL THEN 'NA'
+        WHEN pendig_rework_after_uat_inprogress.created_at > uat_in_progress_rnk.created_at THEN 'Not Meet'
+        ELSE 'Meet'
+    END AS 'UAT In Progress',
+    -- Sanity check VS rework 
+    CASE 
+        WHEN pendig_rework_after_sanity.created_at IS NULL THEN 'NA'
+        WHEN pendig_rework_after_sanity.created_at > sanity_check_rnk.created_at THEN 'Not Meet'
+        ELSE 'Meet'
+    END AS 'Sanity Check',
+    -- Health Check
+    CASE 
+        WHEN pendig_rework_after_health.created_at IS NULL THEN 'NA'
+        WHEN pendig_rework_after_health.created_at > health_check_rnk.created_at THEN 'Not Meet'
+        ELSE 'Meet'
+    END AS 'Healthy Check',
+    (SELECT COUNT(*) 
+ FROM change_request_statuses 
+ WHERE cr_id = req.id AND new_status_id = 31) AS 'Count-Required Info',
+IF(
+        COALESCE(
+            (SELECT SUM(
+                (TIMESTAMPDIFF(DAY, created_at, updated_at) - 
+                (FLOOR((TIMESTAMPDIFF(DAY, created_at, updated_at) + WEEKDAY(created_at) + 1) / 7) * 2)) * 8 
+                + (TIMESTAMPDIFF(HOUR, created_at, updated_at) % 24) -- Captures partial day hours
+            )
+            FROM change_request_statuses 
+            WHERE cr_id = req.id AND new_status_id = 31), 
+        0) <= 2, 'Meet', 'Not Meet'
+    ) AS 'Time -Required Info',
+     (SELECT COUNT(*) 
+ FROM change_request_statuses 
+ WHERE cr_id = req.id AND new_status_id = 7) AS 'Count-Design Rework',
+ 
+ IF(
+        -- ACTUAL REWORK DURATION (Status 7)
+        COALESCE((
+            SELECT SUM((TIMESTAMPDIFF(DAY, created_at, updated_at) - 
+                (FLOOR((TIMESTAMPDIFF(DAY, created_at, updated_at) + WEEKDAY(created_at) + 1) / 7) * 2)) * 8)
+            FROM change_request_statuses 
+            WHERE cr_id = req.id AND new_status_id = 7
+        ), 0) 
+        <= 
+        -- 25% OF PLANNED DURATION
+        (((TIMESTAMPDIFF(DAY, req.start_design_time, req.end_design_time) - 
+            (FLOOR((TIMESTAMPDIFF(DAY, req.start_design_time, req.end_design_time) + WEEKDAY(req.start_design_time) + 1) / 7) * 2)) * 8) * 0.25),
+        
+        'Meet', 
+        'Not Meet'
+    ) AS 'Rework Time-Design Rework',
+    
+     (SELECT COUNT(*) 
+ FROM change_request_statuses 
+ WHERE cr_id = req.id AND new_status_id = 28) AS 'Rework',
+IF(
+        -- ACTUAL: Total Working Hours spent in 'Pending Rework' (Status 28)
+        COALESCE(
+            (SELECT SUM(
+                ((TIMESTAMPDIFF(DAY, created_at, updated_at) - 
+                (FLOOR((TIMESTAMPDIFF(DAY, created_at, updated_at) + WEEKDAY(created_at) + 1) / 7) * 2)) * 8)
+                + (TIMESTAMPDIFF(HOUR, created_at, updated_at) % 24)
+            )
+            FROM change_request_statuses 
+            WHERE cr_id = req.id AND new_status_id = 28), 
+        0) 
+        <= 
+        -- THRESHOLD: 25% of the Planned Technical Estimation Duration
+        (
+            ((TIMESTAMPDIFF(DAY, req.start_develop_time, req.end_develop_time) - 
+            (FLOOR((TIMESTAMPDIFF(DAY, req.start_develop_time, req.end_develop_time) + WEEKDAY(req.start_develop_time) + 1) / 7) * 2)) * 8) 
+            * 0.25
+        ), 
+        'Meet', 'Not Meet'
+    ) AS 'Time Rework',
+    
+     (SELECT COUNT(*) 
+ FROM change_request_statuses 
+ WHERE cr_id = req.id AND new_status_id = 53) AS 'Count TC-Rwork',
+ 
+ IF(
+        -- ACTUAL: Sum of all working hours in Status 53
+        COALESCE(
+            (SELECT SUM(
+                ((TIMESTAMPDIFF(DAY, created_at, updated_at) - 
+                (FLOOR((TIMESTAMPDIFF(DAY, created_at, updated_at) + WEEKDAY(created_at) + 1) / 7) * 2)) * 8)
+                + (TIMESTAMPDIFF(HOUR, created_at, updated_at) % 24)
+            )
+            FROM change_request_statuses 
+            WHERE cr_id = req.id AND new_status_id = 53), 
+        0) 
+        <= 
+        -- THRESHOLD: 25% of Testing Planned Duration
+        (
+            ((TIMESTAMPDIFF(DAY, req.start_test_time, req.end_test_time) - 
+            (FLOOR((TIMESTAMPDIFF(DAY, req.start_test_time, req.end_test_time) + WEEKDAY(req.start_test_time) + 1) / 7) * 2)) * 8) 
+            * 0.25
+        ), 
+        'Meet', 'Not Meet'
+    ) AS 'Time TC-Rwork',
+ 
+-- Delivery SLA Condition
+    IF(req.end_test_time >= pend_test.updated_at, 'Meet', 'Not Meet') AS 'Meet Delivery Date'
+
+
+FROM change_request AS req
+LEFT JOIN applications AS apps ON apps.id = req.application_id
+LEFT JOIN change_request_statuses AS curr_status ON curr_status.cr_id = req.id AND curr_status.`active` = '1'
+LEFT JOIN statuses AS stat ON stat.id = curr_status.new_status_id 
+LEFT JOIN change_request_custom_fields AS req_csut_feld ON req_csut_feld.cr_id = req.id AND req_csut_feld.custom_field_id = ?
+
+-- Design Estimation
+LEFT JOIN designprogress_ranked designprogress ON designprogress.cr_id = req.id AND designprogress.rn = 1
+LEFT JOIN pend_implementaion_ranked pend_implement ON pend_implement.cr_id = req.id AND pend_implement.rn = 1
+LEFT JOIN pend_testing_ranked pend_test ON pend_test.cr_id = req.id AND pend_test.rn = 1
+LEFT JOIN change_request_custom_fields AS ch_cus_fields ON ch_cus_fields.cr_id = req.id and ch_cus_fields.custom_field_id = 48
+LEFT JOIN technical_implementation_ranked AS tetch_implt_start ON tetch_implt_start.cr_id = req.id  AND tetch_implt_start.rn = 1
+-- Test inprogress
+LEFT JOIN test_in_progress_ranked AS test_in_progress_rnk 
+    ON test_in_progress_rnk.cr_id = req.id  
+    AND test_in_progress_rnk.rn = IF(test_in_progress_rnk.total_entries > 1, 2, 1)
+    -- Pending Rework after Test InProgress
+  LEFT JOIN change_request_statuses AS pendig_rework_after_test_inprogress ON pendig_rework_after_test_inprogress.id = (SELECT id FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = '14' and id > test_in_progress_rnk.id limit 1)
+-- UAT In Progress 
+    LEFT JOIN uat_in_Progress_ranked AS uat_in_progress_rnk 
+        ON uat_in_progress_rnk.cr_id = req.id  
+        AND uat_in_progress_rnk.rn = IF(uat_in_progress_rnk.total_entries > 1, 2, 1)
+-- Pending Rework after UAT InProgress
+  LEFT JOIN change_request_statuses AS pendig_rework_after_uat_inprogress ON pendig_rework_after_uat_inprogress.id = (SELECT id FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = '14' and id > uat_in_progress_rnk.id limit 1)
+-- Sanity check 
+LEFT JOIN sanity_check_ranked AS sanity_check_rnk 
+        ON sanity_check_rnk.cr_id = req.id  
+        AND sanity_check_rnk.rn = IF(sanity_check_rnk.total_entries > 1, 2, 1)
+-- Pending Rework after Sanity check
+  LEFT JOIN change_request_statuses AS pendig_rework_after_sanity ON pendig_rework_after_sanity.id = (SELECT id FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = '14' and id > sanity_check_rnk.id limit 1)
+-- Health Check 
+LEFT JOIN health_check_ranked AS health_check_rnk 
+        ON health_check_rnk.cr_id = req.id  
+        AND health_check_rnk.rn = IF(health_check_rnk.total_entries > 1, 2, 1)
+-- Health Check VS Rework
+  LEFT JOIN change_request_statuses AS pendig_rework_after_health ON pendig_rework_after_health.id = (SELECT id FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = '14' and id > health_check_rnk.id limit 1)
+
+
+
+-- Technical Team
+LEFT JOIN change_request_statuses AS tetch_implt_latest ON tetch_implt_latest.id = (SELECT MAX(id) FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = 10)
+LEFT JOIN user_groups AS usr_grp ON usr_grp.user_id = tetch_implt_latest.user_id 
+LEFT JOIN `groups` AS technical_team ON technical_team.id = usr_grp.group_id 
+
+-- Category
+LEFT JOIN change_request_custom_fields AS cut_felds_cagoy ON cut_felds_cagoy.cr_id = req.id AND cut_felds_cagoy.custom_field_id = '31'
+LEFT JOIN categories AS categry ON categry.id = cut_felds_cagoy.custom_field_value
+
+
+  WHERE 1=1
+  ";
+        
+        $bindings = [];
+        $bindings[] = $department_field_id;
+
+        if ($from_date) {
+            $query .= " AND req.created_at >= ?";
+            $bindings[] = $from_date . ' 00:00:00';
+        }
+
+        if ($to_date) {
+            $query .= " AND req.created_at <= ?";
+            $bindings[] = $to_date . ' 23:59:59';
+        }
+
+        if ($unit_id) {
+            $query .= " AND req.unit_id = ?";
+            $bindings[] = $unit_id;
+        }
+
+        if ($status_name) {
+            $query .= " AND stat.status_name = ?";
+            $bindings[] = $status_name;
+        }
+
+        if ($department_id) {
+            $department = \App\Models\RequesterDepartment::find($department_id);
+            if ($department) {
+                $query .= " AND req_csut_feld.custom_field_value = ?";
+                $bindings[] = $department->name;
+            }
+        }
+
+        $query .= " GROUP BY req.cr_no";
+
+        // Execute query
+        $results = collect(DB::select($query, $bindings));
+
+        // --- KPI Statistics Calculation ---
+        $kpiColumns = [
+            'Design Estimation',
+            'Technical Estimation',
+            'Testing Estimation',
+            'Test in Progress',
+            'UAT In Progress',
+            'Sanity Check',
+            'Healthy Check',
+            'Time -Required Info',
+            'Rework Time-Design Rework',
+            'Time Rework',
+            'Time TC-Rwork',
+            'Meet Delivery Date'
+        ];
+
+        $kpiStats = [];
+
+        foreach ($kpiColumns as $column) {
+            // Count rows that have a valid value (not 'NA', if applicable, though SQL returns 'NA' for some)
+            // SQL returns 'Meet', 'Not Meet', or 'NA'
+            
+            $totalApplicable = $results->filter(function ($row) use ($column) {
+                return isset($row->{$column}) && $row->{$column} !== 'NA';
+            })->count();
+
+            $meetCount = $results->filter(function ($row) use ($column) {
+                return isset($row->{$column}) && $row->{$column} === 'Meet';
+            })->count();
+
+            $percentage = $totalApplicable > 0 ? round(($meetCount / $totalApplicable) * 100, 2) : 0;
+
+            $kpiStats[] = [
+                'name' => $column,
+                'total' => $totalApplicable,
+                'meet' => $meetCount,
+                'percentage' => $percentage
+            ];
+        }
+        // ----------------------------------
+
+        // Pagination
+        $perPage = 10;
+        $page = $request->get('page', 1);
+        $currentPageItems = $results->slice(($page - 1) * $perPage, $perPage)->values();
+
+        $paginatedResults = new LengthAwarePaginator(
+            $currentPageItems,
+            $results->count(),
+            $perPage,
+            $page,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        $units = \App\Models\Unit::all(); 
+        $statuses = DB::table('statuses')->select('status_name')->distinct()->orderBy('status_name')->get();
+        $departments = \App\Models\RequesterDepartment::where('active', '1')->get();
+
+        return view('reports.kpi_report', [
+            'results' => $paginatedResults,
+            'units' => $units,
+            'statuses' => $statuses,
+            'departments' => $departments,
+            'kpiStats' => $kpiStats // Pass stats to view
+        ]);
+    }
 }

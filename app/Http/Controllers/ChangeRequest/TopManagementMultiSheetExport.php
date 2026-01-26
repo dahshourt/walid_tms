@@ -18,20 +18,20 @@ class TopManagementMultiSheetExport implements WithMultipleSheets
     public function __construct()
     {
         // Get all workflow types that have CRs with top_management = 1
-        $this->workflows = WorkFlowType::whereHas('changeRequests', function($query) {
-                $query->where('top_management', '1');
-            })
-            ->active()
+        $this->workflows = WorkFlowType::whereHas('changeRequests', function ($query) {
+            $query->where('top_management', '1');
+        })
+            ->whereRaw('CAST(active AS CHAR) = ?', ['1'])
             ->orderBy('id')
             ->get();
-        
+
         // If no workflows have top management CRs, get all active workflow types
         if ($this->workflows->count() === 0) {
             $this->workflows = WorkFlowType::active()
                 ->orderBy('id')
                 ->get();
         }
-        
+
         // Get top management CRs grouped by workflow type
         $this->topManagementCrsByWorkflow = [];
         foreach ($this->workflows as $workflow) {
@@ -49,12 +49,12 @@ class TopManagementMultiSheetExport implements WithMultipleSheets
     public function sheets(): array
     {
         $sheets = [];
-        
+
         foreach ($this->workflows as $workflow) {
             $crs = $this->topManagementCrsByWorkflow[$workflow->id] ?? collect();
             $sheets[] = new TopManagementSheetExport($workflow->name, $crs);
         }
-        
+
         return $sheets;
     }
 }
@@ -110,7 +110,7 @@ class TopManagementSheetExport implements FromCollection, WithHeadings, WithMapp
     {
         $current_status = $cr->currentRequestStatuses;
         $status_name = ($current_status && $current_status->status) ? $current_status->status->name : 'N/A';
-        
+
         return [
             $cr->cr_no,
             $cr->title,

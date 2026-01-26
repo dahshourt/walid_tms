@@ -44,122 +44,14 @@ License: You must have a valid license purchased only from themeforest(the above
 	<!--end::Layout Themes-->
 
 	<link rel="shortcut icon" href="{{asset('public/logo-icon.png')}}" />
-	<style>
-		#kt_subheader {
-			display: none;
-		}
-
-		.swal2-icon-show {
-			left: 40%;
-		}
-
-		.form-control-feedback {
-			color: red;
-		}
-
-		._change_active {
-			cursor: pointer;
-		}
-
-		.local_password_div {
-			display: none;
-		}
-
-		.same_class {
-			display: none;
-		}
-
-		.select2-container {
-			width: 100% !important;
-		}
-
-		.header-menu .menu-nav>.menu-item>.menu-link .menu-text {
-			font-size: 0.9rem !important;
-		}
-
-		.hint {
-			color: blue;
-		}
-
-		.change-request-form-field {
-			margin-bottom: 1.75rem;
-		}
 
 
-		/* === Notification Wrapper (position control) === */
-		.notification-wrapper {
-			position: absolute;
-			top: -5px;
-			right: -12px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-		}
+	<!-- All Custom styles include here -->
+	<link href="{{ asset('public/css/custom-style.css') }}" rel="stylesheet" type="text/css" />
 
-		/* === Red bubble === */
-		.notification-badge {
-			background-color: #ff3b30;
-			color: #fff;
-			font-size: 11px;
-			font-weight: 700;
-			padding: 4px 7px;
-			border-radius: 50%;
-			box-shadow: 0 0 8px rgba(255, 59, 48, 0.4);
-			z-index: 2;
-			transition: transform 0.2s ease, box-shadow 0.3s ease;
-		}
+	<link href="{{ asset('public/css/custom_change_request.css') }}" rel="stylesheet" type="text/css" />
+	<!-- All Custom styles include here -->
 
-		/* === Subtle hover bounce === */
-		.menu-link:hover .notification-badge {
-			transform: scale(1.15);
-			box-shadow: 0 0 12px rgba(255, 59, 48, 0.6);
-		}
-
-		/* === Soft animated pulse ring (like Facebook) === */
-		.notification-pulse {
-			position: absolute;
-			width: 20px;
-			height: 20px;
-			border-radius: 50%;
-			background: rgba(255, 59, 48, 0.5);
-			animation: pulseRing 1.5s infinite;
-			z-index: 1;
-		}
-
-		@keyframes pulseRing {
-			0% {
-				transform: scale(0.8);
-				opacity: 0.8;
-
-			}
-
-			70% {
-				transform: scale(1.6);
-				opacity: 0;
-			}
-
-			100% {
-				transform: scale(0.8);
-				opacity: 0;
-			}
-		}
-	</style>
-
-	<style>
-		html,
-		body {
-			overflow-x: hidden
-		}
-
-		.select2-container {
-			max-width: 100%
-		}
-
-		.select2-dropdown {
-			max-width: 100vw;
-			overflow-x: hidden
-		}
-	</style>
 
 	@stack('css')
 
