@@ -75,7 +75,7 @@
         @endif
     </div>
 @endif
-
+@push('script')
 @if($item->CustomField->name == 'test_case_approved')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -176,4 +176,4 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 @endif
 @include('change_request.partials.radio_kickoff_script')
-
+@endpush
