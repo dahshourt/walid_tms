@@ -31,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
         //
         // URL::forceRootUrl('https://10.19.44.26/index.php'); // replace with your server IP
         Paginator::useBootstrap();
+        Paginator::defaultView('pagination.modern');
         Schema::defaultstringLength(191);
     }
 }

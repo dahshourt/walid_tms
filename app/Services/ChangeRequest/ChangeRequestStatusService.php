@@ -268,113 +268,76 @@ class ChangeRequestStatusService
         // If same_time = 1, this transition requires merge point check
         return $workflowStatus->workflow->same_time == 1;
     }
-    // /public function updateChangeRequestStatus(int $changeRequestId, $request): bool
-// {
-//     try {
-//         DB::beginTransaction();
+    // public function updateChangeRequestStatus(int $changeRequestId, $request): bool
+    // {
+    //     try {
+    //         DB::beginTransaction();
 
     //         $statusData = $this->extractStatusData($request);
-
-    //         Log::info('Status transition attempt', [
-//             'cr_id' => $changeRequestId,
-//             'old_status_id' => $statusData['old_status_id'],
-//             'new_status_id' => $statusData['new_status_id']
-//         ]);
-
     //         $workflow = $this->getWorkflow($statusData);
-//         $changeRequest = $this->getChangeRequest($changeRequestId);
-//         $userId = $this->getUserId($changeRequest, $request);
+    //         $changeRequest = $this->getChangeRequest($changeRequestId);
+    //         $userId = $this->getUserId($changeRequest, $request);
 
-    //         // Get status objects
-//         $fromStatus = Status::find($statusData['old_status_id']);
-//         $toStatus = Status::find($statusData['new_status_id']);
+    //         Log::info('ChangeRequestStatusService: updateChangeRequestStatus', [
+    //             'changeRequestId' => $changeRequestId,
+    //             'statusData' => $statusData,
+    //             'workflow' => $workflow,
+    //             'changeRequest' => $changeRequest,
+    //             'userId' => $userId,
+    //         ]);
 
-    //         // Validate destination status exists
+    //         if (!$workflow) {
+    //             $newStatusId = $statusData['new_status_id'] ?? 'not set';
+    //             throw new Exception("Workflow not found for status: {$newStatusId}");
+    //         }
 
+    //         // Check if status has changed
+    //         $statusChanged = $this->validateStatusChange($changeRequest, $statusData, $workflow);
 
-    //         // ════════════════════════════════════════════════════════════
-//         // MERGE POINT CHECK
-//         // ════════════════════════════════════════════════════════════
+    //         // If status hasn't changed, just return true without throwing an error
+    //         if (!$statusChanged) {
+    //             DB::commit();
 
-    //        $mergePointStatusId = 250;
-//         $isMergePointTransition = ($statusData['old_status_id'] == $mergePointStatusId);
-//         $bothWorkflowsComplete = true;
-//         // Check if transitioning FROM the merge point
-//   if ($isMergePointTransition) {
-//             $bothWorkflowsComplete = $this->areBothWorkflowsCompleteById(
-//                 $changeRequestId, 
-//                 $mergePointStatusId
-//             );
+    //             return true;
+    //         }
 
-    //             Log::info('Merge point check', [
-//                 'cr_id' => $changeRequestId,
-//                 'both_complete' => $bothWorkflowsComplete,
-//                 'will_insert_with_active' => $bothWorkflowsComplete ? '1' : '0'
-//             ]);
-//         }
+    //         // Check for dependency hold when transitioning from Pending CAB to pending design
+    //         if ($this->isTransitionFromPendingCab($changeRequest, $statusData)) {
+    //             $depService = $this->getDependencyService();
+    //             if ($depService->shouldHoldCr($changeRequestId)) {
+    //                 // Apply dependency hold instead of transitioning
+    //                 $depService->applyDependencyHold($changeRequestId);
+    //                 Log::info('CR held due to unresolved dependencies', [
+    //                     'cr_id' => $changeRequestId,
+    //                     'cr_no' => $changeRequest->cr_no,
+    //                 ]);
+    //                 DB::commit();
 
-
-    //         // ════════════════════════════════════════════════════════════
-//         // END MERGE POINT CHECK
-//         // ════════════════════════════════════════════════════════════
+    //                 return true; // Block the transition
+    //             }
+    //         }
 
     //         $this->processStatusUpdate($changeRequest, $statusData, $workflow, $userId, $request);
-//         $this->activatePendingMergeStatus($changeRequest->id, $statusData);
+
+    //         // Fire CrDeliveredEvent if CR reached Delivered status
+    //         //$this->checkAndFireDeliveredEvent($changeRequest, $statusData);
 
     //         DB::commit();
-
-    //         Log::info('========== STATUS UPDATE COMMITTED ==========', [
-//             'cr_id' => $changeRequestId,
-//             'was_merge_point' => $isMergePoint,
-//             'both_complete' => $bothComplete
-//         ]);
-
-    //         // ════════════════════════════════════════════════════════════
-//         // AFTER INSERT is committed, optionally show message
-//         // ════════════════════════════════════════════════════════════
-
-    //         if ($isMergePoint && !$bothComplete) {
-
-    //             Log::warning('Record inserted with active=0 - showing user message', [
-//                 'cr_id' => $changeRequestId
-//             ]);
-
-    //             // Status already inserted with active=0
-//             // Show informational message to user
-//             throw new \Exception(
-//                 'Status updated successfully. However, this status is pending and will become active when both Workflow A and Workflow B complete and reach "Pending Update Agreed Requirements".'
-//             );
-//         }
-
-    //         // Fire event if no message
-//         $this->checkAndFireDeliveredEvent($changeRequest, $statusData);
+    //         // Fire CrDeliveredEvent if CR reached Delivered status
+    //         $this->checkAndFireDeliveredEvent($changeRequest, $statusData);
 
     //         return true;
 
     //     } catch (Exception $e) {
-
-    //         // Check if this is our informational message
-//         $isInfoMessage = strpos($e->getMessage(), 'Status updated successfully') !== false;
-
-    //         if ($isInfoMessage) {
-//             // Record already committed, just showing message
-//             Log::info('User message displayed (record already saved with active=0)', [
-//                 'cr_id' => $changeRequestId
-//             ]);
-//             throw $e;
-//         }
-
-    //         // Real error - rollback
-//         DB::rollback();
-
+    //         DB::rollback();
     //         Log::error('Error updating change request status', [
-//             'change_request_id' => $changeRequestId,
-//             'error' => $e->getMessage()
-//         ]);
-
+    //             'change_request_id' => $changeRequestId,
+    //             'error' => $e->getMessage(),
+    //             'trace' => $e->getTraceAsString(),
+    //         ]);
     //         throw $e;
-//     }
-// }
+    //     }
+    // }
 
     public function updateChangeRequestStatus(int $changeRequestId, $request): bool
     {
@@ -385,6 +348,22 @@ class ChangeRequestStatusService
             $workflow = $this->getWorkflow($statusData);
             $changeRequest = $this->getChangeRequest($changeRequestId);
             $userId = $this->getUserId($changeRequest, $request);
+
+
+            if ($this->isTransitionFromPendingCab($changeRequest, $statusData)) {
+                $depService = $this->getDependencyService();
+                if ($depService->shouldHoldCr($changeRequestId)) {
+                    // Apply dependency hold instead of transitioning
+                    $depService->applyDependencyHold($changeRequestId);
+                    Log::info('CR held due to unresolved dependencies', [
+                        'cr_id' => $changeRequestId,
+                        'cr_no' => $changeRequest->cr_no,
+                    ]);
+                    DB::commit();
+
+                    return true; // Block the transition
+                }
+            }
 
             // Process update - determineActiveStatus handles merge point logic
             $this->processStatusUpdate($changeRequest, $statusData, $workflow, $userId, $request);

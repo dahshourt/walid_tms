@@ -230,3 +230,225 @@ body {
     max-width: 100vw;
     overflow-x: hidden
 }
+
+/* User Form Redesign */
+.form-section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #3f4254;
+    border-bottom: 1px solid #ebedf3;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+    margin-top: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.form-section-title i {
+    font-size: 1.3rem;
+    color: #3699ff;
+    margin-right: 10px;
+}
+
+.modern-form-group label {
+    font-weight: 500;
+    color: #3f4254;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.modern-form-control {
+    border: 1px solid #e4e6ef;
+    border-radius: 0.42rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s;
+    height: auto !important;
+}
+
+.modern-form-control:focus {
+    border-color: #6993ff;
+    box-shadow: 0 0 0 0.2rem rgba(105, 147, 255, 0.25);
+}
+
+/* Modern Toggle Switch for Active Status */
+.modern-toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 30px;
+}
+
+.modern-toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.modern-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ebedf3;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.modern-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+input:checked+.modern-toggle-slider {
+    background-color: #1bc5bd;
+}
+
+input:focus+.modern-toggle-slider {
+    box-shadow: 0 0 1px #1bc5bd;
+}
+
+input:checked+.modern-toggle-slider:before {
+    transform: translateX(30px);
+}
+
+.toggle-label {
+    margin-left: 15px;
+    font-weight: 500;
+    vertical-align: top;
+    line-height: 30px;
+}
+
+/* Modern Custom Checkbox */
+.modern-checkbox {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 1rem;
+    user-select: none;
+    margin-bottom: 0;
+}
+
+.modern-checkbox input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    position: relative;
+    height: 20px;
+    width: 20px;
+    background-color: #fff;
+    border: 1px solid #d1d3e0;
+    border-radius: 4px;
+    margin-right: 10px;
+    transition: all 0.2s ease;
+}
+
+.modern-checkbox:hover input~.checkmark {
+    background-color: #f8f9fa;
+    border-color: #b5b5c3;
+}
+
+.modern-checkbox input:checked~.checkmark {
+    background-color: #3699ff;
+    border-color: #3699ff;
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.modern-checkbox input:checked~.checkmark:after {
+    display: block;
+}
+
+.modern-checkbox .checkmark:after {
+    left: 7px;
+    top: 3px;
+    width: 5px;
+    height: 10px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+/* Focus state */
+.modern-checkbox input:focus~.checkmark {
+    box-shadow: 0 0 0 0.2rem rgba(54, 153, 255, 0.25);
+}
+
+/* Modern Pagination */
+.modern-pagination {
+    justify-content: center;
+    gap: 5px;
+    margin-top: 20px;
+}
+
+.modern-page-item {
+    border: none;
+    margin: 0 2px;
+}
+
+.modern-page-link {
+    border: 1px solid #ebedf3;
+    border-radius: 6px !important;
+    color: #7e8299;
+    font-weight: 500;
+    padding: 0.5rem 0.75rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    font-size: 0.95rem;
+    background-color: #fff;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.modern-page-link:hover {
+    background-color: #f3f6f9;
+    color: #3699ff;
+    border-color: #e4e6ef;
+    text-decoration: none;
+}
+
+.modern-page-item.active .modern-page-link {
+    background-color: #3699ff;
+    color: #fff;
+    border-color: #3699ff;
+    box-shadow: 0 4px 6px rgba(54, 153, 255, 0.2);
+}
+
+.modern-page-item.active .modern-page-link:hover {
+    background-color: #3699ff;
+    color: #fff;
+}
+
+.modern-page-item.disabled .modern-page-link {
+    color: #b5b5c3;
+    background-color: #f3f6f9;
+    border-color: #ebedf3;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.modern-page-link i {
+    font-size: 0.7rem;
+}
