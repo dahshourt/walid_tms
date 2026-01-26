@@ -46,7 +46,8 @@
                             </div>
                             <input type="date" class="form-control border-left-0 pl-0 focus-shadow-none"
                                 id="start_date_{{ $value->id }}" name="start_date"
-                                value="{{ $value->start_date->format('Y-m-d') }}" min="{{ date('Y-m-d') }}" required>
+                                value="{{ $value->start_date ? $value->start_date->format('Y-m-d') : null }}"
+                                min="{{ date('Y-m-d') }}" required>
                         </div>
                         <small class="form-text text-muted mt-2">
                             <i class="fas fa-info-circle mr-1"></i> End date will be automatically recalculated.
