@@ -33,7 +33,7 @@ class CustomFieldStatusRepository
 
             // Delete statuses that are not in the submitted data
             $statusesToDelete = array_diff($existingStatusIds, $submittedStatusIds);
-            if (!empty($statusesToDelete)) {
+            if (! empty($statusesToDelete)) {
                 CustomFieldStatus::where('custom_field_id', $customFieldId)
                     ->whereIn('status_id', $statusesToDelete)
                     ->delete();
@@ -41,12 +41,14 @@ class CustomFieldStatusRepository
 
             // Prepare data for upsert
             $upsertData = [];
+            $userId = auth()->id();
             foreach ($statuses as $statusData) {
                 if (isset($statusData['status_id']) && $statusData['status_id']) {
                     $upsertData[] = [
                         'custom_field_id' => $customFieldId,
                         'status_id' => $statusData['status_id'],
                         'log_message' => $statusData['log_message'],
+                        'user_id' => $userId,
                         'updated_at' => now(),
                         'created_at' => now(),
                     ];
@@ -54,11 +56,11 @@ class CustomFieldStatusRepository
             }
 
             // Use upsert to insert or update records
-            if (!empty($upsertData)) {
+            if (! empty($upsertData)) {
                 CustomFieldStatus::upsert(
                     $upsertData,
                     ['custom_field_id', 'status_id'], // Unique columns
-                    ['log_message', 'updated_at'] // Columns to update on conflict
+                    ['log_message', 'user_id'] // Columns to update on conflict
                 );
             }
         });

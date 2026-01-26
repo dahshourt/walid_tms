@@ -6,7 +6,7 @@ use App\Traits\BindsDynamically;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CustomField extends Model
 {
@@ -69,15 +69,20 @@ class CustomField extends Model
     /**
      * Get the status log messages for this custom field.
      */
-    public function customFieldStatuses(): HasMany
+    public function customFieldStatus(): HasOne
     {
-        return $this->hasMany(CustomFieldStatus::class);
+        return $this->hasOne(CustomFieldStatus::class)->latestOfMany();
     }
 
-    public function scopeLogsForStatus(Builder $query, array $statuses_ids): Builder
+    public function customFieldStatuses()
+    {
+        return $this->hasMany(CustomFieldStatus::class)();
+    }
+
+    public function scopeWithLogMessageForStatus(Builder $query, array $statuses_ids): Builder
     {
         return $query->with([
-            'customFieldStatuses' => function ($query) use ($statuses_ids) {
+            'customFieldStatus' => function ($query) use ($statuses_ids) {
                 $query->whereIn('status_id', $statuses_ids);
             },
         ]);

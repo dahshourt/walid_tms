@@ -16,6 +16,7 @@ class CustomFieldStatus extends Model
         'custom_field_id',
         'status_id',
         'log_message',
+        'user_id',
     ];
 
     /**
@@ -32,5 +33,13 @@ class CustomFieldStatus extends Model
     public function status(): BelongsTo
     {
         return $this->belongsTo(Status::class);
+    }
+
+    /**
+     * Get the user who created/updated this log message.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

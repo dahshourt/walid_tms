@@ -129,7 +129,7 @@ class LogRepository implements LogRepositoryInterface
 
         if ($request->get('new_status_id')) {
             $newStatusesIds = NewWorkFlowStatuses::where('new_workflow_id', $request->get('new_status_id'))->pluck('to_status_id')->toArray();
-            $customFieldsQuery->logsForStatus($newStatusesIds);
+            $customFieldsQuery->withLogMessageForStatus($newStatusesIds);
         }
 
         $customFields = $customFieldsQuery->get();
@@ -140,7 +140,7 @@ class LogRepository implements LogRepositoryInterface
 
             // Fallback message if label is null
             $label = $cf->label ?: Str::of($cf->name)->replace('_', ' ')->title();
-            $cf_log_message = $cf->log_message ?? $cf_default_log_message;
+            $cf_log_message = $cf->customFieldStatus?->log_message ?? $cf->log_message ?? $cf_default_log_message;
 
             $base = [];
 
