@@ -141,7 +141,9 @@ class LogRepository implements LogRepositoryInterface
 
             $base = [];
 
-            $base['old_value'] = json_decode($change_request->changeRequestCustomFields->where('custom_field_name', $cf->name)->last()?->custom_field_value, true);
+            $latest_value = $change_request->changeRequestCustomFields->where('custom_field_name', $cf->name)->last()?->custom_field_value;
+
+            $base['old_value'] = json_decode($latest_value, true);
 
             if (in_array($cf->type, ['multiselect', 'select'], true)) {
                 $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name});
