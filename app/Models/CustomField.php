@@ -62,4 +62,12 @@ class CustomField extends Model
     {
         return $this->setTableName($this->related_table)->getCustomDataByDynamicTable($selected, $columnName, $pluckColumn);
     }
+
+    /**
+     * Get the status log messages for this custom field.
+     */
+    public function customFieldStatuses()
+    {
+        return $this->hasMany(CustomFieldStatus::class);
+    }
 }
