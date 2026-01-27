@@ -147,13 +147,16 @@
         <div class="form-group">
             <label for="log_message">
                 Log Message
-                <button type="button" class="btn btn-sm btn-light-primary ml-2" onclick="insertPlaceholder('log_message', ':cf_label')">
+                <button type="button" class="btn btn-sm btn-light-primary ml-2"
+                        onclick="insertPlaceholder('log_message', ':cf_label')">
                     CF Label
                 </button>
-                <button type="button" class="btn btn-sm btn-light-primary ml-1" onclick="insertPlaceholder('log_message', ':cf_value')">
+                <button type="button" class="btn btn-sm btn-light-primary ml-1"
+                        onclick="insertPlaceholder('log_message', ':cf_value')">
                     CF Value
                 </button>
-                <button type="button" class="btn btn-sm btn-light-primary ml-1" onclick="insertPlaceholder('log_message', ':user_name')">
+                <button type="button" class="btn btn-sm btn-light-primary ml-1"
+                        onclick="insertPlaceholder('log_message', ':user_name')">
                     User Name
                 </button>
             </label>
@@ -171,20 +174,22 @@
 </div>
 
 @if(isset($row) && $row->id)
-<div class="row">
-    <div class="col-lg-12">
-        <div class="form-group">
-            <button type="button" class="btn btn-primary" id="btn-log-messages" data-custom-field-id="{{ $row->id }}">
-                <i class="la la-comment"></i>
-                Log messages
-            </button>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="form-group">
+                <button type="button" class="btn btn-primary" id="btn-log-messages"
+                        data-custom-field-id="{{ $row->id }}">
+                    <i class="la la-comment"></i>
+                    Log messages
+                </button>
+            </div>
         </div>
     </div>
-</div>
 @endif
 
 <!-- Log Messages Modal -->
-<div class="modal fade" id="logMessagesModal" tabindex="-1" role="dialog" aria-labelledby="logMessagesModalLabel" aria-hidden="true">
+<div class="modal fade" id="logMessagesModal" tabindex="-1" role="dialog" aria-labelledby="logMessagesModalLabel"
+     aria-hidden="true">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -229,50 +234,50 @@
 
 
 @push('css')
-<style>
-    /* Clean Modal Styles */
-    #logMessagesModal .modal-body {
-        padding: 1.5rem;
-    }
-    
-    #logMessagesModal .log-message-row {
-        transition: all 0.2s ease;
-        padding-right: 3rem !important; /* Make room for X button */
-    }
-    
-    #logMessagesModal .log-message-row:hover {
-        box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
-    }
-    
-    #logMessagesModal .form-group {
-        margin-bottom: 1rem;
-    }
-    
-    #logMessagesModal .form-group label {
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: #495057;
-    }
-    
-    #logMessagesModal .log-message-textarea {
-        resize: vertical;
-        min-height: 80px;
-    }
-    
-    #logMessagesModal .btn-delete-log-message-row {
-        width: 28px;
-        height: 28px;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-    }
-    
-    #logMessagesModal .btn-delete-log-message-row i {
-        font-size: 1rem;
-    }
-</style>
+    <style>
+        /* Clean Modal Styles */
+        #logMessagesModal .modal-body {
+            padding: 1.5rem;
+        }
+
+        #logMessagesModal .log-message-row {
+            transition: all 0.2s ease;
+            padding-right: 3rem !important; /* Make room for X button */
+        }
+
+        #logMessagesModal .log-message-row:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        #logMessagesModal .form-group {
+            margin-bottom: 1rem;
+        }
+
+        #logMessagesModal .form-group label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        #logMessagesModal .log-message-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        #logMessagesModal .btn-delete-log-message-row {
+            width: 28px;
+            height: 28px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        #logMessagesModal .btn-delete-log-message-row i {
+            font-size: 1rem;
+        }
+    </style>
 @endpush
 
 @push('script')
@@ -481,18 +486,18 @@
         function insertPlaceholderInModal(textareaId, placeholder) {
             var textarea = document.getElementById(textareaId);
             if (!textarea) return;
-            
+
             var start = textarea.selectionStart;
             var end = textarea.selectionEnd;
             var text = textarea.value;
-            
+
             // Insert placeholder at cursor position
             textarea.value = text.substring(0, start) + placeholder + text.substring(end);
-            
+
             // Set cursor position after inserted text
             var newPosition = start + placeholder.length;
             textarea.setSelectionRange(newPosition, newPosition);
-            
+
             // Focus the textarea
             textarea.focus();
         }
@@ -501,18 +506,18 @@
         function insertPlaceholder(textareaId, placeholder) {
             var textarea = document.getElementById(textareaId);
             if (!textarea) return;
-            
+
             var start = textarea.selectionStart;
             var end = textarea.selectionEnd;
             var text = textarea.value;
-            
+
             // Insert placeholder at cursor position
             textarea.value = text.substring(0, start) + placeholder + text.substring(end);
-            
+
             // Set cursor position after inserted text
             var newPosition = start + placeholder.length;
             textarea.setSelectionRange(newPosition, newPosition);
-            
+
             // Focus the textarea
             textarea.focus();
         }
@@ -523,18 +528,18 @@
         var customFieldId = null;
 
         // Initialize log messages functionality
-        $(document).ready(function() {
+        $(document).ready(function () {
             // Get custom field ID from button
             var $btnLogMessages = $('#btn-log-messages');
             if ($btnLogMessages.length) {
                 customFieldId = $btnLogMessages.data('custom-field-id');
-                
+
                 // Load statuses on page load
                 loadStatuses();
             }
 
             // Open modal button click
-            $(document).on('click', '#btn-log-messages', function() {
+            $(document).on('click', '#btn-log-messages', function () {
                 customFieldId = $(this).data('custom-field-id');
                 if (!customFieldId) {
                     Swal.fire({
@@ -548,22 +553,22 @@
             });
 
             // Add new row button
-            $(document).on('click', '#btn-add-log-message-row', function() {
+            $(document).on('click', '#btn-add-log-message-row', function () {
                 addLogMessageRow();
             });
 
             // Delete row button
-            $(document).on('click', '.btn-delete-log-message-row', function() {
+            $(document).on('click', '.btn-delete-log-message-row', function () {
                 $(this).closest('.log-message-row').remove();
             });
 
             // Save log messages
-            $(document).on('click', '#btn-save-log-messages', function() {
+            $(document).on('click', '#btn-save-log-messages', function () {
                 saveLogMessages();
             });
 
             // Initialize select2 when modal is shown
-            $('#logMessagesModal').on('shown.bs.modal', function() {
+            $('#logMessagesModal').on('shown.bs.modal', function () {
                 $('.log-message-status-select').select2({
                     dropdownParent: $('#logMessagesModal'),
                     width: '100%'
@@ -575,12 +580,12 @@
             $.ajax({
                 url: '{{ route("custom-fields.log-messages.statuses") }}',
                 type: 'GET',
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
                         allStatuses = response.data;
                     }
                 },
-                error: function() {
+                error: function () {
                     console.error('Failed to load statuses');
                 }
             });
@@ -599,13 +604,13 @@
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
-                success: function(response) {
+                success: function (response) {
                     $('#log-messages-loader').hide();
                     $('#log-messages-content').show();
 
                     if (response.success && response.data.length > 0) {
                         // Load existing rows
-                        response.data.forEach(function(item) {
+                        response.data.forEach(function (item) {
                             addLogMessageRow(item.status_id, item.log_message);
                         });
                     } else {
@@ -613,7 +618,7 @@
                         addLogMessageRow();
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     $('#log-messages-loader').hide();
                     $('#log-messages-content').show();
                     Swal.fire({
@@ -637,13 +642,13 @@
                         <div class="col-md-4">
                             <div class="form-group mb-3">
                                 <label class="font-weight-bold text-dark mb-2">Status <span class="text-danger">*</span></label>
-                                <select class="form-control log-message-status-select kt-select2" 
-                                        name="statuses[${logMessageRowIndex}][status_id]" 
+                                <select class="form-control log-message-status-select kt-select2"
+                                        name="statuses[${logMessageRowIndex}][status_id]"
                                         data-placeholder="Select Status" required>
                                     <option value="">Select Status</option>
-                                    ${allStatuses.map(function(status) {
-                                        return `<option value="${status.id}" ${status.id == statusId ? 'selected' : ''}>${status.name}</option>`;
-                                    }).join('')}
+                                    ${allStatuses.map(function (status) {
+                return `<option value="${status.id}" ${status.id == statusId ? 'selected' : ''}>${status.name}</option>`;
+            }).join('')}
                                 </select>
                             </div>
                         </div>
@@ -663,11 +668,11 @@
                                         <i class="la la-user"></i> User Name
                                     </button>
                                 </div>
-                                <textarea class="form-control log-message-textarea" 
+                                <textarea class="form-control log-message-textarea"
                                           id="log_message_${logMessageRowIndex}"
-                                          name="statuses[${logMessageRowIndex}][log_message]" 
-                                          rows="3" 
-                                          placeholder="Enter log message" 
+                                          name="statuses[${logMessageRowIndex}][log_message]"
+                                          rows="3"
+                                          placeholder="Enter log message"
                                           required>${logMessage || ''}</textarea>
                             </div>
                         </div>
@@ -675,7 +680,7 @@
                 </div>
             `;
             $('#log-messages-repeater').append(rowHtml);
-            
+
             // Initialize select2 for the new select
             $('#logMessagesModal').find('.log-message-status-select').last().select2({
                 dropdownParent: $('#logMessagesModal'),
@@ -685,23 +690,23 @@
 
         function saveLogMessages() {
             var $saveBtn = $('#btn-save-log-messages');
-            
+
             // Collect data from all rows
             var statuses = [];
             var hasErrors = false;
             var errorMessages = [];
-            
-            $('.log-message-row').each(function() {
+
+            $('.log-message-row').each(function () {
                 var $row = $(this);
                 var $statusSelect = $row.find('.log-message-status-select');
                 var $logTextarea = $row.find('.log-message-textarea');
                 var statusId = $statusSelect.val();
                 var logMessage = $logTextarea.val().trim();
-                
+
                 // Reset validation classes
                 $statusSelect.removeClass('is-invalid');
                 $logTextarea.removeClass('is-invalid');
-                
+
                 // Validate: if log message is filled, status must be selected
                 if (logMessage && !statusId) {
                     $statusSelect.addClass('is-invalid');
@@ -711,7 +716,7 @@
                         errorMessages.push('Status is required when log message is provided.');
                     }
                 }
-                
+
                 // Validate: if status is selected, log message must be filled
                 if (statusId && !logMessage) {
                     $logTextarea.addClass('is-invalid');
@@ -720,7 +725,7 @@
                         errorMessages.push('Log message is required when status is selected.');
                     }
                 }
-                
+
                 // Only add to statuses array if both are valid
                 if (statusId && logMessage) {
                     statuses.push({
@@ -752,8 +757,11 @@
                     statuses: statuses,
                     _token: $('meta[name="csrf-token"]').attr('content')
                 },
-                success: function(response) {
+                success: function (response) {
                     if (response.success) {
+                        // Close modal
+                        $('#logMessagesModal').modal('hide');
+
                         // Show success alert
                         Swal.fire({
                             icon: 'success',
@@ -761,10 +769,7 @@
                             text: 'Log messages saved successfully!',
                             timer: 2000,
                             showConfirmButton: false
-                        }).then(function() {
-                            // Close modal
-                            $('#logMessagesModal').modal('hide');
-                            
+                        }).then(function () {
                             // Reset button
                             $saveBtn.prop('disabled', false);
                             $('#log-messages-save-loader').hide();
@@ -781,7 +786,7 @@
                         $('#log-messages-content').show();
                     }
                 },
-                error: function(xhr) {
+                error: function (xhr) {
                     var errorMessage = 'Failed to save log messages.';
                     if (xhr.responseJSON && xhr.responseJSON.message) {
                         errorMessage = xhr.responseJSON.message;
