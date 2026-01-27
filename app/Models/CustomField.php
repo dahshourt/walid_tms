@@ -79,11 +79,11 @@ class CustomField extends Model
         return $this->hasMany(CustomFieldStatus::class)();
     }
 
-    public function scopeWithLogMessageForStatus(Builder $query, array $statuses_ids): Builder
+    public function scopeWithLogMessageForStatus(Builder $query, string $status_id): Builder
     {
         return $query->with([
-            'customFieldStatus' => function ($query) use ($statuses_ids) {
-                $query->whereIn('status_id', $statuses_ids);
+            'customFieldStatus' => function ($query) use ($status_id) {
+                $query->where('status_id', $status_id);
             },
         ]);
     }
