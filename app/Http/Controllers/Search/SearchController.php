@@ -83,7 +83,7 @@ class SearchController extends Controller
         $this->authorize('Access Search');
 
         $cr = $this->changerequest->searhchangerequest(request()->search);
-        if (! $cr) {
+        if (!$cr) {
             return redirect('/searchs')->with('error', 'CR NO not exists.');
         }
         // dd($change_request_custom_fields->where('custom_field_name','title')->first()->custom_field_value);
@@ -101,7 +101,7 @@ class SearchController extends Controller
         $collection = $this->changerequest->AdvancedSearchResult()->appends(request()->query());
 
         // Ensure $collection is an instance of Illuminate\Pagination\LengthAwarePaginator
-        if (! ($collection instanceof \Illuminate\Pagination\LengthAwarePaginator)) {
+        if (!($collection instanceof \Illuminate\Pagination\LengthAwarePaginator)) {
             abort(500, 'Expected paginated collection from AdvancedSearchResult.');
         }
 
@@ -118,8 +118,8 @@ class SearchController extends Controller
     public function AdvancedSearchResultExport(request $request): BinaryFileResponse
     {
         $this->authorize('Access Advanced Search');
-//$filters = $request->only(['cr_type', 'status_ids', 'cr_nos']);
-
+        //$filters = $request->only(['cr_type', 'status_ids', 'cr_nos']);
+        //dd("here");
         // Export the filtered results as Excel
         return Excel::download(new TableExport, 'advanced_search_results.xlsx');
     }

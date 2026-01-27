@@ -73,10 +73,10 @@ $business_feedback = $cr->change_request_custom_fields->where('custom_field_name
                                 <td>{{ $value->group->title }}</td>
                                 <td>{{ $value->user->user_name }}</td>
                                 <td>{{ $value->man_day }}</td>
-                                <td>{{ $value->start_date->toDateString() }}</td>
-                                <td>{{ $value->end_date->toDateString() }}</td>
+                                <td>{{ $value->start_date ? $value->start_date->toDateString() : null }}</td>
+                                <td>{{ $value->end_date ? $value->end_date->toDateString() : null }}</td>
                                 <td>{{ $value->created_at }}</td>
-                                @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Update MDs'))
+                                @can('Update MDs')
                                     <td>
                                         <button type="button" class="btn btn-primary" data-toggle="modal"
                                             data-target="#edit-start-date-modal-{{ $value->id }}" data-bs-toggle="modal"
@@ -86,7 +86,7 @@ $business_feedback = $cr->change_request_custom_fields->where('custom_field_name
 
 
                                     </td>
-                                @endif
+                                @endcan
                             </tr>
                         @endforeach
                     </tbody>

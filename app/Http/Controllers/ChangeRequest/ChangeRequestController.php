@@ -232,8 +232,8 @@ class ChangeRequestController extends Controller
             self::FORM_TYPE_CREATE
         );
         $title = (!empty($workflow_type_id) && $workflow_type_id == 9)
-            ? "Create {$target_system->name} Promo"
-            : "Create {$target_system->name} CR";
+            ? "Create {$target_system->name} - Promo"
+            : "Create {$target_system->name} - CR";
 
         return view("{$this->view}.create", compact(
             'CustomFields',
