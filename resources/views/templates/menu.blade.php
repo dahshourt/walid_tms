@@ -1287,72 +1287,96 @@
                                     </div>
                                 </li>
                             @endcanany
-                            @can('Access Search')
-                                <li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click"
-                                    aria-haspopup="true">
-                                    <a href="{{ url('searchs') }}" class="menu-link">
-                                        <span class="menu-text">Search</span>
-                                    </a>
-                                </li>
-                            @endcan
-
-                            @can('Reports')
+                            @canany(['Access Search', 'Access Advanced Search', 'Reports'])
                                 <li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click"
                                     aria-haspopup="true">
                                     <a href="javascript:;" class="menu-link menu-toggle">
-                                        <span class="menu-text">Reports</span>
+                                        <span class="menu-text">Search & Reporting</span>
                                         <i class="menu-arrow"></i>
                                     </a>
                                     <div class="menu-submenu menu-submenu-classic menu-submenu-left">
                                         <ul class="menu-subnav">
-                                            <li class="menu-item">
-                                                <a href="{{ url('reports/actual-vs-planned') }}" class="menu-link">
-                                                    <span class="menu-text">Actual vs planned</span>
-                                                </a>
-                                            </li>
-                                            <li class="menu-item">
-                                                <a href="{{ url('reports/all-crs-by-requester') }}" class="menu-link">
-                                                    <span class="menu-text">All CRs by requester</span>
-                                                </a>
-                                            </li>
-                                            <li class="menu-item">
-                                                <a href="{{ url('reports/cr-current-status') }}" class="menu-link">
-                                                    <span class="menu-text">CR Current Status</span>
-                                                </a>
-                                            </li>
-                                            <li class="menu-item">
-                                                <a href="{{ url('reports/cr-crossed-sla') }}" class="menu-link">
-                                                    <span class="menu-text">List of CRs crossed SLA</span>
-                                                </a>
-                                            </li>
-                                            <li class="menu-item">
-                                                <a href="{{ url('reports/rejected-crs') }}" class="menu-link">
-                                                    <span class="menu-text">Rejected CRs</span>
-                                                </a>
-                                            </li>
-                                            <li class="menu-item">
-                                                <a href="{{ url('reports/sla-report') }}" class="menu-link">
-                                                    <span class="menu-text">SLA Report</span>
-                                                </a>
-                                            </li>
-                                            <li class="menu-item">
-                                                <a href="{{ url('reports/kpi-report') }}" class="menu-link">
-                                                    <span class="menu-text">KPI Report</span>
-                                                </a>
-                                            </li>
+                                            @can('Access Search')
+                                                <li class="menu-item" aria-haspopup="true">
+                                                    <a href="{{ url('searchs') }}" class="menu-link">
+                                                        <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                                                        <span class="menu-text">Search</span>
+                                                    </a>
+                                                </li>
+                                            @endcan
+
+                                            @can('Access Advanced Search')
+                                                <li class="menu-item" aria-haspopup="true">
+                                                    <a href="{{ route('advanced.search') }}" class="menu-link">
+                                                        <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                                                        <span class="menu-text">Advanced Search</span>
+                                                    </a>
+                                                </li>
+                                            @endcan
+
+                                            @can('Reports')
+                                                <li class="menu-item menu-item-submenu" data-menu-toggle="hover"
+                                                    aria-haspopup="true">
+                                                    <a href="javascript:;" class="menu-link menu-toggle">
+                                                        <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                                                        <span class="menu-text">Reports</span>
+                                                        <i class="menu-arrow"></i>
+                                                    </a>
+                                                    <div class="menu-submenu menu-submenu-classic menu-submenu-right">
+                                                        <ul class="menu-subnav">
+                                                            <li class="menu-item">
+                                                                <a href="{{ url('reports/actual-vs-planned') }}"
+                                                                    class="menu-link">
+                                                                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                                                                    <span class="menu-text">Actual vs planned</span>
+                                                                </a>
+                                                            </li>
+                                                            <li class="menu-item">
+                                                                <a href="{{ url('reports/all-crs-by-requester') }}"
+                                                                    class="menu-link">
+                                                                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                                                                    <span class="menu-text">All CRs by requester</span>
+                                                                </a>
+                                                            </li>
+                                                            <li class="menu-item">
+                                                                <a href="{{ url('reports/cr-current-status') }}"
+                                                                    class="menu-link">
+                                                                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                                                                    <span class="menu-text">CR Current Status</span>
+                                                                </a>
+                                                            </li>
+                                                            <li class="menu-item">
+                                                                <a href="{{ url('reports/cr-crossed-sla') }}" class="menu-link">
+                                                                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                                                                    <span class="menu-text">List of CRs crossed SLA</span>
+                                                                </a>
+                                                            </li>
+                                                            <li class="menu-item">
+                                                                <a href="{{ url('reports/rejected-crs') }}" class="menu-link">
+                                                                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                                                                    <span class="menu-text">Rejected CRs</span>
+                                                                </a>
+                                                            </li>
+                                                            <li class="menu-item">
+                                                                <a href="{{ url('reports/sla-report') }}" class="menu-link">
+                                                                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                                                                    <span class="menu-text">SLA Report</span>
+                                                                </a>
+                                                            </li>
+                                                            <li class="menu-item">
+                                                                <a href="{{ url('reports/kpi-report') }}" class="menu-link">
+                                                                    <i class="menu-bullet menu-bullet-dot"><span></span></i>
+                                                                    <span class="menu-text">KPI Report</span>
+                                                                </a>
+                                                            </li>
+                                                        </ul>
+                                                    </div>
+                                                </li>
+                                            @endcan
                                         </ul>
                                     </div>
                                 </li>
-                            @endcan
-
-                            @can('Access Advanced Search')
-                                <li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click"
-                                    aria-haspopup="true">
-                                    <a href="{{ route('advanced.search') }}" class="menu-link">
-                                        <span class="menu-text">Advanced Search</span>
-                                    </a>
-                                </li>
-                            @endcan
+                            @endcanany
 
                             @canany(['List Release', 'Release To CRs'])
                                 <li class="menu-item menu-item-submenu menu-item-rel" data-menu-toggle="click"

@@ -51,7 +51,7 @@ class ChangeRequestStatusService
 
     private static ?int $PENDING_DESIGN_STATUS_ID = null;
     private static ?int $REJECTED_STATUS_ID = null;
-    
+
     // Status IDs for agreed scope approval workflow
     private static ?int $PENDING_CREATE_AGREED_SCOPE_STATUS_ID = null;
     private static ?int $PENDING_AGREED_SCOPE_SA_STATUS_ID = null;
@@ -73,7 +73,7 @@ class ChangeRequestStatusService
         self::$DELIVERED_STATUS_ID = \App\Services\StatusConfigService::getStatusId('Delivered');
         self::$PENDING_DESIGN_STATUS_ID = \App\Services\StatusConfigService::getStatusId('pending_design');
         self::$REJECTED_STATUS_ID = \App\Services\StatusConfigService::getStatusId('Reject');
-        
+
         // Initialize agreed scope approval status IDs
         self::$PENDING_CREATE_AGREED_SCOPE_STATUS_ID = $this->getStatusIdByName('Pending Create Agreed Scope');
         self::$PENDING_AGREED_SCOPE_SA_STATUS_ID = $this->getStatusIdByName('Pending Agreed Scope Approval-SA');
@@ -359,7 +359,7 @@ class ChangeRequestStatusService
     //         'change_request_id' => $changeRequestId,
     //         'request_data' => $request->all()
     //     ]);
-        
+
     //     try {
     //         DB::beginTransaction();
 
@@ -370,7 +370,7 @@ class ChangeRequestStatusService
 
     //         // Process update - determineActiveStatus handles merge point logic
     //         $this->processStatusUpdate($changeRequest, $statusData, $workflow, $userId, $request);
-            
+
     //         // Handle agreed scope approval transition logic
     //         Log::info('About to call handleAgreedScopeApprovalTransition', [
     //             'cr_id' => $changeRequest->id,
@@ -400,288 +400,304 @@ class ChangeRequestStatusService
     //     }
     // }
 
-public function updateChangeRequestStatus(int $changeRequestId, $request): bool
-{
-    Log::info('updateChangeRequestStatus called', [
-        'change_request_id' => $changeRequestId,
-        'request_data' => $request->all()
-    ]);
-    
-    try {
-        DB::beginTransaction();
-
-        $statusData = $this->extractStatusData($request);
-        
-        // ════════════════════════════════════════════════════════════════
-        // ⭐⭐⭐ CRITICAL FIX: Early check for "Need Update" (dynamic workflow ID)
-        // This MUST run BEFORE processStatusUpdate to prevent unwanted records
-        // ════════════════════════════════════════════════════════════════
-        
-        // Get the workflow ID dynamically for "Need Update" transition
-        echo $needUpdateWorkflowId = $this->getNeedUpdateWorkflowId($changeRequestId, $statusData); //die;
-        
-        if (isset($statusData['new_status_id']) && $statusData['new_status_id'] == $needUpdateWorkflowId) {
-            Log::info('Need Update detected (workflow ID ' . $needUpdateWorkflowId . ') - bypassing normal workflow', [
-                'cr_id' => $changeRequestId,
-                'status_id' => $statusData['new_status_id']
-            ]);
-            
-            // Handle the special "Need Update" logic
-            $this->handleNeedUpdateTransition($changeRequestId, $statusData);
-            
-            DB::commit();
-            
-            Log::info('Need Update transition completed successfully', [
-                'cr_id' => $changeRequestId
-            ]);
-            
-            return true; // ⭐ EXIT EARLY - don't run normal workflow
-        }
-        // ════════════════════════════════════════════════════════════════
-        // END OF CRITICAL FIX
-        // ════════════════════════════════════════════════════════════════
-        
-        // Normal workflow continues only if NOT a "Need Update" transition
-        $workflow = $this->getWorkflow($statusData);
-        $changeRequest = $this->getChangeRequest($changeRequestId);
-        $userId = $this->getUserId($changeRequest, $request);
-
-        // Process update - determineActiveStatus handles merge point logic
-        $this->processStatusUpdate($changeRequest, $statusData, $workflow, $userId, $request);
-        
-      
-        $this->activatePendingMergeStatus($changeRequest->id, $statusData);
-
-        DB::commit();
-        
-        // Fire CrDeliveredEvent if CR reached Delivered status
-        $this->checkAndFireDeliveredEvent($changeRequest, $statusData);
-
-        event(new ChangeRequestStatusUpdated($changeRequest, $statusData, $request, $this->active_flag));
-
-        return true;
-
-    } catch (Exception $e) {
-        DB::rollback();
-        Log::error('Error updating change request status', [
+    public function updateChangeRequestStatus(int $changeRequestId, $request): bool
+    {
+        Log::info('updateChangeRequestStatus called', [
             'change_request_id' => $changeRequestId,
-            'error' => $e->getMessage()
+            'request_data' => $request->all()
         ]);
-        throw $e;
+
+        try {
+            DB::beginTransaction();
+
+            $statusData = $this->extractStatusData($request);
+
+            // ════════════════════════════════════════════════════════════════
+            // ⭐⭐⭐ CRITICAL FIX: Early check for "Need Update" (dynamic workflow ID)
+            // This MUST run BEFORE processStatusUpdate to prevent unwanted records
+            // ════════════════════════════════════════════════════════════════
+
+            // Get the workflow ID dynamically for "Need Update" transition
+            $needUpdateWorkflowId = $this->getNeedUpdateWorkflowId($changeRequestId, $statusData); //die;
+
+            if (isset($statusData['new_status_id']) && $statusData['new_status_id'] == $needUpdateWorkflowId) {
+                Log::info('Need Update detected (workflow ID ' . $needUpdateWorkflowId . ') - bypassing normal workflow', [
+                    'cr_id' => $changeRequestId,
+                    'status_id' => $statusData['new_status_id']
+                ]);
+
+                // Handle the special "Need Update" logic
+                $this->handleNeedUpdateTransition($changeRequestId, $statusData);
+
+                DB::commit();
+
+                Log::info('Need Update transition completed successfully', [
+                    'cr_id' => $changeRequestId
+                ]);
+
+                return true; // ⭐ EXIT EARLY - don't run normal workflow
+            }
+            // ════════════════════════════════════════════════════════════════
+            // END OF CRITICAL FIX
+            // ════════════════════════════════════════════════════════════════
+
+            // Normal workflow continues only if NOT a "Need Update" transition
+            $workflow = $this->getWorkflow($statusData);
+            $changeRequest = $this->getChangeRequest($changeRequestId);
+            $userId = $this->getUserId($changeRequest, $request);
+
+
+            if ($this->isTransitionFromPendingCab($changeRequest, $statusData)) {
+                $depService = $this->getDependencyService();
+                if ($depService->shouldHoldCr($changeRequestId)) {
+                    // Apply dependency hold instead of transitioning
+                    $depService->applyDependencyHold($changeRequestId);
+                    Log::info('CR held due to unresolved dependencies', [
+                        'cr_id' => $changeRequestId,
+                        'cr_no' => $changeRequest->cr_no,
+                    ]);
+                    DB::commit();
+
+                    return true; // Block the transition
+                }
+            }
+
+            // Process update - determineActiveStatus handles merge point logic
+            $this->processStatusUpdate($changeRequest, $statusData, $workflow, $userId, $request);
+
+
+            $this->activatePendingMergeStatus($changeRequest->id, $statusData);
+
+            DB::commit();
+
+            // Fire CrDeliveredEvent if CR reached Delivered status
+            $this->checkAndFireDeliveredEvent($changeRequest, $statusData);
+
+            event(new ChangeRequestStatusUpdated($changeRequest, $statusData, $request, $this->active_flag));
+
+            return true;
+
+        } catch (Exception $e) {
+            DB::rollback();
+            Log::error('Error updating change request status', [
+                'change_request_id' => $changeRequestId,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
+        }
     }
-}
 
-private function handleNeedUpdateTransition(int $crId, array $statusData): void
-{
-    Log::info('Starting Need Update transition', [
-        'cr_id' => $crId,
-        'status_data' => $statusData
-    ]);
-
-    // ════════════════════════════════════════════════════════════════════
-    // STEP 1: Archive ALL active records first (active: 1 → 2)
-    // THIS MUST HAPPEN BEFORE EVERYTHING ELSE
-    // ════════════════════════════════════════════════════════════════════
-    
-    $allActiveCount = ChangeRequestStatus::where('cr_id', $crId)
-        ->where('active', self::ACTIVE_STATUS) // active = '1'
-        ->update(['active' => self::COMPLETED_STATUS]); // active = '2'
-
-    Log::info('Archived ALL active records for this CR', [
-        'cr_id' => $crId,
-        'count' => $allActiveCount
-    ]);
-
-    // ════════════════════════════════════════════════════════════════════
-    // STEP 2: Define the 4 parallel workflow status IDs to archive
-    // ════════════════════════════════════════════════════════════════════
-    
-    // These are the status IDs for the 4 parallel workflows:
-    // - Pending Agreed Scope Approval-SA (e.g., 292)
-    // - Pending Agreed Scope Approval-Vendor (e.g., 293)
-    // - Pending Agreed Scope Approval-Business (e.g., 294)
-    // - Request Draft CR Doc (e.g., 295)
-    $parallelStatusIds = [
-        self::$PENDING_AGREED_SCOPE_SA_STATUS_ID,
-        self::$PENDING_AGREED_SCOPE_VENDOR_STATUS_ID,
-        self::$PENDING_AGREED_SCOPE_BUSINESS_STATUS_ID,
-        self::$REQUEST_DRAFT_CR_DOC_STATUS_ID,
-    ];
-
-    // Filter out any null values (in case status not found)
-    $parallelStatusIds = array_filter($parallelStatusIds);
-
-    // Validate that we have status IDs configured
-    if (empty($parallelStatusIds)) {
-        Log::error('No parallel workflow status IDs configured', [
+    private function handleNeedUpdateTransition(int $crId, array $statusData): void
+    {
+        Log::info('Starting Need Update transition', [
             'cr_id' => $crId,
-            'check_statuses' => [
-                'PENDING_AGREED_SCOPE_SA_STATUS_ID' => self::$PENDING_AGREED_SCOPE_SA_STATUS_ID,
-                'PENDING_AGREED_SCOPE_VENDOR_STATUS_ID' => self::$PENDING_AGREED_SCOPE_VENDOR_STATUS_ID,
-                'PENDING_AGREED_SCOPE_BUSINESS_STATUS_ID' => self::$PENDING_AGREED_SCOPE_BUSINESS_STATUS_ID,
-                'REQUEST_DRAFT_CR_DOC_STATUS_ID' => self::$REQUEST_DRAFT_CR_DOC_STATUS_ID,
+            'status_data' => $statusData
+        ]);
+
+        // ════════════════════════════════════════════════════════════════════
+        // STEP 1: Archive ALL active records first (active: 1 → 2)
+        // THIS MUST HAPPEN BEFORE EVERYTHING ELSE
+        // ════════════════════════════════════════════════════════════════════
+
+        $allActiveCount = ChangeRequestStatus::where('cr_id', $crId)
+            ->where('active', self::ACTIVE_STATUS) // active = '1'
+            ->update(['active' => self::COMPLETED_STATUS]); // active = '2'
+
+        Log::info('Archived ALL active records for this CR', [
+            'cr_id' => $crId,
+            'count' => $allActiveCount
+        ]);
+
+        // ════════════════════════════════════════════════════════════════════
+        // STEP 2: Define the 4 parallel workflow status IDs to archive
+        // ════════════════════════════════════════════════════════════════════
+
+        // These are the status IDs for the 4 parallel workflows:
+        // - Pending Agreed Scope Approval-SA (e.g., 292)
+        // - Pending Agreed Scope Approval-Vendor (e.g., 293)
+        // - Pending Agreed Scope Approval-Business (e.g., 294)
+        // - Request Draft CR Doc (e.g., 295)
+        $parallelStatusIds = [
+            self::$PENDING_AGREED_SCOPE_SA_STATUS_ID,
+            self::$PENDING_AGREED_SCOPE_VENDOR_STATUS_ID,
+            self::$PENDING_AGREED_SCOPE_BUSINESS_STATUS_ID,
+            self::$REQUEST_DRAFT_CR_DOC_STATUS_ID,
+        ];
+
+        // Filter out any null values (in case status not found)
+        $parallelStatusIds = array_filter($parallelStatusIds);
+
+        // Validate that we have status IDs configured
+        if (empty($parallelStatusIds)) {
+            Log::error('No parallel workflow status IDs configured', [
+                'cr_id' => $crId,
+                'check_statuses' => [
+                    'PENDING_AGREED_SCOPE_SA_STATUS_ID' => self::$PENDING_AGREED_SCOPE_SA_STATUS_ID,
+                    'PENDING_AGREED_SCOPE_VENDOR_STATUS_ID' => self::$PENDING_AGREED_SCOPE_VENDOR_STATUS_ID,
+                    'PENDING_AGREED_SCOPE_BUSINESS_STATUS_ID' => self::$PENDING_AGREED_SCOPE_BUSINESS_STATUS_ID,
+                    'REQUEST_DRAFT_CR_DOC_STATUS_ID' => self::$REQUEST_DRAFT_CR_DOC_STATUS_ID,
+                ]
+            ]);
+            throw new Exception('Parallel workflow status IDs not configured');
+        }
+
+        Log::info('Parallel workflow status IDs loaded', [
+            'cr_id' => $crId,
+            'status_ids' => $parallelStatusIds,
+            'count' => count($parallelStatusIds)
+        ]);
+
+        // ════════════════════════════════════════════════════════════════════
+        // STEP 3: Archive parallel workflow records (active: 0 or 1 → 2)
+        // (This catches any that weren't caught in Step 1)
+        // ════════════════════════════════════════════════════════════════════
+
+        // This archives BOTH active (1) and inactive (0) records
+        // All should become archived (2)
+        $archivedCount = ChangeRequestStatus::where('cr_id', $crId)
+            ->whereIn('new_status_id', $parallelStatusIds)
+            ->whereIn('active', ['0', '1'])
+            ->update(['active' => self::COMPLETED_STATUS]); // active = '2'
+
+        Log::info('Archived parallel workflow records', [
+            'cr_id' => $crId,
+            'archived_count' => $archivedCount,
+            'status_ids' => $parallelStatusIds,
+            'expected_count' => 4
+        ]);
+
+        // Validate that we archived records
+        if ($archivedCount === 0) {
+            Log::warning('No parallel workflow records found to archive', [
+                'cr_id' => $crId,
+                'searched_status_ids' => $parallelStatusIds
+            ]);
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // STEP 4: Get the LAST archived record (highest ID where active=2)
+        // ════════════════════════════════════════════════════════════════════
+
+        $lastRecord = ChangeRequestStatus::where('cr_id', $crId)
+            ->where('active', self::COMPLETED_STATUS) // active = '2'
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if (!$lastRecord) {
+            Log::error('No archived record found to use as template', [
+                'cr_id' => $crId,
+                'active_status_checked' => self::COMPLETED_STATUS
+            ]);
+            throw new Exception("No archived record found for CR {$crId}");
+        }
+
+        Log::info('Found last archived record to use as template', [
+            'cr_id' => $crId,
+            'record_id' => $lastRecord->id,
+            'old_status_id' => $lastRecord->old_status_id,
+            'new_status_id' => $lastRecord->new_status_id,
+            'current_group_id' => $lastRecord->current_group_id,
+            'created_at' => $lastRecord->created_at
+        ]);
+
+        // ════════════════════════════════════════════════════════════════════
+        // STEP 5: VERIFY no active records exist (safety check)
+        // ════════════════════════════════════════════════════════════════════
+
+        $stillActiveCount = ChangeRequestStatus::where('cr_id', $crId)
+            ->where('active', self::ACTIVE_STATUS)
+            ->count();
+
+        if ($stillActiveCount > 0) {
+            Log::warning('Found active records that should have been archived', [
+                'cr_id' => $crId,
+                'count' => $stillActiveCount
+            ]);
+
+            // Archive them now (safety measure)
+            ChangeRequestStatus::where('cr_id', $crId)
+                ->where('active', self::ACTIVE_STATUS)
+                ->update(['active' => self::COMPLETED_STATUS]);
+
+            Log::info('Archived remaining active records (safety)', [
+                'cr_id' => $crId,
+                'count' => $stillActiveCount
+            ]);
+        } else {
+            Log::info('Verified: No active records remain', [
+                'cr_id' => $crId
+            ]);
+        }
+
+
+        $newRecord = $lastRecord->replicate();
+
+        // ⭐ OVERRIDE new_status_id to 291 (Pending Create Agreed Scope)
+        // This is the "Need Update" destination status
+        $newRecord->new_status_id = self::$PENDING_CREATE_AGREED_SCOPE_STATUS_ID; // 291
+
+        // Set old_status_id to the status we're coming FROM
+        $newRecord->old_status_id = $lastRecord->new_status_id;
+
+        // Set it as active - THIS IS THE ONLY RECORD WITH active='1'
+        $newRecord->active = self::ACTIVE_STATUS; // '1'
+
+        // Update timestamps
+        $newRecord->created_at = now();
+        $newRecord->updated_at = null;
+
+        // Save to database (gets new auto-increment ID)
+        $newRecord->save();
+
+        Log::info('Created new record with new_status_id=291 and active=1', [
+            'cr_id' => $crId,
+            'original_record_id' => $lastRecord->id,
+            'new_record_id' => $newRecord->id,
+            'old_status_id' => $newRecord->old_status_id,
+            'new_status_id' => $newRecord->new_status_id, // Should be 291
+            'active' => $newRecord->active,
+            'created_at' => $newRecord->created_at,
+            'pending_create_agreed_scope_id' => self::$PENDING_CREATE_AGREED_SCOPE_STATUS_ID
+        ]);
+
+        // ════════════════════════════════════════════════════════════════════
+        // STEP 7: FINAL VERIFICATION - Ensure only 1 active record
+        // ════════════════════════════════════════════════════════════════════
+
+        $finalActiveCount = ChangeRequestStatus::where('cr_id', $crId)
+            ->where('active', self::ACTIVE_STATUS)
+            ->count();
+
+        if ($finalActiveCount !== 1) {
+            Log::error('CRITICAL: Expected 1 active record but found ' . $finalActiveCount, [
+                'cr_id' => $crId,
+                'active_count' => $finalActiveCount
+            ]);
+        } else {
+            Log::info('Verified: Exactly 1 active record as expected', [
+                'cr_id' => $crId,
+                'active_record_id' => $newRecord->id
+            ]);
+        }
+
+        // ════════════════════════════════════════════════════════════════════
+        // FINAL: Log completion
+        // ════════════════════════════════════════════════════════════════════
+
+        Log::info('Need Update transition completed successfully', [
+            'cr_id' => $crId,
+            'all_active_archived' => $allActiveCount,
+            'parallel_archived' => $archivedCount,
+            'new_active_record' => $newRecord->id,
+            'new_status_id' => $newRecord->new_status_id,
+            'summary' => [
+                'step1_all_active_archived' => $allActiveCount,
+                'step3_parallel_archived' => $archivedCount,
+                'step6_new_active_record' => $newRecord->id,
+                'final_verification' => $finalActiveCount === 1 ? 'PASS' : 'FAIL'
             ]
         ]);
-        throw new Exception('Parallel workflow status IDs not configured');
     }
-
-    Log::info('Parallel workflow status IDs loaded', [
-        'cr_id' => $crId,
-        'status_ids' => $parallelStatusIds,
-        'count' => count($parallelStatusIds)
-    ]);
-
-    // ════════════════════════════════════════════════════════════════════
-    // STEP 3: Archive parallel workflow records (active: 0 or 1 → 2)
-    // (This catches any that weren't caught in Step 1)
-    // ════════════════════════════════════════════════════════════════════
-    
-    // This archives BOTH active (1) and inactive (0) records
-    // All should become archived (2)
-    $archivedCount = ChangeRequestStatus::where('cr_id', $crId)
-        ->whereIn('new_status_id', $parallelStatusIds)
-        ->whereIn('active', ['0', '1'])
-        ->update(['active' => self::COMPLETED_STATUS]); // active = '2'
-
-    Log::info('Archived parallel workflow records', [
-        'cr_id' => $crId,
-        'archived_count' => $archivedCount,
-        'status_ids' => $parallelStatusIds,
-        'expected_count' => 4
-    ]);
-
-    // Validate that we archived records
-    if ($archivedCount === 0) {
-        Log::warning('No parallel workflow records found to archive', [
-            'cr_id' => $crId,
-            'searched_status_ids' => $parallelStatusIds
-        ]);
-    }
-
-    // ════════════════════════════════════════════════════════════════════
-    // STEP 4: Get the LAST archived record (highest ID where active=2)
-    // ════════════════════════════════════════════════════════════════════
-    
-    $lastRecord = ChangeRequestStatus::where('cr_id', $crId)
-        ->where('active', self::COMPLETED_STATUS) // active = '2'
-        ->orderBy('id', 'desc')
-        ->first();
-
-    if (!$lastRecord) {
-        Log::error('No archived record found to use as template', [
-            'cr_id' => $crId,
-            'active_status_checked' => self::COMPLETED_STATUS
-        ]);
-        throw new Exception("No archived record found for CR {$crId}");
-    }
-
-    Log::info('Found last archived record to use as template', [
-        'cr_id' => $crId,
-        'record_id' => $lastRecord->id,
-        'old_status_id' => $lastRecord->old_status_id,
-        'new_status_id' => $lastRecord->new_status_id,
-        'current_group_id' => $lastRecord->current_group_id,
-        'created_at' => $lastRecord->created_at
-    ]);
-
-    // ════════════════════════════════════════════════════════════════════
-    // STEP 5: VERIFY no active records exist (safety check)
-    // ════════════════════════════════════════════════════════════════════
-    
-    $stillActiveCount = ChangeRequestStatus::where('cr_id', $crId)
-        ->where('active', self::ACTIVE_STATUS)
-        ->count();
-
-    if ($stillActiveCount > 0) {
-        Log::warning('Found active records that should have been archived', [
-            'cr_id' => $crId,
-            'count' => $stillActiveCount
-        ]);
-        
-        // Archive them now (safety measure)
-        ChangeRequestStatus::where('cr_id', $crId)
-            ->where('active', self::ACTIVE_STATUS)
-            ->update(['active' => self::COMPLETED_STATUS]);
-            
-        Log::info('Archived remaining active records (safety)', [
-            'cr_id' => $crId,
-            'count' => $stillActiveCount
-        ]);
-    } else {
-        Log::info('Verified: No active records remain', [
-            'cr_id' => $crId
-        ]);
-    }
-
-  
-    $newRecord = $lastRecord->replicate();
-    
-    // ⭐ OVERRIDE new_status_id to 291 (Pending Create Agreed Scope)
-    // This is the "Need Update" destination status
-    $newRecord->new_status_id = self::$PENDING_CREATE_AGREED_SCOPE_STATUS_ID; // 291
-    
-    // Set old_status_id to the status we're coming FROM
-    $newRecord->old_status_id = $lastRecord->new_status_id;
-    
-    // Set it as active - THIS IS THE ONLY RECORD WITH active='1'
-    $newRecord->active = self::ACTIVE_STATUS; // '1'
-    
-    // Update timestamps
-    $newRecord->created_at = now();
-    $newRecord->updated_at = null;
-    
-    // Save to database (gets new auto-increment ID)
-    $newRecord->save();
-
-    Log::info('Created new record with new_status_id=291 and active=1', [
-        'cr_id' => $crId,
-        'original_record_id' => $lastRecord->id,
-        'new_record_id' => $newRecord->id,
-        'old_status_id' => $newRecord->old_status_id,
-        'new_status_id' => $newRecord->new_status_id, // Should be 291
-        'active' => $newRecord->active,
-        'created_at' => $newRecord->created_at,
-        'pending_create_agreed_scope_id' => self::$PENDING_CREATE_AGREED_SCOPE_STATUS_ID
-    ]);
-
-    // ════════════════════════════════════════════════════════════════════
-    // STEP 7: FINAL VERIFICATION - Ensure only 1 active record
-    // ════════════════════════════════════════════════════════════════════
-    
-    $finalActiveCount = ChangeRequestStatus::where('cr_id', $crId)
-        ->where('active', self::ACTIVE_STATUS)
-        ->count();
-
-    if ($finalActiveCount !== 1) {
-        Log::error('CRITICAL: Expected 1 active record but found ' . $finalActiveCount, [
-            'cr_id' => $crId,
-            'active_count' => $finalActiveCount
-        ]);
-    } else {
-        Log::info('Verified: Exactly 1 active record as expected', [
-            'cr_id' => $crId,
-            'active_record_id' => $newRecord->id
-        ]);
-    }
-
-    // ════════════════════════════════════════════════════════════════════
-    // FINAL: Log completion
-    // ════════════════════════════════════════════════════════════════════
-    
-    Log::info('Need Update transition completed successfully', [
-        'cr_id' => $crId,
-        'all_active_archived' => $allActiveCount,
-        'parallel_archived' => $archivedCount,
-        'new_active_record' => $newRecord->id,
-        'new_status_id' => $newRecord->new_status_id,
-        'summary' => [
-            'step1_all_active_archived' => $allActiveCount,
-            'step3_parallel_archived' => $archivedCount,
-            'step6_new_active_record' => $newRecord->id,
-            'final_verification' => $finalActiveCount === 1 ? 'PASS' : 'FAIL'
-        ]
-    ]);
-}
 
 
     /**
@@ -1130,7 +1146,7 @@ private function handleNeedUpdateTransition(int $crId, array $statusData): void
         $workflowActive = $workflow->workflow_type == self::WORKFLOW_NORMAL
             ? self::INACTIVE_STATUS
             : self::COMPLETED_STATUS;
-        
+
         // Log for debugging null created_at issue
         if (is_null($currentStatus->created_at)) {
             Log::warning('Current status has null created_at', [
@@ -1140,7 +1156,7 @@ private function handleNeedUpdateTransition(int $crId, array $statusData): void
                 'active' => $currentStatus->active
             ]);
         }
-        
+
         $slaDifference = $this->calculateSlaDifference($currentStatus->created_at);
 
         $shouldUpdate = $this->shouldUpdateCurrentStatus($statusData['old_status_id'], $technicalTeamCounts);
@@ -1220,7 +1236,7 @@ private function handleNeedUpdateTransition(int $crId, array $statusData): void
         if (!$createdAt) {
             return 0; // Return 0 if created_at is null
         }
-        
+
         return Carbon::parse($createdAt)->diffInDays(Carbon::now());
     }
 
@@ -1398,18 +1414,20 @@ private function handleNeedUpdateTransition(int $crId, array $statusData): void
             // ✨ SPECIAL CASE: "Need Update" selected
             // Call our dedicated Need Update action instead of normal workflow
             // ════════════════════════════════════════════════════════════
-            
-            if ($newStatus && $newStatus->status_name == 'Pending Create Agreed Scope' && 
-                isset($statusData['need_update']) && $statusData['need_update'] === true) {
-                
+
+            if (
+                $newStatus && $newStatus->status_name == 'Pending Create Agreed Scope' &&
+                isset($statusData['need_update']) && $statusData['need_update'] === true
+            ) {
+
                 Log::info('Need Update selected - calling dedicated Need Update action', [
                     'cr_id' => $changeRequest->id,
                     'new_status_id' => $newStatus->id
                 ]);
-                
+
                 // Call our Need Update action
                 $this->handleNeedUpdateAction($changeRequest->id);
-                
+
                 // Return early to skip normal workflow processing
                 return;
             }
@@ -2192,7 +2210,7 @@ private function handleNeedUpdateTransition(int $crId, array $statusData): void
         $status = Status::where('status_name', $statusName)
             ->where('active', '1')
             ->first();
-        
+
         return $status ? $status->id : null;
     }
 
@@ -2201,7 +2219,7 @@ private function handleNeedUpdateTransition(int $crId, array $statusData): void
      * When any approval status transitions to "Pending Create Agreed Scope",
      * deactivate other approval statuses and create new active record
      */
-   /**
+    /**
      * Handle agreed scope approval transition logic
      * When vendor workflow is in any "Pending Agreed Scope Approval" status
      * and transitions to "Pending Create Agreed Scope" (Need Update - Status ID 8370),
@@ -2215,112 +2233,112 @@ private function handleNeedUpdateTransition(int $crId, array $statusData): void
      * @return void
      */
 
-   private function isNeedUpdateTransition(int $crId, array $statusData): bool
-{
-    $newStatusId = $statusData['new_status_id'] ?? null;
-    $needUpdateWorkflowId = $this->getNeedUpdateWorkflowId($crId, $statusData);
-    
-    // Only handle if transitioning TO the dynamic Need Update workflow ID
-    return $newStatusId === $needUpdateWorkflowId;
-}
-   private function handleAgreedScopeApprovalTransition(int $crId, array $statusData): void
-{
-    Log::info('Starting agreed scope Need Update workflow', [
-        'cr_id' => $crId,
-        'status_data' => $statusData
-    ]);
+    private function isNeedUpdateTransition(int $crId, array $statusData): bool
+    {
+        $newStatusId = $statusData['new_status_id'] ?? null;
+        $needUpdateWorkflowId = $this->getNeedUpdateWorkflowId($crId, $statusData);
 
-    // Define the 4 parallel workflow status IDs that need to be archived
-    // Based on your data: 292, 293, 294, 295
-    $parallelWorkflowStatusIds = [
-        self::$PENDING_AGREED_SCOPE_SA_STATUS_ID,        // 292
-        self::$PENDING_AGREED_SCOPE_VENDOR_STATUS_ID,    // 293
-        self::$PENDING_AGREED_SCOPE_BUSINESS_STATUS_ID,  // 294
-        self::$REQUEST_DRAFT_CR_DOC_STATUS_ID,           // 295
-    ];
-
-    // Filter out any null values
-    $parallelWorkflowStatusIds = array_filter($parallelWorkflowStatusIds);
-
-    if (empty($parallelWorkflowStatusIds)) {
-        Log::error('No parallel workflow status IDs configured', [
-            'cr_id' => $crId
-        ]);
-        throw new Exception('Parallel workflow status IDs not configured');
+        // Only handle if transitioning TO the dynamic Need Update workflow ID
+        return $newStatusId === $needUpdateWorkflowId;
     }
-
-    Log::info('Parallel workflow status IDs loaded', [
-        'cr_id' => $crId,
-        'status_ids' => $parallelWorkflowStatusIds
-    ]);
-
-    // Step 1: Archive ALL records for these 4 statuses (active: 0 or 1 → 2)
-    $archivedCount = ChangeRequestStatus::where('cr_id', $crId)
-        ->whereIn('new_status_id', $parallelWorkflowStatusIds)
-        ->whereIn('active', ['0', '1'])
-        ->update(['active' => self::COMPLETED_STATUS]); // active = '2'
-
-    Log::info('Archived parallel workflow records', [
-        'cr_id' => $crId,
-        'archived_count' => $archivedCount,
-        'status_ids' => $parallelWorkflowStatusIds
-    ]);
-
-    // Step 2: Get the LAST archived record (highest ID where active=2)
-    $lastArchivedRecord = ChangeRequestStatus::where('cr_id', $crId)
-        ->where('active', self::COMPLETED_STATUS) // active = '2'
-        ->orderBy('id', 'desc')
-        ->first();
-
-    if (!$lastArchivedRecord) {
-        Log::error('No archived record found to reinsert', [
-            'cr_id' => $crId
-        ]);
-        throw new Exception("No archived record found for CR {$crId}");
-    }
-
-    Log::info('Found last archived record', [
-        'cr_id' => $crId,
-        'record_id' => $lastArchivedRecord->id,
-        'old_status_id' => $lastArchivedRecord->old_status_id,
-        'new_status_id' => $lastArchivedRecord->new_status_id,
-        'current_group_id' => $lastArchivedRecord->current_group_id
-    ]);
-
-    // Step 3: Archive ANY other active records (safety measure)
-    $otherActiveCount = ChangeRequestStatus::where('cr_id', $crId)
-        ->where('active', self::ACTIVE_STATUS) // active = '1'
-        ->update(['active' => self::COMPLETED_STATUS]); // active = '2'
-
-    if ($otherActiveCount > 0) {
-        Log::info('Archived other active records', [
+    private function handleAgreedScopeApprovalTransition(int $crId, array $statusData): void
+    {
+        Log::info('Starting agreed scope Need Update workflow', [
             'cr_id' => $crId,
-            'count' => $otherActiveCount
+            'status_data' => $statusData
+        ]);
+
+        // Define the 4 parallel workflow status IDs that need to be archived
+        // Based on your data: 292, 293, 294, 295
+        $parallelWorkflowStatusIds = [
+            self::$PENDING_AGREED_SCOPE_SA_STATUS_ID,        // 292
+            self::$PENDING_AGREED_SCOPE_VENDOR_STATUS_ID,    // 293
+            self::$PENDING_AGREED_SCOPE_BUSINESS_STATUS_ID,  // 294
+            self::$REQUEST_DRAFT_CR_DOC_STATUS_ID,           // 295
+        ];
+
+        // Filter out any null values
+        $parallelWorkflowStatusIds = array_filter($parallelWorkflowStatusIds);
+
+        if (empty($parallelWorkflowStatusIds)) {
+            Log::error('No parallel workflow status IDs configured', [
+                'cr_id' => $crId
+            ]);
+            throw new Exception('Parallel workflow status IDs not configured');
+        }
+
+        Log::info('Parallel workflow status IDs loaded', [
+            'cr_id' => $crId,
+            'status_ids' => $parallelWorkflowStatusIds
+        ]);
+
+        // Step 1: Archive ALL records for these 4 statuses (active: 0 or 1 → 2)
+        $archivedCount = ChangeRequestStatus::where('cr_id', $crId)
+            ->whereIn('new_status_id', $parallelWorkflowStatusIds)
+            ->whereIn('active', ['0', '1'])
+            ->update(['active' => self::COMPLETED_STATUS]); // active = '2'
+
+        Log::info('Archived parallel workflow records', [
+            'cr_id' => $crId,
+            'archived_count' => $archivedCount,
+            'status_ids' => $parallelWorkflowStatusIds
+        ]);
+
+        // Step 2: Get the LAST archived record (highest ID where active=2)
+        $lastArchivedRecord = ChangeRequestStatus::where('cr_id', $crId)
+            ->where('active', self::COMPLETED_STATUS) // active = '2'
+            ->orderBy('id', 'desc')
+            ->first();
+
+        if (!$lastArchivedRecord) {
+            Log::error('No archived record found to reinsert', [
+                'cr_id' => $crId
+            ]);
+            throw new Exception("No archived record found for CR {$crId}");
+        }
+
+        Log::info('Found last archived record', [
+            'cr_id' => $crId,
+            'record_id' => $lastArchivedRecord->id,
+            'old_status_id' => $lastArchivedRecord->old_status_id,
+            'new_status_id' => $lastArchivedRecord->new_status_id,
+            'current_group_id' => $lastArchivedRecord->current_group_id
+        ]);
+
+        // Step 3: Archive ANY other active records (safety measure)
+        $otherActiveCount = ChangeRequestStatus::where('cr_id', $crId)
+            ->where('active', self::ACTIVE_STATUS) // active = '1'
+            ->update(['active' => self::COMPLETED_STATUS]); // active = '2'
+
+        if ($otherActiveCount > 0) {
+            Log::info('Archived other active records', [
+                'cr_id' => $crId,
+                'count' => $otherActiveCount
+            ]);
+        }
+
+        // Step 4: Reinsert the last archived record with active=1
+        $newActiveRecord = $lastArchivedRecord->replicate();
+        $newActiveRecord->active = self::ACTIVE_STATUS; // active = '1'
+        $newActiveRecord->created_at = now();
+        $newActiveRecord->updated_at = null;
+        $newActiveRecord->save();
+
+        Log::info('Reinserted record with active=1', [
+            'cr_id' => $crId,
+            'original_record_id' => $lastArchivedRecord->id,
+            'new_record_id' => $newActiveRecord->id,
+            'old_status_id' => $newActiveRecord->old_status_id,
+            'new_status_id' => $newActiveRecord->new_status_id,
+            'active' => $newActiveRecord->active
+        ]);
+
+        Log::info('Need Update workflow completed successfully', [
+            'cr_id' => $crId,
+            'archived_count' => $archivedCount,
+            'reinserted_record_id' => $newActiveRecord->id
         ]);
     }
-
-    // Step 4: Reinsert the last archived record with active=1
-    $newActiveRecord = $lastArchivedRecord->replicate();
-    $newActiveRecord->active = self::ACTIVE_STATUS; // active = '1'
-    $newActiveRecord->created_at = now();
-    $newActiveRecord->updated_at = null;
-    $newActiveRecord->save();
-
-    Log::info('Reinserted record with active=1', [
-        'cr_id' => $crId,
-        'original_record_id' => $lastArchivedRecord->id,
-        'new_record_id' => $newActiveRecord->id,
-        'old_status_id' => $newActiveRecord->old_status_id,
-        'new_status_id' => $newActiveRecord->new_status_id,
-        'active' => $newActiveRecord->active
-    ]);
-
-    Log::info('Need Update workflow completed successfully', [
-        'cr_id' => $crId,
-        'archived_count' => $archivedCount,
-        'reinserted_record_id' => $newActiveRecord->id
-    ]);
-}
 
 
     /**
@@ -2349,7 +2367,7 @@ private function handleNeedUpdateTransition(int $crId, array $statusData): void
             // Step 2: Define the parallel approval status names
             $parallelStatusNames = [
                 'Pending Agreed Scope Approval-SA',
-                'Pending Agreed Scope Approval-Vendor', 
+                'Pending Agreed Scope Approval-Vendor',
                 'Pending Agreed Scope Approval-Business',
                 'Request Draft CR Doc'
             ];
@@ -2417,16 +2435,16 @@ private function handleNeedUpdateTransition(int $crId, array $statusData): void
             $duplicatedRecord->active = self::ACTIVE_STATUS; // Only update active = 1
             $duplicatedRecord->created_at = now(); // Set new creation timestamp
             $duplicatedRecord->updated_at = null; // Keep consistent with model behavior
-            
+
             // Ensure created_at is not null
             if (!$duplicatedRecord->created_at) {
                 $duplicatedRecord->created_at = now();
             }
-            
+
             // Use direct DB insert to avoid any model events or automatic workflow creation
             $insertData = $duplicatedRecord->toArray();
             unset($insertData['id']); // Remove ID to let database generate new one
-            
+
             $newRecordId = DB::table('change_request_statuses')->insertGetId($insertData);
 
             Log::info('Created duplicated record with active=1', [
