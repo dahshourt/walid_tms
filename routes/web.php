@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Controllers\CustomField\CustomFieldStatusController;
 use Illuminate\Support\Facades\Route;
 use App\Services\EwsMailReader;
 
@@ -43,6 +42,7 @@ use App\Http\Controllers\Sla\SlaCalculationController;
 use App\Http\Controllers\Prerequisites\PrerequisitesController;
 use App\Http\Controllers\FinalConfirmation\FinalConfirmationController;
 use App\Http\Controllers\NotificationTemplates\NotificationTemplatesController;
+use App\Http\Controllers\NotificationRules\NotificationRulesController;
 use App\Http\Controllers\KPIs\KPIController;
 use App\Http\Controllers\KpiProject\KpiProjectController;
 use App\Http\Controllers\Project\ProjectController;
@@ -195,11 +195,6 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('directors', DirectorController::class)->except(['show', 'destroy']);
     Route::post('directors/updateactive', [DirectorController::class, 'updateStatus'])->name('directors.updateStatus');
 
-    // Custom Field Status Log Messages
-    Route::get('custom-fields/log-messages/statuses', [CustomFieldStatusController::class, 'getActiveStatuses'])->name('custom-fields.log-messages.statuses');
-    Route::get('custom-fields/{id}/log-messages', [CustomFieldStatusController::class, 'index'])->where('id', '[0-9]+')->name('custom-fields.log-messages.index');
-    Route::post('custom-fields/{id}/log-messages', [CustomFieldStatusController::class, 'store'])->where('id', '[0-9]+')->name('custom-fields.log-messages.store');
-
     // Custom Fields (Resource / Singular Namespace)
     Route::resource('custom-fields', CustomFieldController::class)->except(['show', 'destroy']);
     Route::post('custom-fields/updateactive', [CustomFieldController::class, 'updateStatus'])->name('custom-fields.updateStatus');
@@ -268,6 +263,9 @@ Route::middleware(['auth'])->group(function () {
 
     // Notification Templates
     Route::resource('notification_templates', NotificationTemplatesController::class);
+    
+    // Notification Rules
+    Route::resource('notification_rules', NotificationRulesController::class);
 
     // Prerequisites
     Route::resource('prerequisites', PrerequisitesController::class);

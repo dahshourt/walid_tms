@@ -33,7 +33,7 @@ class NotificationTemplatesController extends Controller
     public function index()
     {
         $this->authorize('List Notification Templates');
-        $collection = $this->NotificationTemplates->getAll();
+        $collection = $this->NotificationTemplates->list();
 
         return view("$this->view.index", compact('collection'));
     }
