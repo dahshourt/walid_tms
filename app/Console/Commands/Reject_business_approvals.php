@@ -34,8 +34,9 @@ class Reject_business_approvals extends Command
 
         $adminUser = User::where('email', 'admin@te.eg')->first();
 
-        if (!$adminUser) {
+        if (! $adminUser) {
             Log::error("Auto-Reject CR job aborted: Admin user 'admin@te.eg' not found.");
+
             return;
         }
 
@@ -60,6 +61,7 @@ class Reject_business_approvals extends Command
                 'old_status_id' => '22',
                 'new_status_id' => '35',
                 'user_id' => $adminUser->id,
+                'cron_status_log_message' => 'Change request rejected by :user_name due to no response from the requester’s division manager.',
             ]);
 
             try {
