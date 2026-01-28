@@ -134,7 +134,7 @@ class LogRepository implements LogRepositoryInterface
         $customFields = CustomField::query()
             ->whereIn('name', array_keys($filtered_request))
             ->whereNotIn('name', $excludeNames)
-            ->withLogMessageForStatus($cr_current_status->new_status_id)
+            ->withLogMessageForStatus($cr_current_status->old_status_id)
             ->get();
 
         $cf_default_log_message = ":cf_label Changed To ':cf_value' by :user_name";
