@@ -41,7 +41,7 @@ class Prerequisite extends Model
      */
     public function promo(): BelongsTo
     {
-        return $this->belongsTo(change_request::class);
+        return $this->belongsTo(Change_request::class);
     }
 
     /**

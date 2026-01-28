@@ -27,28 +27,40 @@ class ChangeRequestEstimationService
         // Handle development estimation
         if (isset($request['dev_estimation'])) {
             $returnData = array_merge($returnData, $this->calculateDevelopmentEstimation(
-                $id, $changeRequest, $request, $user
+                $id,
+                $changeRequest,
+                $request,
+                $user
             ));
         }
 
         // Handle testing estimation
         if (isset($request['testing_estimation'])) {
             $returnData = array_merge($returnData, $this->calculateTestingEstimation(
-                $id, $changeRequest, $request, $user
+                $id,
+                $changeRequest,
+                $request,
+                $user
             ));
         }
 
         // Handle design estimation
         if (isset($request['design_estimation'])) {
             $returnData = array_merge($returnData, $this->calculateDesignEstimation(
-                $id, $changeRequest, $request, $user
+                $id,
+                $changeRequest,
+                $request,
+                $user
             ));
         }
 
         // Handle CR estimation
         if (isset($request['CR_duration'])) {
             $returnData = array_merge($returnData, $this->calculateCREstimation(
-                $id, $changeRequest, $request, $user
+                $id,
+                $changeRequest,
+                $request,
+                $user
             ));
         }
 
@@ -153,9 +165,11 @@ class ChangeRequestEstimationService
             $hour = (int) date('G', $time);
 
             // Only count working hours
-            if (! in_array($dayOfWeek, $weekendDays) &&
+            if (
+                !in_array($dayOfWeek, $weekendDays) &&
                 $hour < $workingHours['end'] &&
-                $hour >= $workingHours['start']) {
+                $hour >= $workingHours['start']
+            ) {
                 $i--;
             }
         }
@@ -245,7 +259,7 @@ class ChangeRequestEstimationService
             if (isset($estimations[$phase])) {
                 $value = $estimations[$phase];
 
-                if (! is_numeric($value) || $value < 0) {
+                if (!is_numeric($value) || $value < 0) {
                     $errors[$phase] = "The {$phase} must be a positive number.";
                 } elseif ($value > $maxHours) {
                     $errors[$phase] = "The {$phase} cannot exceed {$maxHours} hours.";
@@ -298,16 +312,16 @@ class ChangeRequestEstimationService
      */
     protected function calculateDevelopmentEstimation($id, $changeRequest, $request, $user): array
     {
-		$isTestable = $changeRequest
-							->change_request_custom_fields
-							->where('custom_field_name', 'testable')
-							->pluck('custom_field_value')
-							->first(); // check if cr is testable or not
-		$data = [
+        $isTestable = $changeRequest
+            ->change_request_custom_fields
+            ->where('custom_field_name', 'testable')
+            ->pluck('custom_field_value')
+            ->first(); // check if cr is testable or not
+        $data = [
             'develop_duration' => $request['dev_estimation'],
             'developer_id' => $request['developer_id'] ?? $user->id,
         ];
-        if (isset($changeRequest['test_duration']) && $isTestable) {
+        if ($isTestable) {
             $dates = $this->getLastCRDate(
                 $id,
                 $data['developer_id'],
@@ -317,11 +331,13 @@ class ChangeRequestEstimationService
                 'dev'
             );
 
-            $data['start_develop_time'] = $dates[0] ?? '';
-            $data['end_develop_time'] = $dates[1] ?? '';
+
 
             // Calculate subsequent phase (testing) if it exists
-            if (! empty($changeRequest['test_duration'])) {
+            if (!empty($changeRequest['test_duration'])) {
+
+                $data['start_develop_time'] = $dates[0] ?? '';
+                $data['end_develop_time'] = $dates[1] ?? '';
                 $testEndTime = $data['end_develop_time'];
                 $testDates = $this->getLastEndDate(
                     $id,
@@ -335,10 +351,8 @@ class ChangeRequestEstimationService
                 $data['start_test_time'] = $testDates[0] ?? '';
                 $data['end_test_time'] = $testDates[1] ?? '';
             }
-        }
-		else
-		{
-			$dates = $this->getLastCRDate(
+        } else {
+            $dates = $this->getLastCRDate(
                 $id,
                 $data['developer_id'],
                 'developer_id',
@@ -349,7 +363,7 @@ class ChangeRequestEstimationService
 
             $data['start_develop_time'] = $dates[0] ?? '';
             $data['end_develop_time'] = $dates[1] ?? '';
-		}
+        }
 
         return $data;
     }
@@ -368,7 +382,7 @@ class ChangeRequestEstimationService
             'test_duration' => $request['testing_estimation'],
             'tester_id' => $request['tester_id'] ?? $user->id,
         ];
-        if (! empty($changeRequest['develop_duration'])) {
+        if (!empty($changeRequest['develop_duration'])) {
             // If design phase exists, calculate testing after development
 
             // $developDates = $this->getLastEndDate(
@@ -438,7 +452,7 @@ class ChangeRequestEstimationService
         $data['end_design_time'] = $dates[1] ?? '';
 
         // Calculate subsequent phases if they exist
-        if (! empty($changeRequest['develop_duration'])) {
+        if (!empty($changeRequest['develop_duration'])) {
             $developDates = $this->getLastEndDate(
                 $id,
                 $changeRequest['developer_id'],
@@ -452,7 +466,7 @@ class ChangeRequestEstimationService
             $data['end_develop_time'] = $developDates[1] ?? '';
         }
 
-        if (! empty($changeRequest['test_duration'])) {
+        if (!empty($changeRequest['test_duration'])) {
             $testEndTime = $data['end_develop_time'] ?? $data['end_design_time'];
             $testDates = $this->getLastEndDate(
                 $id,
@@ -525,7 +539,7 @@ class ChangeRequestEstimationService
         $newStartDate = date('Y-m-d H:i:s', $this->setToWorkingDate(strtotime($newStartDate)));
         $now = Carbon::now();
 
-        if (! Carbon::parse($newStartDate)->gt(Carbon::now())) {
+        if (!Carbon::parse($newStartDate)->gt(Carbon::now())) {
             $newStartDate = date('Y-m-d H:i:s');
         }
 
@@ -554,12 +568,12 @@ class ChangeRequestEstimationService
     {
         // Map actions to their respective start/end dependencies
         $actionConfig = [
-            'dev' => ['prevField' => 'end_design_time',   'maxField' => 'end_develop_time'],
-            'test' => ['prevField' => 'end_develop_time',  'maxField' => 'end_test_time'],
+            'dev' => ['prevField' => 'end_design_time', 'maxField' => 'end_develop_time'],
+            'test' => ['prevField' => 'end_develop_time', 'maxField' => 'end_test_time'],
         ];
 
         // If action not recognized, return lastEndDate as is
-        if (! isset($actionConfig[$action])) {
+        if (!isset($actionConfig[$action])) {
             return [$lastEndDate, $lastEndDate];
         }
 
@@ -588,7 +602,7 @@ class ChangeRequestEstimationService
         $newStartDate = date('Y-m-d H:i:s', $this->setToWorkingDate(strtotime($newStartDate)));
 
         // 6️⃣ If start is in the past, use now
-        if (! Carbon::parse($newStartDate)->gt(Carbon::now())) {
+        if (!Carbon::parse($newStartDate)->gt(Carbon::now())) {
             $newStartDate = Carbon::createFromTimestamp(
                 $this->setToWorkingDate(strtotime(Carbon::now()))
             )->format('Y-m-d H:i:s');
@@ -623,7 +637,7 @@ class ChangeRequestEstimationService
         // Add remaining working days
         for ($i = 0; $i < $remainingDays; $i++) {
             $dayOfWeek = $i % 7;
-            if (! in_array($dayOfWeek, $workingHours['weekend_days'])) {
+            if (!in_array($dayOfWeek, $workingHours['weekend_days'])) {
                 $workingDays++;
             }
         }
@@ -654,14 +668,14 @@ class ChangeRequestEstimationService
             default => null,
         };
 
-        if (! $startTimeField || ! $endTimeField) {
+        if (!$startTimeField || !$endTimeField) {
             return 'not_scheduled';
         }
 
         $startTime = $changeRequest->$startTimeField;
         $endTime = $changeRequest->$endTimeField;
 
-        if (! $startTime || ! $endTime) {
+        if (!$startTime || !$endTime) {
             return 'not_scheduled';
         }
 
@@ -691,7 +705,7 @@ class ChangeRequestEstimationService
             ->where($roleConfig['end_column'], '>=', $afterDate)
             ->max($roleConfig['end_column']);
 
-        if (! $lastEndTime) {
+        if (!$lastEndTime) {
             return $afterDate;
         }
 
