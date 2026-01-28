@@ -91,9 +91,7 @@ class LogRepository implements LogRepositoryInterface
 
             $new_status_id = data_get($request, 'new_status_id');
 
-            $change_request = new Change_request();
-
-            $log_message = $this->prepareCRStatusLogMessage($new_status_id, $change_request, $user, 'create');
+            $log_message = $this->prepareCRStatusLogMessage($new_status_id, $user, 'create');
 
             $this->createLog($log, $id, $user->id, $log_message);
 
@@ -121,6 +119,10 @@ class LogRepository implements LogRepositoryInterface
             'rejection_reason_id' => ['model' => Rejection_reason::class, 'field' => 'name', 'message' => 'Change Request rejection Reason Changed To'],
             'deployment_impact' => ['model' => DeploymentImpact::class, 'field' => 'name', 'message' => 'Change Request Deployment Impact Changed To'],
         ];
+
+        if ($user->isSystemAdmin()) {
+            $user->user_name = 'System';
+        }
 
         // Excluded to be handled in separate function
         $excludeNames = ['new_status_id', 'testing_estimation', 'design_estimation', 'dev_estimation', 'postpone', 'need_ux_ui', 'active'];
@@ -269,9 +271,10 @@ class LogRepository implements LogRepositoryInterface
         $this->logDurationWithTimes($log, $id, $user, $request, 'develop_duration', 'start_develop_time', 'end_develop_time');
         $this->logDurationWithTimes($log, $id, $user, $request, 'test_duration', 'start_test_time', 'end_test_time');
 
+        $status_logs = [];
+
         // Status change
         if (isset($request->new_status_id)) {
-            // echo $request->new_status_id; die;
             $workflow = NewWorkFlow::find($request->new_status_id);
 
             $status_title = null;
@@ -286,7 +289,7 @@ class LogRepository implements LogRepositoryInterface
                     $newStatusesNames = Status::whereIn('id', $newStatusesIds)->pluck('status_name')->toArray();
                     $actualStatuses = implode(', ', $newStatusesNames);
 
-                    $this->createLog($log, $id, $user->id, "Change request status has been released by {$user->user_name} and the current status is $actualStatuses");
+                    $status_logs[] = "Change request status has been released by {$user->user_name} and the current status is $actualStatuses";
                 }
                 // Dependency Hold Log
                 elseif ($change_request->fresh()->is_dependency_hold) {
@@ -302,37 +305,34 @@ class LogRepository implements LogRepositoryInterface
                         ->filter()
                         ->implode(', ');
 
-                    $this->createLog($log, $id, $user->id, "Change Request Status changed to '$actualStatuses' by {$user->user_name} (Pending Dependency (CR#$blockingCrs))");
+                    $status_logs[] = "Change Request Status changed to '$actualStatuses' by {$user->user_name} (Pending Dependency (CR#$blockingCrs))";
                 }
                 // Normal Status Log
                 else {
-                    $log_message = $this->prepareCRStatusLogMessage($request->new_status_id, $change_request, $user);
+                    $log_message_template = $request->get('cron_status_log_message');
+                    $log_message = $this->prepareCRStatusLogMessage($request->new_status_id, $user, custom_log_message_template: $log_message_template);
 
-                    $this->createLog($log, $id, $user->id, $log_message);
+                    $status_logs[] = $log_message;
                 }
             } else {
-                $log_message = $this->prepareCRStatusLogMessage($request->new_status_id, $change_request, $user);
+                $log_message_template = $request->get('cron_status_log_message');
+                $log_message = $this->prepareCRStatusLogMessage($request->new_status_id, $user, custom_log_message_template: $log_message_template);
 
                 if ($request->has('is_final_confirmation')) {
                     $log_message = "$log_message from Administration";
                 }
 
-                $this->createLog($log, $id, $user->id, $log_message);
+                $status_logs[] = $log_message;
             }
-            /*
-            $workflow = NewWorkFlow::find($request->new_status_id);
-            $status_title = $workflow->workflowstatus->count() > 1
-                ? $workflow->to_status_label
-                : $workflow->workflowstatus[0]->to_status->status_name;
-            */
-            // $this->createLog($log, $id, $user->id, "Change Request Status changed to '$status_title' by {$user->user_name}");
         }
 
         if ($request->hold === 1) {
-            $this->createLog($log, $id, $user->id, "Change Request Held by $user->user_name");
+            $status_logs[] = "Change Request Held by $user->user_name";
         } elseif ($request->hold === 0) {
-            $this->createLog($log, $id, $user->id, "Change Request unheld by $user->user_name");
+            $status_logs[] = "Change Request unheld by $user->user_name";
         }
+
+        $this->createMultipleLogs($id, $user->id, $status_logs);
 
         return true;
     }
@@ -346,7 +346,7 @@ class LogRepository implements LogRepositoryInterface
         ]);
     }
 
-    private function logToggle($logRepo, $crId, $userId, $request, $old, $field, $messagePrefix)
+    private function logToggle($logRepo, $crId, $userId, $request, $old, $field, $messagePrefix): void
     {
         if (isset($request->$field) && $request->$field != $old->$field) {
             $status = $request->$field == 1 ? 'Active' : 'InActive';
@@ -354,7 +354,7 @@ class LogRepository implements LogRepositoryInterface
         }
     }
 
-    private function logEstimateWithoutAssignee($logRepo, $crId, $user, $request, $durationField, $assigneeField, $label)
+    private function logEstimateWithoutAssignee($logRepo, $crId, $user, $request, $durationField, $assigneeField, $label): void
     {
         if (isset($request->$durationField) && empty($request->$assigneeField)) {
             $log_message = "Change Request $label Estimated by {$user->user_name}";
@@ -365,7 +365,7 @@ class LogRepository implements LogRepositoryInterface
         }
     }
 
-    private function logDurationWithTimes($logRepo, $crId, $user, $request, $durationField, $startField, $endField)
+    private function logDurationWithTimes($logRepo, $crId, $user, $request, $durationField, $startField, $endField): void
     {
         if (isset($request->$durationField)) {
             $cleaned_field = Str::of($durationField)->remove('_id')->replace('_', ' ')->title();
@@ -401,7 +401,7 @@ class LogRepository implements LogRepositoryInterface
         return Log::where('cr_id', $crId)->where('log_text', $log_message)->exists();
     }
 
-    private function prepareCRStatusLogMessage(int $status_id, Change_request $change_request, User $user, ?string $stage = null): string
+    private function prepareCRStatusLogMessage(int $status_id, User $user, ?string $stage = null, ?string $custom_log_message_template = null): string
     {
         $default_status_log_message = "Change Request Status changed to ':status_name' By ':user_name'";
 
@@ -409,13 +409,13 @@ class LogRepository implements LogRepositoryInterface
             $status = Status::findOrFail($status_id);
 
             $status_name = $status?->status_name;
-            $log_message = $status->log_message ?? $default_status_log_message;
+            $log_message = $custom_log_message_template ?? $status->log_message ?? $default_status_log_message;
         } else {
             $newStatusesIds = NewWorkFlowStatuses::where('new_workflow_id', $status_id)->pluck('to_status_id')->toArray();
             $statuses = Status::whereIn('id', $newStatusesIds)->toBase()->get(['status_name', 'log_message']);
 
             $status_name = $statuses?->pluck('status_name')->unique()->implode(', ');
-            $log_message = $statuses->whereNotNull('log_message')->first()->log_message ?? $default_status_log_message;
+            $log_message = $custom_log_message_template ?? $statuses->whereNotNull('log_message')->first()->log_message ?? $default_status_log_message;
         }
 
         return trans($log_message, [

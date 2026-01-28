@@ -121,4 +121,9 @@ class User extends Authenticatable
     {
         return 'name';
     }
+
+    public function isSystemAdmin(): bool
+    {
+        return $this->email === 'admin@te.eg';
+    }
 }
