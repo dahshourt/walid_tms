@@ -417,6 +417,28 @@ return [
         19 => 35,
         82 => 161,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | UAT Promo Flow Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for UAT Promo workflow special logic.
+    |
+    */
+    'uat_promo_flow' => [
+        'statuses' => [
+            'pending_uat_promo' => 'Pending UAT (promo)',
+            'deploy_on_uat_env' => 'Deploy on UAT Environment',
+            'pending_uat_test_case_approval' => 'Pending UAT Test Cases Approval',
+        ],
+        'trigger_parallel_statuses' => [
+            'Create UAT Test cases',
+            'Pending UAT Test Cases Approval',
+            'Test Case Rework',
+            'YesNoPending Test Cases Rework'
+        ],
+    ],
 ];
 
 

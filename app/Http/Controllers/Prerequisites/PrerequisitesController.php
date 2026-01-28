@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Prerequisites;
 use App\Factories\Prerequisites\PrerequisitesFactory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Prerequisites\PrerequisitesRequest;
-use App\Models\change_request;
+use App\Models\Change_request;
 use App\Models\Group;
 use App\Models\Prerequisite;
 use App\Models\PrerequisiteAttachment;
@@ -51,7 +51,7 @@ class PrerequisitesController extends Controller
     public function create()
     {
         $this->authorize('Create Assisstance Request'); // permission check
-        $changeRequests = change_request::where('workflow_type_id', 9)->get();
+        $changeRequests = Change_request::where('workflow_type_id', 9)->get();
         $groups = Group::all();
         $defaultStatusId = Status::where('status_name', 'Open')->value('id');
 
@@ -108,7 +108,7 @@ class PrerequisitesController extends Controller
 
         $prerequisite->load(['comments', 'attachments', 'logs']);
 
-        $changeRequests = change_request::where('workflow_type_id', 9)
+        $changeRequests = Change_request::where('workflow_type_id', 9)
             ->select('id', 'cr_no', 'title')
             ->get();
 
