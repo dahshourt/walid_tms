@@ -22,12 +22,12 @@
                 <div class="card-header flex-wrap border-0 pt-6 pb-0">
                     <div class="card-title">
                         <h3 class="card-label">{{ $title }}
-                            <span class="d-block text-muted pt-2 font-size-sm">Manage your Email Templates</span>
+                            <span class="d-block text-muted pt-2 font-size-sm">Manage your Notification Rules</span>
                         </h3>
                     </div>
                     <div class="card-toolbar">
                         <div class="d-flex align-items-center">
-                            @can('Create Notification Templates')
+                            @can('Create Notification Rules')
                             <a href='{{ url("$route/create") }}' class="btn btn-primary font-weight-bolder">
                                 <span class="svg-icon svg-icon-md">
                                     <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -40,7 +40,7 @@
                                                 fill="#000000" opacity="0.3"/>
                                         </g>
                                     </svg>
-                                </span>New Template
+                                </span>New Rule
                             </a>
                             @endcan
                         </div>
@@ -73,12 +73,13 @@
                     @endif
                     
                     <div class="table-responsive">
-                        <table class="table table-head-custom table-vertical-center" id="notificationTemplatesTable">
+                        <table class="table table-head-custom table-vertical-center" id="notificationRulesTable">
                             <thead>
                                 <tr class="text-uppercase text-center">
                                     <th style="min-width: 50px">ID</th>
                                     <th style="min-width: 200px">Name</th>
-                                    <th style="min-width: 250px">Subject</th>
+                                    <th style="min-width: 120px">Event</th>
+                                    <th style="min-width: 100px">Recipients</th>
                                     <th style="min-width: 80px">Status</th>
                                     <th style="min-width: 130px">Actions</th>
                                 </tr>
@@ -101,7 +102,7 @@
 <script>
 $(document).ready(function() {
     // Initialize DataTable with search and pagination (no page reload)
-    $('#notificationTemplatesTable').DataTable({
+    $('#notificationRulesTable').DataTable({
         responsive: true,
         paging: true,
         searching: true,
@@ -115,7 +116,7 @@ $(document).ready(function() {
             search: "_INPUT_",
             searchPlaceholder: "Search...",
             lengthMenu: "Show _MENU_ entries",
-            info: "Showing _START_ to _END_ of _TOTAL_ templates",
+            info: "Showing _START_ to _END_ of _TOTAL_ rules",
             paginate: {
                 first: '<i class="ki ki-double-arrow-back"></i>',
                 last: '<i class="ki ki-double-arrow-next"></i>',
