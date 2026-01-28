@@ -81,6 +81,9 @@ class LogRepository implements LogRepositoryInterface
 
         $user = User::find($user_id);
 
+        /**
+         * @var Change_request $change_request
+         */
         $change_request = $changeRequest_old;
 
         if ($type === 'create') {
@@ -120,28 +123,38 @@ class LogRepository implements LogRepositoryInterface
         ];
 
         // Excluded to be handled in separate function
-        $excludeNames = ['new_status_id', 'testing_estimation', 'design_estimation', 'dev_estimation', 'postpone', 'need_ux_ui'];
+        $excludeNames = ['new_status_id', 'testing_estimation', 'design_estimation', 'dev_estimation', 'postpone', 'need_ux_ui', 'active'];
 
-        // fetch custom fields you want to append
+        $cr_current_status = $change_request->getCurrentStatus();
+
+        $filtered_request = array_filter($request->all(), static fn ($value) => ! is_null($value));
+
         $customFields = CustomField::query()
+            ->whereIn('name', array_keys($filtered_request))
             ->whereNotIn('name', $excludeNames)
+            ->withLogMessageForStatus($cr_current_status->new_status_id)
             ->get();
 
         $cf_default_log_message = ":cf_label Changed To ':cf_value' by :user_name";
 
         $customFieldMap = $customFields->mapWithKeys(function ($cf) use ($request, $cf_default_log_message, $user, $change_request) {
 
-            if ($cf->name !== 'testable' && (! $request->{$cf->name} || ! array_key_exists($cf->name, $request->all()))) {
-                return [];
-            }
-
             // Fallback message if label is null
-            $label = $cf->label ?: Str::of($cf->name)->replace('_', ' ')->title();
-            $cf_log_message = $cf->log_message ?? $cf_default_log_message;
+            $label = $cf->label ?: Str::of($cf->name)->remove('_id')->replace('_', ' ')->title();
+
+            // CF Log message
+            $cf_log_message = $cf->customFieldStatus?->log_message ?? $cf->log_message ?? $cf_default_log_message;
 
             $base = [];
 
-            $base['old_value'] = json_decode($change_request->changeRequestCustomFields->where('custom_field_name', $cf->name)->last()?->custom_field_value, true);
+            // Prepare old values for comparison
+            if (in_array($cf->type, ['textArea', 'file'], true)) {
+                $base['old_value'] = null;
+            } else {
+                $latest_value = $change_request->changeRequestCustomFields->where('custom_field_name', $cf->name)->last()?->custom_field_value;
+
+                $base['old_value'] = json_decode($latest_value, true);
+            }
 
             if (in_array($cf->type, ['multiselect', 'select'], true)) {
                 $data = $cf->getSpecificCustomFieldValues((array) $request->{$cf->name});
@@ -153,7 +166,7 @@ class LogRepository implements LogRepositoryInterface
                 $value = $request->get('testable') === '1' ? 'Testable' : 'Non Testable';
             }
 
-            if (in_array($cf->name, ['technical_attachments', 'business_attachments'], true)) {
+            if ($cf->type === 'file') {
                 $files_name = [];
                 $attachments = $request->file($cf->name, []);
 
@@ -185,47 +198,35 @@ class LogRepository implements LogRepositoryInterface
         // append without overriding existing keys in $fields
         $fields += $customFieldMap;
         foreach ($fields as $field => $info) {
-            if (isset($request->$field)) {
+            if (isset($request->{$field})) {
                 if ($field === 'kpi') {
                     $oldValue = $change_request->kpis->first()->id ?? null;
                     $newValue = $request->kpi;
                 } elseif ($field === 'depend_on') {
                     $oldValue = $change_request->dependencies
                         ->where('pivot.status', '0')
-                        ->pluck('id')
+                        ->pluck('cr_no')
                         ->toArray();
-                    $newValue = $request->depend_on;
-                    // Normalize to arrays
-                    if (! is_array($oldValue)) {
-                        $oldValue = [];
-                    }
-                    if (! is_array($newValue)) {
-                        $newValue = [];
-                    }
-                } elseif ($field === 'cr_type') {
-                    $oldValue = $change_request->changeRequestCustomFields->where('custom_field_name', 'cr_type')->first()?->custom_field_value;
-                    $newValue = $request->cr_type;
+
+                    $newValue = (array) $request->{$field};
                 } elseif (is_array($info) && array_key_exists('old_value', $info)) {
                     $oldValue = $info['old_value'];
                     $newValue = $request->{$field};
                 } else {
-                    $oldValue = $change_request->$field ?? null;
-                    $newValue = $request->$field;
+                    $oldValue = $change_request->{$field} ?? null;
+                    $newValue = $request->{$field};
                 }
 
-                if ($oldValue != $newValue) {
+                if (($oldValue != $newValue) && is_array($info)) {
+                    if (isset($info['model'])) {
+                        $modelName = $info['model'];
+                        $fieldName = $info['field'];
+                        $valueName = $modelName::find($newValue)?->$fieldName;
+                        $message = $info['message'] . " '$valueName' By '$user->user_name'";
 
-                    if (is_array($info)) {
-                        if (isset($info['model'])) {
-                            $modelName = $info['model'];
-                            $fieldName = $info['field'];
-                            $valueName = $modelName::find($newValue)?->$fieldName;
-                            $message = $info['message'] . " '$valueName' By '$user->user_name'";
-
-                            $all_logs[] = $message;
-                        } elseif (array_key_exists('already_has_message', $info)) {
-                            $all_logs[] = $info['message'];
-                        }
+                        $all_logs[] = $message;
+                    } elseif (array_key_exists('already_has_message', $info)) {
+                        $all_logs[] = $info['message'];
                     }
                 }
             }

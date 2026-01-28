@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CustomField\CustomFieldStatusController;
 use Illuminate\Support\Facades\Route;
 use App\Services\EwsMailReader;
 
@@ -193,6 +194,11 @@ Route::middleware(['auth'])->group(function () {
     // Directors
     Route::resource('directors', DirectorController::class)->except(['show', 'destroy']);
     Route::post('directors/updateactive', [DirectorController::class, 'updateStatus'])->name('directors.updateStatus');
+
+    // Custom Field Status Log Messages
+    Route::get('custom-fields/log-messages/statuses', [CustomFieldStatusController::class, 'getActiveStatuses'])->name('custom-fields.log-messages.statuses');
+    Route::get('custom-fields/{id}/log-messages', [CustomFieldStatusController::class, 'index'])->where('id', '[0-9]+')->name('custom-fields.log-messages.index');
+    Route::post('custom-fields/{id}/log-messages', [CustomFieldStatusController::class, 'store'])->where('id', '[0-9]+')->name('custom-fields.log-messages.store');
 
     // Custom Fields (Resource / Singular Namespace)
     Route::resource('custom-fields', CustomFieldController::class)->except(['show', 'destroy']);

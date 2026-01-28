@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Traits\BindsDynamically;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CustomField extends Model
 {
@@ -50,16 +52,39 @@ class CustomField extends Model
         if (empty($this->related_table)) {
             Log::warning('CustomField has empty related_table', [
                 'custom_field_id' => $this->id,
-                'custom_field_name' => $this->name
+                'custom_field_name' => $this->name,
             ]);
+
             return collect([]);
         }
-        
+
         return $this->setTableName($this->related_table)->getDataByDynamicTable();
     }
 
     public function getSpecificCustomFieldValues(array $selected, ?string $columnName = null, ?string $pluckColumn = null)
     {
         return $this->setTableName($this->related_table)->getCustomDataByDynamicTable($selected, $columnName, $pluckColumn);
+    }
+
+    /**
+     * Get the status log messages for this custom field.
+     */
+    public function customFieldStatus(): HasOne
+    {
+        return $this->hasOne(CustomFieldStatus::class)->latestOfMany();
+    }
+
+    public function customFieldStatuses()
+    {
+        return $this->hasMany(CustomFieldStatus::class)();
+    }
+
+    public function scopeWithLogMessageForStatus(Builder $query, string $status_id): Builder
+    {
+        return $query->with([
+            'customFieldStatus' => function ($query) use ($status_id) {
+                $query->where('status_id', $status_id);
+            },
+        ]);
     }
 }
