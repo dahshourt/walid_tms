@@ -472,6 +472,43 @@
                                                                                 </div>
                                                                             </li>
                                                                         @endcanany
+                                                                        @canany(['List Notification Templates', 'List Notification Rules'])
+                                                                            <li class="menu-item menu-item-submenu menu-item-rel"
+                                                                                data-menu-toggle="hover" aria-haspopup="true">
+                                                                                <a href="javascript:;" class="menu-link menu-toggle">
+                                                                                    <span class="svg-icon menu-icon">
+                                                                                        <img src="{{ asset('public/new_theme/assets/media/notification.png') }}"
+                                                                                            alt="Management" width="24" height="24" />
+                                                                                    </span>
+                                                                                    <span class="menu-text">Notifications</span>
+                                                                                    <i class="menu-arrow"></i>
+                                                                                </a>
+                                                                                <div class="menu-submenu menu-submenu-classic menu-submenu-right">
+                                                                                    <ul class="menu-subnav">
+                                                                                        @can('List Notification Templates')
+                                                                                            <li class="menu-item" aria-haspopup="true">
+                                                                                                <a href="{{ route('notification_templates.index') }}"
+                                                                                                    class="menu-link">
+                                                                                                    <i
+                                                                                                        class="menu-bullet menu-bullet-dot"><span></span></i>
+                                                                                                    <span class="menu-text">Notification Templates</span>
+                                                                                                </a>
+                                                                                            </li>
+                                                                                        @endcan
+                                                                                        @can('List Notification Rules')
+                                                                                            <li class="menu-item" aria-haspopup="true">
+                                                                                                <a href="{{ route('notification_rules.index') }}"
+                                                                                                    class="menu-link">
+                                                                                                    <i
+                                                                                                        class="menu-bullet menu-bullet-dot"><span></span></i>
+                                                                                                    <span class="menu-text">Notification Rules</span>
+                                                                                                </a>
+                                                                                            </li>
+                                                                                        @endcan
+                                                                                    </ul>
+                                                                                </div>
+                                                                            </li>
+                                                                        @endcanany
 
                                                                         @can('List Groups')
                                                                             <li class="menu-item menu-item-submenu menu-item-rel"

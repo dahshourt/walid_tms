@@ -1,10 +1,60 @@
 @if($collection)
 
 @foreach ($collection as $item)
+    @php
+        // Format event class for display
+        $eventDisplay = str_contains($item->event_class, 'Created') ? 'CR Created' : 'CR Status Updated';
+        
+        // Format conditions for display
+        $conditionDisplay = 'No conditions';
+        if ($item->conditions && is_array($item->conditions)) {
+            $condLabels = [
+                'workflow_type' => 'Workflow =',
+                'workflow_type_not' => 'Workflow ≠',
+                'new_status_id' => 'New Status =',
+                'old_status_id' => 'Old Status =',
+            ];
+            $parts = [];
+            foreach ($item->conditions as $type => $value) {
+                $label = $condLabels[$type] ?? $type;
+                if (in_array($type, ['workflow_type', 'workflow_type_not'])) {
+                    $workflow = \App\Models\WorkFlowType::find($value);
+                    $valueName = $workflow ? $workflow->name : "ID: $value";
+                } elseif (in_array($type, ['new_status_id', 'old_status_id'])) {
+                    $status = \App\Models\Status::find($value);
+                    $valueName = $status ? $status->status_name : "ID: $value";
+                } else {
+                    $valueName = $value;
+                }
+                $parts[] = "$label $valueName";
+            }
+            $conditionDisplay = implode(', ', $parts);
+        }
+        
+        // Count recipients by channel
+        $toCount = $item->recipients->where('channel', 'to')->count();
+        $ccCount = $item->recipients->where('channel', 'cc')->count();
+        $bccCount = $item->recipients->where('channel', 'bcc')->count();
+        $recipientSummary = [];
+        if ($toCount > 0) $recipientSummary[] = "{$toCount} TO";
+        if ($ccCount > 0) $recipientSummary[] = "{$ccCount} CC";
+        if ($bccCount > 0) $recipientSummary[] = "{$bccCount} BCC";
+    @endphp
     <tr class="text-center">
         <td>{{ $item->id }}</td>
         <td>{{ $item->name }}</td>
-        <td>{{ Str::limit($item->subject, 50) }}</td>
+        <td>
+            <span class="label label-{{ str_contains($item->event_class, 'Created') ? 'primary' : 'info' }} label-inline font-weight-bold">
+                {{ $eventDisplay }}
+            </span>
+        </td>
+        <td>
+            @if(count($recipientSummary) > 0)
+                <span class="text-dark-50">{{ implode(', ', $recipientSummary) }}</span>
+            @else
+                <span class="text-muted">None</span>
+            @endif
+        </td>
         <td>
             <span class="label label-{{ $item->is_active ? 'success' : 'danger' }} label-inline font-weight-bold">
                 {{ $item->is_active ? 'Active' : 'Inactive' }}
@@ -13,8 +63,9 @@
         <td>
             <div class="d-inline-flex justify-content-center w-100">
                 {{-- Show Button --}}
-                <a href='{{ url("$route") }}/{{ $item->id }}' class="btn btn-icon btn-light btn-hover-primary btn-sm mr-2" title="View Template">
+                <a href='{{ url("$route") }}/{{ $item->id }}' class="btn btn-icon btn-light btn-hover-primary btn-sm mr-2" title="View Rule">
                     <span class="svg-icon svg-icon-md svg-icon-primary">
+                        <!--View Icon-->
                         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
                              height="24px" viewBox="0 0 24 24" version="1.1">
                             <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -30,10 +81,11 @@
                     </span>
                 </a>
 
-                @can('Edit Notification Templates')
+                @can('Edit Notification Rules')
                 {{-- Edit Button --}}
-                <a href='{{url("$route")}}/{{ $item->id }}/edit' class="btn btn-icon btn-light btn-hover-primary btn-sm mr-2" title="Edit Template">
+                <a href='{{url("$route")}}/{{ $item->id }}/edit' class="btn btn-icon btn-light btn-hover-primary btn-sm mr-2" title="Edit Rule">
                     <span class="svg-icon svg-icon-md svg-icon-primary">
+                        <!--Edit Icon-->
                         <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px"
                              height="24px" viewBox="0 0 24 24" version="1.1">
                             <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -50,11 +102,11 @@
                 @endcan
 
                 {{--
-                @can('Delete Notification Templates')
-                <form action='{{ url("$route") }}/{{ $item->id }}' method="POST" onsubmit="return confirm('Are you sure you want to delete this template?');" style="display:inline;">
+                @can('Delete Notification Rules')
+                <form action='{{ url("$route") }}/{{ $item->id }}' method="POST" onsubmit="return confirm('Are you sure you want to delete this rule? This will also delete all associated recipients.');" style="display:inline;">
                     {{ csrf_field() }}
                     {{ method_field('DELETE') }}
-                    <button type="submit" class="btn btn-icon btn-light btn-hover-primary btn-sm" title="Delete Template">
+                    <button type="submit" class="btn btn-icon btn-light btn-hover-primary btn-sm mr-2" title="Delete Rule">
                         <span class="svg-icon svg-icon-md svg-icon-primary">
                             <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
                                 <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
@@ -75,6 +127,6 @@
 
 @else
 <tr>
-    <td colspan="5" style="text-align:center">No Templates Found</td>
+    <td colspan="8" style="text-align:center">No Notification Rules Found</td>
 </tr>
 @endif

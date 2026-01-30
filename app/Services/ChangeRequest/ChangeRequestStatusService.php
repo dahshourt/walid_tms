@@ -1205,6 +1205,27 @@ private function handleRequestUpdateAtpsTransition(int $changeRequestId, array $
 
         $this->createNewStatuses($changeRequest, $statusData, $workflow, $userId, $request);
 
+        // ═══════════════════════════════════════════════════════════════════════
+        // Special Flow: Pending UAT (promo) Deactivation Logic
+        // ═══════════════════════════════════════════════════════════════════════
+        try {
+            $uatPromoService = new \App\Services\ChangeRequest\SpecialFlows\UatPromoFlowService();
+            $newActiveStatus = $uatPromoService->handlePendingUatuActivation($changeRequest->id, $statusData, $changeRequest->workflow_type_id);
+
+            if ($newActiveStatus !== null) {
+                $this->active_flag = $newActiveStatus;
+                Log::info('Pending UAT (promo) active status updated by special flow', [
+                    'cr_id' => $changeRequest->id,
+                    'new_active' => $newActiveStatus
+                ]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Error in UatPromoFlowService', [
+                'cr_id' => $changeRequest->id,
+                'error' => $e->getMessage()
+            ]);
+        }
+
         // $this->handleNotifications($statusData, $changeRequest->id, $request);
         // event(new ChangeRequestStatusUpdated($changeRequest, $statusData, $request, $this->active_flag));
 
