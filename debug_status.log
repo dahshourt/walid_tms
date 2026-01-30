@@ -1,0 +1,29 @@
+status-options.blade.php REACHED for CR: 31308
+status-options.blade.php REACHED for CR: 31308
+status-options.blade.php REACHED for CR: 31308
+status-options.blade.php REACHED for CR: 31308
+status-options.blade.php REACHED for CR: 31308
+Checking set_status for CR: 31308
+status-options.blade.php REACHED for CR: 31308
+Checking set_status for CR: 31308
+status-options.blade.php REACHED for CR: 31308
+Checking set_status for CR: 31308
+About to check isset($cr->set_status)
+status-options.blade.php REACHED for CR: 31308
+Checking set_status for CR: 31308
+About to check isset($cr->set_status)
+getSetStatus returned 3 results for CR: 31308
+getSetStatus returned 3 results for CR: 31308
+set_status exists, count: 3
+Finished checking set_status
+getSetStatus returned 3 results for CR: 31308
+getSetStatus returned 3 results for CR: 31308
+status-options.blade.php REACHED for CR: 31308
+Checking set_status for CR: 31308
+About to check isset($cr->set_status)
+getSetStatus returned 3 results for CR: 31308
+getSetStatus returned 3 results for CR: 31308
+set_status exists, count: 3
+Finished checking set_status
+getSetStatus returned 3 results for CR: 31308
+getSetStatus returned 3 results for CR: 31308

@@ -1,0 +1,24 @@
+Array
+(
+    [total_fields] => 11
+    [enabled_fields] => Array
+        (
+            [0] => new_status_id
+            [1] => technical_feedback
+            [2] => technical_attachments
+        )
+
+    [disabled_fields] => Array
+        (
+            [0] => requester_name
+            [1] => requester_email
+            [2] => requester_department
+            [3] => division_manager
+            [4] => application_id
+            [5] => title
+            [6] => description
+            [7] => creator_mobile_number
+        )
+
+    [has_new_status_id] => 1
+)
