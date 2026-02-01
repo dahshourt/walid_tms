@@ -1,0 +1,22 @@
+Array
+(
+    [cr_id] => 31293
+    [custom_fields_count] => 11
+    [custom_fields] => Array
+        (
+            [0] => new_status_id
+            [1] => technical_feedback
+            [2] => technical_attachments
+            [3] => requester_name
+            [4] => requester_email
+            [5] => requester_department
+            [6] => division_manager
+            [7] => application_id
+            [8] => title
+            [9] => description
+            [10] => creator_mobile_number
+        )
+
+    [workflow_type_id] => 3
+    [status_id] => 72
+)
