@@ -129,12 +129,19 @@ class LogRepository implements LogRepositoryInterface
 
         $cr_current_status = $change_request->getCurrentStatus();
 
+        $cr_current_status_id = $cr_current_status->new_status_id;
+
+        // If there is a new status get the old status for correct log message
+        if ($request->get('new_status_id')) {
+            $cr_current_status_id = $cr_current_status->old_status_id;
+        }
+
         $filtered_request = array_filter($request->all(), static fn ($value) => ! is_null($value));
 
         $customFields = CustomField::query()
             ->whereIn('name', array_keys($filtered_request))
             ->whereNotIn('name', $excludeNames)
-            ->withLogMessageForStatus($cr_current_status->old_status_id)
+            ->withLogMessageForStatus($cr_current_status_id)
             ->get();
 
         $cf_default_log_message = ":cf_label Changed To ':cf_value' by :user_name";
