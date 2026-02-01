@@ -491,7 +491,8 @@
                                                                                                     class="menu-link">
                                                                                                     <i
                                                                                                         class="menu-bullet menu-bullet-dot"><span></span></i>
-                                                                                                    <span class="menu-text">Notification Templates</span>
+                                                                                                    <span class="menu-text">Notification
+                                                                                                        Templates</span>
                                                                                                 </a>
                                                                                             </li>
                                                                                         @endcan
@@ -1554,7 +1555,7 @@
                                     <span
                                         class="text-white opacity-70 font-weight-bold font-size-base d-none d-md-inline mr-1">Hi,</span>
                                     <span
-                                        class="text-white opacity-90 font-weight-bolder font-size-base d-none d-md-inline mr-4">{{ auth()->user()->name }}</span>
+                                        class="text-white opacity-90 font-weight-bolder font-size-base d-none d-md-inline mr-4">{{ explode(' ', auth()->user()->name)[0] }}</span>
                                     <span class="symbol symbol-35">
                                         @php
                                             $user_name = explode(" ", auth()->user()->name);

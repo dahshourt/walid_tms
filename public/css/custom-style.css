@@ -486,9 +486,9 @@ input:checked+.modern-toggle-slider:before {
 /* === Modern Menu Redesign (Purple Background) === */
 .header-menu .menu-nav>.menu-item>.menu-link {
     border-radius: 12px;
-    padding: 0.8rem 1.2rem;
+    padding: 0.6rem 0.8rem;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    margin: 0 4px;
+    margin: 0 2px;
 }
 
 .header-menu .menu-nav>.menu-item>.menu-link:hover,
@@ -503,11 +503,12 @@ input:checked+.modern-toggle-slider:before {
 
 .header-menu .menu-nav>.menu-item>.menu-link .menu-text {
     font-weight: 600;
-    font-size: 0.95rem !important;
+    font-size: 0.85rem !important;
     color: rgba(255, 255, 255, 0.9);
     /* High contrast white */
-    letter-spacing: 0.3px;
+    letter-spacing: 0.2px;
     text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    white-space: nowrap;
 }
 
 .header-menu .menu-nav>.menu-item>.menu-link:hover .menu-text,
@@ -556,7 +557,7 @@ input:checked+.modern-toggle-slider:before {
 
 .header-menu .menu-nav>.menu-item .menu-submenu .menu-subnav>.menu-item>.menu-link {
     border-radius: 10px;
-    padding: 10px 15px;
+    padding: 12px 20px;
     transition: all 0.2s ease;
 }
 
@@ -571,6 +572,7 @@ input:checked+.modern-toggle-slider:before {
     font-weight: 500;
     font-size: 0.9rem !important;
     color: #5e6278;
+    white-space: nowrap;
     /* Dark text for white submenu */
 }
 
