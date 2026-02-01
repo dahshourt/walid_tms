@@ -59,20 +59,20 @@ class DefectController extends Controller
 
         $cr = $this->changerequest->findById($id);
 
-        if (! $cr) {
+        if (!$cr) {
             return redirect()->back()->with('status', 'CR not exists');
         } // to check if the cr exists or not
 
         $cr = $this->changerequest->find($id);
 
-        if (! $cr) {
+        if (!$cr) {
             return redirect()->back()->with('status', 'You have no access to edit this CR');
         } // to check if the user has access to edit this cr or not
         $technical_team = Group::where('technical_team', '1')->get();
         $defect_status = $this->status->get_defect_status();
         $CustomFields = $this->custom_field_group_type->getAllCustomFieldsWithSelectedByformType('form_type', 7);
 
-        return view("$this->view.create_defect", compact('id', 'CustomFields', 'technical_team', 'defect_status'));
+        return view("$this->view.create_defect", compact('id', 'CustomFields', 'technical_team', 'defect_status', 'cr'));
     }
 
     /**
