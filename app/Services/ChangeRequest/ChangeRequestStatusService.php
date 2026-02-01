@@ -1825,7 +1825,8 @@ private function handleRequestUpdateAtpsTransition(int $changeRequestId, array $
         // ✨ MODIFIED: Only apply if CR used parallel workflows
         // ════════════════════════════════════════════════════════════
 
-        $mergePointStatusId = 250;
+        $mergePointStatus = Status::where('status_name', 'Pending Update Agreed Requirements')->first();
+        $mergePointStatusId = $mergePointStatus ? $mergePointStatus->id : null;
 
         if ($workflowStatus->to_status_id == $mergePointStatusId) {
 
