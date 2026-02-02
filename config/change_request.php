@@ -94,9 +94,13 @@ return [
         ],
     ],
     "kickoff_meeting_flag" => [
-        "status" => [
+        "no" => [
             'id' => 102,
             'name' => "Request Kickoff meeting",
+        ],
+        "yes" => [
+            'id' => 111,
+            'name' => "Request MD’s & Prerequisites",
         ]
     ],
 
@@ -106,7 +110,6 @@ return [
         'technical_fb' => 108,
         'confirmed_sdd' => 149,
         'set_md_prerequisites' => 112,
-
         'review_uat_results_fb' => 168,
         'promo_closure' => 129,
 
@@ -115,6 +118,8 @@ return [
         'promo_closure' => 129,
         'review_uat_results_fb' => 168,
         'final_uat_results_fb' => 167,
+        'set_md_prerequisites' => 112,
+        'pending_pmo' => 162,
     ],
     'promo_depend_statuses' => [
         // 'pending_uat' => 78,
