@@ -62,9 +62,9 @@ $business_feedback = $cr->change_request_custom_fields->where('custom_field_name
                             <th>Start Date</th>
                             <th>End Date</th>
                             <th>Created At</th>
-                            @if(auth()->user()->hasRole('Super Admin') || auth()->user()->hasRole('Update MDs'))
+                            @can('Update MDs')
                                 <th>Actions</th>
-                            @endif
+                            @endcan
                         </tr>
                     </thead>
                     <tbody class="text-center">

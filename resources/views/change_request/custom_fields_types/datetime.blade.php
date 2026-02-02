@@ -9,6 +9,10 @@
             $required = "required";
         if ($item->CustomField->name == 'deployment_date' || $item->CustomField->name == 'start_date_mds' || $item->CustomField->name == 'kick_off_meeting_date' || $item->CustomField->name == 'start_date')
             $min = date('Y-m-d\TH:i');
+        
+        if ($item->CustomField->name == 'start_date_mds') {
+            $custom_field_value = "";
+        }
     @endphp
 
     <div class="col-md-6 change-request-form-field field_{{$item->CustomField->name}}">
