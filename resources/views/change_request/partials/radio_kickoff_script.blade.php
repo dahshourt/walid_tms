@@ -4,54 +4,94 @@
             const statusSelect = document.querySelector('select[name="new_status_id"]');
             if (!statusSelect) return;
 
-            let kickoffOption = null;
-            let nextSibling = null;
+            // Defines
+            const kickoffId = "{{ config('change_request.kickoff_meeting_flag.no.id') }}";
+            const kickoffName = "{{ config('change_request.kickoff_meeting_flag.no.name') }}";
 
-            // Find the option with text 'Request Kickoff meeting'
-            for (let i = 0; i < statusSelect.options.length; i++) {
-                if (statusSelect.options[i].text.trim() === '{{config('change_request.kickoff_meeting_flag.status.name')}}') {
-                    kickoffOption = statusSelect.options[i];
-                    nextSibling = kickoffOption.nextElementSibling; // Store reference for re-insertion
-                    break;
-                }
+            const mdsId = "{{ config('change_request.kickoff_meeting_flag.yes.id') }}";
+            const mdsName = "{{ config('change_request.kickoff_meeting_flag.yes.name') }}";
+
+            function normalize(str) {
+                if (!str) return '';
+                // Decode HTML entities first to avoid "amp" being kept as letters
+                let decoded = str.replace(/&amp;/g, '&')
+                                 .replace(/&lt;/g, '<')
+                                 .replace(/&gt;/g, '>')
+                                 .replace(/&quot;/g, '"')
+                                 .replace(/&#039;/g, "'");
+                
+                // Remove EVERYTHING that is not a letter or number (a-z, 0-9)
+                return decoded.toLowerCase().replace(/[^a-z0-9]/g, '');
             }
 
-            // If option is not found initially, it might have been removed already or doesn't exist for this status flow
-            // But we need to handle the case where we can't find it to remove it if needed.
-            // If it's not there, we can't do anything unless we know how to create it, but we assume it's there on load if applicable.
+            // Helper to get persistent reference from EXISTING options only
+            function getExistingOption(id, name) {
+                // Try to find by ID
+                let opt = Array.from(statusSelect.options).find(o => o.value == id);
 
-            const radios = document.querySelectorAll('input[name="kick_off_meeting"]');
+                // Fallback: Try to find by Name (Text) - Normalized
+                if (!opt) {
+                    const searchName = normalize(name);
+                    opt = Array.from(statusSelect.options).find(o => normalize(o.text) === searchName);
+                }
+
+                return opt;
+            }
+
+            // Store references to the DOM elements
+            const kickoffOption = getExistingOption(kickoffId, kickoffName);
+            const mdsOption = getExistingOption(mdsId, mdsName);
+
+            console.log('Kickoff Toggle Script: Init');
+            console.log('Kickoff ID:', kickoffId, 'Found:', kickoffOption);
+            console.log('MDs ID:', mdsId, 'Found:', mdsOption);
 
             function handleKickoffChange() {
                 const selected = document.querySelector('input[name="kick_off_meeting"]:checked');
                 if (!selected) return;
+                console.log(mdsId, mdsName);
+                console.log(kickoffId, kickoffName);
+                console.log('Kickoff Change:', selected.value);
 
-                // Re-find the option if it's currently in the DOM to ensure we have a reference
-                // (Use the cached one if we have it, check if connected)
+                if (selected.value === 'yes') {
+                    // YES: Show Kickoff, Hide MDs
 
-                if (selected.value === 'no') {
-                    // Remove logic
-                    if (kickoffOption && kickoffOption.parentNode === statusSelect) {
-                        statusSelect.removeChild(kickoffOption);
-                        console.log('Removed Request Kickoff meeting option');
+                    // Hide MDs
+                    if (mdsOption && mdsOption.parentNode) {
+                        mdsOption.remove();
+                        console.log('Removed MDs Option');
+                    } else if (!mdsOption) {
+                        console.warn('Could not remove MDs Option: Not found');
                     }
-                } else if (selected.value === 'yes') {
-                    // Restore logic
-                    if (kickoffOption && kickoffOption.parentNode !== statusSelect) {
-                        if (nextSibling && nextSibling.parentNode === statusSelect) {
-                            statusSelect.insertBefore(kickoffOption, nextSibling);
-                        } else {
-                            statusSelect.appendChild(kickoffOption);
-                        }
-                        console.log('Restored Request Kickoff meeting option');
+
+                    // Show Kickoff
+                    if (kickoffOption && !kickoffOption.parentNode) {
+                        statusSelect.add(kickoffOption); // Adds to end.
+                        console.log('Added Kickoff Option');
+                    }
+
+                } else if (selected.value === 'no') {
+                    // NO: Show MDs, Hide Kickoff
+
+                    // Hide Kickoff
+                    if (kickoffOption && kickoffOption.parentNode) {
+                        kickoffOption.remove();
+                        console.log('Removed Kickoff Option');
+                    }
+
+                    // Show MDs
+                    if (mdsOption && !mdsOption.parentNode) {
+                        statusSelect.add(mdsOption);
+                        console.log('Added MDs Option');
                     }
                 }
             }
 
-            if (radios.length > 0 && kickoffOption) {
-                radios.forEach(radio => radio.addEventListener('change', handleKickoffChange));
-                handleKickoffChange(); // Run initial check
-            }
+            const radios = document.querySelectorAll('input[name="kick_off_meeting"]');
+            radios.forEach(radio => radio.addEventListener('change', handleKickoffChange));
+
+            // Run on load
+            handleKickoffChange();
         });
     </script>
 @endif

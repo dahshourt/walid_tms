@@ -60,7 +60,7 @@ class ChangeRequestStatusService
     private static ?int $REQUEST_DRAFT_CR_DOC_STATUS_ID = null;
     // private const PENDING_CAB_STATUS_ID = 38;
     // private const DELIVERED_STATUS_ID = 27;
-        private static ?int $ATP_REVIEW_QC_STATUS_ID = null;
+    private static ?int $ATP_REVIEW_QC_STATUS_ID = null;
     private static ?int $ATP_REVIEW_UAT_STATUS_ID = null;
     private static ?int $REQUEST_UPDATE_ATPS_STATUS_ID = null;
 
@@ -82,12 +82,12 @@ class ChangeRequestStatusService
         self::$PENDING_AGREED_SCOPE_SA_STATUS_ID = $this->getStatusIdByName('Pending Agreed Scope Approval-SA');
         self::$PENDING_AGREED_SCOPE_VENDOR_STATUS_ID = $this->getStatusIdByName('Pending Agreed Scope Approval-Vendor');
         self::$PENDING_AGREED_SCOPE_BUSINESS_STATUS_ID = $this->getStatusIdByName('Pending Agreed Scope Approval-Business');
-       
+
         self::$REQUEST_DRAFT_CR_DOC_STATUS_ID = $this->getStatusIdByName('Request Draft CR Doc');
-         self::$ATP_REVIEW_QC_STATUS_ID = \App\Services\StatusConfigService::getStatusId('ATP Review_qc');
-    self::$ATP_REVIEW_UAT_STATUS_ID = \App\Services\StatusConfigService::getStatusId('ATP Review_UAT');
-    self::$REQUEST_UPDATE_ATPS_STATUS_ID = \App\Services\StatusConfigService::getStatusId('Request Update ATPs');
-    
+        self::$ATP_REVIEW_QC_STATUS_ID = \App\Services\StatusConfigService::getStatusId('ATP Review_qc');
+        self::$ATP_REVIEW_UAT_STATUS_ID = \App\Services\StatusConfigService::getStatusId('ATP Review_UAT');
+        self::$REQUEST_UPDATE_ATPS_STATUS_ID = \App\Services\StatusConfigService::getStatusId('Request Update ATPs');
+
         $this->statusRepository = new ChangeRequestStatusRepository();
         $this->mailController = new MailController();
     }
@@ -100,109 +100,109 @@ class ChangeRequestStatusService
      */
 
     /**
- * Get workflow ID for transitioning from ATP Review statuses to Request Update ATPs
- */
-private function getRequestUpdateAtpsWorkflowId(int $changeRequestId): ?int
-{
-    // Get current status of the CR
-    $changeRequest = ChangeRequest::find($changeRequestId);
-    if (!$changeRequest) {
-        return null;
-    }
-    
-    $currentStatusId = $changeRequest->status_id;
-    
-    // Check if current status is one of the ATP Review statuses
-    if (!in_array($currentStatusId, [self::$ATP_REVIEW_QC_STATUS_ID, self::$ATP_REVIEW_UAT_STATUS_ID])) {
-        return null;
-    }
-    
-    // Find workflow from current ATP Review status to "Request Update ATPs"
-    $workflow = NewWorkFlow::where('from_status_id', $currentStatusId)
-        ->whereHas('workflowstatus', function($query) {
-            $query->where('to_status_id', self::$REQUEST_UPDATE_ATPS_STATUS_ID);
-        })
-        ->active()
-        ->first();
-    
-    return $workflow?->id;
-}
+     * Get workflow ID for transitioning from ATP Review statuses to Request Update ATPs
+     */
+    private function getRequestUpdateAtpsWorkflowId(int $changeRequestId): ?int
+    {
+        // Get current status of the CR
+        $changeRequest = ChangeRequest::find($changeRequestId);
+        if (!$changeRequest) {
+            return null;
+        }
 
-/**
- * Handle transition from ATP Review (QC/UAT) to Request Update ATPs
- * Sets the other ATP Review status to active=2
- */
-private function handleRequestUpdateAtpsTransition(int $changeRequestId, array $statusData): void
-{
-    Log::info('Handling Request Update ATPs transition', [
-        'cr_id' => $changeRequestId,
-        'status_data' => $statusData
-    ]);
-    
-    $changeRequest = ChangeRequest::findOrFail($changeRequestId);
-    $currentStatusId = $changeRequest->status_id;
-    
-    // Determine which ATP Review status to deactivate (the one we're NOT coming from)
-    $statusToDeactivate = null;
-    
-    if ($currentStatusId == self::$ATP_REVIEW_QC_STATUS_ID) {
-        // Coming from QC, so deactivate UAT if it exists
-        $statusToDeactivate = self::$ATP_REVIEW_UAT_STATUS_ID;
-        Log::info('Coming from ATP Review_qc, will deactivate ATP Review_UAT', [
-            'cr_id' => $changeRequestId
-        ]);
-    } elseif ($currentStatusId == self::$ATP_REVIEW_UAT_STATUS_ID) {
-        // Coming from UAT, so deactivate QC if it exists
-        $statusToDeactivate = self::$ATP_REVIEW_QC_STATUS_ID;
-        Log::info('Coming from ATP Review_UAT, will deactivate ATP Review_qc', [
-            'cr_id' => $changeRequestId
-        ]);
+        $currentStatusId = $changeRequest->status_id;
+
+        // Check if current status is one of the ATP Review statuses
+        if (!in_array($currentStatusId, [self::$ATP_REVIEW_QC_STATUS_ID, self::$ATP_REVIEW_UAT_STATUS_ID])) {
+            return null;
+        }
+
+        // Find workflow from current ATP Review status to "Request Update ATPs"
+        $workflow = NewWorkFlow::where('from_status_id', $currentStatusId)
+            ->whereHas('workflowstatus', function ($query) {
+                $query->where('to_status_id', self::$REQUEST_UPDATE_ATPS_STATUS_ID);
+            })
+            ->active()
+            ->first();
+
+        return $workflow?->id;
     }
-    
-    // Update the other ATP Review status to active=2
-    if ($statusToDeactivate) {
-        $updated = ChangeRequestStatus::where('change_request_id', $changeRequestId)
-            ->where('status_id', $statusToDeactivate)
-            ->where('active', 1) // Only update if currently active
-            ->update(['active' => 2]);
-        
-        if ($updated > 0) {
-            Log::info('Deactivated other ATP Review status', [
-                'cr_id' => $changeRequestId,
-                'deactivated_status_id' => $statusToDeactivate,
-                'rows_updated' => $updated
+
+    /**
+     * Handle transition from ATP Review (QC/UAT) to Request Update ATPs
+     * Sets the other ATP Review status to active=2
+     */
+    private function handleRequestUpdateAtpsTransition(int $changeRequestId, array $statusData): void
+    {
+        Log::info('Handling Request Update ATPs transition', [
+            'cr_id' => $changeRequestId,
+            'status_data' => $statusData
+        ]);
+
+        $changeRequest = ChangeRequest::findOrFail($changeRequestId);
+        $currentStatusId = $changeRequest->status_id;
+
+        // Determine which ATP Review status to deactivate (the one we're NOT coming from)
+        $statusToDeactivate = null;
+
+        if ($currentStatusId == self::$ATP_REVIEW_QC_STATUS_ID) {
+            // Coming from QC, so deactivate UAT if it exists
+            $statusToDeactivate = self::$ATP_REVIEW_UAT_STATUS_ID;
+            Log::info('Coming from ATP Review_qc, will deactivate ATP Review_UAT', [
+                'cr_id' => $changeRequestId
             ]);
-        } else {
-            Log::info('No active ATP Review status found to deactivate', [
-                'cr_id' => $changeRequestId,
-                'searched_status_id' => $statusToDeactivate
+        } elseif ($currentStatusId == self::$ATP_REVIEW_UAT_STATUS_ID) {
+            // Coming from UAT, so deactivate QC if it exists
+            $statusToDeactivate = self::$ATP_REVIEW_QC_STATUS_ID;
+            Log::info('Coming from ATP Review_UAT, will deactivate ATP Review_qc', [
+                'cr_id' => $changeRequestId
             ]);
         }
+
+        // Update the other ATP Review status to active=2
+        if ($statusToDeactivate) {
+            $updated = ChangeRequestStatus::where('change_request_id', $changeRequestId)
+                ->where('status_id', $statusToDeactivate)
+                ->where('active', 1) // Only update if currently active
+                ->update(['active' => 2]);
+
+            if ($updated > 0) {
+                Log::info('Deactivated other ATP Review status', [
+                    'cr_id' => $changeRequestId,
+                    'deactivated_status_id' => $statusToDeactivate,
+                    'rows_updated' => $updated
+                ]);
+            } else {
+                Log::info('No active ATP Review status found to deactivate', [
+                    'cr_id' => $changeRequestId,
+                    'searched_status_id' => $statusToDeactivate
+                ]);
+            }
+        }
+
+        // Now create the new "Request Update ATPs" status record
+        $newStatusRecord = ChangeRequestStatus::create([
+            'change_request_id' => $changeRequestId,
+            'status_id' => self::$REQUEST_UPDATE_ATPS_STATUS_ID,
+            'user_id' => $statusData['user_id'] ?? auth()->id(),
+            'active' => 1,
+            'comment' => $statusData['comment'] ?? 'Transition to Request Update ATPs',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // Update the change request main status
+        $changeRequest->update([
+            'status_id' => self::$REQUEST_UPDATE_ATPS_STATUS_ID,
+            'updated_at' => now(),
+        ]);
+
+        Log::info('Request Update ATPs transition completed', [
+            'cr_id' => $changeRequestId,
+            'new_status_record_id' => $newStatusRecord->id,
+            'new_status_id' => self::$REQUEST_UPDATE_ATPS_STATUS_ID
+        ]);
     }
-    
-    // Now create the new "Request Update ATPs" status record
-    $newStatusRecord = ChangeRequestStatus::create([
-        'change_request_id' => $changeRequestId,
-        'status_id' => self::$REQUEST_UPDATE_ATPS_STATUS_ID,
-        'user_id' => $statusData['user_id'] ?? auth()->id(),
-        'active' => 1,
-        'comment' => $statusData['comment'] ?? 'Transition to Request Update ATPs',
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]);
-    
-    // Update the change request main status
-    $changeRequest->update([
-        'status_id' => self::$REQUEST_UPDATE_ATPS_STATUS_ID,
-        'updated_at' => now(),
-    ]);
-    
-    Log::info('Request Update ATPs transition completed', [
-        'cr_id' => $changeRequestId,
-        'new_status_record_id' => $newStatusRecord->id,
-        'new_status_id' => self::$REQUEST_UPDATE_ATPS_STATUS_ID
-    ]);
-}
     private function haveBothWorkflowsReachedMergePoint(int $crId, string $mergeStatusName): bool
     {
         // Find the merge status ID
@@ -513,120 +513,122 @@ private function handleRequestUpdateAtpsTransition(int $changeRequestId, array $
     //     }
     // }
 
-  public function updateChangeRequestStatus(int $changeRequestId, $request): bool
-{
-    Log::info('updateChangeRequestStatus called', [
-        'change_request_id' => $changeRequestId,
-        'request_data' => $request->all()
-    ]);
+    public function updateChangeRequestStatus(int $changeRequestId, $request): bool
+    {
+        Log::info('updateChangeRequestStatus called', [
+            'change_request_id' => $changeRequestId,
+            'request_data' => $request->all()
+        ]);
 
-    try {
-        DB::beginTransaction();
+        try {
+            DB::beginTransaction();
 
-        $statusData = $this->extractStatusData($request);
+            $statusData = $this->extractStatusData($request);
 
-        // ════════════════════════════════════════════════════════════════
-        // ⭐⭐⭐ CRITICAL FIX: Early check for "Need Update" (dynamic workflow ID)
-        // This MUST run BEFORE processStatusUpdate to prevent unwanted records
-        // ════════════════════════════════════════════════════════════════
+            // ════════════════════════════════════════════════════════════════
+            // ⭐⭐⭐ CRITICAL FIX: Early check for "Need Update" (dynamic workflow ID)
+            // This MUST run BEFORE processStatusUpdate to prevent unwanted records
+            // ════════════════════════════════════════════════════════════════
 
-        // Get the workflow ID dynamically for "Need Update" transition
-        $needUpdateWorkflowId = $this->getNeedUpdateWorkflowId($changeRequestId, $statusData);
+            // Get the workflow ID dynamically for "Need Update" transition
+            $needUpdateWorkflowId = $this->getNeedUpdateWorkflowId($changeRequestId, $statusData);
 
-        if (isset($statusData['new_status_id']) && $statusData['new_status_id'] == $needUpdateWorkflowId) {
-            Log::info('Need Update detected (workflow ID ' . $needUpdateWorkflowId . ') - bypassing normal workflow', [
-                'cr_id' => $changeRequestId,
-                'status_id' => $statusData['new_status_id']
-            ]);
-
-            // Handle the special "Need Update" logic
-            $this->handleNeedUpdateTransition($changeRequestId, $statusData);
-
-            DB::commit();
-
-            Log::info('Need Update transition completed successfully', [
-                'cr_id' => $changeRequestId
-            ]);
-
-            return true; // ⭐ EXIT EARLY - don't run normal workflow
-        }
-
-        // ════════════════════════════════════════════════════════════════
-        // ⭐⭐⭐ NEW: Check for "Request Update ATPs" transition from ATP Review statuses
-        // ════════════════════════════════════════════════════════════════
-
-        $requestUpdateAtpsWorkflowId = $this->getRequestUpdateAtpsWorkflowId($changeRequestId);
-
-        if (isset($statusData['new_status_id']) && 
-            $statusData['new_status_id'] == $requestUpdateAtpsWorkflowId &&
-            self::$REQUEST_UPDATE_ATPS_STATUS_ID !== null &&
-            $statusData['new_status_id'] == self::$REQUEST_UPDATE_ATPS_STATUS_ID) {
-            
-            Log::info('Request Update ATPs transition detected from ATP Review status', [
-                'cr_id' => $changeRequestId,
-                'workflow_id' => $requestUpdateAtpsWorkflowId,
-                'status_id' => $statusData['new_status_id']
-            ]);
-
-            // Handle the special "Request Update ATPs" logic
-            $this->handleRequestUpdateAtpsTransition($changeRequestId, $statusData);
-
-            DB::commit();
-
-            Log::info('Request Update ATPs transition completed successfully', [
-                'cr_id' => $changeRequestId
-            ]);
-
-            return true; // ⭐ EXIT EARLY - don't run normal workflow
-        }
-
-        // ════════════════════════════════════════════════════════════════
-        // END OF REQUEST UPDATE ATPs FIX
-        // ════════════════════════════════════════════════════════════════
-
-        // Normal workflow continues only if NOT a special transition
-        $workflow = $this->getWorkflow($statusData);
-        $changeRequest = $this->getChangeRequest($changeRequestId);
-        $userId = $this->getUserId($changeRequest, $request);
-
-        if ($this->isTransitionFromPendingCab($changeRequest, $statusData)) {
-            $depService = $this->getDependencyService();
-            if ($depService->shouldHoldCr($changeRequestId)) {
-                // Apply dependency hold instead of transitioning
-                $depService->applyDependencyHold($changeRequestId);
-                Log::info('CR held due to unresolved dependencies', [
+            if (isset($statusData['new_status_id']) && $statusData['new_status_id'] == $needUpdateWorkflowId) {
+                Log::info('Need Update detected (workflow ID ' . $needUpdateWorkflowId . ') - bypassing normal workflow', [
                     'cr_id' => $changeRequestId,
-                    'cr_no' => $changeRequest->cr_no,
+                    'status_id' => $statusData['new_status_id']
                 ]);
+
+                // Handle the special "Need Update" logic
+                $this->handleNeedUpdateTransition($changeRequestId, $statusData);
+
                 DB::commit();
 
-                return true; // Block the transition
+                Log::info('Need Update transition completed successfully', [
+                    'cr_id' => $changeRequestId
+                ]);
+
+                return true; // ⭐ EXIT EARLY - don't run normal workflow
             }
+
+            // ════════════════════════════════════════════════════════════════
+            // ⭐⭐⭐ NEW: Check for "Request Update ATPs" transition from ATP Review statuses
+            // ════════════════════════════════════════════════════════════════
+
+            $requestUpdateAtpsWorkflowId = $this->getRequestUpdateAtpsWorkflowId($changeRequestId);
+
+            if (
+                isset($statusData['new_status_id']) &&
+                $statusData['new_status_id'] == $requestUpdateAtpsWorkflowId &&
+                self::$REQUEST_UPDATE_ATPS_STATUS_ID !== null &&
+                $statusData['new_status_id'] == self::$REQUEST_UPDATE_ATPS_STATUS_ID
+            ) {
+
+                Log::info('Request Update ATPs transition detected from ATP Review status', [
+                    'cr_id' => $changeRequestId,
+                    'workflow_id' => $requestUpdateAtpsWorkflowId,
+                    'status_id' => $statusData['new_status_id']
+                ]);
+
+                // Handle the special "Request Update ATPs" logic
+                $this->handleRequestUpdateAtpsTransition($changeRequestId, $statusData);
+
+                DB::commit();
+
+                Log::info('Request Update ATPs transition completed successfully', [
+                    'cr_id' => $changeRequestId
+                ]);
+
+                return true; // ⭐ EXIT EARLY - don't run normal workflow
+            }
+
+            // ════════════════════════════════════════════════════════════════
+            // END OF REQUEST UPDATE ATPs FIX
+            // ════════════════════════════════════════════════════════════════
+
+            // Normal workflow continues only if NOT a special transition
+            $workflow = $this->getWorkflow($statusData);
+            $changeRequest = $this->getChangeRequest($changeRequestId);
+            $userId = $this->getUserId($changeRequest, $request);
+
+            if ($this->isTransitionFromPendingCab($changeRequest, $statusData)) {
+                $depService = $this->getDependencyService();
+                if ($depService->shouldHoldCr($changeRequestId)) {
+                    // Apply dependency hold instead of transitioning
+                    $depService->applyDependencyHold($changeRequestId);
+                    Log::info('CR held due to unresolved dependencies', [
+                        'cr_id' => $changeRequestId,
+                        'cr_no' => $changeRequest->cr_no,
+                    ]);
+                    DB::commit();
+
+                    return true; // Block the transition
+                }
+            }
+
+            // Process update - determineActiveStatus handles merge point logic
+            $this->processStatusUpdate($changeRequest, $statusData, $workflow, $userId, $request);
+
+            $this->activatePendingMergeStatus($changeRequest->id, $statusData);
+
+            DB::commit();
+
+            // Fire CrDeliveredEvent if CR reached Delivered status
+            $this->checkAndFireDeliveredEvent($changeRequest, $statusData);
+
+            event(new ChangeRequestStatusUpdated($changeRequest, $statusData, $request, $this->active_flag));
+
+            return true;
+
+        } catch (Exception $e) {
+            DB::rollback();
+            Log::error('Error updating change request status', [
+                'change_request_id' => $changeRequestId,
+                'error' => $e->getMessage()
+            ]);
+            throw $e;
         }
-
-        // Process update - determineActiveStatus handles merge point logic
-        $this->processStatusUpdate($changeRequest, $statusData, $workflow, $userId, $request);
-
-        $this->activatePendingMergeStatus($changeRequest->id, $statusData);
-
-        DB::commit();
-
-        // Fire CrDeliveredEvent if CR reached Delivered status
-        $this->checkAndFireDeliveredEvent($changeRequest, $statusData);
-
-        event(new ChangeRequestStatusUpdated($changeRequest, $statusData, $request, $this->active_flag));
-
-        return true;
-
-    } catch (Exception $e) {
-        DB::rollback();
-        Log::error('Error updating change request status', [
-            'change_request_id' => $changeRequestId,
-            'error' => $e->getMessage()
-        ]);
-        throw $e;
     }
-}
 
     private function handleNeedUpdateTransition(int $crId, array $statusData): void
     {
@@ -1927,6 +1929,7 @@ private function handleRequestUpdateAtpsTransition(int $changeRequestId, array $
             ->get();
 
         if ($changeRequest->workflow_type_id == 9) {
+
             $NextStatusWorkflow = NewWorkFlow::find($newStatusId);
 
             if ($NextStatusWorkflow && isset($NextStatusWorkflow->workflowstatus[0])) {
