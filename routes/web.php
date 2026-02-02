@@ -1,52 +1,51 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use App\Services\EwsMailReader;
-
-// Controllers
-use App\Http\Controllers\HomeController;
-use App\Http\Controllers\ConfigurationController;
-use App\Http\Controllers\HoldReasonController;
+use App\Http\Controllers\Applications\ApplicationController;
 use App\Http\Controllers\Auth\CustomAuthController;
+// Controllers
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\CabUser\CabUserController;
 use App\Http\Controllers\ChangeRequest\Api\EmailApprovalController;
 use App\Http\Controllers\ChangeRequest\ChangeRequestController;
-use App\Http\Controllers\CustomFields\CustomFieldGroupTypeController;
+use App\Http\Controllers\ConfigurationController;
+use App\Http\Controllers\CustomField\CustomFieldController;
+use App\Http\Controllers\CustomField\CustomFieldStatusController;
 use App\Http\Controllers\CustomFields\CustomFieldController as CustomFieldsController;
-use App\Http\Controllers\CustomField\CustomFieldController as CustomFieldController;
-use App\Http\Controllers\Users\UserController;
-use App\Http\Controllers\Groups\GroupController;
-use App\Http\Controllers\Statuses\StatusController;
-use App\Http\Controllers\Division_manager\Division_managerController;
+use App\Http\Controllers\CustomFields\CustomFieldGroupTypeController;
+use App\Http\Controllers\Defect\DefectController;
 use App\Http\Controllers\Director\DirectorController;
-use App\Http\Controllers\KpiType\KpiTypeController;
-use App\Http\Controllers\KpiPillar\KpiPillarController;
-use App\Http\Controllers\KpiInitiative\KpiInitiativeController;
-use App\Http\Controllers\KpiSubInitiative\KpiSubInitiativeController;
-use App\Http\Controllers\Units\UnitController;
-use App\Http\Controllers\Stages\StageController;
-use App\Http\Controllers\RequesterDepartment\RequesterDepartmentController;
-use App\Http\Controllers\Parents\ParentController;
+use App\Http\Controllers\Division_manager\Division_managerController;
+use App\Http\Controllers\FinalConfirmation\FinalConfirmationController;
+use App\Http\Controllers\Groups\GroupController;
 use App\Http\Controllers\highLevelStatuses\highLevelStatusesControlller;
-use App\Http\Controllers\Search\SearchController;
-use App\Http\Controllers\Workflow\NewWorkFlowController;
-use App\Http\Controllers\Applications\ApplicationController;
-use App\Http\Controllers\RejectionReasons\RejectionReasonsController;
-use App\Http\Controllers\Roles\RolesController;
+use App\Http\Controllers\HoldReasonController;
+use App\Http\Controllers\HomeController;
+use App\Http\Controllers\KpiInitiative\KpiInitiativeController;
+use App\Http\Controllers\KpiPillar\KpiPillarController;
+use App\Http\Controllers\KpiProject\KpiProjectController;
+use App\Http\Controllers\KPIs\KPIController;
+use App\Http\Controllers\KpiSubInitiative\KpiSubInitiativeController;
+use App\Http\Controllers\KpiType\KpiTypeController;
+use App\Http\Controllers\NotificationRules\NotificationRulesController;
+use App\Http\Controllers\NotificationTemplates\NotificationTemplatesController;
+use App\Http\Controllers\Parents\ParentController;
 use App\Http\Controllers\Permissions\PermissionsController;
+use App\Http\Controllers\Prerequisites\PrerequisitesController;
+use App\Http\Controllers\Project\ProjectController;
+use App\Http\Controllers\RejectionReasons\RejectionReasonsController;
 use App\Http\Controllers\Releases\CRSReleaseController;
 use App\Http\Controllers\Releases\ReleaseController;
-use App\Http\Controllers\CabUser\CabUserController;
-use App\Http\Controllers\Defect\DefectController;
-use App\Http\Controllers\Sla\SlaCalculationController;
-use App\Http\Controllers\Prerequisites\PrerequisitesController;
-use App\Http\Controllers\FinalConfirmation\FinalConfirmationController;
-use App\Http\Controllers\NotificationTemplates\NotificationTemplatesController;
-use App\Http\Controllers\NotificationRules\NotificationRulesController;
-use App\Http\Controllers\KPIs\KPIController;
-use App\Http\Controllers\KpiProject\KpiProjectController;
-use App\Http\Controllers\Project\ProjectController;
 use App\Http\Controllers\Report\ReportController;
+use App\Http\Controllers\RequesterDepartment\RequesterDepartmentController;
+use App\Http\Controllers\Roles\RolesController;
+use App\Http\Controllers\Search\SearchController;
+use App\Http\Controllers\Sla\SlaCalculationController;
+use App\Http\Controllers\Stages\StageController;
+use App\Http\Controllers\Statuses\StatusController;
+use App\Http\Controllers\Units\UnitController;
+use App\Http\Controllers\Users\UserController;
+use App\Http\Controllers\Workflow\NewWorkFlowController;
+use Illuminate\Support\Facades\Route;
 
 /*
 |--------------------------------------------------------------------------
@@ -97,9 +96,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('dvision_manager_cr/unreadNotifications', 'unreadNotifications');
         Route::get('change_request1/selectUserGroup/{group?}', 'selectUserGroup')->name('change_request.selectUserGroup');
         Route::post('/select-group/{group}', 'selectGroup')->name('select_group');
-        Route::post('/change-requests/reorder', 'reorderChangeRequest')->name("change-requests.reorder");
-        Route::post('/change-requests/hold', 'holdChangeRequest')->name("change-requests.hold");
-        Route::get('/change-requests/reorder/home', 'reorderhome')->name("change-requests.reorder.home");
+        Route::post('/change-requests/reorder', 'reorderChangeRequest')->name('change-requests.reorder');
+        Route::post('/change-requests/hold', 'holdChangeRequest')->name('change-requests.hold');
+        Route::get('/change-requests/reorder/home', 'reorderhome')->name('change-requests.reorder.home');
         Route::get('change_request/workflow/type', 'Allsubtype');
         Route::get('files/download/{id}', 'download')->name('files.download');
         Route::get('files/delete/{id}', 'deleteFile')->name('files.delete');
@@ -195,6 +194,11 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('directors', DirectorController::class)->except(['show', 'destroy']);
     Route::post('directors/updateactive', [DirectorController::class, 'updateStatus'])->name('directors.updateStatus');
 
+    // Custom Field Status Log Messages
+    Route::get('custom-fields/log-messages/statuses', [CustomFieldStatusController::class, 'getActiveStatuses'])->name('custom-fields.log-messages.statuses');
+    Route::get('custom-fields/{id}/log-messages', [CustomFieldStatusController::class, 'index'])->where('id', '[0-9]+')->name('custom-fields.log-messages.index');
+    Route::post('custom-fields/{id}/log-messages', [CustomFieldStatusController::class, 'store'])->where('id', '[0-9]+')->name('custom-fields.log-messages.store');
+
     // Custom Fields (Resource / Singular Namespace)
     Route::resource('custom-fields', CustomFieldController::class)->except(['show', 'destroy']);
     Route::post('custom-fields/updateactive', [CustomFieldController::class, 'updateStatus'])->name('custom-fields.updateStatus');
@@ -263,7 +267,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Notification Templates
     Route::resource('notification_templates', NotificationTemplatesController::class);
-    
+
     // Notification Rules
     Route::resource('notification_rules', NotificationRulesController::class);
 

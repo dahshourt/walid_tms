@@ -59,6 +59,18 @@
         </div>
     </div>
 
+    <div class="form-group modern-form-group">
+        <label for="log_message">
+            Log Message
+            <button type="button" class="btn btn-sm btn-light-primary ml-2" onclick="insertPlaceholder('log_message', ':user_name')">
+                User Name
+            </button>
+        </label>
+        <textarea class="form-control modern-form-control" id="log_message" name="log_message" rows="3"
+                  placeholder="Optional log message">{{ isset($row) ? $row->log_message : old('log_message') }}</textarea>
+        {!! $errors->first('log_message', '<span class="form-control-feedback">:message</span>') !!}
+    </div>
+
     <!-- Section: Status Transition -->
     <div class="form-section-title">
         <i class="la la-exchange"></i> Status Transition
@@ -280,6 +292,25 @@
                     // Attach the event listener to handle changes
                     sameTimeCheckbox.addEventListener('change', handleCheckboxChange);
                 });
+
+                function insertPlaceholder(textareaId, placeholder) {
+                    var textarea = document.getElementById(textareaId);
+                    if (!textarea) return;
+                    
+                    var start = textarea.selectionStart;
+                    var end = textarea.selectionEnd;
+                    var text = textarea.value;
+                    
+                    // Insert placeholder at cursor position
+                    textarea.value = text.substring(0, start) + placeholder + text.substring(end);
+                    
+                    // Set cursor position after inserted text
+                    var newPosition = start + placeholder.length;
+                    textarea.setSelectionRange(newPosition, newPosition);
+                    
+                    // Focus the textarea
+                    textarea.focus();
+                }
 
     </script>
 @endpush

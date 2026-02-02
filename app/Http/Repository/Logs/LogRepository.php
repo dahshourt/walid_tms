@@ -316,13 +316,13 @@ class LogRepository implements LogRepositoryInterface
                 }
                 // Normal Status Log
                 else {
-                    $log_message_template = $request->get('cron_status_log_message');
+                    $log_message_template = $request->get('cron_status_log_message', $workflow->log_message);
                     $log_message = $this->prepareCRStatusLogMessage($request->new_status_id, $user, custom_log_message_template: $log_message_template);
 
                     $status_logs[] = $log_message;
                 }
             } else {
-                $log_message_template = $request->get('cron_status_log_message');
+                $log_message_template = $request->get('cron_status_log_message', $workflow->log_message);
                 $log_message = $this->prepareCRStatusLogMessage($request->new_status_id, $user, custom_log_message_template: $log_message_template);
 
                 if ($request->has('is_final_confirmation')) {
@@ -384,15 +384,15 @@ class LogRepository implements LogRepositoryInterface
         }
 
         if (isset($request->$startField) && isset($request->$endField)) {
-            $startField = match ($startField) {
+            $NewStartField = match ($startField) {
                 'start_design_time' => 'design_start_time',
                 'start_develop_time' => 'develop_start_time',
                 'start_test_time' => 'testing_start_time',
                 default => $startField
             };
 
-            $startLabel = Str::of($startField)->replace('_', ' ')->title();
-            $endLabel = Str::of($endField)->replace('_', ' ')->title();
+            $startLabel = Str::of($NewStartField)->replace('_', ' ')->title();
+            //            $endLabel = Str::of($endField)->replace('_', ' ')->title();
 
             $log_message = "Change Request $startLabel set to '{$request->$startField}' and end time set to '{$request->$endField}' by {$user->user_name}";
 

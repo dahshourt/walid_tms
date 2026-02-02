@@ -47,6 +47,7 @@ class NewWorkflowRequest extends FormRequest
             // 'to_status_label' => ['sometimes','nullable','string'],
             'to_status_id' => ['required'],
             'default_to_status' => ['sometimes', 'nullable', 'int'],
+            'log_message' => ['sometimes', 'nullable', 'string'],
 
         ];
         // $rules['to_status_id'] = is_array(request()->to_status_id) ? ['required','array'] : ['required','int'];
@@ -65,6 +66,7 @@ class NewWorkflowRequest extends FormRequest
 
             // 'to_status_label' => ['sometimes','nullable','string'],
             'default_to_status' => ['sometimes', 'nullable', 'int'],
+            'log_message' => ['sometimes', 'nullable', 'string'],
 
         ];
         $rules['to_status_id'] = is_array(request()->to_status_id) ? ['required', 'array'] : ['required', 'int'];
