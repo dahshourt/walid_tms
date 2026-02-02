@@ -25,6 +25,10 @@
         } else {
             $fieldValue = old($fieldName, $custom_field_value ?? '');
         }
+
+        if ($fieldName == 'man_days') {
+            $fieldValue = "";
+        }
     @endphp
 
     <div class="col-md-6 change-request-form-field field_{{ $fieldName }}">

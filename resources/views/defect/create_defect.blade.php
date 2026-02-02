@@ -22,12 +22,15 @@
                         <div class="card card-custom gutter-b">
                             <div class="card-header border-0 py-5">
                                 <h3 class="card-title align-items-start flex-column">
-                                    <span class="card-label font-weight-bolder text-dark">Create Defect For CR#{{$cr->cr_no}}</span>
-                                    <span class="text-muted mt-3 font-weight-bold font-size-sm">Fill in the details below to create a new defect</span>
+                                    <span class="card-label font-weight-bolder text-dark">Create Defect For
+                                        CR#{{$cr->cr_no}}</span>
+                                    <span class="text-muted mt-3 font-weight-bold font-size-sm">Fill in the details below to
+                                        create a new defect</span>
                                 </h3>
                             </div>
 
-                            <form class="form" action='{{URL("store_defect/")}}' method="post" enctype="multipart/form-data">
+                            <form class="form" action='{{URL("store_defect/")}}' method="post"
+                                enctype="multipart/form-data">
                                 {{ csrf_field() }}
 
                                 <input type="hidden" name="cr_id" value="{{$id}}">
@@ -39,25 +42,27 @@
                                                 @php
                                                     $customField = $field->CustomField;
                                                     // Default to col-md-4 for better modern spacing unless specified
-                                                    $fieldClasses = isset($field->styleClasses) ? $field->styleClasses : 'col-md-4'; 
+                                                    $fieldClasses = isset($field->styleClasses) ? $field->styleClasses : 'col-md-4';
                                                     // Ensure we don't have conflicting col classes if we want a fresh look, 
                                                     // but respect logic if it was dynamic. For now, assuming standarization:
-                                                    if(strpos($fieldClasses, 'col-') === false) {
+                                                    if (strpos($fieldClasses, 'col-') === false) {
                                                         $fieldClasses .= ' col-md-4';
                                                     }
                                                 @endphp
 
                                                 <div class="{{ $fieldClasses }} mb-6 modern-form-group">
-                                                    <label for="{{ $customField->name }}" class="font-weight-bolder text-dark">{{ $customField->label }}
+                                                    <label for="{{ $customField->name }}"
+                                                        class="font-weight-bolder text-dark">{{ $customField->label }}
                                                         @if(isset($customField->required) && $customField->required)
                                                             <span class="text-danger">*</span>
                                                         @endif
                                                     </label>
 
                                                     @if ($customField->type == 'select')
-                                                        <select class="form-control modern-form-control form-control-lg" id="{{ $customField->name }}" name="{{ $customField->name }}">
+                                                        <select class="form-control modern-form-control form-control-lg"
+                                                            id="{{ $customField->name }}" name="{{ $customField->name }}">
                                                             <option value="">Select {{ $customField->label }}</option>
-                                                            
+
                                                             @if($customField->name == "defect_status")
                                                                 @foreach ($defect_status as $value)
                                                                     <option value="{{ $value->id }}">{{ $value->status_name }}</option>
@@ -66,15 +71,18 @@
 
                                                             @if($customField->name == "technical_team")
                                                                 @foreach ($technical_team as $value)
-                                                                    <option value="{{ $value->id }}">{{ $value->name }}</option>
+                                                                @if(in_array($value->id, $selected_cr_technical_team))
+                                                                    <option value="{{ $value->id }}" >
+                                                                        {{ $value->name }}</option>
+                                                                @endif
                                                                 @endforeach
                                                             @endif
 
-                                                            @if($customField->name == "priority_id")
-                                                                @foreach ($priorities as $value)
-                                                                    <option value="{{ $value->id }}">{{ $value->name }}</option>
-                                                                @endforeach
-                                                            @endif
+                                                                @if($customField->name == "priority_id")
+                                                                    @foreach ($priorities as $value)
+                                                                        <option value="{{ $value->id }}">{{ $value->name }}</option>
+                                                                    @endforeach
+                                                                @endif
 
                                                             @if($customField->name == "application_id")
                                                                 @foreach ($applications as $value)
@@ -99,7 +107,7 @@
                                                                     <option value="{{ $value->id }}">{{ $value->name }}</option>
                                                                 @endforeach
                                                             @endif
-                                                            
+
                                                             @if($customField->name == "workflow_type_id")
                                                                 @foreach ($workflows as $value)
                                                                     <option value="{{ $value->id }}">{{ $value->name }}</option>
@@ -128,8 +136,11 @@
                                                             value="{{ old($customField->name) }}">
                                                     @elseif ($customField->type == 'file')
                                                         <div class="custom-file">
-                                                            <input type="file" class="custom-file-input" id="{{ $customField->name }}" name="{{ $customField->name }}[]">
-                                                            <label class="custom-file-label modern-form-control form-control-lg" style="height: auto; align-content: center;" for="{{ $customField->name }}">Choose file</label>
+                                                            <input type="file" class="custom-file-input" id="{{ $customField->name }}"
+                                                                name="{{ $customField->name }}[]">
+                                                            <label class="custom-file-label modern-form-control form-control-lg"
+                                                                style="height: auto; align-content: center;"
+                                                                for="{{ $customField->name }}">Choose file</label>
                                                         </div>
                                                     @endif
                                                 </div>
@@ -146,7 +157,9 @@
                                 </div>
 
                                 <div class="card-footer bg-white border-top-0 pt-0 pb-10 text-right">
-                                    <button type="submit" class="btn btn-primary font-weight-bolder px-9 py-4 shadow-sm hover-elevate-up">Add Defect</button>
+                                    <button type="submit"
+                                        class="btn btn-primary font-weight-bolder px-9 py-4 shadow-sm hover-elevate-up">Add
+                                        Defect</button>
                                 </div>
                             </form>
                         </div>

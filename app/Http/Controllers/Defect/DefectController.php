@@ -71,8 +71,8 @@ class DefectController extends Controller
         $technical_team = Group::where('technical_team', '1')->get();
         $defect_status = $this->status->get_defect_status();
         $CustomFields = $this->custom_field_group_type->getAllCustomFieldsWithSelectedByformType('form_type', 7);
-
-        return view("$this->view.create_defect", compact('id', 'CustomFields', 'technical_team', 'defect_status', 'cr'));
+        $selected_cr_technical_team = $cr->technicalCrFirst->technical_cr_team->pluck('group_id')->toArray();
+        return view("$this->view.create_defect", compact('id', 'CustomFields', 'technical_team', 'defect_status', 'cr', 'selected_cr_technical_team'));
     }
 
     /**
