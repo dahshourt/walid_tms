@@ -32,11 +32,8 @@ class NotificationRulesRepository implements NotificationRulesRepositoryInterfac
     public function create($data)
     {
         return DB::transaction(function () use ($data) {
-            // Build conditions JSON
-            $conditions = null;
-            if (!empty($data['condition_type']) && !empty($data['condition_value'])) {
-                $conditions = [$data['condition_type'] => $data['condition_value']];
-            }
+            // Build conditions JSON from conditions array
+            $conditions = $this->buildConditionsFromArray($data['conditions'] ?? []);
 
             // Create the rule
             $rule = NotificationRule::create([
@@ -63,11 +60,8 @@ class NotificationRulesRepository implements NotificationRulesRepositoryInterfac
         return DB::transaction(function () use ($data, $id) {
             $rule = NotificationRule::findOrFail($id);
 
-            // Build conditions JSON
-            $conditions = null;
-            if (!empty($data['condition_type']) && !empty($data['condition_value'])) {
-                $conditions = [$data['condition_type'] => $data['condition_value']];
-            }
+            // Build conditions JSON from conditions array
+            $conditions = $this->buildConditionsFromArray($data['conditions'] ?? []);
 
             // Update the rule
             $rule->update([
@@ -126,6 +120,47 @@ class NotificationRulesRepository implements NotificationRulesRepositoryInterfac
                 'recipient_identifier' => $identifier,
             ]);
         }
+    }
+
+    /**
+     * Build conditions JSON from the form's conditions array.
+     * 
+     * @param array $conditionsArray
+     * @return array|null
+     */
+    protected function buildConditionsFromArray(array $conditionsArray): ?array
+    {
+        if (empty($conditionsArray)) {
+            return null;
+        }
+
+        $conditions = [];
+        
+        foreach ($conditionsArray as $condition) {
+            // Skip empty rows
+            if (empty($condition['type'])) {
+                continue;
+            }
+
+            $type = $condition['type'];
+
+            if ($type === 'custom_field') {
+                // Custom field condition
+                if (!empty($condition['custom_field_name']) && isset($condition['custom_field_value'])) {
+                    $conditions['custom_field'] = [
+                        'name' => $condition['custom_field_name'],
+                        'value' => $condition['custom_field_value'],
+                    ];
+                }
+            } else {
+                // Standard conditions (workflow_type, new_status_id, etc.)
+                if (!empty($condition['value'])) {
+                    $conditions[$type] = $condition['value'];
+                }
+            }
+        }
+
+        return empty($conditions) ? null : $conditions;
     }
 
     // Get all rules as a list (no pagination).
