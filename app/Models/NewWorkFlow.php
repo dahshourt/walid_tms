@@ -30,6 +30,7 @@ class NewWorkFlow extends Model
         'workflow_type', // this is flag especially or not
         'to_status_label',
         'type_id', // this is workflow type id
+        'log_message',
     ];
 
     public function from_status()
