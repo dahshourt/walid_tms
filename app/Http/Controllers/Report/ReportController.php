@@ -12,6 +12,8 @@ use App\Factories\NewWorkFlow\NewWorkFlowFactory;
 use App\Factories\Workflow\Workflow_type_factory;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use App\Exports\SlaReportExport;
+use App\Exports\KpiReportExport;
 
 
 class ReportController extends Controller
@@ -180,8 +182,14 @@ technical_implementation_ranked AS (
                 ]);
     }*/
 
-public function actualVsPlanned(Request $request)
+    public function actualVsPlanned(Request $request)
     {
+        $relevant_with = $request->input('relevant_with');
+        $depend_on = $request->input('depend_on');
+        $top_management = $request->input('top_management');
+        $on_hold = $request->input('on_hold');
+        $on_behalf = $request->input('on_behalf');
+
         $query = DB::table('change_request as req')
             ->leftJoin('applications as apps', 'apps.id', '=', 'req.application_id')
             ->leftJoin('workflow_type as flow', 'flow.id', '=', 'req.workflow_type_id')
@@ -239,6 +247,14 @@ public function actualVsPlanned(Request $request)
             ->leftJoin('users as pend_test_assig_usr', 'pend_test_assig_usr.id', '=', 'pend_test.user_id')
             ->leftJoin('user_groups as usr_grp', 'usr_grp.user_id', '=', 'tetch_implt_start.user_id')
             ->leftJoin('groups as technical_team', 'technical_team.id', '=', 'usr_grp.group_id')
+            ->leftJoin('change_request_custom_fields as dpnd_on', function($join) {
+                $join->on('dpnd_on.cr_id', '=', 'req.id')
+                     ->where('dpnd_on.custom_field_name', '=', 'cr_type');
+            })
+            ->leftJoin('change_request_custom_fields as rlvvnt', function($join) {
+                $join->on('rlvvnt.cr_id', '=', 'req.id')
+                     ->where('rlvvnt.custom_field_name', '=', 'cr_type');
+            })
 
             ->selectRaw("
               
@@ -269,8 +285,25 @@ public function actualVsPlanned(Request $request)
                 req.division_manager,
                 'Not Found' AS `Requseter division`,
                 'Not Found' AS `Requester Sector`
-            ")
-            ->groupBy("req.cr_no");
+            ");
+
+        if ($top_management) {
+            $query->where('req.top_management', $top_management);
+        }
+
+        if ($on_hold) {
+            $query->where('req.hold', $on_hold);
+        }
+
+        if ($depend_on) {
+            $query->where('dpnd_on.custom_field_value', $depend_on);
+        }
+
+        if ($relevant_with) {
+            $query->where('rlvvnt.custom_field_value', $relevant_with);
+        }
+
+        $query->groupBy("req.cr_no");
 
         // handle export
         if ($request->has('export')) {
@@ -289,6 +322,12 @@ public function actualVsPlanned(Request $request)
      */
     public function allCrsByRequester(Request $request)
     {
+        $relevant_with = $request->input('relevant_with');
+        $depend_on = $request->input('depend_on');
+        $top_management = $request->input('top_management');
+        $on_hold = $request->input('on_hold');
+        $on_behalf = $request->input('on_behalf');
+
 $query = "
                        WITH pend_design_ranked AS (
     SELECT 
@@ -456,6 +495,10 @@ $query = "
     LEFT JOIN change_request_statuses as chang_stat_busen_tst_cas_appval ON  chang_stat_busen_tst_cas_appval.cr_id = req.id and  chang_stat_busen_tst_cas_appval.new_status_id = 41
     LEFT JOIN change_request_statuses as chang_stat_busen_uat_sign_off ON  chang_stat_busen_uat_sign_off.cr_id = req.id and  chang_stat_busen_uat_sign_off.new_status_id = 44
 
+   LEFT JOIN change_request_custom_fields AS dpnd_on  ON dpnd_on.cr_id = req.id AND dpnd_on.custom_field_name = 'cr_type'
+    LEFT JOIN change_request_custom_fields AS rlvvnt  ON rlvvnt.cr_id = req.id AND rlvvnt.custom_field_name = 'cr_type'
+
+
     LEFT JOIN users AS pend_design_assig_usr ON pend_design_assig_usr.id = pend_design.user_id 
     LEFT JOIN users AS pend_imple_assig_usr ON pend_imple_assig_usr.id = pend_implement.user_id 
     LEFT JOIN `groups` AS grop ON grop.id = pend_implement.group_id 
@@ -463,11 +506,34 @@ $query = "
     LEFT JOIN change_request_custom_fields as chang_custm_rejt_reason ON  chang_custm_rejt_reason.cr_id = req.id and  chang_custm_rejt_reason.custom_field_id = 63
     LEFT JOIN rejection_reasons as rejt_reason ON  rejt_reason.id = chang_custm_rejt_reason.custom_field_value 
    
-   GROUP BY req.cr_no;
+    WHERE 1=1
+   ";
 
-                ";
+        $bindings = [];
 
-                $results = \DB::select($query);
+        if ($top_management) {
+            $query .= " AND req.top_management = ?";
+            $bindings[] = $top_management;
+        }
+
+        if ($on_hold) {
+            $query .= " AND req.hold = ?";
+            $bindings[] = $on_hold;
+        }
+
+        if ($depend_on) {
+            $query .= " AND dpnd_on.custom_field_value = ?";
+            $bindings[] = $depend_on;
+        }
+
+        if ($relevant_with) {
+            $query .= " AND rlvvnt.custom_field_value = ?";
+            $bindings[] = $relevant_with;
+        }
+
+        $query .= " GROUP BY req.cr_no";
+
+        $results = \DB::select($query, $bindings);
                 $results = collect($results);
 
                 // Pagination setup
@@ -617,6 +683,12 @@ $query = "
         $status_ids = $request->input('status_ids', []);      // array
         $cr_nos = $request->input('cr_nos');                 // optional text field "CR001,CR002"
 
+        $relevant_with = $request->input('relevant_with');
+        $depend_on = $request->input('depend_on');
+        $top_management = $request->input('top_management');
+        $on_hold = $request->input('on_hold');
+        $on_behalf = $request->input('on_behalf');
+
         // 2) Build query dynamically
         $query = DB::table('change_request as req')
             ->leftJoin('applications as apps', 'apps.id', '=', 'req.application_id')
@@ -638,6 +710,14 @@ $query = "
             })
             ->leftJoin('users as usr', 'usr.id', '=', 'custom_field_chang.custom_field_value')
             ->leftJoin('roles', 'roles.id', '=', 'usr.role_id')
+            ->leftJoin('change_request_custom_fields as dpnd_on', function($join) {
+                $join->on('dpnd_on.cr_id', '=', 'req.id')
+                     ->where('dpnd_on.custom_field_name', '=', 'cr_type');
+            })
+            ->leftJoin('change_request_custom_fields as rlvvnt', function($join) {
+                $join->on('rlvvnt.cr_id', '=', 'req.id')
+                     ->where('rlvvnt.custom_field_name', '=', 'cr_type');
+            })
             ->select(
                 'req.cr_no',
                 'apps.name as Applications',
@@ -676,6 +756,22 @@ $query = "
             $query->whereIn('req.cr_no', $cr_nos_array);
         }
 
+        if ($top_management) {
+            $query->where('req.top_management', $top_management);
+        }
+
+        if ($on_hold) {
+            $query->where('req.hold', $on_hold);
+        }
+
+        if ($depend_on) {
+            $query->where('dpnd_on.custom_field_value', $depend_on);
+        }
+
+        if ($relevant_with) {
+            $query->where('rlvvnt.custom_field_value', $relevant_with);
+        }
+
         $results = collect($query->get());
 
         // 4) Pagination
@@ -705,6 +801,13 @@ $query = "
      */
     public function crCrossedSla(Request $request)
     {
+        $relevant_with = $request->input('relevant_with');
+        $depend_on = $request->input('depend_on');
+        $top_management = $request->input('top_management');
+        $on_hold = $request->input('on_hold');
+        $on_behalf = $request->input('on_behalf');
+
+        $bindings = [];
 
         $query = "
                          WITH pend_design_ranked AS (
@@ -787,10 +890,13 @@ $query = "
    LEFT JOIN users AS pend_imple_assig_usr ON pend_imple_assig_usr.id = pend_implement.user_id 
    LEFT JOIN `groups` AS grop ON grop.id = pend_implement.group_id 
    LEFT JOIN users AS pend_test_assig_usr ON pend_test_assig_usr.id = pend_test.user_id 
-   
+
+     LEFT JOIN change_request_custom_fields AS dpnd_on  ON dpnd_on.cr_id = req.id AND dpnd_on.custom_field_name = 'cr_type'
+    LEFT JOIN change_request_custom_fields AS rlvvnt  ON rlvvnt.cr_id = req.id AND rlvvnt.custom_field_name = 'cr_type'
+
    where 
 	 -- Design mismatch
-    req.start_design_time < pend_design.created_at
+    (req.start_design_time < pend_design.created_at
     OR req.end_design_time < pend_design.updated_at
     
     -- Implementation mismatch
@@ -799,16 +905,35 @@ $query = "
 
     -- Testing mismatch
     OR req.start_test_time < pend_test.created_at
-    OR req.end_test_time < pend_test.updated_at
-    
-    GROUP BY req.cr_no;
-    
+    OR req.end_test_time < pend_test.updated_at)
+    ";
 
+        // start new filter
+        if ($top_management) {
+            $query .= " AND req.top_management = ?";
+            $bindings[] = $top_management;
+        }
 
-                ";
+        if ($on_hold) {
+            $query .= " AND req.hold = ?";
+            $bindings[] = $on_hold;
+        }
 
-                $results = \DB::select($query);
-                $results = collect($results);
+        if ($depend_on) {
+            $query .= " AND dpnd_on.custom_field_value = ?";
+            $bindings[] = $depend_on;
+        }
+
+        if ($relevant_with) {
+            $query .= " AND rlvvnt.custom_field_value = ?";
+            $bindings[] = $relevant_with;
+        }
+        // end new filter
+
+        $query .= " GROUP BY req.cr_no";
+
+        $results = \DB::select($query, $bindings);
+        $results = collect($results);
 
                 // Pagination setup
                 $perPage = 10;
@@ -844,9 +969,16 @@ $query = "
      */
     public function rejectedCrs(Request $request)
     {
+        $relevant_with = $request->input('relevant_with');
+        $depend_on = $request->input('depend_on');
+        $top_management = $request->input('top_management');
+        $on_hold = $request->input('on_hold');
+        $on_behalf = $request->input('on_behalf');
 
-   $query = "
-           SELECT 
+        $bindings = [];
+
+        $query = "
+            SELECT 
         req.cr_no,
        
         apps.`name` 'Applications',
@@ -855,7 +987,7 @@ $query = "
    --     chang_stat_reject.created_at 'Review and estimation start date' ,
     --    chang_stat_reject.updated_at 'Review and estimation start date' ,
      --   chang_stat_analysis.created_at 'Analysis start date',
-   --     chang_stat_analysis.updated_at 'Analysis start date',
+    --     chang_stat_analysis.updated_at 'Analysis start date',
         chang_stat_busin_valid.created_at 'Business Validation Status Start Date',
         chang_stat_busin_valid.updated_at 'Business Validation Status End Date',
         chang_stat_pend_cab.created_at 'Pending CAB status Start Date',
@@ -891,8 +1023,8 @@ $query = "
          chang_stat_closed.created_at 'Closed Date',
         stat.status_name 'Previous Status',
     --    CONCAT(sla.unit_sla_time, ' ', sla.sla_type_unit) AS `Assigned SLA`,
-   --     grou.title AS `Assigned team`,
-   --     usr.user_name as 'Assigned Member',
+    --     grou.title AS `Assigned team`,
+    --     usr.user_name as 'Assigned Member',
     --    roles.`name` as 'Assigned member level',
         req.requester_name,
         req.division_manager,
@@ -934,6 +1066,10 @@ $query = "
     LEFT JOIN roles as assigned_user_level_test  ON roles.id = usr_test.role_id 
 
 
+    LEFT JOIN change_request_custom_fields AS dpnd_on  ON dpnd_on.cr_id = req.id AND dpnd_on.custom_field_name = 'cr_type'
+    LEFT JOIN change_request_custom_fields AS rlvvnt  ON rlvvnt.cr_id = req.id AND rlvvnt.custom_field_name = 'cr_type'
+
+
      LEFT JOIN change_request_statuses as chang_stat_closed ON  chang_stat_closed.cr_id = req.id and  chang_stat_closed.new_status_id = 49
   LEFT JOIN change_request_statuses as chang_stat_delivered ON  chang_stat_delivered.cr_id = req.id and  chang_stat_delivered.new_status_id = 27
      LEFT JOIN change_request_statuses as chang_stat_delivery ON  chang_stat_delivery.cr_id = req.id and  chang_stat_delivery.new_status_id = 60
@@ -941,26 +1077,47 @@ $query = "
      LEFT JOIN rejection_reasons as rejt_reason ON  rejt_reason.id = chang_custm_rejt_reason.custom_field_value 
 
 
-    where curr_status.new_status_id = 19
-    GROUP BY req.cr_no;
+    WHERE curr_status.new_status_id = 19
+    ";
 
+        // start new filter
+        if ($top_management) {
+            $query .= " AND req.top_management = ?";
+            $bindings[] = $top_management;
+        }
 
-                ";
+        if ($on_hold) {
+            $query .= " AND req.hold = ?";
+            $bindings[] = $on_hold;
+        }
 
-                $results = \DB::select($query);
-                $results = collect($results);
+        if ($depend_on) {
+            $query .= " AND dpnd_on.custom_field_value = ?";
+            $bindings[] = $depend_on;
+        }
 
-                // Pagination setup
-                $perPage = 10;
-                $page = $request->get('page', 1);
+        if ($relevant_with) {
+            $query .= " AND rlvvnt.custom_field_value = ?";
+            $bindings[] = $relevant_with;
+        }
+        // end new filter
 
-                // Slice collection for current page
-                $currentPageItems = $results->slice(($page - 1) * $perPage, $perPage)->values();
+        $query .= " GROUP BY req.cr_no";
 
-                // Create LengthAwarePaginator
-                $paginatedResults = new LengthAwarePaginator(
-                    $currentPageItems,
-                    $results->count(),
+        $results = \DB::select($query, $bindings);
+        $results = collect($results);
+
+        // Pagination setup
+        $perPage = 10;
+        $page = $request->get('page', 1);
+
+        // Slice collection for current page
+        $currentPageItems = $results->slice(($page - 1) * $perPage, $perPage)->values();
+
+        // Create LengthAwarePaginator
+        $paginatedResults = new LengthAwarePaginator(
+            $currentPageItems,
+            $results->count(),
                     $perPage,
                     $page,
                     ['path' => $request->url(), 'query' => $request->query()]
@@ -994,6 +1151,12 @@ $query = "
         $unit_id = $request->input('unit_id');
         $status_name = $request->input('status_name');
         $department_id = $request->input('department_id');
+
+        $relevant_with = $request->input('relevant_with');
+        $depend_on = $request->input('depend_on');
+        $top_management = $request->input('top_management');
+        $on_hold = $request->input('on_hold');
+        $on_behalf = $request->input('on_behalf');
 
         // Dynamic ID fetching for consistency, though seeding implies a fixed name
         $department_field_id = \DB::table('custom_fields')->where('name', 'requester_department')->value('id');
@@ -1074,28 +1237,47 @@ SELECT
         ) <= sla_busns_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
     ) AS 'Business Validation',
 
-    -- Testing Estimation
+   -- Testing Estimation
     IF(
-        IF(tstig_est_val.sla_type_unit = 'day', 
-           (TIMESTAMPDIFF(DAY, tstig_est_stats.created_at, tstig_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tstig_est_stats.created_at, tstig_est_stats.updated_at) + WEEKDAY(tstig_est_stats.created_at) + 1) / 7) * 2)),
-           (TIMESTAMPDIFF(DAY, tstig_est_stats.created_at, tstig_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tstig_est_stats.created_at, tstig_est_stats.updated_at) + WEEKDAY(tstig_est_stats.created_at) + 1) / 7) * 2)) * 8
-        ) <= tstig_est_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
+        req.start_test_time > 0 AND req.end_test_time > 0,
+        -- If valid timestamps exist, calculate the Business Day SLA
+        IF(
+            IF(tstig_est_val.sla_type_unit = 'day', 
+            (TIMESTAMPDIFF(DAY, tstig_est_stats.created_at, tstig_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tstig_est_stats.created_at, tstig_est_stats.updated_at) + WEEKDAY(tstig_est_stats.created_at) + 1) / 7) * 2)),
+            (TIMESTAMPDIFF(DAY, tstig_est_stats.created_at, tstig_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tstig_est_stats.created_at, tstig_est_stats.updated_at) + WEEKDAY(tstig_est_stats.created_at) + 1) / 7) * 2)) * 8
+            ) <= tstig_est_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
+        ),
+        -- If start_test_time or end_test_time are NULL or 0, return N/A
+        'N/A'
     ) AS 'Testing Estimation',
 
-    -- Design Estimation
+   -- 2. Design Estimation Column (with N/A Logic)
+IF(req.start_design_time > 0 AND req.end_design_time > 0,
+    -- Inner Logic: Only runs if design status is 'Design'
     IF(
         IF(dsign_est_val.sla_type_unit = 'day', 
-           (TIMESTAMPDIFF(DAY, dsign_est_stats.created_at, dsign_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, dsign_est_stats.created_at, dsign_est_stats.updated_at) + WEEKDAY(dsign_est_stats.created_at) + 1) / 7) * 2)),
-           (TIMESTAMPDIFF(DAY, dsign_est_stats.created_at, dsign_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, dsign_est_stats.created_at, dsign_est_stats.updated_at) + WEEKDAY(dsign_est_stats.created_at) + 1) / 7) * 2)) * 8
+            (TIMESTAMPDIFF(DAY, dsign_est_stats.created_at, dsign_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, dsign_est_stats.created_at, dsign_est_stats.updated_at) + WEEKDAY(dsign_est_stats.created_at) + 1) / 7) * 2)),
+            (TIMESTAMPDIFF(DAY, dsign_est_stats.created_at, dsign_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, dsign_est_stats.created_at, dsign_est_stats.updated_at) + WEEKDAY(dsign_est_stats.created_at) + 1) / 7) * 2)) * 8
         ) <= dsign_est_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
-    ) AS 'Design Estimation',
+    ),
+    -- Default value if conditions aren't met
+    'N/A'
+) AS 'Design Estimation',
 
     -- Technical Estimation
     IF(
-        IF(tech_est_val.sla_type_unit = 'day', 
-           (TIMESTAMPDIFF(DAY, tech_est_stats.created_at, tech_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tech_est_stats.created_at, tech_est_stats.updated_at) + WEEKDAY(tech_est_stats.created_at) + 1) / 7) * 2)),
-           (TIMESTAMPDIFF(DAY, tech_est_stats.created_at, tech_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tech_est_stats.created_at, tech_est_stats.updated_at) + WEEKDAY(tech_est_stats.created_at) + 1) / 7) * 2)) * 8
-        ) <= tech_est_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
+        req.start_develop_time > 0 AND req.end_develop_time > 0 
+        AND req.start_develop_time IS NOT NULL 
+        AND req.end_develop_time IS NOT NULL,
+        -- If Development times are valid, run the SLA logic
+        IF(
+            IF(tech_est_val.sla_type_unit = 'day', 
+            (TIMESTAMPDIFF(DAY, tech_est_stats.created_at, tech_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tech_est_stats.created_at, tech_est_stats.updated_at) + WEEKDAY(tech_est_stats.created_at) + 1) / 7) * 2)),
+            (TIMESTAMPDIFF(DAY, tech_est_stats.created_at, tech_est_stats.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tech_est_stats.created_at, tech_est_stats.updated_at) + WEEKDAY(tech_est_stats.created_at) + 1) / 7) * 2)) * 8
+            ) <= tech_est_val.unit_sla_time, 'Meet SLA', 'No Meet SLA'
+        ),
+        -- If Null or Zero, return N/A
+        'N/A'
     ) AS 'Technical Estimation',
 
     -- Pending Design Document Approval QC 
@@ -1236,6 +1418,8 @@ LEFT JOIN `groups` AS technical_team ON technical_team.id = usr_grp.group_id
    LEFT JOIN technical_implementation_ranked AS tetch_implt_start ON tetch_implt_start.cr_id = req.id  AND tetch_implt_start.rn = 1
    LEFT JOIN pend_testing_ranked pend_test ON pend_test.cr_id = req.id AND pend_test.rn = 1
 
+LEFT JOIN change_request_custom_fields AS dpnd_on  ON dpnd_on.cr_id = req.id AND dpnd_on.custom_field_name = 'cr_type'
+LEFT JOIN change_request_custom_fields AS rlvvnt  ON rlvvnt.cr_id = req.id AND rlvvnt.custom_field_name = 'cr_type'
 
 -- Category
 LEFT JOIN change_request_custom_fields AS cut_felds_cagoy ON cut_felds_cagoy.cr_id = req.id AND cut_felds_cagoy.custom_field_id = '31'
@@ -1252,6 +1436,27 @@ LEFT JOIN categories AS categry ON categry.id = cut_felds_cagoy.custom_field_val
         if ($from_date) {
             $query .= " AND req.created_at >= ?";
             $bindings[] = $from_date . ' 00:00:00';
+        }
+
+         if ($top_management) {
+            $query .= " AND req.top_management = ?";
+            $bindings[] = $top_management;
+        }
+
+        if ($on_hold) {
+            $query .= " AND req.hold = ?";
+            $bindings[] = $on_hold;
+        }
+
+        if ($depend_on) {
+           // dd($depend_on);
+            $query .= " AND dpnd_on.custom_field_value = ?";
+            $bindings[] = $depend_on;
+        }
+
+        if ($relevant_with) {
+            $query .= " AND rlvvnt.custom_field_value = ?";
+            $bindings[] = $relevant_with;
         }
 
         if ($to_date) {
@@ -1281,6 +1486,10 @@ LEFT JOIN categories AS categry ON categry.id = cut_felds_cagoy.custom_field_val
 
         // Execute query
         $results = collect(DB::select($query, $bindings));
+
+        if ($request->has('export')) {
+            return Excel::download(new SlaReportExport($results), 'sla_report.xlsx');
+        }
 
         // Pagination
         $perPage = 10;
@@ -1317,6 +1526,12 @@ LEFT JOIN categories AS categry ON categry.id = cut_felds_cagoy.custom_field_val
         $unit_id = $request->input('unit_id');
         $status_name = $request->input('status_name');
         $department_id = $request->input('department_id');
+
+        $relevant_with = $request->input('relevant_with');
+        $depend_on = $request->input('depend_on');
+        $top_management = $request->input('top_management');
+        $on_hold = $request->input('on_hold');
+        $on_behalf = $request->input('on_behalf');
 
         // Dynamic ID fetching for consistency
         $department_field_id = \DB::table('custom_fields')->where('name', 'requester_department')->value('id');
@@ -1426,33 +1641,54 @@ SELECT
 
     -- Design Estimation Comparison
     IF(
-        -- Actual Duration (8-hour work day, excluding Fri/Sat)
-        ((TIMESTAMPDIFF(DAY, designprogress.created_at, designprogress.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, designprogress.created_at, designprogress.updated_at) + WEEKDAY(designprogress.created_at) + 1) / 7) * 2)) * 8) 
-        <= 
-        -- Planned Duration (8-hour work day, excluding Fri/Sat)
-        ((TIMESTAMPDIFF(DAY, req.start_design_time, req.end_design_time) - (FLOOR((TIMESTAMPDIFF(DAY, req.start_design_time, req.end_design_time) + WEEKDAY(req.start_design_time) + 1) / 7) * 2)) * 8),
-        'Meet', 'Not Meet'
-    ) AS 'Design Estimation',
+        req.start_design_time > 0 AND req.end_design_time > 0,
+        -- If Design exists, perform the comparison math
+        IF(
+            -- Actual Duration (8-hour work day, excluding Fri/Sat)
+            ((TIMESTAMPDIFF(DAY, designprogress.created_at, designprogress.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, designprogress.created_at, designprogress.updated_at) + WEEKDAY(designprogress.created_at) + 1) / 7) * 2)) * 8) 
+            <= 
+            -- Planned Duration (8-hour work day, excluding Fri/Sat)
+            ((TIMESTAMPDIFF(DAY, req.start_design_time, req.end_design_time) - (FLOOR((TIMESTAMPDIFF(DAY, req.start_design_time, req.end_design_time) + WEEKDAY(req.start_design_time) + 1) / 7) * 2)) * 8),
+            'Meet', 
+            'Not Meet'
+        ),
+        -- If No Design, return N/A
+        'N/A'
+    ) AS 'Design Estimation ',
 
-    -- Technical Implementation Comparison
-    IF(
-        -- Actual Duration (8-hour work day, excluding Fri/Sat)
-        ((TIMESTAMPDIFF(DAY, tetch_implt_start.created_at, tetch_implt_start.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tetch_implt_start.created_at, tetch_implt_start.updated_at) + WEEKDAY(tetch_implt_start.created_at) + 1) / 7) * 2)) * 8) 
-        <= 
-        -- Planned Duration (8-hour work day, excluding Fri/Sat)
-        ((TIMESTAMPDIFF(DAY, req.start_develop_time, req.end_develop_time) - (FLOOR((TIMESTAMPDIFF(DAY, req.start_develop_time, req.end_develop_time) + WEEKDAY(req.start_develop_time) + 1) / 7) * 2)) * 8),
-        'Meet', 'Not Meet'
-    ) AS 'Technical Estimation',
+   -- Technical Implementation Comparison
+        IF(
+            req.start_develop_time > 0 AND req.end_develop_time > 0,
+            -- If valid development plan exists, run the comparison
+            IF(
+            -- Actual Duration (8-hour work day, excluding Fri/Sat)
+            ((TIMESTAMPDIFF(DAY, tetch_implt_start.created_at, tetch_implt_start.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, tetch_implt_start.created_at, tetch_implt_start.updated_at) + WEEKDAY(tetch_implt_start.created_at) + 1) / 7) * 2)) * 8) 
+            <= 
+            -- Planned Duration (8-hour work day, excluding Fri/Sat)
+            ((TIMESTAMPDIFF(DAY, req.start_develop_time, req.end_develop_time) - (FLOOR((TIMESTAMPDIFF(DAY, req.start_develop_time, req.end_develop_time) + WEEKDAY(req.start_develop_time) + 1) / 7) * 2)) * 8),
+            'Meet', 
+            'Not Meet'
+        ),
+        -- If start_develop_time or end_develop_time are NULL or 0, return N/A
+        'N/A'
+        ) AS 'Technical Estimation',
 
-    -- Testing Estimation Comparison
+   -- Testing Estimation Comparison
     IF(
-        -- Actual Duration (8-hour work day, excluding Fri/Sat)
-        ((TIMESTAMPDIFF(DAY, pend_test.created_at, pend_test.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, pend_test.created_at, pend_test.updated_at) + WEEKDAY(pend_test.created_at) + 1) / 7) * 2)) * 8) 
-        <= 
-        -- Planned Duration (8-hour work day, excluding Fri/Sat)
-        ((TIMESTAMPDIFF(DAY, req.start_test_time, req.end_test_time) - (FLOOR((TIMESTAMPDIFF(DAY, req.start_test_time, req.end_test_time) + WEEKDAY(req.start_test_time) + 1) / 7) * 2)) * 8),
-        'Meet', 'Not Meet'
-    ) AS 'Testing Estimation',
+        req.start_test_time > 0 AND req.end_test_time > 0,
+        -- If valid test plan exists, run the comparison
+        IF(
+            -- Actual Duration (8-hour work day, excluding Fri/Sat)
+            ((TIMESTAMPDIFF(DAY, pend_test.created_at, pend_test.updated_at) - (FLOOR((TIMESTAMPDIFF(DAY, pend_test.created_at, pend_test.updated_at) + WEEKDAY(pend_test.created_at) + 1) / 7) * 2)) * 8) 
+            <= 
+            -- Planned Duration (8-hour work day, excluding Fri/Sat)
+            ((TIMESTAMPDIFF(DAY, req.start_test_time, req.end_test_time) - (FLOOR((TIMESTAMPDIFF(DAY, req.start_test_time, req.end_test_time) + WEEKDAY(req.start_test_time) + 1) / 7) * 2)) * 8),
+            'Meet', 
+            'Not Meet'
+        ),
+        -- If start_test_time or end_test_time are NULL or 0, return N/A
+        'N/A'
+    ) AS 'Testing Estimation ',
    
    -- Test InProgress vs Rework Logic
     CASE 
@@ -1513,57 +1749,91 @@ IF(
         'Not Meet'
     ) AS 'Rework Time-Design Rework',
     
-     (SELECT COUNT(*) 
- FROM change_request_statuses 
- WHERE cr_id = req.id AND new_status_id = 28) AS 'Rework',
-IF(
-        -- ACTUAL: Total Working Hours spent in 'Pending Rework' (Status 28)
-        COALESCE(
-            (SELECT SUM(
-                ((TIMESTAMPDIFF(DAY, created_at, updated_at) - 
-                (FLOOR((TIMESTAMPDIFF(DAY, created_at, updated_at) + WEEKDAY(created_at) + 1) / 7) * 2)) * 8)
-                + (TIMESTAMPDIFF(HOUR, created_at, updated_at) % 24)
-            )
-            FROM change_request_statuses 
-            WHERE cr_id = req.id AND new_status_id = 28), 
-        0) 
-        <= 
-        -- THRESHOLD: 25% of the Planned Technical Estimation Duration
-        (
-            ((TIMESTAMPDIFF(DAY, req.start_develop_time, req.end_develop_time) - 
-            (FLOOR((TIMESTAMPDIFF(DAY, req.start_develop_time, req.end_develop_time) + WEEKDAY(req.start_develop_time) + 1) / 7) * 2)) * 8) 
-            * 0.25
-        ), 
-        'Meet', 'Not Meet'
+   -- Rework Count
+    IF(
+        req.start_develop_time > 0 AND req.end_develop_time > 0,
+        -- If development times exist, perform the count
+        (SELECT COUNT(*) 
+        FROM change_request_statuses 
+        WHERE cr_id = req.id AND new_status_id = 28),
+        -- If start_develop_time or end_develop_time are NULL or 0, return N/A
+        'N/A'
+    ) AS 'Rework',
+    -- Time Rework
+    IF(
+        req.start_develop_time > 0 AND req.end_develop_time > 0,
+        -- If Development times exist, calculate the Rework vs Threshold
+        IF(
+            -- ACTUAL: Total Working Hours spent in 'Pending Rework' (Status 28)
+            COALESCE(
+                (SELECT SUM(
+                    ((TIMESTAMPDIFF(DAY, created_at, updated_at) - 
+                    (FLOOR((TIMESTAMPDIFF(DAY, created_at, updated_at) + WEEKDAY(created_at) + 1) / 7) * 2)) * 8)
+                    + (TIMESTAMPDIFF(HOUR, created_at, updated_at) % 24)
+                )
+                FROM change_request_statuses 
+                WHERE cr_id = req.id AND new_status_id = 28), 
+            0) 
+            <= 
+            -- THRESHOLD: 25% of the Planned Technical Estimation Duration
+            (
+                ((TIMESTAMPDIFF(DAY, req.start_develop_time, req.end_develop_time) - 
+                (FLOOR((TIMESTAMPDIFF(DAY, req.start_develop_time, req.end_develop_time) + WEEKDAY(req.start_develop_time) + 1) / 7) * 2)) * 8) 
+                * 0.25
+            ), 
+            'Meet', 'Not Meet'
+        ),
+        -- If no Development Plan, return N/A
+        'N/A'
     ) AS 'Time Rework',
     
-     (SELECT COUNT(*) 
- FROM change_request_statuses 
- WHERE cr_id = req.id AND new_status_id = 53) AS 'Count TC-Rwork',
+    -- Count TC-Rework
+    IF(
+        req.start_develop_time > 0 AND req.end_develop_time > 0,
+        -- If Development times exist, perform the count
+        (SELECT COUNT(*) 
+        FROM change_request_statuses 
+        WHERE cr_id = req.id AND new_status_id = 53),
+        -- If start_develop_time or end_develop_time are NULL or 0, return N/A
+        'N/A'
+    ) AS 'Count TC-Rwork',
  
- IF(
-        -- ACTUAL: Sum of all working hours in Status 53
-        COALESCE(
-            (SELECT SUM(
-                ((TIMESTAMPDIFF(DAY, created_at, updated_at) - 
-                (FLOOR((TIMESTAMPDIFF(DAY, created_at, updated_at) + WEEKDAY(created_at) + 1) / 7) * 2)) * 8)
-                + (TIMESTAMPDIFF(HOUR, created_at, updated_at) % 24)
-            )
-            FROM change_request_statuses 
-            WHERE cr_id = req.id AND new_status_id = 53), 
-        0) 
-        <= 
-        -- THRESHOLD: 25% of Testing Planned Duration
-        (
-            ((TIMESTAMPDIFF(DAY, req.start_test_time, req.end_test_time) - 
-            (FLOOR((TIMESTAMPDIFF(DAY, req.start_test_time, req.end_test_time) + WEEKDAY(req.start_test_time) + 1) / 7) * 2)) * 8) 
-            * 0.25
-        ), 
-        'Meet', 'Not Meet'
+    -- Time TC-Rwork
+    IF(
+        req.start_test_time > 0 AND req.end_test_time > 0,
+        -- If Testing timestamps exist, run the comparison logic
+        IF(
+            -- ACTUAL: Sum of all working hours in Status 53
+            COALESCE(
+                (SELECT SUM(
+                    ((TIMESTAMPDIFF(DAY, created_at, updated_at) - 
+                    (FLOOR((TIMESTAMPDIFF(DAY, created_at, updated_at) + WEEKDAY(created_at) + 1) / 7) * 2)) * 8)
+                    + (TIMESTAMPDIFF(HOUR, created_at, updated_at) % 24)
+                )
+                FROM change_request_statuses 
+                WHERE cr_id = req.id AND new_status_id = 53), 
+            0) 
+            <= 
+            -- THRESHOLD: 25% of Testing Planned Duration
+            (
+                ((TIMESTAMPDIFF(DAY, req.start_test_time, req.end_test_time) - 
+                (FLOOR((TIMESTAMPDIFF(DAY, req.start_test_time, req.end_test_time) + WEEKDAY(req.start_test_time) + 1) / 7) * 2)) * 8) 
+                * 0.25
+            ), 
+            'Meet', 'Not Meet'
+        ),
+        -- If no Testing Plan, return N/A
+        'N/A'
     ) AS 'Time TC-Rwork',
  
--- Delivery SLA Condition
-    IF(req.end_test_time >= pend_test.updated_at, 'Meet', 'Not Meet') AS 'Meet Delivery Date'
+-- Meet Delivery Date
+IF(
+    req.end_test_time > 0 AND req.end_test_time IS NOT NULL,
+    -- If a planned end time exists, compare it to the actual update time
+    IF(req.end_test_time >= pend_test.updated_at, 'Meet', 'Not Meet'),
+    -- If end_test_time is NULL or 0, return N/A
+    'N/A'
+) AS 'Meet Delivery Date'
 
 
 FROM change_request AS req
@@ -1603,6 +1873,8 @@ LEFT JOIN health_check_ranked AS health_check_rnk
 -- Health Check VS Rework
   LEFT JOIN change_request_statuses AS pendig_rework_after_health ON pendig_rework_after_health.id = (SELECT id FROM change_request_statuses WHERE cr_id = req.id AND new_status_id = '14' and id > health_check_rnk.id limit 1)
 
+LEFT JOIN change_request_custom_fields AS dpnd_on  ON dpnd_on.cr_id = req.id AND dpnd_on.custom_field_name = 'cr_type'
+LEFT JOIN change_request_custom_fields AS rlvvnt  ON rlvvnt.cr_id = req.id AND rlvvnt.custom_field_name = 'cr_type'
 
 
 -- Technical Team
@@ -1625,6 +1897,28 @@ LEFT JOIN categories AS categry ON categry.id = cut_felds_cagoy.custom_field_val
             $query .= " AND req.created_at >= ?";
             $bindings[] = $from_date . ' 00:00:00';
         }
+
+        if ($top_management) {
+            $query .= " AND req.top_management = ?";
+            $bindings[] = $top_management;
+        }
+
+        if ($on_hold) {
+            $query .= " AND req.hold = ?";
+            $bindings[] = $on_hold;
+        }
+
+        if ($depend_on) {
+           // dd($depend_on);
+            $query .= " AND dpnd_on.custom_field_value = ?";
+            $bindings[] = $depend_on;
+        }
+
+        if ($relevant_with) {
+            $query .= " AND rlvvnt.custom_field_value = ?";
+            $bindings[] = $relevant_with;
+        }
+        
 
         if ($to_date) {
             $query .= " AND req.created_at <= ?";
@@ -1653,6 +1947,10 @@ LEFT JOIN categories AS categry ON categry.id = cut_felds_cagoy.custom_field_val
 
         // Execute query
         $results = collect(DB::select($query, $bindings));
+
+        if ($request->has('export')) {
+            return Excel::download(new KpiReportExport($results), 'kpi_report.xlsx');
+        }
 
         // --- KPI Statistics Calculation ---
         $kpiColumns = [

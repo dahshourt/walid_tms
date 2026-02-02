@@ -76,6 +76,30 @@
                                 </button>
                             </div>
                         </div>
+                        <div class="row mt-2">
+                            <div class="col-md-12">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="relevant_with" id="relevant_with" value="3" {{ request('relevant_with') == 3 ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="relevant_with">Relevant with</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="depend_on" id="depend_on" value="2" {{ request('depend_on') == 2 ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="depend_on">Depend On</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="top_management" id="top_management" value="1" {{ request('top_management') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="top_management">Top Management</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="on_hold" id="on_hold" value="1" {{ request('on_hold') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="on_hold">ON-Hold</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="on_behalf" id="on_behalf" value="1" {{ request('on_behalf') ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="on_behalf">On Behalf</label>
+                                </div>
+                            </div>
+                        </div>
                     </form>
                  </div>
                 <div class="card-body">
