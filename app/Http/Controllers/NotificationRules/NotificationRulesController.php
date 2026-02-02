@@ -141,6 +141,10 @@ class NotificationRulesController extends Controller
                 'workflow_type_not' => 'Workflow Type Is Not',
                 'new_status_id' => 'New Status Is',
                 'old_status_id' => 'Old Status Is',
+                'custom_field' => 'Custom Field Equals',
+            ],
+            'customFields' => [
+                'need_design' => 'Need Design',
             ],
             'workflowTypes' => WorkFlowType::active()
                 ->orderBy('name')
@@ -181,11 +185,20 @@ class NotificationRulesController extends Controller
             'workflow_type_not' => 'Workflow Type Is Not',
             'new_status_id' => 'New Status Is',
             'old_status_id' => 'Old Status Is',
+            'custom_field' => 'Custom Field',
         ];
 
         $parts = [];
         foreach ($conditions as $type => $value) {
             $label = $labels[$type] ?? $type;
+            
+            // Handle custom_field condition
+            if ($type === 'custom_field' && is_array($value)) {
+                $fieldName = $value['name'] ?? 'unknown';
+                $fieldValue = $value['value'] ?? 'unknown';
+                $parts[] = "Custom Field '{$fieldName}' = '{$fieldValue}'";
+                continue;
+            }
             
             // Try to get the actual name
             if (in_array($type, ['workflow_type', 'workflow_type_not'])) {

@@ -13,10 +13,20 @@
                 'workflow_type_not' => 'Workflow ≠',
                 'new_status_id' => 'New Status =',
                 'old_status_id' => 'Old Status =',
+                'custom_field' => 'Custom Field',
             ];
             $parts = [];
             foreach ($item->conditions as $type => $value) {
                 $label = $condLabels[$type] ?? $type;
+                
+                // Handle custom_field condition (array with name and value)
+                if ($type === 'custom_field' && is_array($value)) {
+                    $fieldName = $value['name'] ?? 'unknown';
+                    $fieldValue = $value['value'] ?? 'unknown';
+                    $parts[] = "{$fieldName} = {$fieldValue}";
+                    continue;
+                }
+                
                 if (in_array($type, ['workflow_type', 'workflow_type_not'])) {
                     $workflow = \App\Models\WorkFlowType::find($value);
                     $valueName = $workflow ? $workflow->name : "ID: $value";
@@ -24,7 +34,7 @@
                     $status = \App\Models\Status::find($value);
                     $valueName = $status ? $status->status_name : "ID: $value";
                 } else {
-                    $valueName = $value;
+                    $valueName = is_array($value) ? json_encode($value) : $value;
                 }
                 $parts[] = "$label $valueName";
             }

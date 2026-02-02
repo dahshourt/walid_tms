@@ -69,6 +69,24 @@ class NotificationService
                 return false;
             }
         }
+
+        // Check custom_field condition (for checking custom field values like need_design)
+        if (isset($conditions['custom_field'])) {
+            $fieldName = $conditions['custom_field']['name'] ?? null;
+            $expectedValue = $conditions['custom_field']['value'] ?? null;
+            
+            if ($fieldName && $expectedValue !== null) {
+                $customField = $event->changeRequest->change_request_custom_fields()
+                    ->where('custom_field_name', $fieldName)
+                    ->first();
+                
+                $actualValue = $customField?->custom_field_value;
+                
+                if ($actualValue != $expectedValue) {
+                    return false;
+                }
+            }
+        }
         
         return true;
     }

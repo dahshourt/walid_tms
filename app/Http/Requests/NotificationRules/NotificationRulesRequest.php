@@ -43,8 +43,13 @@ class NotificationRulesRequest extends FormRequest
             'template_id' => ['required', 'exists:notification_templates,id'],
             'priority' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'condition_type' => ['nullable', 'string', 'in:workflow_type,workflow_type_not,new_status_id,old_status_id'],
-            'condition_value' => ['nullable', 'required_with:condition_type', 'string'],
+            
+            // Multiple conditions validation
+            'conditions' => ['nullable', 'array'],
+            'conditions.*.type' => ['required', 'string', 'in:workflow_type,workflow_type_not,new_status_id,old_status_id,custom_field'],
+            'conditions.*.value' => ['nullable', 'string'],
+            'conditions.*.custom_field_name' => ['nullable', 'string'],
+            'conditions.*.custom_field_value' => ['nullable', 'string'],
             
             // Recipients validation
             'recipients' => ['nullable', 'array'],
@@ -67,8 +72,13 @@ class NotificationRulesRequest extends FormRequest
             'template_id' => ['required', 'exists:notification_templates,id'],
             'priority' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
-            'condition_type' => ['nullable', 'string', 'in:workflow_type,workflow_type_not,new_status_id,old_status_id'],
-            'condition_value' => ['nullable', 'required_with:condition_type', 'string'],
+            
+            // Multiple conditions validation
+            'conditions' => ['nullable', 'array'],
+            'conditions.*.type' => ['required', 'string', 'in:workflow_type,workflow_type_not,new_status_id,old_status_id,custom_field'],
+            'conditions.*.value' => ['nullable', 'string'],
+            'conditions.*.custom_field_name' => ['nullable', 'string'],
+            'conditions.*.custom_field_value' => ['nullable', 'string'],
             
             // Recipients validation
             'recipients' => ['nullable', 'array'],

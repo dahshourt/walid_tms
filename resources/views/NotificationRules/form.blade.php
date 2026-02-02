@@ -101,44 +101,113 @@
         <div class="card-title">
             <h3 class="card-label">
                 <i class="text-warning"></i>
-                Condition
+                Conditions
             </h3>
+        </div>
+        <div class="card-toolbar">
+            <button type="button" class="btn btn-primary btn-sm" id="addCondition">
+                <i class="la la-plus"></i> Add Condition
+            </button>
         </div>
     </div>
     <div class="card-body">
         <p class="text-muted mb-4">
             <i class="text-primary"></i>
-            Define when this rule should apply.
+            Define when this rule should apply. All conditions must be met (AND logic).
         </p>
-        <div class="row">
-            <div class="col-md-5">
-                <div class="form-group">
-                    <label for="condition_type">Condition Type <span class="text-danger">*</span></label>
-                    <select class="form-control form-control-lg" id="condition_type" name="condition_type" required>
-                        <option value="">-- No Condition --</option>
-                        @foreach($conditionTypes as $value => $label)
-                            <option value="{{ $value }}" 
-                                {{ (isset($existingConditionType) && $existingConditionType == $value) || old('condition_type') == $value ? 'selected' : '' }}
-                                data-source="{{ in_array($value, ['workflow_type', 'workflow_type_not']) ? 'workflow' : 'status' }}">
-                                {{ $label }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-            <div class="col-md-5">
-                <div class="form-group">
-                    <label for="condition_value">Condition Value <span class="text-danger">*</span></label>
-                    <select class="form-control form-control-lg" id="condition_value" name="condition_value" required disabled>
-                        <option value="">-- Select Condition Type First --</option>
-                    </select>
-                </div>
-            </div>
-            <div class="col-md-2 d-flex align-items-end">
-                <button type="button" class="btn btn-light-danger btn-icon mb-3" id="clearCondition" title="Clear Condition">
-                    <i class="la la-times"></i>
-                </button>
-            </div>
+        
+        <div id="conditionsContainer">
+            @php
+                $existingConditions = [];
+                if (isset($row) && $row->conditions && is_array($row->conditions)) {
+                    foreach ($row->conditions as $type => $value) {
+                        if ($type === 'custom_field' && is_array($value)) {
+                            $existingConditions[] = [
+                                'type' => 'custom_field',
+                                'custom_field_name' => $value['name'] ?? '',
+                                'custom_field_value' => $value['value'] ?? ''
+                            ];
+                        } else {
+                            $existingConditions[] = [
+                                'type' => $type,
+                                'value' => $value
+                            ];
+                        }
+                    }
+                }
+            @endphp
+            
+            @if(count($existingConditions) > 0)
+                @foreach($existingConditions as $index => $cond)
+                    <div class="condition-row border rounded p-3 mb-3" data-index="{{ $index }}">
+                        <div class="row align-items-end">
+                            <div class="col-md-3">
+                                <div class="form-group mb-0">
+                                    <label>Condition Type <span class="text-danger">*</span></label>
+                                    <select class="form-control condition-type-select" name="conditions[{{ $index }}][type]" required>
+                                        <option value="">-- Select Type --</option>
+                                        @foreach($conditionTypes as $value => $label)
+                                            <option value="{{ $value }}" 
+                                                data-source="{{ in_array($value, ['workflow_type', 'workflow_type_not']) ? 'workflow' : (in_array($value, ['new_status_id', 'old_status_id']) ? 'status' : 'custom') }}"
+                                                {{ $cond['type'] == $value ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3 condition-value-col" style="{{ $cond['type'] !== 'custom_field' ? '' : 'display:none;' }}">
+                                <div class="form-group mb-0">
+                                    <label>Condition Value <span class="text-danger">*</span></label>
+                                    <select class="form-control condition-value-select" name="conditions[{{ $index }}][value]">
+                                        <option value="">-- Select Value --</option>
+                                        @if(in_array($cond['type'], ['workflow_type', 'workflow_type_not']))
+                                            @foreach($workflowTypes as $id => $name)
+                                                <option value="{{ $id }}" {{ ($cond['value'] ?? '') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                                            @endforeach
+                                        @elseif(in_array($cond['type'], ['new_status_id', 'old_status_id']))
+                                            @foreach($statuses as $id => $name)
+                                                <option value="{{ $id }}" {{ ($cond['value'] ?? '') == $id ? 'selected' : '' }}>{{ $name }}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-3 custom-field-name-col" style="{{ $cond['type'] === 'custom_field' ? '' : 'display:none;' }}">
+                                <div class="form-group mb-0">
+                                    <label>Field Name <span class="text-danger">*</span></label>
+                                    <select class="form-control custom-field-name" name="conditions[{{ $index }}][custom_field_name]">
+                                        <option value="">-- Select Field --</option>
+                                        @foreach($customFields as $fieldName => $fieldLabel)
+                                            <option value="{{ $fieldName }}" {{ ($cond['custom_field_name'] ?? '') == $fieldName ? 'selected' : '' }}>{{ $fieldLabel }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-2 custom-field-value-col" style="{{ $cond['type'] === 'custom_field' ? '' : 'display:none;' }}">
+                                <div class="form-group mb-0">
+                                    <label>Expected Value <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control custom-field-value" 
+                                           name="conditions[{{ $index }}][custom_field_value]" 
+                                           value="{{ $cond['custom_field_value'] ?? '' }}"
+                                           placeholder="e.g. 1">
+                                </div>
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-light-danger btn-icon remove-condition" title="Remove Condition">
+                                    <i class="la la-trash-o"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            @endif
+        </div>
+        
+        <div id="noConditionsMessage" class="text-center text-muted py-4" style="{{ count($existingConditions) > 0 ? 'display:none;' : '' }}">
+            <i class="flaticon-questions-circular-button icon-3x text-muted mb-3"></i>
+            <p class="mb-0">No conditions added. This rule will always execute when the event fires.</p>
+            <p class="mb-0">Click "Add Condition" to add filtering conditions.</p>
         </div>
     </div>
 </div>
@@ -317,50 +386,123 @@ $(document).ready(function() {
     // Data for condition values
     var workflowTypes = @json($workflowTypes);
     var statuses = @json($statuses);
+    var customFields = @json($customFields ?? []);
     var users = @json($users);
     var groups = @json($groups);
-    var existingConditionValue = "{{ $existingConditionValue ?? '' }}";
     
-    // Recipient index counter
+    // Index counters
+    var conditionIndex = {{ isset($row) && $row->conditions ? count($row->conditions) : 0 }};
     var recipientIndex = {{ isset($row) && $row->recipients ? count($row->recipients) : 1 }};
     
-    // Handle condition type change
-    $('#condition_type').change(function() {
-        var selectedOption = $(this).find('option:selected');
-        var source = selectedOption.data('source');
-        var $valueSelect = $('#condition_value');
-        
-        if (!$(this).val()) {
-            $valueSelect.prop('disabled', true).html('<option value="">-- Select Condition Type First --</option>');
-            return;
-        }
-        
-        $valueSelect.prop('disabled', false);
-        var options = '<option value="">-- Select Value --</option>';
-        
-        if (source === 'workflow') {
-            $.each(workflowTypes, function(id, name) {
-                var selected = existingConditionValue == id ? 'selected' : '';
-                options += '<option value="' + id + '" ' + selected + '>' + name + '</option>';
-            });
-        } else {
-            $.each(statuses, function(id, name) {
-                var selected = existingConditionValue == id ? 'selected' : '';
-                options += '<option value="' + id + '" ' + selected + '>' + name + '</option>';
-            });
-        }
-        
-        $valueSelect.html(options);
-    });
-    
-    // Trigger condition type change on page load if there's an existing value
-    if ($('#condition_type').val()) {
-        $('#condition_type').trigger('change');
+    // Build condition type options HTML
+    function getConditionTypesHtml() {
+        var html = '<option value="">-- Select Type --</option>';
+        @foreach($conditionTypes as $value => $label)
+            html += '<option value="{{ $value }}" data-source="{{ in_array($value, ["workflow_type", "workflow_type_not"]) ? "workflow" : (in_array($value, ["new_status_id", "old_status_id"]) ? "status" : "custom") }}">{{ $label }}</option>';
+        @endforeach
+        return html;
     }
     
-    // Clear condition
-    $('#clearCondition').click(function() {
-        $('#condition_type').val('').trigger('change');
+    // Build custom fields options HTML
+    function getCustomFieldsHtml() {
+        var html = '<option value="">-- Select Field --</option>';
+        $.each(customFields, function(name, label) {
+            html += '<option value="' + name + '">' + label + '</option>';
+        });
+        return html;
+    }
+    
+    // Handle condition type change
+    $(document).on('change', '.condition-type-select', function() {
+        var $row = $(this).closest('.condition-row');
+        var selectedOption = $(this).find('option:selected');
+        var source = selectedOption.data('source');
+        var $valueSelect = $row.find('.condition-value-select');
+        var $valueCol = $row.find('.condition-value-col');
+        var $customNameCol = $row.find('.custom-field-name-col');
+        var $customValueCol = $row.find('.custom-field-value-col');
+        
+        if (source === 'custom') {
+            // Custom field type - show custom field inputs, hide value dropdown
+            $valueCol.hide();
+            $customNameCol.show();
+            $customValueCol.show();
+        } else {
+            // Standard condition types
+            $valueCol.show();
+            $customNameCol.hide();
+            $customValueCol.hide();
+            
+            var options = '<option value="">-- Select Value --</option>';
+            
+            if (source === 'workflow') {
+                $.each(workflowTypes, function(id, name) {
+                    options += '<option value="' + id + '">' + name + '</option>';
+                });
+            } else if (source === 'status') {
+                $.each(statuses, function(id, name) {
+                    options += '<option value="' + id + '">' + name + '</option>';
+                });
+            }
+            
+            $valueSelect.html(options);
+        }
+    });
+    
+    // Add condition row
+    $('#addCondition').click(function() {
+        var newRow = '<div class="condition-row border rounded p-3 mb-3" data-index="' + conditionIndex + '">' +
+            '<div class="row align-items-end">' +
+                '<div class="col-md-3">' +
+                    '<div class="form-group mb-0">' +
+                        '<label>Condition Type <span class="text-danger">*</span></label>' +
+                        '<select class="form-control condition-type-select" name="conditions[' + conditionIndex + '][type]" required>' +
+                            getConditionTypesHtml() +
+                        '</select>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="col-md-3 condition-value-col">' +
+                    '<div class="form-group mb-0">' +
+                        '<label>Condition Value <span class="text-danger">*</span></label>' +
+                        '<select class="form-control condition-value-select" name="conditions[' + conditionIndex + '][value]">' +
+                            '<option value="">-- Select Type First --</option>' +
+                        '</select>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="col-md-3 custom-field-name-col" style="display:none;">' +
+                    '<div class="form-group mb-0">' +
+                        '<label>Field Name <span class="text-danger">*</span></label>' +
+                        '<select class="form-control custom-field-name" name="conditions[' + conditionIndex + '][custom_field_name]">' +
+                            getCustomFieldsHtml() +
+                        '</select>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="col-md-2 custom-field-value-col" style="display:none;">' +
+                    '<div class="form-group mb-0">' +
+                        '<label>Expected Value <span class="text-danger">*</span></label>' +
+                        '<input type="text" class="form-control custom-field-value" name="conditions[' + conditionIndex + '][custom_field_value]" placeholder="e.g. 1">' +
+                    '</div>' +
+                '</div>' +
+                '<div class="col-md-1">' +
+                    '<button type="button" class="btn btn-light-danger btn-icon remove-condition" title="Remove Condition">' +
+                        '<i class="la la-trash-o"></i>' +
+                    '</button>' +
+                '</div>' +
+            '</div>' +
+        '</div>';
+        
+        $('#noConditionsMessage').hide();
+        $('#conditionsContainer').append(newRow);
+        conditionIndex++;
+    });
+    
+    // Remove condition row
+    $(document).on('click', '.remove-condition', function() {
+        $(this).closest('.condition-row').remove();
+        
+        if ($('.condition-row').length === 0) {
+            $('#noConditionsMessage').show();
+        }
     });
     
     // Handle recipient type change
@@ -467,7 +609,10 @@ $(document).ready(function() {
         }
     });
     
-    // Check initial state
+    // Check initial states
+    if ($('.condition-row').length === 0) {
+        $('#noConditionsMessage').show();
+    }
     if ($('.recipient-row').length === 0) {
         $('#noRecipientsMessage').show();
     }
