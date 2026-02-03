@@ -120,6 +120,7 @@ return [
         'final_uat_results_fb' => 167,
         'set_md_prerequisites' => 112,
         'pending_pmo' => 162,
+        'pending_uat_promo' => 177,
     ],
     'promo_depend_statuses' => [
         // 'pending_uat' => 78,

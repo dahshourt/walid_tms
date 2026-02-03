@@ -44,7 +44,7 @@
 
         $(window).on("load", function () {
             // Force hide cap_users field immediately and multiple times
-            console.log('=== Page load: Force hiding cap_users field ===');
+            //console.log('=== Page load: Force hiding cap_users field ===');
             $(".field_cap_users").hide();
             $('select[name="cap_users[]"]').prop('required', false);
 
@@ -53,14 +53,14 @@
             $('.field_cap_users').attr('style', 'display: none !important');
 
             const statusField = document.querySelector('select[name="new_status_id"]');
-            console.log('Status field found:', !!statusField);
+            //console.log('Status field found:', !!statusField);
             if (statusField) {
-                console.log('Current status options:');
+                //console.log('Current status options:');
                 for (let i = 0; i < statusField.options.length; i++) {
-                    console.log(`Option ${i}: "${statusField.options[i].text}" (value: ${statusField.options[i].value})`);
+                    //console.log(`Option ${i}: "${statusField.options[i].text}" (value: ${statusField.options[i].value})`);
                 }
-                console.log('Selected index:', statusField.selectedIndex);
-                console.log('Selected text:', statusField.options[statusField.selectedIndex]?.text);
+                //console.log('Selected index:', statusField.selectedIndex);
+                //console.log('Selected text:', statusField.options[statusField.selectedIndex]?.text);
             }
             // Function to check if the status is "Reject"
             function isStatusReject() {
@@ -123,7 +123,9 @@
                 const requiredStatuses = {!! json_encode(array_values(config('change_request.need_technical_attachments_statuses'))) !!};
                 const isRequired = requiredStatuses.includes(selectedStatus);
 
-                technicalAttachmentField.required = isRequired;
+                if (technicalAttachmentField) {
+                    technicalAttachmentField.required = isRequired;
+                }
 
                 // add red asterisk if required
                 if (technicalAttachmentField) {
@@ -249,49 +251,49 @@
 
 
         $(document).ready(function () {
-            console.log('=== SCRIPT IS RUNNING ===');
+            //console.log('=== SCRIPT IS RUNNING ===');
 
-            console.log('=== CAP USERS VISIBILITY CONTROL ===');
+            //console.log('=== CAP USERS VISIBILITY CONTROL ===');
 
             // Multiple approaches to find the cap_users field
-            console.log('=== FIELD DETECTION DEBUG ===');
+            //console.log('=== FIELD DETECTION DEBUG ===');
 
             // Approach 1: By class name
             var field1 = $('.field_cap_users');
-            console.log('Approach 1 - .field_cap_users:', field1.length, field1);
+            //console.log('Approach 1 - .field_cap_users:', field1.length, field1);
 
             // Approach 2: By input name
             var field2 = $('select[name="cap_users[]"]');
-            console.log('Approach 2 - select[name="cap_users[]"]:', field2.length, field2);
+            //console.log('Approach 2 - select[name="cap_users[]"]:', field2.length, field2);
 
             // Approach 3: By containing div
             var field3 = $('div').has('select[name="cap_users[]"]');
-            console.log('Approach 3 - div containing cap_users:', field3.length, field3);
+            //console.log('Approach 3 - div containing cap_users:', field3.length, field3);
 
             // Approach 4: By data attributes
             var field4 = $('[data-field-name="cap_users"]');
-            console.log('Approach 4 - data-field-name="cap_users":', field4.length, field4);
+            //console.log('Approach 4 - data-field-name="cap_users":', field4.length, field4);
 
             // Approach 5: By label text
             var field5 = $('label:contains("Cab Users")').closest('div');
-            console.log('Approach 5 - label containing "Cab Users":', field5.length, field5);
+            // console.log('Approach 5 - label containing "Cab Users":', field5.length, field5);
 
             // Simple and direct approach
             function updateCapUsersVisibility() {
                 const statusSelect = $('select[name="new_status_id"]');
                 const statusText = statusSelect.find('option:selected').text();
-                console.log('=== UPDATE CHECK ===');
-                console.log('Status select exists:', statusSelect.length > 0);
-                console.log('Current status:', '"' + statusText + '"');
+                //console.log('=== UPDATE CHECK ===');
+                //console.log('Status select exists:', statusSelect.length > 0);
+                //console.log('Current status:', '"' + statusText + '"');
 
                 // Try to find the field again
                 const capField = $('.field_cap_users');
                 const capSelect = $('select[name="cap_users[]"]');
-                console.log('Field found by class:', capField.length > 0);
-                console.log('Select found by name:', capSelect.length > 0);
+                //console.log('Field found by class:', capField.length > 0);
+                //console.log('Select found by name:', capSelect.length > 0);
 
                 if (statusText.includes('Pending CAB') || statusText.includes('Pending CAB Approval') || statusText.includes('CR Doc Valid')) {
-                    console.log('🟢 ACTION: SHOWING cap_users field');
+                    //console.log('🟢 ACTION: SHOWING cap_users field');
 
                     // Try multiple show methods
                     $('.field_cap_users').show();
@@ -307,9 +309,9 @@
                     $('select[name="cap_users[]"]').prop('required', true);
                     $('select[name="cap_users[]"]').attr('required', 'required');
 
-                    console.log('Show methods executed');
+                    //console.log('Show methods executed');
                 } else {
-                    console.log('🔴 ACTION: HIDING cap_users field');
+                    //console.log('🔴 ACTION: HIDING cap_users field');
 
                     // Try multiple hide methods
                     $('.field_cap_users').hide();
@@ -325,28 +327,28 @@
                     $('select[name="cap_users[]"]').prop('required', false);
                     $('select[name="cap_users[]"]').removeAttr('required');
 
-                    console.log('Hide methods executed');
+                    //console.log('Hide methods executed');
                 }
 
                 // Log current state after changes
                 setTimeout(function () {
                     const finalField = $('.field_cap_users');
                     const finalSelect = $('select[name="cap_users[]"]');
-                    console.log('=== FINAL STATE ===');
-                    console.log('Field display:', finalField.css('display'));
-                    console.log('Field visibility:', finalField.css('visibility'));
-                    console.log('Select display:', finalSelect.css('display'));
-                    console.log('Select required:', finalSelect.prop('required'));
+                    //console.log('=== FINAL STATE ===');
+                    //console.log('Field display:', finalField.css('display'));
+                    //console.log('Field visibility:', finalField.css('visibility'));
+                    //console.log('Select display:', finalSelect.css('display'));
+                    //console.log('Select required:', finalSelect.prop('required'));
                 }, 100);
             }
 
             // Initial check immediately (no delay)
-            console.log('=== INITIAL CHECK ===');
+            //console.log('=== INITIAL CHECK ===');
             updateCapUsersVisibility();
 
             // Check on status change
             $('select[name="new_status_id"]').on('change', function () {
-                console.log('=== STATUS CHANGE EVENT ===');
+                //console.log('=== STATUS CHANGE EVENT ===');
                 updateCapUsersVisibility();
             });
 
@@ -358,10 +360,10 @@
 
                 // Only update if there's a mismatch
                 if (shouldShow && isCurrentlyHidden) {
-                    console.log('🔄 PERIODIC CHECK: SHOWING field (was hidden)');
+                    //console.log('🔄 PERIODIC CHECK: SHOWING field (was hidden)');
                     updateCapUsersVisibility();
                 } else if (!shouldShow && !isCurrentlyHidden) {
-                    console.log('🔄 PERIODIC CHECK: HIDING field (was visible)');
+                    //console.log('🔄 PERIODIC CHECK: HIDING field (was visible)');
                     updateCapUsersVisibility();
                 }
             }, 5000);
@@ -409,9 +411,9 @@
                 const technicalTeamsField = $('select[name="technical_teams[]"]');
                 const techLabel = $('.field_technical_teams label');
 
-                console.log("Selected Status:", selectedStatus);
-                console.log("Need Design Checkbox:", needDesignCheckbox.length ? "Found" : "Not found");
-                console.log("Technical Teams Field:", technicalTeamsField.length ? "Found" : "Not found");
+                //console.log("Selected Status:", selectedStatus);
+                //console.log("Need Design Checkbox:", needDesignCheckbox.length ? "Found" : "Not found");
+                //console.log("Technical Teams Field:", technicalTeamsField.length ? "Found" : "Not found");
 
                 // Check if status is "SA FB" and need_design is checked
                 if (selectedStatus === "SA FB" && needDesignCheckbox.is(':checked')) {
@@ -426,7 +428,7 @@
                     // Add visual styling to indicate required field
                     //technicalTeamsField.addClass('required-field');
 
-                    console.log("Technical Teams is now mandatory - Status: SA FB, Need Design: checked");
+                    //console.log("Technical Teams is now mandatory - Status: SA FB, Need Design: checked");
                 } else {
                     // Remove required if conditions are not met
                     technicalTeamsField.prop("required", false);
@@ -439,7 +441,7 @@
                     // Remove visual styling
                     technicalTeamsField.removeClass('required-field');
 
-                    console.log("Technical Teams is now optional");
+                    //console.log("Technical Teams is now optional");
                 }
             }
 
@@ -452,23 +454,23 @@
                 const techLabel = $('.field_technical_teams label');
                 const needDesign = "{{ optional($cr->change_request_custom_fields->where('custom_field_name', 'need_design')->first())->custom_field_value ?? 'null' }}";
 
-                console.log("Current Status:", currentStatus);
-                console.log("Selected Status:", selectedStatus);
-                console.log("Need Design Checkbox:", needDesignCheckbox.length ? "Found" : "Not found");
-                console.log("Technical Teams Field:", technicalTeamsField.length ? "Found" : "Not found");
-                console.log("Need Design:", needDesign);
+                //console.log("Current Status:", currentStatus);
+                //console.log("Selected Status:", selectedStatus);
+                //console.log("Need Design Checkbox:", needDesignCheckbox.length ? "Found" : "Not found");
+                //console.log("Technical Teams Field:", technicalTeamsField.length ? "Found" : "Not found");
+                //console.log("Need Design:", needDesign);
                 // 141 = SA FB
                 if (currentStatus == "141") {
                     if (needDesign != 'null') {
                         //technicalTeamsField.prop("disabled", true);
-                        console.log("Technical Teams is now disabled");
+                        //console.log("Technical Teams is now disabled");
                     } else {
                         technicalTeamsField.prop("disabled", false);
                         technicalTeamsField.prop("required", true);
                         if (techLabel.length && !techLabel.find(".required-mark").length) {
                             techLabel.append('<span class="required-mark" style="color: red;"> *</span>');
                         }
-                        console.log("Technical Teams is now enabled and required");
+                        //console.log("Technical Teams is now enabled and required");
                     }
                 }
 
@@ -724,7 +726,7 @@
                      showValidationError(testingEstimationInput, 'Testing estimation must be greater than 0 when testable is enabled');
                      return false;
                  }*/
-                console.log((!testingEstimationInput.value || isNaN(value)) && statusSelectInput.value == 41);
+                //console.log((!testingEstimationInput.value || isNaN(value)) && statusSelectInput.value == 41);
                 if (isTestable && (!testingEstimationInput.value || isNaN(value) || value <= 0) && statusSelectInput.value == 41) {
                     showValidationError(testingEstimationInput, 'Testing estimation must be greater than 0 when testable is enabled 2   ');
                     return false;
@@ -977,7 +979,7 @@
                     $('select[name="cap_users[]"]').prop('required', true);
                 }
                 else {
-                    console.log(' STATUS CHANGE: HIDING cap_users');
+                    //console.log(' STATUS CHANGE: HIDING cap_users');
                     $(".field_cap_users").hide();
                     $('.field_cap_users').css('display', 'none !important');
                     $('select[name="cap_users[]"]').prop('required', false);
@@ -985,4 +987,161 @@
             });
         });
     </script>
+
+
+
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const statusSelect = document.querySelector('select[name="new_status_id"]');
+            const techTeamWrapper = document.querySelector('.change-request-form-field select[name="technical_teams[]"]')?.closest('.change-request-form-field');
+            const techTeamSelect = document.querySelector('select[name="technical_teams[]"]');
+
+            function addAsteriskIfNeeded(wrapper) {
+                const label = wrapper.querySelector("label");
+                if (label && !label.innerHTML.includes('*')) {
+                    const star = document.createElement("span");
+                    star.style.color = "red";
+                    star.innerHTML = " *";
+                    label.appendChild(star);
+                }
+            }
+
+            function removeAsterisk(wrapper) {
+                const label = wrapper.querySelector("label");
+                if (label) {
+                    label.innerHTML = label.innerHTML.replace(/\s*<span[^>]*>\*<\/span>/g, '').replace(/\s*\*/g, '');
+                }
+            }
+
+            function handleStatusChange(value) {
+                const hideStatuses = ["260", "223", "273"];
+                const requiredStatuses = ["257", "220", "276", "275"];
+                const hideTexts = ["Test in Progress", "Pending HL Design", "Assess the defects"];
+
+                if (!techTeamWrapper || !techTeamSelect) return;
+
+                const selectedOption = statusSelect?.options[statusSelect.selectedIndex];
+                const selectedText = selectedOption?.textContent.trim();
+
+                if (hideStatuses.includes(value) || hideTexts.includes(selectedText)) {
+                    techTeamWrapper.style.display = "none";
+                    techTeamSelect.removeAttribute("required");
+                    removeAsterisk(techTeamWrapper);
+                } else {
+                    techTeamWrapper.style.display = "";
+                    if (requiredStatuses.includes(value)) {
+                        techTeamSelect.setAttribute("required", "required");
+                        addAsteriskIfNeeded(techTeamWrapper);
+                    } else {
+                        techTeamSelect.removeAttribute("required");
+                        removeAsterisk(techTeamWrapper);
+                    }
+                }
+            }
+
+            if (statusSelect) {
+                handleStatusChange(statusSelect.value);
+                statusSelect.addEventListener("change", function () {
+                    handleStatusChange(this.value);
+                });
+            }
+        });
+    </script>
+
+    {{-- Rejection Reason Script --}}
+    @if(isset($cr))
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const select = document.querySelector('select[name="new_status_id"]');
+                const reasonWrapper = document.getElementById('reason-wrapper');
+
+                if (!select || !reasonWrapper) return;
+
+                select.addEventListener('change', function () {
+                    const selectedLabel = this.options[this.selectedIndex].text.trim();
+
+                    if (selectedLabel.toLowerCase() === "reject") {
+                        if (!document.querySelector('select[name="reason"]')) {
+                            const reasonSelect = document.createElement('select');
+                            reasonSelect.name = "reason";
+                            reasonSelect.classList.add("form-control", "mt-2");
+                            reasonWrapper.appendChild(reasonSelect);
+                        }
+                    } else {
+                        const existing = document.querySelector('select[name="reason"]');
+                        if (existing) {
+                            existing.remove();
+                        }
+                    }
+                });
+            });
+        </script>
+    @endif
+
+    {{-- Defects Confirmation Script --}}
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Prevent multiple initializations
+            if (window.checkStatusBeforeSubmitInitialized) return;
+            window.checkStatusBeforeSubmitInitialized = true;
+
+            const statusSelect = document.querySelector('select[name="new_status_id"]');
+
+            // Find form by traversing up from the select
+            const form = statusSelect ? statusSelect.closest("form") : null;
+
+            if (form) {
+                console.log("Change Request Form found. Attaching CAPTURE-PHASE listener.");
+
+                // Use capture phase (third argument = true) to intercept event BEFORE bubbling handlers
+                form.addEventListener("submit", function (event) {
+                    console.log("Submit captured!");
+
+                    const selectElement = form.querySelector('select[name="new_status_id"]');
+                    const selectedOption = selectElement?.options[selectElement.selectedIndex];
+                    const selectedText = selectedOption?.textContent.trim();
+                    const defectValue = selectedOption?.getAttribute('data-defect') || "0";
+
+                    console.log("Checking:", { defectValue, selectedText });
+
+                    if (defectValue === "1" && selectedText === "Final UAT Results & FB") {
+                        console.log("Blocking submit for alert (Capture Phase)");
+                        event.preventDefault();
+                        event.stopPropagation();
+                        event.stopImmediatePropagation();
+
+                        // Show Alert
+                        Swal.fire({
+                            title: 'Are you sure?',
+                            text: "There are defects related to this CRS. Are you sure you want to continue?",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'Yes, continue!',
+                            cancelButtonText: 'No, cancel!'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                console.log("Alert Confirmed -> Submitting Programmatically");
+                                // Submit programmatically (bypasses listeners)
+                                form.submit();
+                            }
+                        });
+
+                        return false;
+                    }
+                    console.log("Allowing submit");
+                }, true); // <--- TRUE for Capture Phase
+            } else {
+                console.warn("Change Request Form NOT found for defect check script!");
+            }
+        });
+    </script>
+
+
+
+
 @endpush
