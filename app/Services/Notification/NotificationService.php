@@ -337,6 +337,16 @@ class NotificationService
                 }
                 return [];
                 
+            // MDS for MDS notifications
+            case 'mds_group':
+                // Get group from MDS event
+                if ($event instanceof \App\Events\MdsStartDateUpdated) {
+                    $group = Group::find($event->groupId);
+                    $this->toMailGroup = $group->head_group_email ?? null;
+                    return $group ? [$group->head_group_email] : [];
+                }
+                return [];
+            
             // Add more types as needed
             default:
                 return [];
@@ -361,7 +371,7 @@ class NotificationService
         
         // Get creator/requester name
         $creatorName = 'User';
-        if ($event->creator && isset($event->creator->user_name)) {
+        if (property_exists($event, 'creator') && $event->creator && isset($event->creator->user_name)) {
             $creatorName = $event->creator->user_name;
         } elseif (isset($statusData['requester_name'])) {
             $creatorName = $statusData['requester_name'];
@@ -423,7 +433,7 @@ class NotificationService
             $oldStatusModel = \App\Models\Status::find($statusData['old_status_id']);
             $oldStatus = $oldStatusModel->status_name ?? '';
         }
-        else{
+        elseif (property_exists($event, 'request') && $event->request && isset($event->request->old_status_id)) {
             $oldStatusModel = \App\Models\Status::find($event->request->old_status_id);
             $oldStatus = $oldStatusModel->status_name ?? '';
         }
@@ -480,6 +490,12 @@ class NotificationService
             'start_sa_date' => $cr->start_design_time,
             'kickoff_meeting_date' => $kickoff_meeting_date,
             
+            // MDS-specific placeholders
+            'mds_start_date' => $event->newStartDate ?? '',
+            'mds_old_start_date' => $event->oldStartDate ?? '',
+            'mds_end_date' => $event->mdsLog->end_date ?? '',
+            'mds_man_days' => $event->mdsLog->man_day ?? '',
+            'mds_group_name' => isset($event->groupId) ? (Group::find($event->groupId)?->title ?? '') : '',
         ];
     }
 

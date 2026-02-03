@@ -37,6 +37,9 @@ class EventServiceProvider extends ServiceProvider
         \App\Events\CrDeliveredEvent::class => [
             \App\Listeners\ReleaseDependentCrsListener::class,
         ],
+        \App\Events\MdsStartDateUpdated::class => [
+            \App\Listeners\SendMdsNotification::class,
+        ],
     ];
 
     /**
