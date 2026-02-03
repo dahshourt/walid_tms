@@ -347,6 +347,15 @@ class NotificationService
                 }
                 return [];
             
+            // Defect group - for defect notifications
+            case 'defect_group':
+                if ($event instanceof \App\Events\DefectCreated || $event instanceof \App\Events\DefectStatusUpdated) {
+                    $group = Group::find($event->groupId);
+                    $this->toMailGroup = $group->head_group_email ?? null;
+                    return $group ? [$group->head_group_email] : [];
+                }
+                return [];
+            
             // Add more types as needed
             default:
                 return [];
@@ -365,8 +374,15 @@ class NotificationService
 
     protected function extractPlaceholders($event, $rule)
     {
-        // Extract data from event
-        $cr = $event->changeRequest;
+        // Handle defect events differently
+        $isDefectEvent = $event instanceof \App\Events\DefectCreated || $event instanceof \App\Events\DefectStatusUpdated;
+        
+        if ($isDefectEvent) {
+            return $this->extractDefectPlaceholders($event, $rule);
+        }
+        
+        // Extract data from event (for CR events)
+        $cr = property_exists($event, 'changeRequest') ? $event->changeRequest : null;
         $statusData = $event->statusData ?? [];
         
         // Get creator/requester name
@@ -375,7 +391,7 @@ class NotificationService
             $creatorName = $event->creator->user_name;
         } elseif (isset($statusData['requester_name'])) {
             $creatorName = $statusData['requester_name'];
-        } elseif (isset($cr->requester_name)) {
+        } elseif ($cr && isset($cr->requester_name)) {
             $creatorName = $cr->requester_name;
         }
         
@@ -499,6 +515,58 @@ class NotificationService
         ];
     }
 
+    protected function extractDefectPlaceholders($event, $rule)
+    {
+        $defect = $event->defect;
+        $group = Group::find($event->groupId);
+        $cr = $defect->change_request;
+        
+        // Get status names
+        $currentStatus = $defect->current_status->status_name ?? '';
+        $oldStatus = '';
+        $newStatus = '';
+        
+        if ($event instanceof \App\Events\DefectStatusUpdated) {
+            $oldStatusModel = \App\Models\Status::find($event->oldStatusId);
+            $newStatusModel = \App\Models\Status::find($event->newStatusId);
+            $oldStatus = $oldStatusModel->status_name ?? '';
+            $newStatus = $newStatusModel->status_name ?? '';
+        }
+        
+        // Get first name from group email
+        $firstName = 'Team';
+        if ($this->toMailGroup) {
+            $email_parts = explode('.', explode('@', $this->toMailGroup)[0]);
+            $firstName = ucfirst($email_parts[0]);
+        }
+        
+        $defectLink = route('defect.show', $defect->id);
+        $systemLink = url('/');
+        
+        return [
+            // Defect-specific placeholders
+            'defect_id' => $defect->id,
+            'defect_subject' => $defect->subject ?? '',
+            'defect_status' => $currentStatus,
+            'defect_old_status' => $oldStatus,
+            'defect_new_status' => $newStatus,
+            'defect_group_name' => $group->title ?? '',
+            'defect_cr_no' => $cr->cr_no ?? '',
+            'defect_cr_title' => $cr->title ?? '',
+            'defect_link' => $defectLink,
+            
+            // Common placeholders
+            'first_name' => $firstName,
+            'group_name' => $group->title ?? '',
+            'system_link' => $systemLink,
+            
+            // CR placeholders (for context)
+            'cr_no' => $cr->cr_no ?? '',
+            'cr_title' => $cr->title ?? '',
+            'cr_link' => $cr ? route('show.cr', $cr->id) : '',
+        ];
+    }
+
     protected function replacePlaceholders($text, $placeholders)
     {
         foreach ($placeholders as $key => $value) {
@@ -509,21 +577,34 @@ class NotificationService
 
     protected function createLog($rule, $event, $recipients, $rendered)
     {
+        // Determine related model based on event type
+        $isDefectEvent = $event instanceof \App\Events\DefectCreated || $event instanceof \App\Events\DefectStatusUpdated;
+        
+        $relatedModelType = $isDefectEvent 
+            ? \App\Models\Defect::class 
+            : (property_exists($event, 'changeRequest') ? get_class($event->changeRequest) : null);
+        
+        $relatedModelId = $isDefectEvent 
+            ? $event->defect->id 
+            : ($event->changeRequest->id ?? null);
+        
+        $eventData = $isDefectEvent 
+            ? ['defect_id' => $event->defect->id]
+            : ['cr_id' => $event->changeRequest->id ?? null];
+
         return NotificationLog::create([
             'notification_rule_id' => $rule->id,
             'template_id' => $rule->template_id,
             'event_class' => get_class($event),
-            'event_data' => [
-                'cr_id' => $event->changeRequest->id ?? null,
-            ],
+            'event_data' => $eventData,
             'subject' => $rendered['subject'],
             'body' => $rendered['body'],
             'recipients_to' => $recipients['to'],
             'recipients_cc' => $recipients['cc'] ?? [],
             'recipients_bcc' => $recipients['bcc'] ?? [],
             'status' => 'pending',
-            'related_model_type' => get_class($event->changeRequest ?? null),
-            'related_model_id' => $event->changeRequest->id ?? null,
+            'related_model_type' => $relatedModelType,
+            'related_model_id' => $relatedModelId,
         ]);
     }
 }

@@ -308,7 +308,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('defect/files/download/{id}', 'download');
         Route::patch('defect_update/{id}', 'update');
         Route::get('defects', 'index');
-        Route::get('show_defect/{id}', 'show');
+        Route::get('show_defect/{id}', 'show')->name('defect.show');
     });
 
     // --- SLAs ---

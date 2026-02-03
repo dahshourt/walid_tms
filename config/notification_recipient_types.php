@@ -149,6 +149,13 @@ return [
         'needs_identifier' => false,
         'description' => 'The group that owns the MDS record (for MDS notifications)'
     ],
+    [
+        'value' => 'defect_group',
+        'label' => 'Defect Group',
+        'category' => 'Dynamic',
+        'needs_identifier' => false,
+        'description' => 'The group assigned to the defect (for defect notifications)'
+    ],
 
     // Explicit - needs identifier (Need Specific email or user or group)
     [
