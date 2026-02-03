@@ -133,6 +133,8 @@ class NotificationRulesController extends Controller
                 'App\Events\ChangeRequestCreated' => 'CR Created',
                 'App\Events\ChangeRequestStatusUpdated' => 'CR Status Updated',
                 'App\Events\MdsStartDateUpdated' => 'MDS Start Date Updated',
+                'App\Events\DefectCreated' => 'Defect Created',
+                'App\Events\DefectStatusUpdated' => 'Defect Status Updated',
             ],
             'templates' => NotificationTemplate::where('is_active', true)
                 ->orderBy('name')

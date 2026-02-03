@@ -40,6 +40,12 @@ class EventServiceProvider extends ServiceProvider
         \App\Events\MdsStartDateUpdated::class => [
             \App\Listeners\SendMdsNotification::class,
         ],
+        \App\Events\DefectCreated::class => [
+            \App\Listeners\SendDefectNotification::class,
+        ],
+        \App\Events\DefectStatusUpdated::class => [
+            \App\Listeners\SendDefectNotification::class,
+        ],
     ];
 
     /**
