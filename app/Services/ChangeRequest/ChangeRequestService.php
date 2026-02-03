@@ -165,12 +165,27 @@ class ChangeRequestService
             throw new Exception("Man Days Log not found");
         }
 
+        // Capture old start date before update
+        $oldStartDate = $log->start_date?->format('Y-m-d');
+
         $endDate = $this->calculateEndDateMds($startDate, $log->man_day);
 
         $log->update([
             'start_date' => $startDate,
             'end_date' => $endDate
         ]);
+
+        // Fire event for MDS start date change notification
+        $changeRequest = Change_request::find($log->cr_id);
+        if ($changeRequest) {
+            event(new \App\Events\MdsStartDateUpdated(
+                $log,
+                $changeRequest,
+                $oldStartDate,
+                $startDate,
+                $log->group_id
+            ));
+        }
 
         return $log;
     }
