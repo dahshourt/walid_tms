@@ -150,6 +150,7 @@ class UatPromoFlowService
                 ->where('active', '1')
                 ->count();
 
+
             if (!$this->hasActiveParallelStatuses($crId)) {
                 $active = $depend_active_count > 1 ? '0' : '1';
             }
@@ -177,11 +178,27 @@ class UatPromoFlowService
             'new_status_id' => $newStatusId
         ]);
 
+
+        $parkedIds = array_values(config('change_request.promo_parked_status_ids', []));
+        $active = 0;
+        if (in_array($newStatusId, $parkedIds, true)) {
+
+            $depend_active_count = ChangeRequestStatus::where('cr_id', $crId)
+                ->where('active', '1')
+                ->count();
+
+
+            if (!$this->hasActiveParallelStatuses($crId)) {
+                $active = $depend_active_count > 0 ? '0' : '1';
+            }
+        }
+
+
         $affected = ChangeRequestStatus::where('cr_id', $crId)
             ->where('old_status_id', $oldStatusId)
             ->where('new_status_id', $newStatusId)
             ->orderBy('id', 'desc')->limit(1)
-            ->update(['active' => '1']);
+            ->update(['active' => $active]);
 
         Log::info('UatPromoFlowService: Status update result', [
             'cr_id' => $crId,
