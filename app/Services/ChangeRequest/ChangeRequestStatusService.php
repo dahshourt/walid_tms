@@ -1938,6 +1938,7 @@ class ChangeRequestStatusService
                 $nextToStatusId = $NextStatusWorkflow->workflowstatus[0]->to_status_id;
 
                 if (in_array($nextToStatusId, $parkedIds, true)) {
+
                     $depend_active_count = ChangeRequestStatus::where('cr_id', $changeRequestId)
                         ->active()
                         ->count();
