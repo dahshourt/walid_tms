@@ -356,6 +356,15 @@ class NotificationService
                 }
                 return [];
             
+            // Prerequisite group - for prerequisite/assistance request notifications
+            case 'prerequisite_group':
+                if ($event instanceof \App\Events\PrerequisiteCreated || $event instanceof \App\Events\PrerequisiteStatusUpdated) {
+                    $group = Group::find($event->groupId);
+                    $this->toMailGroup = $group->head_group_email ?? null;
+                    return $group ? [$group->head_group_email] : [];
+                }
+                return [];
+            
             // Add more types as needed
             default:
                 return [];
@@ -379,6 +388,13 @@ class NotificationService
         
         if ($isDefectEvent) {
             return $this->extractDefectPlaceholders($event, $rule);
+        }
+        
+        // Handle prerequisite events
+        $isPrerequisiteEvent = $event instanceof \App\Events\PrerequisiteCreated || $event instanceof \App\Events\PrerequisiteStatusUpdated;
+        
+        if ($isPrerequisiteEvent) {
+            return $this->extractPrerequisitePlaceholders($event, $rule);
         }
         
         // Extract data from event (for CR events)
@@ -567,6 +583,58 @@ class NotificationService
         ];
     }
 
+    protected function extractPrerequisitePlaceholders($event, $rule)
+    {
+        $prerequisite = $event->prerequisite;
+        $group = Group::find($event->groupId);
+        $cr = $prerequisite->promo; // promo is the related CR
+        
+        // Get status names
+        $currentStatus = $prerequisite->status->status_name ?? '';
+        $oldStatus = '';
+        $newStatus = '';
+        
+        if ($event instanceof \App\Events\PrerequisiteStatusUpdated) {
+            $oldStatusModel = \App\Models\Status::find($event->oldStatusId);
+            $newStatusModel = \App\Models\Status::find($event->newStatusId);
+            $oldStatus = $oldStatusModel->status_name ?? '';
+            $newStatus = $newStatusModel->status_name ?? '';
+        }
+        
+        // Get first name from group email
+        $firstName = 'Team';
+        if ($this->toMailGroup) {
+            $email_parts = explode('.', explode('@', $this->toMailGroup)[0]);
+            $firstName = ucfirst($email_parts[0]);
+        }
+        
+        $prerequisiteLink = route('prerequisites.show', $prerequisite->id);
+        $systemLink = url('/');
+        
+        return [
+            // Prerequisite-specific placeholders
+            'prerequisite_id' => $prerequisite->id,
+            'prerequisite_subject' => $prerequisite->subject ?? '',
+            'prerequisite_status' => $currentStatus,
+            'prerequisite_old_status' => $oldStatus,
+            'prerequisite_new_status' => $newStatus,
+            'prerequisite_group_name' => $group->title ?? '',
+            'prerequisite_cr_no' => $cr->cr_no ?? '',
+            'prerequisite_cr_title' => $cr->title ?? '',
+            'prerequisite_link' => $prerequisiteLink,
+            
+            // Common placeholders
+            'first_name' => $firstName,
+            'group_name' => $group->title ?? '',
+            'system_link' => $systemLink,
+            
+            // CR placeholders (for context - promo)
+            'cr_no' => $cr->cr_no ?? '',
+            'cr_title' => $cr->title ?? '',
+            'cr_link' => $cr ? route('show.cr', $cr->id) : '',
+        ];
+    }
+
     protected function replacePlaceholders($text, $placeholders)
     {
         foreach ($placeholders as $key => $value) {
@@ -579,18 +647,21 @@ class NotificationService
     {
         // Determine related model based on event type
         $isDefectEvent = $event instanceof \App\Events\DefectCreated || $event instanceof \App\Events\DefectStatusUpdated;
+        $isPrerequisiteEvent = $event instanceof \App\Events\PrerequisiteCreated || $event instanceof \App\Events\PrerequisiteStatusUpdated;
         
-        $relatedModelType = $isDefectEvent 
-            ? \App\Models\Defect::class 
-            : (property_exists($event, 'changeRequest') ? get_class($event->changeRequest) : null);
-        
-        $relatedModelId = $isDefectEvent 
-            ? $event->defect->id 
-            : ($event->changeRequest->id ?? null);
-        
-        $eventData = $isDefectEvent 
-            ? ['defect_id' => $event->defect->id]
-            : ['cr_id' => $event->changeRequest->id ?? null];
+        if ($isDefectEvent) {
+            $relatedModelType = \App\Models\Defect::class;
+            $relatedModelId = $event->defect->id;
+            $eventData = ['defect_id' => $event->defect->id];
+        } elseif ($isPrerequisiteEvent) {
+            $relatedModelType = \App\Models\Prerequisite::class;
+            $relatedModelId = $event->prerequisite->id;
+            $eventData = ['prerequisite_id' => $event->prerequisite->id];
+        } else {
+            $relatedModelType = property_exists($event, 'changeRequest') ? get_class($event->changeRequest) : null;
+            $relatedModelId = $event->changeRequest->id ?? null;
+            $eventData = ['cr_id' => $event->changeRequest->id ?? null];
+        }
 
         return NotificationLog::create([
             'notification_rule_id' => $rule->id,

@@ -9,7 +9,7 @@
         }
     @endphp
     @if(!$isCrAdmin)
-        @return
+        @php return; @endphp
     @endif
 @endif
 

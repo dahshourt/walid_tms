@@ -5,6 +5,7 @@ namespace App\Http\Repository\Prerequisites;
 use App\Contracts\Prerequisites\PrerequisitesRepositoryInterface;
 use App\Models\Prerequisite;
 use App\Models\PrerequisiteAttachment;
+use App\Models\Change_request;
 use App\Models\Status;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -43,6 +44,17 @@ class PrerequisitesRepository implements PrerequisitesRepositoryInterface
 
             $this->logAction($prerequisite, 'Prerequisite was created');
 
+            $changeRequest = Change_request::find($requestData['promo_id']);
+          
+
+            // Fire prerequisite created event for notifications
+            event(new \App\Events\PrerequisiteCreated(
+                $prerequisite,
+                $requestData['group_id'],
+                $requestData['status_id'],
+                $changeRequest
+            ));
+
             return $prerequisite;
         });
     }
@@ -68,11 +80,22 @@ class PrerequisitesRepository implements PrerequisitesRepositoryInterface
 
             // Update status if changed
             if (!empty($request['status_id']) && $model->status_id != $request['status_id']) {
+                $oldStatusId = $model->status_id;
                 $status = Status::find($request['status_id']);
                 $model->update(['status_id' => $request['status_id']]);
+                $changeRequest = Change_request::find($request['promo_id']);
 
                 if ($status) {
                     $this->logAction($model, "Prerequisite status changed to < {$status->status_name} >");
+                    
+                    // Fire prerequisite status updated event for notifications
+                    event(new \App\Events\PrerequisiteStatusUpdated(
+                        $model->fresh(),
+                        $model->group_id,
+                        $oldStatusId,
+                        $request['status_id'],
+                        $changeRequest
+                    ));
                 }
             }
 

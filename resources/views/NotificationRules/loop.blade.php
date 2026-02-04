@@ -55,7 +55,7 @@
         <td>{{ $item->name }}</td>
         <td>
             <span class="label label-{{ str_contains($item->event_class, 'Created') ? 'primary' : 'info' }} label-inline font-weight-bold">
-                {{ $eventDisplay }}
+                {{ $item->event_class }}
             </span>
         </td>
         <td>
