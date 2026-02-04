@@ -49,15 +49,15 @@
                                                     <div class="d-flex align-items-center">
                                                         <div class="symbol symbol-40 symbol-light-{{ $colorClass }} mr-4">
                                                             <span class="symbol-label font-size-h5 font-weight-bold text-{{ $colorClass }}">
-                                                                {{ strtoupper(substr($log->user->user_name, 0, 2)) }}
+                                                                {{ $log->user ? strtoupper(substr($log->user->user_name ?? 'Unknown', 0, 2)) : 'UN' }}
                                                             </span>
                                                         </div>
                                                         <div>
                                                             <div class="text-dark font-weight-bold font-size-h6 mb-1">
-                                                                {{ $log->user->user_name }}
+                                                                {{ $log->user ? ($log->user->user_name ?? 'Unknown User') : 'Unknown User' }}
                                                             </div>
                                                             <span class="label label-inline label-light-{{ $colorClass }} font-weight-bold">
-                                                                {{ $log->user->defualt_group->title }}
+                                                                {{ $log->user && $log->user->defualt_group ? ($log->user->defualt_group->title ?? 'Unknown Group') : 'Unknown Group' }}
                                                             </span>
                                                         </div>
                                                     </div>
