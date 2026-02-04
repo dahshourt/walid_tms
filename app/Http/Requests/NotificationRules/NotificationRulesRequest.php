@@ -39,7 +39,7 @@ class NotificationRulesRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255', 'unique:notification_rules,name'],
-            'event_class' => ['required', 'string', 'in:App\Events\ChangeRequestCreated,App\Events\ChangeRequestStatusUpdated,App\Events\MdsStartDateUpdated,App\Events\DefectCreated,App\Events\DefectStatusUpdated'],
+            'event_class' => ['required', 'string', 'in:App\Events\ChangeRequestCreated,App\Events\ChangeRequestStatusUpdated,App\Events\MdsStartDateUpdated,App\Events\DefectCreated,App\Events\DefectStatusUpdated,App\Events\PrerequisiteCreated,App\Events\PrerequisiteStatusUpdated'],
             'template_id' => ['required', 'exists:notification_templates,id'],
             'priority' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],
@@ -68,7 +68,7 @@ class NotificationRulesRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255', 'unique:notification_rules,name,' . $this->route('notification_rule')],
-            'event_class' => ['required', 'string', 'in:App\Events\ChangeRequestCreated,App\Events\ChangeRequestStatusUpdated,App\Events\MdsStartDateUpdated,App\Events\DefectCreated,App\Events\DefectStatusUpdated'],
+            'event_class' => ['required', 'string', 'in:App\Events\ChangeRequestCreated,App\Events\ChangeRequestStatusUpdated,App\Events\MdsStartDateUpdated,App\Events\DefectCreated,App\Events\DefectStatusUpdated,App\Events\PrerequisiteCreated,App\Events\PrerequisiteStatusUpdated'],
             'template_id' => ['required', 'exists:notification_templates,id'],
             'priority' => ['nullable', 'integer', 'min:0'],
             'is_active' => ['nullable', 'boolean'],

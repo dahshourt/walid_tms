@@ -95,12 +95,14 @@ class DefectController extends Controller
         }
 
         $this->defect->AddDefectLog($defect_id, "Defect {$defect_id} Created Successfully");
+        $changerequest = $this->changerequest->findById($defect_data->cr_id);
 
         // Fire defect created event for notifications
         event(new \App\Events\DefectCreated(
             $defect,
             $request->technical_team,
-            $request->defect_status
+            $request->defect_status,
+            $changerequest
         ));
 
         return redirect()->back()->with('status', 'Defect Created Successfully');
@@ -203,6 +205,7 @@ class DefectController extends Controller
         }
         // update data
         $updated_defect = $this->defect->update_defect($id, $request);
+        $changerequest = $this->changerequest->findById($defect_data->cr_id);
 
         // Fire defect status updated event if status changed
         if (isset($request->defect_status) && ($defect_data->status_id != $request->defect_status)) {
@@ -212,7 +215,8 @@ class DefectController extends Controller
                 $updatedDefect,
                 $request->technical_team,
                 $defect_data->status_id,
-                $request->defect_status
+                $request->defect_status,
+                $changerequest
             ));
         }
 

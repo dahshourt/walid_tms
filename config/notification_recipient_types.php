@@ -156,6 +156,13 @@ return [
         'needs_identifier' => false,
         'description' => 'The group assigned to the defect (for defect notifications)'
     ],
+    [
+        'value' => 'prerequisite_group',
+        'label' => 'Prerequisite Group',
+        'category' => 'Dynamic',
+        'needs_identifier' => false,
+        'description' => 'The group assigned to the prerequisite/assistance request (for prerequisite notifications)'
+    ],
 
     // Explicit - needs identifier (Need Specific email or user or group)
     [

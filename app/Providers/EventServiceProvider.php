@@ -46,6 +46,12 @@ class EventServiceProvider extends ServiceProvider
         \App\Events\DefectStatusUpdated::class => [
             \App\Listeners\SendDefectNotification::class,
         ],
+        \App\Events\PrerequisiteCreated::class => [
+            \App\Listeners\SendPrerequisiteNotification::class,
+        ],
+        \App\Events\PrerequisiteStatusUpdated::class => [
+            \App\Listeners\SendPrerequisiteNotification::class,
+        ],
     ];
 
     /**
