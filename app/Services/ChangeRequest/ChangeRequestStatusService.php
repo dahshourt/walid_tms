@@ -58,6 +58,7 @@ class ChangeRequestStatusService
     private static ?int $PENDING_AGREED_SCOPE_VENDOR_STATUS_ID = null;
     private static ?int $PENDING_AGREED_SCOPE_BUSINESS_STATUS_ID = null;
     private static ?int $REQUEST_DRAFT_CR_DOC_STATUS_ID = null;
+    private static ?int $VENDOR_INTERNAL_TEST_STATUS_ID = null;
     // private const PENDING_CAB_STATUS_ID = 38;
     // private const DELIVERED_STATUS_ID = 27;
     private static ?int $ATP_REVIEW_QC_STATUS_ID = null;
@@ -84,6 +85,7 @@ class ChangeRequestStatusService
         self::$PENDING_AGREED_SCOPE_BUSINESS_STATUS_ID = $this->getStatusIdByName('Pending Agreed Scope Approval-Business');
 
         self::$REQUEST_DRAFT_CR_DOC_STATUS_ID = $this->getStatusIdByName('Request Draft CR Doc');
+        self::$VENDOR_INTERNAL_TEST_STATUS_ID = $this->getStatusIdByName('Vendor Internal Test');
         self::$ATP_REVIEW_QC_STATUS_ID = \App\Services\StatusConfigService::getStatusId('ATP Review_qc');
         self::$ATP_REVIEW_UAT_STATUS_ID = \App\Services\StatusConfigService::getStatusId('ATP Review_UAT');
         self::$REQUEST_UPDATE_ATPS_STATUS_ID = \App\Services\StatusConfigService::getStatusId('Request Update ATPs');

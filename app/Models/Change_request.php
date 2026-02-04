@@ -684,7 +684,12 @@ class Change_request extends Model
 
     public function getAllCurrentStatus()
     {
-        $statuses = Change_request_statuse::where('cr_id', $this->id)->where('active', '1')->get();
+        $statuses = Change_request_statuse::where('cr_id', $this->id)
+            ->where('active', '1')
+            ->with(['currentGroup', 'technical_group', 'referenceGroup', 'previousGroup', 'status' => function($query) {
+                $query->with('viewByGroupStatuses.group');
+            }])
+            ->get();
 
         return $statuses;
     }

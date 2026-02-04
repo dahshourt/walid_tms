@@ -41,8 +41,11 @@ class StatusRepository implements StatusRepositoryInterface
 
     public function StoreStatusGroup($status_id, $request)
     {
-        if (isset($status_id) && ! empty($request['set_group_id'])) {
-            GroupStatuses::where('status_id', $status_id)->where('type', 1)->delete();
+        // Always delete existing set groups first
+        GroupStatuses::where('status_id', $status_id)->where('type', 1)->delete();
+        
+        // Add new set groups if provided
+        if (isset($request['set_group_id']) && ! empty($request['set_group_id'])) {
             foreach ($request['set_group_id'] as $key => $value) {
                 $group_statuses = new GroupStatuses;
                 $group_statuses->status_id = $status_id;
@@ -52,8 +55,11 @@ class StatusRepository implements StatusRepositoryInterface
             }
         }
 
-        if (isset($status_id) && ! empty($request['view_group_id'])) {
-            GroupStatuses::where('status_id', $status_id)->where('type', 2)->delete();
+        // Always delete existing view groups first
+        GroupStatuses::where('status_id', $status_id)->where('type', 2)->delete();
+        
+        // Add new view groups if provided
+        if (isset($request['view_group_id']) && ! empty($request['view_group_id'])) {
             foreach ($request['view_group_id'] as $key => $value) {
                 $group_statuses = new GroupStatuses;
                 $group_statuses->status_id = $status_id;
