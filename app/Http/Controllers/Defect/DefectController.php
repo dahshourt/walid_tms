@@ -95,7 +95,7 @@ class DefectController extends Controller
         }
 
         $this->defect->AddDefectLog($defect_id, "Defect {$defect_id} Created Successfully");
-        $changerequest = $this->changerequest->findById($defect_data->cr_id);
+        $changerequest = $this->changerequest->findById($request->cr_id);
 
         // Fire defect created event for notifications
         event(new \App\Events\DefectCreated(
