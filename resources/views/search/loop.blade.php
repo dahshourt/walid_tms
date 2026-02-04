@@ -172,7 +172,7 @@
                             <tr style="border-bottom: 1px solid #f3f4f6; transition: all 0.2s;">
                                 <td class="align-middle" style="padding: 1rem 1.25rem;">
                                     <span class="font-weight-bold text-dark" style="font-size: 0.9rem;">
-                                        {{ $status->currentGroup->name ?? $status->status?->viewByGroupStatuses->first()?->group?->name ?? 'N/A' }}
+                                        {{ $status->status?->viewByGroupStatuses->pluck('group.title')->implode(', ') ?? $status->technical_group->name ?? $status->currentGroup->name ?? 'N/A' }}
                                     </span>
                                 </td>
                                 <td class="align-middle" style="padding: 1rem 1.25rem;">
@@ -181,7 +181,7 @@
                                         ( {{ $cr_status_name ?? 'N/A' }} )
                                         @if($status->reference_group_id)
                                             tech team ({{ $status->referenceGroup->name ?? 'N/A' }})
-                                        @elseif($status->reference_group_id)
+                                        @elseif($status->previous_group_id)
                                             by ({{ $status->previousGroup->name ?? 'N/A' }})
                                         @endif
                                     </span>

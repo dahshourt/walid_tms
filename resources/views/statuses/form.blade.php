@@ -45,7 +45,7 @@
 
     <div class="form-row">
         <div class="form-group col-md-6">
-            <label for="set_group_id">Set by Groups <span class="text-danger">*</span></label>
+            <label for="set_group_id">Set by Groups:</label>
             <select class="form-control form-control-lg" id="set_group_id" name="set_group_id[]" multiple="multiple">
                 <option value=""> Select</option>
                 @foreach($groups as $item)
