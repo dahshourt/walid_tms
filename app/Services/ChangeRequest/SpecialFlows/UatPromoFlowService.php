@@ -64,9 +64,10 @@ class UatPromoFlowService
         elseif ($oldStatusName === $pendingUatTestCaseApprovalStatus) {
             Log::info('UatPromoFlowService: Transition from Pending UAT Test Cases Approval detected', ['cr_id' => $crId]);
 
-            $this->updateStatusActive($crId, $newStatusId, '0');
+            $this->updateApprovedCaseStatusActive($crId, $newStatusId, '0');
             $PromoOldStatusId = $this->getStatusIdByName(statusName: $deployOnUatEnvStatus);
             $PromoNewStatusId = $this->getStatusIdByName($pendingUatPromoStatus);
+
             $this->updateDependStatusActive($crId, $PromoOldStatusId, $PromoNewStatusId);
 
             return '0';
@@ -115,6 +116,19 @@ class UatPromoFlowService
         return $exists;
     }
 
+    private function updateApprovedCaseStatusActive(int $crId, int $statusId, string $active): void
+    {
+
+        $affected = ChangeRequestStatus::where('cr_id', $crId)
+            ->where('new_status_id', $statusId)
+            ->update(['active' => $active]);
+
+        Log::info('UatPromoFlowService: Status update result', [
+            'cr_id' => $crId,
+            'affected_rows' => $affected
+        ]);
+    }
+
     /**
      * Update active status for the Pending UAT (promo) status
      */
@@ -125,6 +139,21 @@ class UatPromoFlowService
             'status_id' => $statusId,
             'target_active' => $active
         ]);
+
+        $parkedIds = array_values(config('change_request.promo_parked_status_ids', []));
+
+
+
+        if (in_array($statusId, $parkedIds, true)) {
+
+            $depend_active_count = ChangeRequestStatus::where('cr_id', $crId)
+                ->where('active', '1')
+                ->count();
+
+            if (!$this->hasActiveParallelStatuses($crId)) {
+                $active = $depend_active_count > 1 ? '0' : '1';
+            }
+        }
 
         $affected = ChangeRequestStatus::where('cr_id', $crId)
             ->where('new_status_id', $statusId)
@@ -151,6 +180,7 @@ class UatPromoFlowService
         $affected = ChangeRequestStatus::where('cr_id', $crId)
             ->where('old_status_id', $oldStatusId)
             ->where('new_status_id', $newStatusId)
+            ->orderBy('id', 'desc')->limit(1)
             ->update(['active' => '1']);
 
         Log::info('UatPromoFlowService: Status update result', [
