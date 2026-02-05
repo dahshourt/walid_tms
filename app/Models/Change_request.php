@@ -689,9 +689,30 @@ class Change_request extends Model
             ->with(['currentGroup', 'technical_group', 'referenceGroup', 'previousGroup', 'status' => function($query) {
                 $query->with('viewByGroupStatuses.group');
             }])
+            ->orderBy('id', 'desc')
             ->get();
-
-        return $statuses;
+        
+        // Group by the actual group being displayed and take the first (latest) from each group
+        $grouped = $statuses->groupBy(function ($status) {
+            // Create a unique key based on the actual group being displayed
+            // Priority: reference_group_id > group_id > technical_group_id
+            if ($status->reference_group_id) {
+                return 'ref_' . $status->reference_group_id;
+            } elseif ($status->group_id) {
+                return 'group_' . $status->group_id;
+            } elseif ($status->technical_group_id) {
+                return 'tech_' . $status->technical_group_id;
+            }
+            return 'no_group';
+        });
+        
+        // Take the first item from each group (which is the latest due to ordering)
+        $deduplicated = $grouped->map(function ($group) {
+            return $group->first();
+        });
+        
+        // Return as a new collection to ensure proper collection behavior
+        return new \Illuminate\Database\Eloquent\Collection($deduplicated->values()->all());
     }
 
     /**
