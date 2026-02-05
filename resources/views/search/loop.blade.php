@@ -172,7 +172,7 @@
                             <tr style="border-bottom: 1px solid #f3f4f6; transition: all 0.2s;">
                                 <td class="align-middle" style="padding: 1rem 1.25rem;">
                                     <span class="font-weight-bold text-dark" style="font-size: 0.9rem;">
-                                        {{ $status->currentGroup->name ?? $status->status?->viewByGroupStatuses->first()?->group?->name ?? 'N/A' }}
+                                        {{ $status->status?->viewByGroupStatuses->first()?->group?->name ?? $status->currentGroup->name ?? 'N/A' }}
                                     </span>
                                 </td>
                                 <td class="align-middle" style="padding: 1rem 1.25rem;">
