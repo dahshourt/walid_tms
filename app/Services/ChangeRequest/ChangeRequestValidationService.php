@@ -55,7 +55,7 @@ class ChangeRequestValidationService
 
         $technicalDefaultGroup = session('default_group') ?: auth()->user()->default_group;
         $cr = Change_request::find($id);
-        $technicalCr = TechnicalCr::where('cr_id', $id)->whereRaw('CAST(status AS CHAR) = ?', ['0'])->first();
+        $technicalCr = TechnicalCr::where('cr_id', $id)->whereRaw('CAST(status AS CHAR) = ?', ['0'])->latest()->first();
 
         if (!$technicalCr) {
             return false;
