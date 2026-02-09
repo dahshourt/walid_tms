@@ -96,8 +96,27 @@ class Status extends Model
         return 'status_name';
     }
 
-	public function workflow_type()
+    public function workflow_type()
     {
         return $this->belongsTo(WorkFlowType::class, 'workflow_type_id');
+    }
+
+
+    public function GetViewGroup($application_id = null)
+    {
+
+        if ($application_id) {
+            $group = $this->viewByGroupStatuses()->whereHas('group.group_applications', function ($q) use ($application_id) {
+                $q->where('application_id', $application_id);
+            })->first();
+
+            if ($group) {
+                return $group->group;
+            }
+        }
+
+        // Fallback to first group (using property to leverage eager loading if available, else lazy load)
+        $firstStatus = $this->viewByGroupStatuses->first();
+        return $firstStatus ? $firstStatus->group : null;
     }
 }

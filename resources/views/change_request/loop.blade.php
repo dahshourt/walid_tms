@@ -79,11 +79,11 @@
 
                         <?php
 
-                             $t= $item->RequestStatuses->last()?->new_status_id;
+                                                                             $t= $item->RequestStatuses->last()?->new_status_id;
 
-                            //dd($t);
-                           // dd($item->workflow_type_id == 5 &&  in_array($t, [66, 67, 68, 69]) );
-                               ?>
+                                                                            //dd($t);
+                                                                           // dd($item->workflow_type_id == 5 &&  in_array($t, [66, 67, 68, 69]) );
+                                                                               ?>
 
 
                         <a href='{{url("$route")}}/{{ $item->id }}/edit' class="btn btn-sm btn-clean btn-icon mr-2"
@@ -142,7 +142,7 @@
                                 <tr style="border-bottom: 1px solid #f3f4f6; transition: all 0.2s;">
                                     <td class="align-middle" style="padding: 1rem 1.25rem;">
                                         <span class="font-weight-bold text-dark" style="font-size: 0.9rem;">
-                                            {{ $status->currentGroup->name ?? $status->status?->viewByGroupStatuses->first()?->group?->name ?? 'N/A' }}
+                                            {{ $status->currentGroup?->name ?? $status->status?->GetViewGroup($item->application_id)->name ?? 'N/A' }}
                                         </span>
                                     </td>
                                     <td class="align-middle" style="padding: 1rem 1.25rem;">

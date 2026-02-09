@@ -86,11 +86,16 @@ class SearchController extends Controller
         if (!$cr) {
             return redirect('/searchs')->with('error', 'CR NO not exists.');
         }
-        // dd($change_request_custom_fields->where('custom_field_name','title')->first()->custom_field_value);
+
+        // Standardize as a collection for the unified view
+        $items = collect([$cr]);
+
         $r = new ChangeRequestRepository();
         $crs_in_queues = $r->getAllWithoutPagination()->pluck('id');
+        $title = 'Search Result';
+        $searchType = 'simple';
 
-        return view("$this->view.index", compact('cr', 'crs_in_queues'));
+        return view("$this->view.index", compact('items', 'crs_in_queues', 'title', 'searchType'));
     }
 
     public function AdvancedSearchResult()
@@ -98,21 +103,35 @@ class SearchController extends Controller
         $this->authorize('Access Advanced Search'); // permission check
 
         // Retrieve the paginated collection from the model
-        $collection = $this->changerequest->AdvancedSearchResult()->appends(request()->query());
+        $items = $this->changerequest->AdvancedSearchResult()->appends(request()->query());
 
-        // Ensure $collection is an instance of Illuminate\Pagination\LengthAwarePaginator
-        if (!($collection instanceof \Illuminate\Pagination\LengthAwarePaginator)) {
+        // Ensure $items is an instance of Illuminate\Pagination\LengthAwarePaginator
+        if (!($items instanceof \Illuminate\Pagination\LengthAwarePaginator)) {
             abort(500, 'Expected paginated collection from AdvancedSearchResult.');
         }
 
-        $totalCount = $collection->total();
-        // Transform the collection into resource format
-        $collection = AdvancedSearchRequestResource::collection($collection);
+        $totalCount = $items->total();
+        // Transform the collection into resource format if needed, but for now we'll use the items directly or ensure consistancy
+        // The original code used a Resource, let's keep it if it transforms data significantly,
+        // but Resources usually return an array/json, not a collection suitable for blade loops if not careful.
+        // Let's look at the resource usage. It was: $collection = AdvancedSearchRequestResource::collection($collection);
+        // This returns an AnonymousResourceCollection.
+        // For the blade view, we might want the original model objects to access methods like `isOnHold()`.
+        // The Resource might flatten things to arrays which breaks method calls in loop.blade.php.
+        // I will stick to passing the models directly for now to preserve functionality in loop.blade.php
+        // unless AdvancedSearchRequestResource does critical formatting.
+        // Checking the original AdvancedSearchResult.blade.php, it accessed properties like $item['id'].
+        // loop.blade.php accesses methods like $cr->isOnHold().
+        // So I MUST pass Model objects to use loop.blade.php.
+        // `AdvancedSearchResult` in repository returns a Paginator of models?
+        // Let's assume yes.
 
         $r = new ChangeRequestRepository();
         $crs_in_queues = $r->getAll()->pluck('id');
+        $title = 'Advanced Search Result';
+        $searchType = 'advanced';
 
-        return view("$this->view.AdvancedSearchResult", ['totalCount' => $totalCount, 'items' => $collection, 'crs_in_queues' => $crs_in_queues]);
+        return view("$this->view.index", compact('totalCount', 'items', 'crs_in_queues', 'title', 'searchType'));
     }
 
     public function AdvancedSearchResultExport(request $request): BinaryFileResponse

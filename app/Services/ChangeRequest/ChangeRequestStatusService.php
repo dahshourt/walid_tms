@@ -1767,17 +1767,24 @@ class ChangeRequestStatusService
                     }
                 }
             } else {
+                $current_group_id = $newStatusRow->GetViewGroup($changeRequest->application_id);
+                if ($current_group_id) {
+                    $current_group_id = $current_group_id->id;
+                } else {
+                    $current_group_id = optional($newStatusRow->group_statuses)
+                        ->where('type', '2')
+                        ->pluck('group_id')
+                        ->first();
+
+                }
                 $payload = $this->buildStatusData(
                     $changeRequest->id,
                     $statusData['old_status_id'],
                     (int) $workflowStatus->to_status_id,
                     null,
-                    $currentStatus->reference_group_id,
+                    $current_group_id,
                     $previous_group_id,
-                    optional($newStatusRow->group_statuses)
-                        ->where('type', '2')
-                        ->pluck('group_id')
-                        ->first(),
+                    $current_group_id,
                     $userId,
                     $active
                 );

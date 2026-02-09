@@ -2,427 +2,410 @@
 
 @section('content')
 
-    <!--begin::Content-->
-    <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
-        <!--begin::Entry-->
-        <div class="d-flex flex-column-fluid">
-            <!--begin::Container-->
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-12">
-                        <!--begin::Card-->
-                        <div class="card card-custom gutter-b shadow-sm border-0">
-                            <div class="card-header border-0 py-5">
-                                <h3 class="card-title font-weight-bolder text-dark">
-                                    <span class="card-icon mr-2">
-                                        <span class="svg-icon svg-icon-lg svg-icon-primary">
-                                            <!--begin::Svg Icon | path:assets/media/svg/icons/General/Search.svg-->
-                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px"
-                                                viewBox="0 0 24 24" version="1.1">
-                                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                    <rect x="0" y="0" width="24" height="24" />
-                                                    <path
-                                                        d="M14.2928932,16.7071068 C13.9023689,16.3165825 13.9023689,15.6834175 14.2928932,15.2928932 C14.6834175,14.9023689 15.3165825,14.9023689 15.7071068,15.2928932 L19.7071068,19.2928932 C20.0976311,19.6834175 20.0976311,20.3165825 19.7071068,20.7071068 C19.3165825,21.0976311 18.6834175,21.0976311 18.2928932,20.7071068 L14.2928932,16.7071068 Z"
-                                                        fill="#000000" fill-rule="nonzero" opacity="0.3" />
-                                                    <path
-                                                        d="M11,16 C13.7614237,16 16,13.7614237 16,11 C16,8.23857625 13.7614237,6 11,6 C8.23857625,6 6,8.23857625 6,11 C6,13.7614237 8.23857625,16 11,16 Z M11,18 C7.13400675,18 4,14.8659932 4,11 C4,7.13400675 7.13400675,4 11,4 C14.8659932,4 18,7.13400675 18,11 C18,14.8659932 14.8659932,18 11,18 Z"
-                                                        fill="#000000" fill-rule="nonzero" />
-                                                </g>
-                                            </svg>
-                                            <!--end::Svg Icon-->
+    @php
+        $user_group = session()->has('current_group') ? session('current_group') : auth()->user()->defualt_group->id;
+        $user_group = \App\Models\Group::find($user_group);
+
+        $user_roles_names = auth()->user()->roles->pluck('name');
+        $current_user_is_just_a_viewer = count($user_roles_names) === 1 && $user_roles_names[0] === 'Viewer';
+    @endphp
+
+        <!--begin::Content-->
+        <div class="content d-flex flex-column flex-column-fluid" id="kt_content">
+            <!--begin::Entry-->
+            <div class="d-flex flex-column-fluid">
+                <!--begin::Container-->
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <!--begin::Card-->
+                            <div class="card card-custom gutter-b shadow-sm border-0">
+                                <div class="card-header border-0 py-5">
+                                    <h3 class="card-title font-weight-bolder text-dark">
+                                        <span class="card-icon mr-2">
+                                            <span class="svg-icon svg-icon-lg svg-icon-primary">
+                                                <!--begin::Svg Icon | path:assets/media/svg/icons/General/Search.svg-->
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                    xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px"
+                                                    viewBox="0 0 24 24" version="1.1">
+                                                    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                                        <rect x="0" y="0" width="24" height="24" />
+                                                        <path
+                                                            d="M14.2928932,16.7071068 C13.9023689,16.3165825 13.9023689,15.6834175 14.2928932,15.2928932 C14.6834175,14.9023689 15.3165825,14.9023689 15.7071068,15.2928932 L19.7071068,19.2928932 C20.0976311,19.6834175 20.0976311,20.3165825 19.7071068,20.7071068 C19.3165825,21.0976311 18.6834175,21.0976311 18.2928932,20.7071068 L14.2928932,16.7071068 Z"
+                                                            fill="#000000" fill-rule="nonzero" opacity="0.3" />
+                                                        <path
+                                                            d="M11,16 C13.7614237,16 16,13.7614237 16,11 C16,8.23857625 13.7614237,6 11,6 C8.23857625,6 6,8.23857625 6,11 C6,13.7614237 8.23857625,16 11,16 Z M11,18 C7.13400675,18 4,14.8659932 4,11 C4,7.13400675 7.13400675,4 11,4 C14.8659932,4 18,7.13400675 18,11 C18,14.8659932 14.8659932,18 11,18 Z"
+                                                            fill="#000000" fill-rule="nonzero" />
+                                                    </g>
+                                                </svg>
+                                                <!--end::Svg Icon-->
+                                            </span>
                                         </span>
-                                    </span>
-                                    Add {{ $form_title }}
-                                </h3>
-                            </div>
-                            <!--begin::Form-->
-                            <form id="advanced_search">
-                                @if (count($fields) > 0)
-                                    <div class="card-body py-0">
-                                        <div class="row">
-                                            @php $createdField = null;
-                                            $updatedField = null; @endphp
-                                                @foreach ($fields as $field)
-                                                    @if (isset($field->custom_field))
-                                                        @php
-                                                            $customField = $field->custom_field;
-                                                            // Change default col-sm-3 to col-lg-3 col-md-4 col-sm-6 for better responsiveness
-                                                            $baseClasses = 'col-lg-3 col-md-4 col-sm-6';
-                                                            $fieldClasses = isset($field->styleClasses) ? str_replace('col-sm-3', $baseClasses, $field->styleClasses) : $baseClasses . ' field-select';
+                                        Add {{ $form_title }}
+                                    </h3>
+                                </div>
+                                <!--begin::Form-->
+                                <form id="advanced_search">
+                                    @if (count($fields) > 0)
+                                        <div class="card-body py-0">
+                                            <div class="row">
+                                                @php $createdField = null;
+                                                $updatedField = null; @endphp
+                                                    @foreach ($fields as $field)
+                                                        @if (isset($field->custom_field))
+                                                            @php
+                                                                $customField = $field->custom_field;
+                                                                // Change default col-sm-3 to col-lg-3 col-md-4 col-sm-6 for better responsiveness
+                                                                $baseClasses = 'col-lg-3 col-md-4 col-sm-6';
+                                                                $fieldClasses = isset($field->styleClasses) ? str_replace('col-sm-3', $baseClasses, $field->styleClasses) : $baseClasses . ' field-select';
 
-                                                            $labelLower = isset($customField->label) ? strtolower(trim($customField->label)) : '';
-                                                            // Skip deprecated standalone date filters
-                                                            if (in_array($labelLower, ['less than date', 'greater than date'])) {
-                                                                continue;
-                                                            }
-                                                            // Defaults for rendering
-                                                            $renderName = $customField->name;
-                                                            $renderLabel = $customField->label;
-                                                            // Remap CR ID -> CR No. with input name cr_no
-                                                            if ($labelLower === 'cr id' || strtolower($customField->name) === 'cr_id') {
-                                                                $renderName = 'cr_no';
-                                                                $renderLabel = 'CR No.';
-                                                            }
+                                                                $labelLower = isset($customField->label) ? strtolower(trim($customField->label)) : '';
+                                                                // Skip deprecated standalone date filters
+                                                                if (in_array($labelLower, ['less than date', 'greater than date'])) {
+                                                                    continue;
+                                                                }
+                                                                // Defaults for rendering
+                                                                $renderName = $customField->name;
+                                                                $renderLabel = $customField->label;
+                                                                // Remap CR ID -> CR No. with input name cr_no
+                                                                if ($labelLower === 'cr id' || strtolower($customField->name) === 'cr_id') {
+                                                                    $renderName = 'cr_no';
+                                                                    $renderLabel = 'CR No.';
+                                                                }
 
-                                                            if (in_array($customField->name, ['created_at', 'updated_at'])) {
-                                                                $renderLabel = $customField->name === 'created_at' ? 'Creation Date' : 'Updated Date';
-                                                            }
+                                                                if (in_array($customField->name, ['created_at', 'updated_at'])) {
+                                                                    $renderLabel = $customField->name === 'created_at' ? 'Creation Date' : 'Updated Date';
+                                                                }
 
-                                                        @endphp
+                                                            @endphp
 
-                                                        <div @class([
-                                                            'form-group modern-form-group',
-                                                            $fieldClasses,
-                                                            'col-12 date-range-group' => in_array($customField->name, ['created_at', 'updated_at']), // Give date ranges full width or larger
-                                                            'col-lg-6' => in_array($customField->name, ['created_at', 'updated_at']), // Override for date ranges
-                                                        ])>
-                                                            <label class="font-weight-bold text-dark mb-2 {{ in_array($customField->name, ['created_at', 'updated_at']) ? 'd-block' : '' }}" for="{{ $renderName }}">{{ $renderLabel }}</label>
+                                                            <div @class([
+                                                                'form-group modern-form-group',
+                                                                $fieldClasses,
+                                                                'col-12 date-range-group' => in_array($customField->name, ['created_at', 'updated_at']), // Give date ranges full width or larger
+                                                                'col-lg-6' => in_array($customField->name, ['created_at', 'updated_at']), // Override for date ranges
+                                                            ])>
+                                                                <label class="font-weight-bold text-dark mb-2 {{ in_array($customField->name, ['created_at', 'updated_at']) ? 'd-block' : '' }}" for="{{ $renderName }}">{{ $renderLabel }}</label>
 
-                                                            @if (in_array($customField->name, ['created_at', 'updated_at']))
-                                                                <div class="p-4 border-0 rounded bg-light-primary d-flex align-items-center justify-content-between date-range-container">
-                                                                    <div class="d-flex flex-column flex-sm-row w-100 align-items-center">
-                                                                        <div class="position-relative w-100 mr-sm-2 mb-2 mb-sm-0">
-                                                                            <input
-                                                                                type="date"
-                                                                                class="form-control form-control-solid modern-form-control"
-                                                                                id="{{ $customField->name }}_start"
-                                                                                name="{{ $customField->name }}_start"
-                                                                                placeholder="Start date"
-                                                                                value="{{ request()->query($customField->name . '_start') }}"
-                                                                            >
-                                                                        </div>
-                                                                        <span class="text-muted font-weight-bold mx-2">to</span>
-                                                                        <div class="position-relative w-100 ml-sm-2">
-                                                                            <input
-                                                                                type="date"
-                                                                                class="form-control form-control-solid modern-form-control"
-                                                                                id="{{ $customField->name }}_end"
-                                                                                name="{{ $customField->name }}_end"
-                                                                                placeholder="End date"
-                                                                                value="{{ request()->query($customField->name . '_end') }}"
-                                                                            >
+                                                                @if (in_array($customField->name, ['created_at', 'updated_at']))
+                                                                    <div class="p-4 border-0 rounded bg-light-primary d-flex align-items-center justify-content-between date-range-container">
+                                                                        <div class="d-flex flex-column flex-sm-row w-100 align-items-center">
+                                                                            <div class="position-relative w-100 mr-sm-2 mb-2 mb-sm-0">
+                                                                                <input
+                                                                                    type="date"
+                                                                                    class="form-control form-control-solid modern-form-control"
+                                                                                    id="{{ $customField->name }}_start"
+                                                                                    name="{{ $customField->name }}_start"
+                                                                                    placeholder="Start date"
+                                                                                    value="{{ request()->query($customField->name . '_start') }}"
+                                                                                >
+                                                                            </div>
+                                                                            <span class="text-muted font-weight-bold mx-2">to</span>
+                                                                            <div class="position-relative w-100 ml-sm-2">
+                                                                                <input
+                                                                                    type="date"
+                                                                                    class="form-control form-control-solid modern-form-control"
+                                                                                    id="{{ $customField->name }}_end"
+                                                                                    name="{{ $customField->name }}_end"
+                                                                                    placeholder="End date"
+                                                                                    value="{{ request()->query($customField->name . '_end') }}"
+                                                                                >
+                                                                            </div>
                                                                         </div>
                                                                     </div>
-                                                                </div>
-                                                                <div id="updated_at_error" class="invalid-feedback d-none"></div>
-                                                            @elseif ($customField->type == 'select')
-                                                                <select
-                                                                    class="form-control form-control-solid select2"
-                                                                    id="{{ $renderName }}"
-                                                                    name="{{ $renderName }}[]"
-                                                                    multiple
-                                                                    data-placeholder="Select {{ $renderLabel }}"
-                                                                    style="width:100%;"
-                                                                >
-                                                                @php
-                                                                    $selectedValuesRaw = request()->query($renderName, []);
-                                                                    if (!is_array($selectedValuesRaw)) {
-                                                                        $selectedValuesRaw = strlen((string) $selectedValuesRaw) ? explode(',', (string) $selectedValuesRaw) : [];
-                                                                    }
-                                                                    $selectedValues = array_map('strval', $selectedValuesRaw);
-                                                                @endphp
-                                                                <!-- options generated below -->
-                                                                @if($customField->name == "new_status_id")
-                                                                    @foreach ($statuses as $value)
-                                                                        @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
-                                                                        <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->status_name }}</option>
-                                                                    @endforeach
+                                                                    <div id="updated_at_error" class="invalid-feedback d-none"></div>
+                                                                @elseif ($customField->type == 'select')
+                                                                    <select
+                                                                        class="form-control form-control-solid select2"
+                                                                        id="{{ $renderName }}"
+                                                                        name="{{ $renderName }}[]"
+                                                                        multiple
+                                                                        data-placeholder="Select {{ $renderLabel }}"
+                                                                        style="width:100%;"
+                                                                    >
+                                                                    @php
+                                                                        $selectedValuesRaw = request()->query($renderName, []);
+                                                                        if (!is_array($selectedValuesRaw)) {
+                                                                            $selectedValuesRaw = strlen((string) $selectedValuesRaw) ? explode(',', (string) $selectedValuesRaw) : [];
+                                                                        }
+                                                                        $selectedValues = array_map('strval', $selectedValuesRaw);
+                                                                    @endphp
+                                                                    <!-- options generated below -->
+                                                                    @if($customField->name == "new_status_id")
+                                                                        @foreach ($statuses as $value)
+                                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->status_name }}</option>
+                                                                        @endforeach
+                                                                    @endif
+
+                                                                    @if($customField->name == "priority_id")
+                                                                        @foreach ($priorities as $value)
+                                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
+                                                                        @endforeach
+                                                                    @endif
+
+
+                                                                    @if($customField->name == "application_id")
+                                                                        @foreach ($applications as $value)
+                                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
+                                                                        @endforeach
+                                                                    @endif
+
+
+                                                                    @if($customField->name == "parent_id")
+                                                                        @foreach ($parents as $value)
+                                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
+                                                                        @endforeach
+                                                                    @endif
+
+                                                                    @if($customField->name == "cr_type")
+                                                                        @foreach ($cr_types as $value)
+                                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
+                                                                        @endforeach
+                                                                    @endif
+
+                                                                    @if($customField->name == "category_id")
+                                                                        @foreach ($categories as $value)
+                                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
+                                                                        @endforeach
+                                                                    @endif
+                                                                    @if($customField->name == "unit_id")
+                                                                        @foreach ($units as $value)
+                                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
+                                                                        @endforeach
+                                                                    @endif
+                                                                    @if($customField->name == "workflow_type_id")
+                                                                        @foreach ($workflows as $value)
+                                                                            @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
+                                                                            <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
+                                                                        @endforeach
+                                                                    @endif
+
+                                                                    @if($customField->name === 'tester_id')
+                                                                        @foreach ($testing_users as $testing_user)
+                                                                            @php $isSelected = in_array((string) $testing_user->id, $selectedValues, true); @endphp
+                                                                            <option value="{{ $testing_user->id }}" @if($isSelected) selected @endif>{{ $testing_user->user_name }}</option>
+                                                                        @endforeach
+                                                                    @endif
+
+                                                                    @if($customField->name === 'designer_id')
+                                                                        @foreach ($sa_users as $sa_user)
+                                                                            @php $isSelected = in_array((string) $sa_user->id, $selectedValues, true); @endphp
+                                                                            <option value="{{ $sa_user->id }}" @if($isSelected) selected @endif>{{ $sa_user->user_name }}</option>
+                                                                        @endforeach
+                                                                    @endif
+
+                                                                    @if($customField->name === 'developer_id')
+                                                                        @foreach ($developer_users as $developer_user)
+                                                                            @php $isSelected = in_array((string) $developer_user->id, $selectedValues, true); @endphp
+                                                                            <option value="{{ $developer_user->id }}" @if($isSelected) selected @endif>{{ $developer_user->user_name }}</option>
+                                                                        @endforeach
+                                                                    @endif
+
+                                                                    </select>
+                                                                @elseif ($customField->type == 'textArea')
+                                                                    <textarea
+                                                                        class="form-control form-control-solid modern-form-control"
+                                                                        id="{{ $renderName }}"
+                                                                        name="{{ $renderName }}"
+                                                                        placeholder="{{ $renderLabel }}"
+                                                                        rows="4"
+                                                                    >{{ request()->query($renderName) }}</textarea>
+                                                                @elseif ($customField->type == 'text' || $customField->type == 'input')
+
+                                                                    @php $isCrIdField = in_array(strtolower($customField->name), ['cr_id', 'id']) || ($labelLower === 'cr id'); @endphp
+                                                                    <input
+                                                                        type="{{ $isCrIdField ? 'number' : 'text' }}"
+                                                                        class="form-control form-control-solid modern-form-control"
+                                                                        id="{{ $renderName }}"
+                                                                        name="{{ $renderName }}"
+                                                                        placeholder="{{ $renderLabel }}"
+                                                                        value="{{ request()->query($renderName) }}"
+                                                                    >
+
+
+                                                                @elseif ($customField->type == 'number')
+                                                                    <input
+                                                                        type="number"
+                                                                        class="form-control form-control-solid modern-form-control"
+                                                                        id="{{ $renderName }}"
+                                                                        name="{{ $renderName }}"
+                                                                        placeholder="{{ $renderLabel }}"
+                                                                        value="{{ request()->query($renderName) }}"
+                                                                    >
+                                                                @elseif ($customField->type == 'date')
+                                                                    <input
+                                                                        type="date"
+                                                                        class="form-control form-control-solid modern-form-control"
+                                                                        id="{{ $customField->name }}"
+                                                                        name="{{ $customField->name }}"
+                                                                        value="{{ request()->query($customField->name) }}"
+                                                                    >
+                                                                @elseif ($customField->type == 'checkbox')
+                                                                    <div class="pt-2">
+                                                                        <label class="modern-checkbox">
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                name="{{ $renderName }}"
+                                                                                value="1"
+                                                                                {{ request()->query($renderName) == '1' ? 'checked' : '' }}
+                                                                            >
+                                                                            <span class="checkmark"></span>
+                                                                        </label>
+                                                                    </div>
                                                                 @endif
 
-                                                                @if($customField->name == "priority_id")
-                                                                    @foreach ($priorities as $value)
-                                                                        @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
-                                                                        <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
-                                                                    @endforeach
+
+
+                                                                @if(isset($customField->required) && $customField->required)
+                                                                    <span class="text-danger">*</span>
                                                                 @endif
-
-
-                                                                @if($customField->name == "application_id")
-                                                                    @foreach ($applications as $value)
-                                                                        @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
-                                                                        <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
-                                                                    @endforeach
-                                                                @endif
-
-
-                                                                @if($customField->name == "parent_id")
-                                                                    @foreach ($parents as $value)
-                                                                        @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
-                                                                        <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
-                                                                    @endforeach
-                                                                @endif
-
-                                                                @if($customField->name == "cr_type")
-                                                                    @foreach ($cr_types as $value)
-                                                                        @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
-                                                                        <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
-                                                                    @endforeach
-                                                                @endif
-
-                                                                @if($customField->name == "category_id")
-                                                                    @foreach ($categories as $value)
-                                                                        @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
-                                                                        <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
-                                                                    @endforeach
-                                                                @endif
-                                                                @if($customField->name == "unit_id")
-                                                                    @foreach ($units as $value)
-                                                                        @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
-                                                                        <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
-                                                                    @endforeach
-                                                                @endif
-                                                                @if($customField->name == "workflow_type_id")
-                                                                    @foreach ($workflows as $value)
-                                                                        @php $isSelected = in_array((string) $value->id, $selectedValues, true); @endphp
-                                                                        <option value="{{ $value->id }}" @if($isSelected) selected @endif>{{ $value->name }}</option>
-                                                                    @endforeach
-                                                                @endif
-
-                                                                @if($customField->name === 'tester_id')
-                                                                    @foreach ($testing_users as $testing_user)
-                                                                        @php $isSelected = in_array((string) $testing_user->id, $selectedValues, true); @endphp
-                                                                        <option value="{{ $testing_user->id }}" @if($isSelected) selected @endif>{{ $testing_user->user_name }}</option>
-                                                                    @endforeach
-                                                                @endif
-
-                                                                @if($customField->name === 'designer_id')
-                                                                    @foreach ($sa_users as $sa_user)
-                                                                        @php $isSelected = in_array((string) $sa_user->id, $selectedValues, true); @endphp
-                                                                        <option value="{{ $sa_user->id }}" @if($isSelected) selected @endif>{{ $sa_user->user_name }}</option>
-                                                                    @endforeach
-                                                                @endif
-
-                                                                @if($customField->name === 'developer_id')
-                                                                    @foreach ($developer_users as $developer_user)
-                                                                        @php $isSelected = in_array((string) $developer_user->id, $selectedValues, true); @endphp
-                                                                        <option value="{{ $developer_user->id }}" @if($isSelected) selected @endif>{{ $developer_user->user_name }}</option>
-                                                                    @endforeach
-                                                                @endif
-
-                                                                </select>
-                                                            @elseif ($customField->type == 'textArea')
-                                                                <textarea
-                                                                    class="form-control form-control-solid modern-form-control"
-                                                                    id="{{ $renderName }}"
-                                                                    name="{{ $renderName }}"
-                                                                    placeholder="{{ $renderLabel }}"
-                                                                    rows="4"
-                                                                >{{ request()->query($renderName) }}</textarea>
-                                                            @elseif ($customField->type == 'text' || $customField->type == 'input')
-
-                                                                @php $isCrIdField = in_array(strtolower($customField->name), ['cr_id', 'id']) || ($labelLower === 'cr id'); @endphp
-                                                                <input
-                                                                    type="{{ $isCrIdField ? 'number' : 'text' }}"
-                                                                    class="form-control form-control-solid modern-form-control"
-                                                                    id="{{ $renderName }}"
-                                                                    name="{{ $renderName }}"
-                                                                    placeholder="{{ $renderLabel }}"
-                                                                    value="{{ request()->query($renderName) }}"
-                                                                >
-
-
-                                                            @elseif ($customField->type == 'number')
-                                                                <input
-                                                                    type="number"
-                                                                    class="form-control form-control-solid modern-form-control"
-                                                                    id="{{ $renderName }}"
-                                                                    name="{{ $renderName }}"
-                                                                    placeholder="{{ $renderLabel }}"
-                                                                    value="{{ request()->query($renderName) }}"
-                                                                >
-                                                            @elseif ($customField->type == 'date')
-                                                                <input
-                                                                    type="date"
-                                                                    class="form-control form-control-solid modern-form-control"
-                                                                    id="{{ $customField->name }}"
-                                                                    name="{{ $customField->name }}"
-                                                                    value="{{ request()->query($customField->name) }}"
-                                                                >
-                                                            @elseif ($customField->type == 'checkbox')
-                                                                <div class="pt-2">
-                                                                    <label class="modern-checkbox">
-                                                                        <input
-                                                                            type="checkbox"
-                                                                            name="{{ $renderName }}"
-                                                                            value="1"
-                                                                            {{ request()->query($renderName) == '1' ? 'checked' : '' }}
-                                                                        >
-                                                                        <span class="checkmark"></span>
-                                                                    </label>
-                                                                </div>
-                                                            @endif
-
-
-
-                                                            @if(isset($customField->required) && $customField->required)
-                                                                <span class="text-danger">*</span>
-                                                            @endif
-                                                        </div>
-                                                    @else
-                                                        <p>Custom field data is not available.</p>
-                                                    @endif
-                                                @endforeach
+                                                            </div>
+                                                        @else
+                                                            <p>Custom field data is not available.</p>
+                                                        @endif
+                                                    @endforeach
+                                                    </div>
                                                 </div>
-                                            </div>
 
-                                            <div class="card-footer border-0 p-5 d-flex justify-content-end bg-white">
-                                                <button type="button" id="reset_advanced_search" class="btn btn-secondary font-weight-bold mr-3 px-6 h-40px">
-                                                    <i class="la la-trash"></i> Clear
-                                                </button>
-                                                <button type="submit" class="btn btn-primary font-weight-bold px-8 h-40px shadow-sm">
-                                                    <i class="la la-search"></i> Search
-                                                </button>
-                                            </div>
-                                @else
+                                                <div class="card-footer border-0 p-5 d-flex justify-content-end bg-white">
+                                                    <button type="button" id="reset_advanced_search" class="btn btn-secondary font-weight-bold mr-3 px-6 h-40px">
+                                                        <i class="la la-trash"></i> Clear
+                                                    </button>
+                                                    <button type="submit" class="btn btn-primary font-weight-bold px-8 h-40px shadow-sm">
+                                                        <i class="la la-search"></i> Search
+                                                    </button>
+                                                </div>
+                                    @else
                                         <div class="card-body">
                                             <p class="text-center text-muted">No fields available for search.</p>
                                         </div>
                                     @endif
-                                </form>
-                                <!--end::Form-->
+                                    </form>
+                                    <!--end::Form-->
+                                </div>
+                                <!--end::Card-->
+                            </div>
+                        </div>
+                    </div>
+                    <!--end::Container-->
+                </div>
+                <!--end::Entry-->
+            </div>
+            <!--end::Content-->
+
+            <div class="container" id="results">
+                <div class="row">
+                    <div class="col-md-12">
+                        <!--begin::Card-->
+                        <div class="card card-custom gutter-b shadow-sm border-0">
+                            <div class="card-header flex-wrap border-0 pt-6 pb-0">
+                                <div class="card-title">
+                                    <h3 class="card-label">Search Results
+                                    <span class="d-block text-muted pt-2 font-size-sm">Total Records: {{ $items->total() }}</span></h3>
+                                </div>
+                                <div class="card-toolbar">
+                                    @if(isset($searchType) && $searchType === 'advanced')
+                                        <form action="{{ route('advanced.search.export', request()->query()) }}" method="POST"
+                                            style="display: inline;">
+                                            @csrf
+                                            <button type="submit" class="btn btn-light-primary font-weight-bolder">
+                                                <span class="svg-icon svg-icon-md">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px"
+                                                        viewBox="0 0 24 24" version="1.1">
+                                                        <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                                            <rect x="0" y="0" width="24" height="24" />
+                                                            <path
+                                                                d="M7,2 L17,2 C18.1045695,2 19,2.8954305 19,4 L19,20 C19,21.1045695 18.1045695,22 17,22 L7,22 C5.8954305,22 5,21.1045695 5,20 L5,4 C5,2.8954305 5.8954305,2 7,2 Z"
+                                                                fill="#000000" />
+                                                            <polygon fill="#000000" opacity="0.3" points="6 8 18 8 18 10 6 10" />
+                                                        </g>
+                                                    </svg>
+                                                </span>
+                                                Export Table
+                                            </button>
+                                        </form>
+                                    @else
+                                        <!-- Simple search dropdown placeholder if needed, but in advanced search we usually just export -->
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                <!--begin: Datatable-->
+                                <div class="table-responsive">
+                                <table class="table table-bordered">
+                                    <thead>
+                                        <tr>
+                                            @if(isset($searchType) && $searchType === 'advanced')
+                                                <th>CR ID</th>
+                                                <th>Title</th>
+                                                <th>Category</th>
+                                                <th>Release</th>
+                                                <th>Current Status</th>
+                                                <th>Requester</th>
+                                                <th>Requester Email</th>
+                                                <th>Design Duration</th>
+                                                <th>Dev Duration</th>
+                                                <th>Test Duration</th>
+                                                <th>Creation Date</th>
+                                                <th>Requesting Department</th>
+                                                <th>Targeted System</th>
+                                                <th>Last Action Date</th>
+                                                <th>Action</th>
+                                            @else
+                                                <tr class="text-uppercase text-muted">
+                                        <th style="min-width: 110px">CR ID</th>
+                                        <th style="min-width: 150px">Title</th>
+                                                <th>Status</th>
+                                                <th>Action</th>
+                                            @endif
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    @forelse($items as $cr)
+                                        @include("search.loop")
+                                    @empty
+                                        <tr>
+                                            <td colspan="15" class="text-center">No results found</td>
+                                        </tr>
+                                    @endforelse
+                                    </tbody>
+                                </table>
+                                </div>
+                                @if(isset($items) && $items instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                                    <div class="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded shadow-sm">
+                                        <p class="mb-0 text-primary fw-bold">Total Results: {{ $items->total() }}</p>
+                                        <div>{{ $items->links() }}</div>
+                                    </div>
+                                @endif
+                                <div class="modal fade" id="descriptionModal" tabindex="-1" role="dialog" aria-labelledby="descriptionModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="descriptionModalLabel">Full Description</h5>
+                                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                    <span aria-hidden="true">&times;</span>
+                                                </button>
+                                            </div>
+                                            <div class="modal-body" style="white-space: pre-wrap;"></div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-light-primary font-weight-bold" data-dismiss="modal">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <!--end::Card-->
                         </div>
                     </div>
                 </div>
-                <!--end::Container-->
             </div>
-            <!--end::Entry-->
-        </div>
-        <!--end::Content-->
-
-        <div class="container" id="results">
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="card card-custom shadow-sm border-0">
-                        <div class="card-header border-0 py-5">
-                            <h3 class="card-title align-items-start flex-column">
-                                <span class="card-label font-weight-bolder text-dark">Search Results</span>
-                                <span class="text-muted mt-3 font-weight-bold font-size-sm">Total Records: <span class="text-primary">{{ $totalCount }}</span></span>
-                            </h3>
-                            <div class="card-toolbar">
-                                <form action="{{ route('advanced.search.export', request()->query()) }}" method="POST" style="display: inline;">
-                                    @csrf
-                                    <button type="submit" class="btn btn-success font-weight-bolder shadow-sm px-5 py-2">
-                                        <span class="svg-icon svg-icon-md mr-2">
-                                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24px" height="24px" viewBox="0 0 24 24" version="1.1">
-                                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-                                                    <rect x="0" y="0" width="24" height="24"/>
-                                                    <path d="M7,18 L17,18 C18.1045695,18 19,18.8954305 19,20 C19,21.1045695 18.1045695,22 17,22 L7,22 C5.8954305,22 5,21.1045695 5,20 C5,18.8954305 5.8954305,18 7,18 Z M7,20 L17,20 C17.5522847,20 18,20.4477153 18,21 C18,21.5522847 17.5522847,22 17,22 L7,22 C6.44771525,22 6,21.5522847 6,21 C6,20.4477153 6.44771525,20 7,20 Z" fill="#000000" fill-rule="nonzero"/>
-                                                    <path d="M12,2 C12.5522847,2 13,2.44771525 13,3 L13,13.5857864 L15.2928932,11.2928932 C15.6834175,10.9023689 16.3165825,10.9023689 16.7071068,11.2928932 C17.0976311,11.6834175 17.0976311,12.3165825 16.7071068,12.7071068 L12.7071068,16.7071068 C12.3165825,17.0976311 11.6834175,17.0976311 11.2928932,16.7071068 L7.29289322,12.7071068 C6.90236893,12.3165825 6.90236893,11.6834175 7.29289322,11.2928932 C7.68341751,10.9023689 8.31658249,10.9023689 8.70710678,11.2928932 L11,13.5857864 L11,3 C11,2.44771525 11.4477153,2 12,2 Z" fill="#000000"/>
-                                                </g>
-                                            </svg>
-                                        </span>
-                                        Export Table
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                        <div class="card-body py-0">
-                            <div class="table-responsive">
-                                <table class="table table-head-custom table-vertical-center table-hover table-bordered" id="kt_advanced_search_table">
-                                    <thead>
-                                    <tr class="text-uppercase text-muted">
-                                        <th style="min-width: 80px">CR ID</th>
-                                        <th style="min-width: 150px">Title</th>
-                                        <th style="min-width: 100px">Category</th>
-                                        <th style="min-width: 100px">Release</th>
-                                        <th style="min-width: 150px">Current Status</th>
-                                        <th style="min-width: 100px">On Behalf</th>
-                                        <th style="min-width: 100px">Cr Type</th>
-                                        <th style="min-width: 120px">Requester</th>
-                                        <th style="min-width: 150px">Requester Email</th>
-                                        <th style="min-width: 80px">Design Dur.</th>
-                                        <th style="min-width: 80px">Dev Dur.</th>
-                                        <th style="min-width: 80px">Test Dur.</th>
-                                        <th style="min-width: 120px">Creation Date</th>
-                                        <th style="min-width: 150px">Requesting Dept.</th>
-                                        <th style="min-width: 120px">Target System</th>
-                                        <th style="min-width: 120px">Last Action</th>
-                                        <th style="min-width: 100px" class="text-right">Action</th>
-                                    </tr>
-                                    </thead>
-                                    <tbody>
-                                    @foreach ($collection as $item)
-                                        <tr>
-                                            <td>
-                                                @can('Edit ChangeRequest')
-                                                    <a href='{{ route('change_request.edit', $item->id) }}' class="text-dark-75 font-weight-bolder text-hover-primary mb-1 font-size-lg">{{ $item['cr_no'] }}</a>
-                                                @endcan
-                                            </td>
-                                            <td><span class="text-dark-75 font-weight-bold d-block font-size-lg">{{ $item['title'] ?? "" }}</span></td>
-                                            <td>{{ $item['category']['name'] ?? "" }}</td>
-                                            <td>{{ $item['release']['name'] ?? "" }}</td>
-                                            <td>
-                                                @php
-                                                    if ($item->isOnHold()) {
-                                                        $statuses_names = ['On Hold'];
-                                                    } elseif ($item->isDependencyHold()) {
-                                                        $blockingCrs = $item->getBlockingCrNumbers();
-                                                        $crList = !empty($blockingCrs) ? ' (CR#' . implode(', CR#', $blockingCrs) . ')' : '';
-                                                        $statuses_names = ['Design Estimation - Pending Dependency' . $crList];
-                                                    } else {
-                                                        $statuses_names = $item->RequestStatuses->pluck('status.name');
-                                                    }
-                                                @endphp
-                                                <div class="d-flex flex-wrap align-items-center" style="gap: 0.4rem;">
-                                                    @forelse ($statuses_names as $statusName)
-                                                        <span class="label label-lg label-light-primary label-inline font-weight-bold py-2 px-3 rounded h-auto" style="white-space: normal; text-align: left;">
-                                                            {{ $statusName }}
-                                                        </span>
-                                                    @empty
-                                                        <span class="text-muted">—</span>
-                                                    @endforelse
-                                                </div>
-                                            </td>
-                                            <td>{{ $item['on_behalf'] ?? "" }}</td>
-                                            <td>{{ $item['cr_type_name'] ?? "" }}</td>
-                                            <td>{{ $item['requester_name'] ?? "" }}</td>
-                                            <td>{{ $item['requester_email'] ?? "" }}</td>
-                                            <td>{{ $item['design_duration'] ?? "" }}</td>
-                                            <td>{{ $item['develop_duration'] ?? "" }}</td>
-                                            <td>{{ $item['test_duration'] ?? "" }}</td>
-                                            <td>
-                                                <span class="text-muted font-weight-bold">
-                                                    {{ $item['created_at'] ? \Carbon\Carbon::parse($item['created_at'])->format('Y-m-d') : '' }}
-                                                </span>
-                                            </td>
-                                            <td>{{ is_object($item->requesterDepartment) ? ($item->requesterDepartment->name ?? '') : ($item->requesterDepartment ?? '') }}</td>
-                                            <td>{{ $item['application']['name'] ?? "" }}</td>
-                                            <td>
-                                                <span class="text-muted font-weight-bold">
-                                                    {{ $item['updated_at'] ? \Carbon\Carbon::parse($item['updated_at'])->format('Y-m-d') : '' }}
-                                                </span>
-                                            </td>
-                                            <td class="text-right">
-                                                <div class="d-inline-flex">
-                                                    <a href='{{ route('change_request.show', $item->id) }}' class="btn btn-icon btn-light btn-hover-primary btn-sm mr-2" title="Show details">
-                                                        <i class="la la-eye"></i>
-                                                    </a>
-                                                    @if(in_array($item["id"], $crs_in_queues->toArray()) && !(($item["workflow_type_id"] == 5) && in_array($item["new_status_id"], [66, 67, 68, 69])))
-                                                        <a href='{{ route('change_request.show', $item->id) }}/edit' class="btn btn-icon btn-light btn-hover-primary btn-sm" title="Edit details">
-                                                            <i class="la la-edit"></i>
-                                                        </a>
-                                                    @endif
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mb-5 mt-5">
-                               <div class="d-flex align-items-center py-3">
-                                   <!-- Pagination -->
-                                   {{ $collection->links() }}
-                               </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 @endsection
 @push('css')
     {{--Avoid horizontal scrollbars when Select2 opens--}}
@@ -459,6 +442,49 @@
     </style>
 @endpush
 @push('script')
+    <script>
+    $(document).on('click', '.js-toggle-cr-details', function(e) {
+      e.preventDefault();
+      var $btn = $(this);
+      var id = $btn.data('cr-id');
+      var $row = $btn.closest('tr');
+      var $details = $('tr.cr-details-row[data-cr-id="' + id + '"]');
+      var expanded = $btn.attr('aria-expanded') === 'true';
+
+      if (expanded) {
+        $btn.attr('aria-expanded', 'false');
+        $btn.find('i.la').removeClass('la-angle-up').addClass('la-angle-down');
+        $details.hide();
+      } else {
+        $btn.attr('aria-expanded', 'true');
+        $btn.find('i.la').removeClass('la-angle-down').addClass('la-angle-up');
+        if ($details.prev()[0] !== $row[0]) {
+          $details.insertAfter($row);
+        }
+        $details.show();
+      }
+    });
+
+    $(document).on('click', 'tr.cr-row', function(e) {
+      if ($(e.target).closest('a, button, .js-toggle-cr-details, .dropdown-menu, .select2-container').length) {
+        return;
+      }
+      $(this).find('.js-toggle-cr-details').trigger('click');
+    });
+
+    $(document).on('click', '.description-preview', function (event) {
+        event.preventDefault();
+        let fullDescription = $(this).attr('data-description') || '';
+        try {
+            fullDescription = $('<div>').html(fullDescription).text();
+            fullDescription = JSON.parse(fullDescription);
+        } catch (e) {
+            console.warn('Failed to parse description JSON:', e);
+        }
+        $('#descriptionModal .modal-body').text(fullDescription);
+        $('#descriptionModal').modal('show');
+    });
+    </script>
     <script>
         @if(count(request()->query()))
             $('html, body').animate({

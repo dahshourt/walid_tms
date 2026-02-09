@@ -502,8 +502,9 @@ input:checked+.modern-toggle-slider:before {
 }
 
 .header-menu .menu-nav>.menu-item>.menu-link .menu-text {
-    font-weight: 600;
-    font-size: 0.85rem !important;
+    /* font-weight: 600; */
+    font-weight: bolder;
+    font-size: 0.75rem !important;
     color: rgba(255, 255, 255, 0.9);
     /* High contrast white */
     letter-spacing: 0.2px;
@@ -607,4 +608,8 @@ input:checked+.modern-toggle-slider:before {
 .header-menu .menu-nav>.menu-item>.menu-link:hover .svg-icon svg g [fill],
 .header-menu .menu-nav>.menu-item.menu-item-active>.menu-link .svg-icon svg g [fill] {
     fill: #ffffff;
+}
+
+#group-name {
+    font-size: .9rem !important;
 }
