@@ -1127,7 +1127,7 @@ class ChangeRequestStatusService
     /**
      * Extract status data from request
      */
-    private function extractStatusData($request): array
+    public function extractStatusData($request): array
     {
         $newStatusId = $request['new_status_id'] ?? $request->new_status_id ?? null;
         $oldStatusId = $request['old_status_id'] ?? $request->old_status_id ?? null;

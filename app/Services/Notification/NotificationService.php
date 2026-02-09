@@ -446,6 +446,8 @@ class NotificationService
         if ($rule->name == config('constants.rules.notify_division_manager_default')) {
             $crLink = route('edit.cr', ['id' => $cr->id, 'check_dm' => 1]);
         }
+
+        $applicationName = $cr->application->name ?? '';
         
         // Get QC email (RPA) and ticketing dev from config
         $qcEmail = config('constants.mails.qc_mail', '');
@@ -521,6 +523,7 @@ class NotificationService
             'start_cr_date' => $cr->start_CR_time,
             'start_sa_date' => $cr->start_design_time,
             'kickoff_meeting_date' => $kickoff_meeting_date,
+            'application_name' => $applicationName,
             
             // MDS-specific placeholders
             'mds_start_date' => $event->newStartDate ?? '',
