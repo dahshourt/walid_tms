@@ -43,6 +43,27 @@
 											<h3 class="card-label">{{ $title }}
 										</div>
 										<div class="card-toolbar">
+                                            @if(isset($searchType) && $searchType === 'advanced')
+                                                <form action="{{ route('advanced.search.export', request()->query()) }}" method="POST"
+                                                    style="display: inline;">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-light-primary font-weight-bolder">
+                                                        <span class="svg-icon svg-icon-md">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px"
+                                                                viewBox="0 0 24 24" version="1.1">
+                                                                <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                                                                    <rect x="0" y="0" width="24" height="24" />
+                                                                    <path
+                                                                        d="M7,2 L17,2 C18.1045695,2 19,2.8954305 19,4 L19,20 C19,21.1045695 18.1045695,22 17,22 L7,22 C5.8954305,22 5,21.1045695 5,20 L5,4 C5,2.8954305 5.8954305,2 7,2 Z"
+                                                                        fill="#000000" />
+                                                                    <polygon fill="#000000" opacity="0.3" points="6 8 18 8 18 10 6 10" />
+                                                                </g>
+                                                            </svg>
+                                                        </span>
+                                                        Export Table
+                                                    </button>
+                                                </form>
+                                            @else
 											<!--begin::Dropdown-->
 											<div class="dropdown dropdown-inline mr-2" style="display:none">
 												<button type="button" class="btn btn-light-primary font-weight-bolder dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -108,6 +129,7 @@
 												<!--end::Dropdown Menu-->
 											</div>
 											<!--end::Dropdown-->
+                                            @endif
 											<!--begin::Button-->
 
 											<!--end::Button-->
@@ -119,49 +141,82 @@
 										<table class="table table-bordered" >
 											<thead>
 												<tr>
-													@if($cr->workflow_type_id == 5)
-														<th>#</th>
-														<th>Sbject</th>
-														<th>Sumarry</th>
-														<th>status</th>
-														<th>App</th>
-														<th>Release Name</th>
-														<th>Go Live Planned Date</th>
-														<th> planned_start_iot_date</th>
-														<th> planned_end_iot_date</th>
-														<th> planned_start_e2e_date</th>
-														<th> planned_end_e2e_date</th>
-														<th> planned_start_uat_date</th>
-														<th> planned_end_uat_date</th>
-														<th> planned_start_smoke_test_date</th>
-														<th> planned_end_smoke_test_date</th>
-														{{--<th>#</th>--}}
-													@else
-														<th>#</th>
-														<th>Sbject</th>
-														<th>Sumarry</th>
-														<th>status</th>
-														<th>App</th>
-														<th>Design Duration</th>
-														<th>Start Design Time</th>
-														<th>End Design Time</th>
-														<th>Development Duration</th>
-														<th>Start Development Time</th>
-														<th>End Development Time</th>
-														<th>Test Duration</th>
-														<th>Start Test Time</th>
-														<th>End Test Time</th>
-														<th>Creation Date</th>
-														<th>Delivery/Updated Date</th>
-														{{--<th>#</th>--}}
-													@endif
+                                                    @if(isset($searchType) && $searchType === 'advanced')
+                                                        <th>CR ID</th>
+                                                        <th>Title</th>
+                                                        <th>Category</th>
+                                                        <th>Release</th>
+                                                        <th>Current Status</th>
+                                                        <th>Requester</th>
+                                                        <th>Requester Email</th>
+                                                        <th>Design Duration</th>
+                                                        <th>Dev Duration</th>
+                                                        <th>Test Duration</th>
+                                                        <th>Creation Date</th>
+                                                        <th>Requesting Department</th>
+                                                        <th>Targeted System</th>
+                                                        <th>Last Action Date</th>
+                                                        <th>Action</th>
+                                                    @else
+                                                        @php
+                                                            $firstItem = $items->first();
+                                                        @endphp
+                                                        @if($firstItem && $firstItem->workflow_type_id == 5)
+                                                            <th>#</th>
+                                                            <th>Sbject</th>
+                                                            <th>Sumarry</th>
+                                                            <th>status</th>
+                                                            <th>App</th>
+                                                            <th>Release Name</th>
+                                                            <th>Go Live Planned Date</th>
+                                                            <th> planned_start_iot_date</th>
+                                                            <th> planned_end_iot_date</th>
+                                                            <th> planned_start_e2e_date</th>
+                                                            <th> planned_end_e2e_date</th>
+                                                            <th> planned_start_uat_date</th>
+                                                            <th> planned_end_uat_date</th>
+                                                            <th> planned_start_smoke_test_date</th>
+                                                            <th> planned_end_smoke_test_date</th>
+                                                            {{--<th>#</th>--}}
+                                                        @else
+                                                            <th>#</th>
+                                                            <th>Sbject</th>
+                                                            <th>Sumarry</th>
+                                                            <th>status</th>
+                                                            <th>App</th>
+                                                            <th>Design Duration</th>
+                                                            <th>Start Design Time</th>
+                                                            <th>End Design Time</th>
+                                                            <th>Development Duration</th>
+                                                            <th>Start Development Time</th>
+                                                            <th>End Development Time</th>
+                                                            <th>Test Duration</th>
+                                                            <th>Start Test Time</th>
+                                                            <th>End Test Time</th>
+                                                            <th>Creation Date</th>
+                                                            <th>Delivery/Updated Date</th>
+                                                            {{--<th>#</th>--}}
+                                                        @endif
+                                                    @endif
 												</tr>
 											</thead>
 											<tbody>
-											@include("$view.loop")
+                                            @forelse($items as $cr)
+											    @include("$view.loop")
+                                            @empty
+                                                <tr>
+                                                    <td colspan="15" class="text-center">No results found</td>
+                                                </tr>
+                                            @endforelse
 											</tbody>
 										</table>
 										</div>
+                                        @if(isset($items) && $items instanceof \Illuminate\Pagination\LengthAwarePaginator)
+                                            <div class="d-flex justify-content-between align-items-center mt-3 p-3 bg-light rounded shadow-sm">
+                                                <p class="mb-0 text-primary fw-bold">Total Results: {{ $items->total() }}</p>
+                                                <div>{{ $items->links() }}</div>
+                                            </div>
+                                        @endif
 										<div class="modal fade" id="descriptionModal" tabindex="-1" role="dialog" aria-labelledby="descriptionModalLabel" aria-hidden="true">
 											<div class="modal-dialog modal-lg" role="document">
 												<div class="modal-content">

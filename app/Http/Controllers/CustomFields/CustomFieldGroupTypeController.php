@@ -33,6 +33,8 @@ class CustomFieldGroupTypeController extends Controller
 
     private $changerequest;
 
+    private $user;
+
     public function __construct(ChangeRequestFactory $changerequest, CustomFieldGroupTypeFactory $custom_field_group_type)
     {
 
@@ -172,14 +174,16 @@ class CustomFieldGroupTypeController extends Controller
         }
 
         $totalCount = $collection->total();
-        // Transform the collection into resource format
-        $collection = AdvancedSearchRequestResource::collection($collection);
+        // Transform the collection into resource format - REMOVED to match unified search view logic (expects Models)
+        // $collection = AdvancedSearchRequestResource::collection($collection);
+        $items = $collection;
 
         $r = new ChangeRequestRepository();
-        $crs_in_queues = $r->getAll()->pluck('id');
+        $crs_in_queues = $r->getAllWithoutPagination()->pluck('id');
         $cr_types = \App\Models\CrType::all();
+        $searchType = 'advanced';
 
-        return view('search.advanced_search', compact('fields', 'statuses', 'priorities', 'applications', 'parents', 'categories', 'units', 'workflows', 'testing_users', 'sa_users', 'developer_users', 'totalCount', 'collection', 'crs_in_queues', 'cr_types'));
+        return view('search.advanced_search', compact('fields', 'statuses', 'priorities', 'applications', 'parents', 'categories', 'units', 'workflows', 'testing_users', 'sa_users', 'developer_users', 'totalCount', 'collection', 'items', 'crs_in_queues', 'cr_types', 'searchType'));
     }
 
     public function AllCustomFieldsSelected()
@@ -295,7 +299,7 @@ class CustomFieldGroupTypeController extends Controller
                 'message' => 'Group Not Exists',
             ], 422);
         }
-        $this->CustomField->update($request, $id);
+        $this->custom_field_group_type->update($request, $id);
 
         return response()->json([
             'message' => 'Updated Successfully',

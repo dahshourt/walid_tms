@@ -49,7 +49,7 @@
                                             <a href="javascript:;" class="menu-link menu-toggle">
                                                 <span class="menu-text">KPIs</span>
                                                 <span class="menu-desc"></span>
-                                                <i class="menu-arrow"></i>
+                                                <i class="la la-angle-down ml-2"></i>
                                             </a>
                                             <div class="menu-submenu menu-submenu-classic menu-submenu-left">
                                                 <ul class="menu-subnav">
@@ -124,7 +124,7 @@
                                                                     </svg>
                                                                 </span>
                                                                 <span class="menu-text">KPIs Configurations</span>
-                                                                <i class="menu-arrow"></i>
+                                                                <i class="la la-angle-down ml-2"></i>
                                                             </a>
                                                             <div class="menu-submenu menu-submenu-classic menu-submenu-right">
                                                                 <ul class="menu-subnav">
@@ -188,7 +188,7 @@
                                         <a href="javascript:;" class="menu-link menu-toggle">
                                             <span class="menu-text">Settings</span>
                                             <span class="menu-desc"></span>
-                                            <i class="menu-arrow"></i>
+                                            <i class="la la-angle-down ml-2"></i>
                                         </a>
                                         <div class="menu-submenu menu-submenu-classic menu-submenu-left">
                                             <ul class="menu-subnav">
@@ -238,7 +238,7 @@
                                                                                     <!--end::Svg Icon-->
                                                                                 </span>
                                                                                 <span class="menu-text">Custom Fields</span>
-                                                                                <i class="menu-arrow"></i>
+                                                                                <i class="la la-angle-down ml-2"></i>
                                                                             </a>
                                                                             <div class="menu-submenu menu-submenu-classic menu-submenu-right">
                                                                                 <ul class="menu-subnav">
@@ -435,7 +435,7 @@
                                                                                             alt="Management" width="24" height="24" />
                                                                                     </span>
                                                                                     <span class="menu-text">Management</span>
-                                                                                    <i class="menu-arrow"></i>
+                                                                                    <i class="la la-angle-down ml-2"></i>
                                                                                 </a>
                                                                                 <div class="menu-submenu menu-submenu-classic menu-submenu-right">
                                                                                     <ul class="menu-subnav">
@@ -481,7 +481,7 @@
                                                                                             alt="Management" width="24" height="24" />
                                                                                     </span>
                                                                                     <span class="menu-text">Notifications</span>
-                                                                                    <i class="menu-arrow"></i>
+                                                                                    <i class="la la-angle-down ml-2"></i>
                                                                                 </a>
                                                                                 <div class="menu-submenu menu-submenu-classic menu-submenu-right">
                                                                                     <ul class="menu-subnav">
@@ -839,7 +839,7 @@
                                 <a href="javascript:;" class="menu-link menu-toggle">
                                     <span class="menu-text">Admin</span>
                                     <span class="menu-desc"></span>
-                                    <i class="menu-arrow"></i>
+                                    <i class="la la-angle-down ml-2"></i>
                                 </a>
                                 <div class="menu-submenu menu-submenu-classic menu-submenu-left">
                                     <ul class="menu-subnav">
@@ -922,7 +922,7 @@
                                                                     <!--end::Svg Icon-->
                                                                 </span>
                                                                 <span class="menu-text">Top Management Admin</span>
-                                                                <i class="menu-arrow"></i>
+                                                                <i class="la la-angle-down ml-2"></i>
                                                             </a>
                                                             <div class="menu-submenu menu-submenu-classic menu-submenu-left">
                                                                 <ul class="menu-subnav">
@@ -1067,7 +1067,7 @@
                                     <a href="javascript:;" class="menu-link menu-toggle">
                                         <span class="menu-text">Change Request</span>
                                         <span class="menu-desc"></span>
-                                        <i class="menu-arrow"></i>
+                                        <i class="la la-angle-down ml-2"></i>
                                     </a>
                                     <div class="menu-submenu menu-submenu-classic menu-submenu-left">
                                         <ul class="menu-subnav">
@@ -1330,7 +1330,7 @@
                                     aria-haspopup="true">
                                     <a href="javascript:;" class="menu-link menu-toggle">
                                         <span class="menu-text">Search & Reporting</span>
-                                        <i class="menu-arrow"></i>
+                                        <i class="la la-angle-down ml-2"></i>
                                     </a>
                                     <div class="menu-submenu menu-submenu-classic menu-submenu-left">
                                         <ul class="menu-subnav">
@@ -1358,7 +1358,7 @@
                                                     <a href="javascript:;" class="menu-link menu-toggle">
                                                         <i class="menu-bullet menu-bullet-dot"><span></span></i>
                                                         <span class="menu-text">Reports</span>
-                                                        <i class="menu-arrow"></i>
+                                                        <i class="la la-angle-down ml-2"></i>
                                                     </a>
                                                     <div class="menu-submenu menu-submenu-classic menu-submenu-right">
                                                         <ul class="menu-subnav">
@@ -1421,7 +1421,7 @@
                                     aria-haspopup="true">
                                     <a href="javascript:;" class="menu-link menu-toggle">
                                         <span class="menu-text">Releases</span>
-                                        <i class="menu-arrow"></i>
+                                        <i class="la la-angle-down ml-2"></i>
                                     </a>
                                     <div class="menu-submenu menu-submenu-classic menu-submenu-left">
                                         <ul class="menu-subnav">
@@ -1492,86 +1492,84 @@
                 <!--begin::Topbar-->
                 <div class="topbar">
                     <!--begin::User-->
-                    <div class="dropdown">
-                        <!--begin::User Section-->
-                        <div class="d-flex justify-content-between">
-                            <!-- Group Bar (Left) -->
-                            <div class="topbar-item">
-                                <div class="btn-group">
-                                    <button type="button"
-                                        class="btn btn-icon btn-hover-transparent-white d-flex align-items-center btn-lg px-md-2 w-md-auto dropdown-toggle"
-                                        data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                        <span class="navi-text" id="group-name">
-                                            <img src="{{ asset('public/new_theme/assets/media/group.png') }}" />
-                                            @if(session()->has('current_group_name'))
-                                                {{ session('current_group_name') }}
-                                            @else
-                                                @if(auth()->user()->default_group)
-                                                    {{ auth()->user()->defualt_group->name }}
-                                                @endif
-                                            @endif
-                                        </span>
-                                    </button>
-
-                                    <div class="dropdown-menu">
-                                        <!-- Loop through user's groups and list them -->
-                                        @if(isset($userGroups))
-                                            @foreach ($userGroups as $group)
-                                                @if(Session::has('current_group') && Session::get('current_group') == $group->group->id)
-                                                    <a class="dropdown-item {{ Session::has('current_group') && Session::get('current_group') == $group->group->id ? 'active' : '' }}"
-                                                        href="{{route('change_request.selectUserGroup', ['group' => $group->group->id])}}">
-                                                        {{ $group->group->name }}
-                                                    </a>
-                                                @else
-                                                    <a class="dropdown-item {{ auth()->user()->defualt_group->id == $group->group->id ? 'active' : '' }} "
-                                                        href="{{route('change_request.selectUserGroup', ['group' => $group->group->id])}}">
-                                                        {{ $group->group->name }}
-                                                    </a>
-                                                @endif
-                                            @endforeach
-                                        @else
-                                            @foreach (auth()->user()->user_groups()->with('group')->get() as $group)
-                                                @if(Session::has('current_group') && Session::get('current_group') == $group->group->id)
-                                                    <a class="dropdown-item {{ Session::has('current_group') && Session::get('current_group') == $group->group->id ? 'active' : '' }}"
-                                                        href="{{route('change_request.selectUserGroup', ['group' => $group->group->id])}}">
-                                                        {{ Session::get('current_group_name') }}
-                                                    </a>
-                                                @else
-                                                    <a class="dropdown-item "
-                                                        href="{{route('change_request.selectUserGroup', ['group' => $group->group->id])}}">
-                                                        {{ $group->group->name }}
-                                                    </a>
-                                                @endif
-                                            @endforeach
+                    <!--begin::User Section-->
+                    <!-- Group Bar (Left) -->
+                    <div class="topbar-item">
+                        <div class="btn-group">
+                            <button type="button"
+                                class="btn btn-icon btn-hover-transparent-white d-flex align-items-center btn-lg px-md-2 w-md-auto dropdown-toggle"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="navi-text" id="group-name">
+                                    <img src="{{ asset('public/new_theme/assets/media/group.png') }}" />
+                                    @if(session()->has('current_group_name'))
+                                        {{ session('current_group_name') }}
+                                    @else
+                                        @if(auth()->user()->default_group)
+                                            {{ auth()->user()->defualt_group->name }}
                                         @endif
-                                    </div>
-                                </div>
-                            </div>
+                                    @endif
+                                </span>
+                                <i class="la text-white ml-2"></i>
+                            </button>
 
-                            <!-- User Section (Right) -->
-                            <div class="topbar-item ml-auto">
-                                <div class="btn btn-icon btn-hover-transparent-white d-flex align-items-center btn-lg px-md-2 w-md-auto"
-                                    id="kt_quick_user_toggle">
-                                    <span
-                                        class="text-white opacity-70 font-weight-bold font-size-base d-none d-md-inline mr-1">Hi,</span>
-                                    <span
-                                        class="text-white opacity-90 font-weight-bolder font-size-base d-none d-md-inline mr-4">{{ explode(' ', auth()->user()->name)[0] }}</span>
-                                    <span class="symbol symbol-35">
-                                        @php
-                                            $user_name = explode(" ", auth()->user()->name);
-                                            $first_letters = "";
-                                            foreach ($user_name as $word) {
-                                                $first_letters .= mb_substr($word, 0, 1);
-                                            }
-                                        @endphp
-                                        <span
-                                            class="symbol-label text-white font-size-h5 font-weight-bold bg-white-o-30">{{$first_letters}}</span>
-                                    </span>
-                                </div>
+                            <div class="dropdown-menu">
+                                <!-- Loop through user's groups and list them -->
+                                @if(isset($userGroups))
+                                    @foreach ($userGroups as $group)
+                                        @if(Session::has('current_group') && Session::get('current_group') == $group->group->id)
+                                            <a class="dropdown-item {{ Session::has('current_group') && Session::get('current_group') == $group->group->id ? 'active' : '' }}"
+                                                href="{{route('change_request.selectUserGroup', ['group' => $group->group->id])}}">
+                                                {{ $group->group->name }}
+                                            </a>
+                                        @else
+                                            <a class="dropdown-item {{ auth()->user()->defualt_group->id == $group->group->id ? 'active' : '' }} "
+                                                href="{{route('change_request.selectUserGroup', ['group' => $group->group->id])}}">
+                                                {{ $group->group->name }}
+                                            </a>
+                                        @endif
+                                    @endforeach
+                                @else
+                                    @foreach (auth()->user()->user_groups()->with('group')->get() as $group)
+                                        @if(Session::has('current_group') && Session::get('current_group') == $group->group->id)
+                                            <a class="dropdown-item {{ Session::has('current_group') && Session::get('current_group') == $group->group->id ? 'active' : '' }}"
+                                                href="{{route('change_request.selectUserGroup', ['group' => $group->group->id])}}">
+                                                {{ Session::get('current_group_name') }}
+                                            </a>
+                                        @else
+                                            <a class="dropdown-item "
+                                                href="{{route('change_request.selectUserGroup', ['group' => $group->group->id])}}">
+                                                {{ $group->group->name }}
+                                            </a>
+                                        @endif
+                                    @endforeach
+                                @endif
                             </div>
                         </div>
-                        <!--end::User Section-->
                     </div>
+
+                    <!-- User Section (Right) -->
+                    <div class="topbar-item ml-auto">
+                        <div class="btn btn-icon btn-hover-transparent-white d-flex align-items-center btn-lg px-md-2 w-md-auto"
+                            id="kt_quick_user_toggle">
+                            <span
+                                class="text-white opacity-70 font-weight-bold font-size-base d-none d-md-inline mr-1">Hi,</span>
+                            <span
+                                class="text-white opacity-90 font-weight-bolder font-size-base d-none d-md-inline mr-4">{{ explode(' ', auth()->user()->name)[0] }}</span>
+                            <span class="symbol symbol-35">
+                                @php
+                                    $user_name = explode(" ", auth()->user()->name);
+                                    $first_letters = "";
+                                    foreach ($user_name as $word) {
+                                        $first_letters .= mb_substr($word, 0, 1);
+                                    }
+                                @endphp
+                                <span
+                                    class="symbol-label text-white font-size-h5 font-weight-bold bg-white-o-30">{{$first_letters}}</span>
+                            </span>
+                            <i class="la text-white ml-2"></i>
+                        </div>
+                    </div>
+                    <!--end::User Section-->
                     <!--end::Topbar-->
                     <!--end: Group bar -->
                 </div>
