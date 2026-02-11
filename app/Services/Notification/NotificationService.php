@@ -296,6 +296,28 @@ class NotificationService
             case 'pmo_team':
                 $group = Group::where('title',config('constants.group_names.pmo_team'))->first();
                 return $group ? [$group->head_group_email] : [config('constants.mails.pmo_team')];
+            case 'cap_users':
+                // If cap users were provided in the event/request (e.g. during update), use them
+                if (property_exists($event, 'request') && isset($event->request->cap_users) && is_array($event->request->cap_users) && !empty($event->request->cap_users)) {
+                    $emails = User::whereIn('id', $event->request->cap_users)->where('active', '1')->pluck('email')->filter()->values()->toArray();
+                    $this->toMailUser = $emails[0] ?? null;
+                    return $emails;
+                }
+
+                // Otherwise, try to load active CAB record for this CR and return its active CAB users
+                if (property_exists($event, 'changeRequest') && $event->changeRequest && isset($event->changeRequest->id)) {
+                    $cabCr = \App\Models\CabCr::where('cr_id', $event->changeRequest->id)
+                        ->whereRaw('CAST(status AS CHAR) = ?', ['0'])
+                        ->first();
+
+                    if ($cabCr) {
+                        $emails = $cabCr->activeCabCrUsers()->with('user')->get()->pluck('user.email')->filter()->values()->toArray();
+                        $this->toMailUser = $emails[0] ?? null;
+                        return $emails;
+                    }
+                }
+
+                return [];
             
             case 'assigned_dev_team':
                 // Get the group assigned to handle the CR
