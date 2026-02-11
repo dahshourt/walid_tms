@@ -42,6 +42,11 @@
             $('#new_status_id').prop('disabled', false);
         });
 
+    </script>
+    
+    @include('change_request.partials.on_behalf_script')
+
+    <script>
         $(window).on("load", function () {
             // Force hide cap_users field immediately and multiple times
             //console.log('=== Page load: Force hiding cap_users field ===');

@@ -76,6 +76,7 @@
                     value="{{ $fieldValue }}"
                     @if ($isRequired) required @endif
                     @if ($isNumeric) step="any" @endif
+                    @if ($isEstimationField) placeholder="Estimation (hours)" @endif
                 />
                 @error($fieldName)
                     <small class="text-danger">{{ $message }}</small>
