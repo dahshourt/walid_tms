@@ -355,6 +355,7 @@
             let targetGroup = null;
             let targetWorkflow = null;
 
+            // Find type_{group}_{workflow} parameter in URL
             for (let [key, value] of urlParams.entries()) {
                 if (key.startsWith('type_')) {
                     // key pattern: type_{groupKey}_{workflowId}
@@ -367,19 +368,46 @@
                 }
             }
 
+            // Function to activate tabs based on group and workflow
+            function activateTabs(groupKey, workflowId) {
+                if (!groupKey || !workflowId) {
+                    return;
+                }
+
+                // First, activate the group tab
+                const groupTabSelector = 'a[href="#group_tab_' + groupKey + '"]';
+                const groupTab = $(groupTabSelector);
+                
+                if (groupTab.length) {
+                    // Remove active class from all group tabs
+                    $('.nav-tabs a[href^="#group_tab_"]').removeClass('active').parent().removeClass('active');
+                    $('.tab-pane[id^="group_tab_"]').removeClass('show active');
+                    
+                    // Activate the target group tab
+                    groupTab.addClass('active').attr('aria-selected', 'true').parent().addClass('active');
+                    $('#group_tab_' + groupKey).addClass('show active');
+                    
+                    // After group tab is activated, activate the workflow tab
+                    setTimeout(function() {
+                        const workflowTabSelector = 'a[data-group="' + groupKey + '"][data-workflow="' + workflowId + '"]';
+                        const workflowTab = $(workflowTabSelector);
+                        
+                        if (workflowTab.length) {
+                            // Remove active class from all workflow tabs in this group
+                            $('a[data-group="' + groupKey + '"][data-workflow]').removeClass('active').parent().removeClass('active');
+                            $('.tab-pane[id^="workflow_tab_' + groupKey + '_"]').removeClass('show active');
+                            
+                            // Activate the target workflow tab
+                            workflowTab.addClass('active').attr('aria-selected', 'true').parent().addClass('active');
+                            $('#workflow_tab_' + groupKey + '_' + workflowId).addClass('show active');
+                        }
+                    }, 150);
+                }
+            }
+
             // If we have a type_{group}_{workflow} param, activate the right group & workflow tabs
             if (targetGroup !== null && targetWorkflow !== null) {
-                const groupTabSelector = 'a[href="#group_tab_' + targetGroup + '"]';
-                const groupTab = $(groupTabSelector);
-                if (groupTab.length) {
-                    groupTab.tab('show');
-
-                    const workflowTabSelector = 'a[data-group="' + targetGroup + '"][data-workflow="' + targetWorkflow + '"]';
-                    const workflowTab = $(workflowTabSelector);
-                    if (workflowTab.length) {
-                        workflowTab.tab('show');
-                    }
-                }
+                activateTabs(targetGroup, targetWorkflow);
             }
 
             // When switching workflow tabs, update URL to keep only the current type_{group}_{workflow} param
